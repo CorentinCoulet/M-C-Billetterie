@@ -1,0 +1,64 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String    @id @default(uuid())
+  email     String    @unique
+  name      String?
+  password  String
+  tickets   Ticket[]
+  orders    Order[]
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+}
+
+model Organizer {
+  id        String    @id @default(uuid())
+  name      String
+  events    Event[]
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+}
+
+model Event {
+  id           String     @id @default(uuid())
+  title        String
+  description  String?
+  date         DateTime
+  location     String
+  organizer    Organizer  @relation(fields: [organizerId], references: [id])
+  organizerId  String
+  tickets      Ticket[]
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+}
+
+model Order {
+  id         String    @id @default(uuid())
+  user       User      @relation(fields: [userId], references: [id])
+  userId     String
+  tickets    Ticket[]
+  totalPrice Float
+  status     String    // e.g. "pending", "paid", "cancelled"
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+}
+
+model Ticket {
+  id         String   @id @default(uuid())
+  user       User?    @relation(fields: [userId], references: [id])
+  userId     String?
+  event      Event    @relation(fields: [eventId], references: [id])
+  eventId    String
+  order      Order?   @relation(fields: [orderId], references: [id])
+  orderId    String?
+  code       String   @unique
+  purchasedAt DateTime @default(now())
+}
