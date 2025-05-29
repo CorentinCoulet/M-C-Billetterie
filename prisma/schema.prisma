@@ -1,3 +1,4 @@
+
 generator client {
   provider = "prisma-client-js"
   output   = "../src/generated/prisma"
@@ -8,47 +9,87 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+
+enum OrderStatus {
+  draft
+  pending_payment
+  paid
+  cancelled
+}
+
+enum TicketStatus {
+  pending
+  paid
+  cancelled
+  used
+}
+
+
 model User {
-  id        String    @id @default(uuid())
-  email     String    @unique
+  id        String     @id @default(uuid())
+  email     String     @unique
   name      String?
   password  String
   tickets   Ticket[]
   orders    Order[]
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
+  sessions  Session[]
+  reviews   Review[]
+  teamRoles TeamMember[]
+  logs      ActivityLog[]
+  notifications Notification[]
+  eventLogs EventLog[]
+  blocked   BlockedUser?
+  metadata  Json?      // TODO: future extensibility
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
 }
 
 model Organizer {
-  id        String    @id @default(uuid())
+  id        String     @id @default(uuid())
   name      String
   events    Event[]
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
+  team      TeamMember[]
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
 }
 
 model Event {
-  id           String     @id @default(uuid())
+  id           String        @id @default(uuid())
   title        String
   description  String?
   date         DateTime
   location     String
-  organizer    Organizer  @relation(fields: [organizerId], references: [id])
-  organizerId  String
+  maxCapacity  Int?
+  isPublished  Boolean       @default(false)
+  isCancelled  Boolean       @default(false)
   tickets      Ticket[]
-  createdAt    DateTime   @default(now())
-  updatedAt    DateTime   @updatedAt
+  reviews      Review[]
+  eventSetting EventSetting?
+  category     Category?     @relation(fields: [categoryId], references: [id])
+  categoryId   String?
+  venue        Venue?        @relation(fields: [venueId], references: [id])
+  venueId      String?
+  organizer    Organizer     @relation(fields: [organizerId], references: [id])
+  organizerId  String
+  metadata     Json?         // TODO: future extensibility
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
 }
 
 model Order {
-  id         String    @id @default(uuid())
-  user       User      @relation(fields: [userId], references: [id])
-  userId     String
-  tickets    Ticket[]
-  totalPrice Float
-  status     String    // e.g. "pending", "paid", "cancelled"
-  createdAt  DateTime  @default(now())
-  updatedAt  DateTime  @updatedAt
+  id             String     @id @default(uuid())
+  user           User       @relation(fields: [userId], references: [id])
+  userId         String
+  tickets        Ticket[]
+  payment        Payment?
+  totalPrice     Float
+  status         OrderStatus
+  promoCode      String?    // TODO: future promo system
+  discountAmount Float?     // TODO: to be used with promoCode
+  currency       String     @default("EUR") // future multi-currency
+  metadata       Json?      // TODO: for any future extensibility
+  createdAt      DateTime   @default(now())
+  updatedAt      DateTime   @updatedAt
 }
 
 model Ticket {
@@ -60,5 +101,124 @@ model Ticket {
   order      Order?   @relation(fields: [orderId], references: [id])
   orderId    String?
   code       String   @unique
+  status     TicketStatus @default(paid)
+  seatNumber String?
+  qrCode     String?
+  usedAt     DateTime?
   purchasedAt DateTime @default(now())
+  metadata   Json?    // TODO: future data like scan info, access history
+}
+
+model Payment {
+  id            String   @id @default(uuid())
+  order         Order    @relation(fields: [orderId], references: [id])
+  orderId       String   @unique
+  paymentMethod String
+  paymentStatus String
+  paymentDate   DateTime
+  transactionId String
+  currency      String   @default("EUR") // harmonized with Order
+}
+
+model Category {
+  id    String   @id @default(uuid())
+  name  String   @unique
+  events Event[]
+}
+
+model Venue {
+  id       String   @id @default(uuid())
+  name     String
+  address  String
+  capacity Int
+  events   Event[]
+}
+
+model Review {
+  id        String   @id @default(uuid())
+  user      User     @relation(fields: [userId], references: [id])
+  userId    String
+  event     Event    @relation(fields: [eventId], references: [id])
+  eventId   String
+  rating    Int
+  comment   String?
+  createdAt DateTime @default(now())
+}
+
+model TeamMember {
+  id          String     @id @default(uuid())
+  organizer   Organizer  @relation(fields: [organizerId], references: [id])
+  organizerId String
+  user        User       @relation(fields: [userId], references: [id])
+  userId      String
+  role        String
+  joinedAt    DateTime   @default(now())
+}
+
+model EventSetting {
+  id                     String   @id @default(uuid())
+  event                  Event    @relation(fields: [eventId], references: [id])
+  eventId                String   @unique
+  theme                  String?
+  allowAnonymousPurchase Boolean  @default(false)
+  allowTransfer          Boolean  @default(false)
+  createdAt              DateTime @default(now())
+  updatedAt              DateTime @updatedAt
+}
+
+model ActivityLog {
+  id         String   @id @default(uuid())
+  user       User     @relation(fields: [userId], references: [id])
+  userId     String
+  action     String
+  targetType String
+  targetId   String
+  timestamp  DateTime @default(now())
+}
+
+model EventLog {
+  id        String   @id @default(uuid())
+  user      User?    @relation(fields: [userId], references: [id])
+  userId    String?
+  type      String
+  context   String?
+  createdAt DateTime @default(now())
+}
+
+model Notification {
+  id        String   @id @default(uuid())
+  user      User     @relation(fields: [userId], references: [id])
+  userId    String
+  type      String
+  message   String
+  isRead    Boolean  @default(false)
+  sentAt    DateTime
+}
+
+model Session {
+  id        String   @id @default(uuid())
+  user      User     @relation(fields: [userId], references: [id])
+  userId    String
+  token     String   @unique
+  ipAddress String?
+  userAgent String?
+  createdAt DateTime @default(now())
+  expiresAt DateTime
+}
+
+model BlockedUser {
+  id        String   @id @default(uuid())
+  user      User     @relation(fields: [userId], references: [id])
+  userId    String   @unique
+  reason    String
+  blockedAt DateTime @default(now())
+}
+
+model Translation {
+  id         String   @id @default(uuid())
+  entityType String
+  entityId   String
+  locale     String
+  field      String
+  value      String
 }

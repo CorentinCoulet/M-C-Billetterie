@@ -51,8 +51,7 @@ Bienvenue sur le dépôt de M&C Society, un système complet de gestion d'évén
 ### 1. Cloner le repo
 
 ```bash
-git clone https://github.com/votre-utilisateur/mc-society-ticketing.git
-cd mc-society-ticketing
+git clone https://github.com/CorentinCoulet/M-C-Billetterie.git
 ```
 
 ### 2. Installer les dépendances
