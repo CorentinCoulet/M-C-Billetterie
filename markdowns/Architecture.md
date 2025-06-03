@@ -130,8 +130,9 @@ pages/
 │   ├── index.tsx
 │   ├── [id].tsx
 │   ├── new.tsx
-│   ├── [id]/edit.tsx
-│   └── [id]/tickets.tsx
+│   ├── [id]
+|       ├── edit.tsx
+│       └── /tickets.tsx
 ├── my-account.tsx
 ├── my-tickets.tsx
 ├── orders/

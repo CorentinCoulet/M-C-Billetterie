@@ -15,6 +15,8 @@
   },
   "dependencies": {
     "@prisma/client": "^6.8.2",
+    "bcryptjs": "^3.0.2",
+    "jsonwebtoken": "^9.0.2",
     "next": "15.3.2",
     "pino": "^9.7.0",
     "react": "^19.0.0",
@@ -24,6 +26,7 @@
     "@eslint/eslintrc": "^3",
     "@tailwindcss/postcss": "^4",
     "@types/jest": "^29.5.14",
+    "@types/jsonwebtoken": "^9.0.9",
     "@types/node": "^20.17.52",
     "@types/react": "^19",
     "@types/react-dom": "^19",

@@ -39,7 +39,7 @@ model User {
   notifications Notification[]
   eventLogs EventLog[]
   blocked   BlockedUser?
-  metadata  Json?      // TODO: future extensibility
+  metadata  Json?      
   createdAt DateTime   @default(now())
   updatedAt DateTime   @updatedAt
 }
@@ -71,7 +71,7 @@ model Event {
   venueId      String?
   organizer    Organizer     @relation(fields: [organizerId], references: [id])
   organizerId  String
-  metadata     Json?         // TODO: future extensibility
+  metadata     Json?         
   createdAt    DateTime      @default(now())
   updatedAt    DateTime      @updatedAt
 }
@@ -84,10 +84,10 @@ model Order {
   payment        Payment?
   totalPrice     Float
   status         OrderStatus
-  promoCode      String?    // TODO: future promo system
-  discountAmount Float?     // TODO: to be used with promoCode
-  currency       String     @default("EUR") // future multi-currency
-  metadata       Json?      // TODO: for any future extensibility
+  promoCode      String?    
+  discountAmount Float?     
+  currency       String     @default("EUR") 
+  metadata       Json?      
   createdAt      DateTime   @default(now())
   updatedAt      DateTime   @updatedAt
 }
@@ -106,7 +106,7 @@ model Ticket {
   qrCode     String?
   usedAt     DateTime?
   purchasedAt DateTime @default(now())
-  metadata   Json?    // TODO: future data like scan info, access history
+  metadata   Json?    
 }
 
 model Payment {
@@ -117,7 +117,7 @@ model Payment {
   paymentStatus String
   paymentDate   DateTime
   transactionId String
-  currency      String   @default("EUR") // harmonized with Order
+  currency      String   @default("EUR") 
 }
 
 model Category {

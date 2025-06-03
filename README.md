@@ -49,7 +49,11 @@ Le tout est containerisé avec Docker pour un environnement reproductible.
 │ ├── pages/ # Pages Next.js et API routes
 │ ├── services/ # Logique métier (event, ticket, user…)
 │ ├── tests/ # Tests unitaires et intégration
-│ └── types/ # Types partagés
+│ ├── types/               
+│   ├── dto/             
+│   └── enums/           
+├── errors/   
+├── constants/   
 ├── .env* # Variables d’environnement
 ├── docker-compose.yml
 ├── jest.config.ts
