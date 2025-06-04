@@ -170,10 +170,11 @@ export class AuthController {
       }
       
       await authService.resetPassword(data);
-      
+
       return res.status(200).json({ message: 'Password reset successfully' });
-    } catch (error: any) {
-      return res.status(400).json({ message: error.message });
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : 'An error occurred';
+      return res.status(400).json({ message });
     }
   }
 }

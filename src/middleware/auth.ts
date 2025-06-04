@@ -26,10 +26,11 @@ export async function isAuthenticated(
     }
 
     // Attach user to request object for use in route handlers
-    (req as any).user = user;
+    (req as never).user = user;
 
     // Continue to the next middleware or route handler
     return next();
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
   } catch (error) {
     return res.status(401).json({ message: 'Authentication failed' });
   }
