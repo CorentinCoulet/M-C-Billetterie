@@ -1,17 +1,17 @@
-import { PrismaClient, User } from '@prisma/client';
+import prisma from '@/lib/prisma';
+import { User } from '@prisma/client';
 import bcrypt from 'bcryptjs';
 import { signToken, verifyToken } from '../../lib/jwt';
-import { 
-  AuthResponse, 
-  ChangePasswordDto, 
-  LoginUserDto, 
-  RegisterUserDto, 
-  ResetPasswordDto, 
-  ResetPasswordRequestDto, 
-  TokenPayload 
+import {
+  AuthResponse,
+  ChangePasswordDto,
+  LoginUserDto,
+  RegisterUserDto,
+  ResetPasswordDto,
+  ResetPasswordRequestDto,
+  TokenPayload
 } from './auth.types';
 
-const prisma = new PrismaClient();
 const SALT_ROUNDS = 10;
 const SESSION_EXPIRY_DAYS = 7;
 
@@ -19,7 +19,7 @@ export class AuthService {
   /**
    * Register a new user
    */
-  async register(userData: RegisterUserDto): Promise<AuthResponse> {
+  async register(userData: RegisterUserDto, ipAddress?: string, userAgent?: string): Promise<AuthResponse> {
     // Check if user already exists
     const existingUser = await prisma.user.findUnique({
       where: { email: userData.email }
@@ -41,15 +41,15 @@ export class AuthService {
       },
     });
 
-    // Generate JWT token
+    // Generate JWT token (avec expiration explicite)
     const tokenPayload: TokenPayload = {
       userId: user.id,
       email: user.email,
     };
     const token = signToken(tokenPayload);
 
-    // Create a session
-    await this.createSession(user.id, token);
+    // Create a session (avec IP et user-agent)
+    await this.createSession(user.id, token, ipAddress, userAgent);
 
     // Return user data (excluding password) and token
     const { password, ...userWithoutPassword } = user;
@@ -62,7 +62,7 @@ export class AuthService {
   /**
    * Login a user
    */
-  async login(credentials: LoginUserDto): Promise<AuthResponse> {
+  async login(credentials: LoginUserDto, ipAddress?: string, userAgent?: string): Promise<AuthResponse> {
     // Find the user
     const user = await prisma.user.findUnique({
       where: { email: credentials.email }
@@ -87,15 +87,15 @@ export class AuthService {
       throw new Error('Invalid email or password');
     }
 
-    // Generate JWT token
+    // Generate JWT token (avec expiration explicite)
     const tokenPayload: TokenPayload = {
       userId: user.id,
       email: user.email,
     };
-    const token = signToken(tokenPayload);
+    const token = signToken(tokenPayload, { expiresIn: `${SESSION_EXPIRY_DAYS}d` });
 
-    // Create a session
-    await this.createSession(user.id, token);
+    // Create a session (avec IP et user-agent)
+    await this.createSession(user.id, token, ipAddress, userAgent);
 
     // Return user data (excluding password) and token
     const { password, ...userWithoutPassword } = user;
@@ -121,10 +121,10 @@ export class AuthService {
     try {
       // Verify the token
       const payload = verifyToken<TokenPayload>(token);
-      
-      // Check if session exists
+
+      // Check if session exists and is not expired
       const session = await prisma.session.findFirst({
-        where: { 
+        where: {
           token,
           userId: payload.userId,
           expiresAt: { gt: new Date() }
@@ -140,6 +140,7 @@ export class AuthService {
         where: { id: payload.userId }
       });
     } catch (error) {
+      console.error('Token validation error:', error);
       return null;
     }
   }
@@ -192,7 +193,7 @@ export class AuthService {
       return;
     }
 
-    // Generate a reset token
+    // Generate a reset token (avec expiration explicite)
     const resetToken = signToken({ userId: user.id, email: user.email });
 
     // TODO: Send email with reset link
@@ -206,7 +207,7 @@ export class AuthService {
     try {
       // Verify the token
       const payload = verifyToken<TokenPayload>(data.token);
-      
+
       // Find the user
       const user = await prisma.user.findUnique({
         where: { id: payload.userId }
@@ -230,6 +231,7 @@ export class AuthService {
         where: { userId: user.id }
       });
     } catch (error) {
+      console.error('Error resetting password:', error);
       throw new Error('Invalid or expired token');
     }
   }
@@ -253,4 +255,5 @@ export class AuthService {
   }
 }
 
-export default new AuthService();
+const authService = new AuthService();
+export default authService;
