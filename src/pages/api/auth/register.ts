@@ -1,9 +1,10 @@
-import authController from "@/modules/auth/auth.controller";
-import type { NextApiRequest, NextApiResponse } from "next";
+import { authRateLimiter } from '@/middlewares/rateLimit';
+import authController from '@/modules/auth/auth.controller';
+// @ts-expect-error next-connect types are not fully compatible with Next.js types
+import nc from 'next-connect';
 
-export default async function handler(
-  req: NextApiRequest,
-  res: NextApiResponse
-) {
-  return authController.register(req, res);
-}
+const handler = nc()
+  .use(authRateLimiter)
+  .post(authController.register);
+
+export default handler;

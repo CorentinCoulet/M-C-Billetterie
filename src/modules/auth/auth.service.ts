@@ -1,5 +1,5 @@
 import prisma from '@/lib/prisma';
-import { User } from '@prisma/client';
+import { User } from "@prisma/client";
 import bcrypt from 'bcryptjs';
 import { signToken, verifyToken } from '../../lib/jwt';
 import {
@@ -52,7 +52,8 @@ export class AuthService {
     await this.createSession(user.id, token, ipAddress, userAgent);
 
     // Return user data (excluding password) and token
-    const { password, ...userWithoutPassword } = user;
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { password: _password, ...userWithoutPassword } = user;
     return {
       user: userWithoutPassword,
       token,
@@ -92,13 +93,14 @@ export class AuthService {
       userId: user.id,
       email: user.email,
     };
-    const token = signToken(tokenPayload, { expiresIn: `${SESSION_EXPIRY_DAYS}d` });
+    const token = signToken(tokenPayload);
 
     // Create a session (avec IP et user-agent)
     await this.createSession(user.id, token, ipAddress, userAgent);
 
     // Return user data (excluding password) and token
-    const { password, ...userWithoutPassword } = user;
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { password: _password, ...userWithoutPassword } = user;
     return {
       user: userWithoutPassword,
       token,
@@ -115,13 +117,13 @@ export class AuthService {
   }
 
   /**
+  /**
    * Validate a token and return the user
    */
   async validateToken(token: string): Promise<User | null> {
     try {
       // Verify the token
       const payload = verifyToken<TokenPayload>(token);
-
       // Check if session exists and is not expired
       const session = await prisma.session.findFirst({
         where: {

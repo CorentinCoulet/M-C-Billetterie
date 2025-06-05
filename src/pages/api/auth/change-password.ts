@@ -1,6 +1,6 @@
-import type { NextApiRequest, NextApiResponse } from "next";
+import { isAuthenticated } from "@/middlewares/auth";
 import authController from "@/modules/auth/auth.controller";
-import { isAuthenticated } from "@/middleware/auth";
+import type { NextApiRequest, NextApiResponse } from "next";
 
 export default async function handler(
   req: NextApiRequest,

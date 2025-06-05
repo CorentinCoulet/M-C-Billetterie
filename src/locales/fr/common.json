@@ -1,0 +1,11 @@
+{
+  "auth": {
+    "login": "Connexion",
+    "logout": "Déconnexion",
+    "register": "Inscription",
+    "email": "Adresse e-mail",
+    "password": "Mot de passe",
+    "invalid_credentials": "Identifiants invalides",
+    "user_exists": "Cet utilisateur existe déjà"
+  }
+}
