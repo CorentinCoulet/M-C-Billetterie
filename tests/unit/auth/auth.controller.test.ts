@@ -6,10 +6,10 @@ jest.mock('@/lib/prisma', () => ({
 }));
 
 import { createMocks } from 'node-mocks-http';
-import authController from '../../src/modules/auth/auth.controller';
-import authService from '../../src/modules/auth/auth.service';
+import authController from '@/modules/auth/auth.controller';
+import authService from '@/modules/auth/auth.service';
 
-jest.mock('../../src/modules/auth/auth.service');
+jest.mock('@/modules/auth/auth.service');
 
 const mockedAuthService = authService as jest.Mocked<typeof authService>;
 
