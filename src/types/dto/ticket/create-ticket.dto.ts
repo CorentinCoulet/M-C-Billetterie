@@ -1,4 +1,4 @@
-export interface TicketCreateDto {
+export interface CreateTicketDto {
   eventId: string;
   userId: string;
   price: number;
