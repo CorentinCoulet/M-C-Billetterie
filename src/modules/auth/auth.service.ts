@@ -2,6 +2,7 @@ import prisma from '@/lib/prisma';
 import { User } from "@prisma/client";
 import bcrypt from 'bcryptjs';
 import { signToken, verifyToken } from '../../lib/jwt';
+import { sendPasswordResetEmail } from '@/config/email';
 import {
   AuthResponse,
   ChangePasswordDto,
@@ -198,8 +199,14 @@ export class AuthService {
     // Generate a reset token (avec expiration explicite)
     const resetToken = signToken({ userId: user.id, email: user.email });
 
-    // TODO: Send email with reset link
-    console.log(`Password reset token for ${user.email}: ${resetToken}`);
+    // Send email with reset link
+    try {
+      await sendPasswordResetEmail(user.email, user.name || 'User', resetToken);
+      console.log(`Password reset email sent to ${user.email}`);
+    } catch (error) {
+      console.error('Error sending password reset email:', error);
+      // Don't throw the error to avoid revealing that the email exists
+    }
   }
 
   /**

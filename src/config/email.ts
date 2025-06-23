@@ -20,16 +20,16 @@ export const EMAIL_CONFIG = {
       PASS: process.env.SMTP_PASS || 'password',
     },
   },
-  
+
   // Default sender
   FROM: {
     NAME: process.env.EMAIL_FROM_NAME || 'M&C Society',
-    EMAIL: process.env.EMAIL_FROM_ADDRESS || 'noreply@mcsociety.com',
+    EMAIL: process.env.FROM_EMAIL || 'noreply@mcsociety.com',
   },
-  
+
   // Email templates directory
   TEMPLATES_DIR: path.join(process.cwd(), 'src/templates/emails'),
-  
+
   // Email subjects
   SUBJECTS: {
     WELCOME: 'Welcome to M&C Society',
@@ -67,17 +67,17 @@ export function loadTemplate(templateName: string): HandlebarsTemplateDelegate {
   if (templateCache[templateName]) {
     return templateCache[templateName];
   }
-  
+
   // Load template from file
   const templatePath = path.join(EMAIL_CONFIG.TEMPLATES_DIR, `${templateName}.hbs`);
   const templateSource = fs.readFileSync(templatePath, 'utf-8');
-  
+
   // Compile template
   const template = Handlebars.compile(templateSource);
-  
+
   // Cache template
   templateCache[templateName] = template;
-  
+
   return template;
 }
 
@@ -98,11 +98,11 @@ export async function sendEmail(options: {
   }>;
 }): Promise<SentMessageInfo> {
   const { to, subject, template, context, text, html, attachments } = options;
-  
+
   // Prepare email content
   let htmlContent = html;
   let textContent = text;
-  
+
   // If template is provided, render it
   if (template && context) {
     try {
@@ -113,7 +113,7 @@ export async function sendEmail(options: {
       throw new Error(`Failed to load email template: ${template}`);
     }
   }
-  
+
   // Send email
   return transporter.sendMail({
     from: `"${EMAIL_CONFIG.FROM.NAME}" <${EMAIL_CONFIG.FROM.EMAIL}>`,
@@ -145,7 +145,7 @@ export async function sendWelcomeEmail(to: string, name: string): Promise<SentMe
  */
 export async function sendVerificationEmail(to: string, name: string, token: string): Promise<SentMessageInfo> {
   const verificationUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/verify-email?token=${token}`;
-  
+
   return sendEmail({
     to,
     subject: EMAIL_CONFIG.SUBJECTS.VERIFY_EMAIL,
@@ -162,7 +162,7 @@ export async function sendVerificationEmail(to: string, name: string, token: str
  */
 export async function sendPasswordResetEmail(to: string, name: string, token: string): Promise<SentMessageInfo> {
   const resetUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/reset-password?token=${token}`;
-  
+
   return sendEmail({
     to,
     subject: EMAIL_CONFIG.SUBJECTS.RESET_PASSWORD,

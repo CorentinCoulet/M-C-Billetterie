@@ -2,6 +2,10 @@ import QRCode from 'qrcode';
 import crypto from 'crypto';
 import prisma from '@/lib/prisma';
 
+// QR Code configuration
+const QR_CODE_SIZE = parseInt(process.env.QR_CODE_SIZE || '200', 10);
+const QR_CODE_MARGIN = parseInt(process.env.QR_CODE_MARGIN || '4', 10);
+
 /**
  * Service for QR code generation and validation
  */
@@ -15,7 +19,7 @@ export class QRCodeService {
   }> {
     // Create a unique token for this ticket
     const qrCodeToken = this.generateQRCodeToken(ticketId, orderId, userId);
-    
+
     // Store the token in the database
     await prisma.ticketQRCode.upsert({
       where: { ticketId_orderId: { ticketId, orderId } },
@@ -35,11 +39,11 @@ export class QRCodeService {
       orderId,
       token: qrCodeToken
     };
-    
+
     const qrCodeDataUrl = await QRCode.toDataURL(JSON.stringify(qrCodeData), {
       errorCorrectionLevel: 'H',
-      margin: 1,
-      width: 300,
+      margin: QR_CODE_MARGIN,
+      width: QR_CODE_SIZE,
       color: {
         dark: '#000000',
         light: '#ffffff'
@@ -133,11 +137,11 @@ export class QRCodeService {
    */
   async generateQRCode(data: string | object): Promise<string> {
     const dataString = typeof data === 'string' ? data : JSON.stringify(data);
-    
+
     return QRCode.toDataURL(dataString, {
       errorCorrectionLevel: 'M',
-      margin: 1,
-      width: 300,
+      margin: QR_CODE_MARGIN,
+      width: QR_CODE_SIZE,
       color: {
         dark: '#000000',
         light: '#ffffff'
@@ -150,11 +154,11 @@ export class QRCodeService {
    */
   async generateQRCodeBuffer(data: string | object): Promise<Buffer> {
     const dataString = typeof data === 'string' ? data : JSON.stringify(data);
-    
+
     return QRCode.toBuffer(dataString, {
       errorCorrectionLevel: 'M',
-      margin: 1,
-      width: 300,
+      margin: QR_CODE_MARGIN,
+      width: QR_CODE_SIZE,
       color: {
         dark: '#000000',
         light: '#ffffff'

@@ -6,7 +6,7 @@ import Stripe from 'stripe';
 
 // Initialize Stripe with API key from environment variables
 const stripeSecretKey = process.env.STRIPE_SECRET_KEY || 'sk_test_your_test_key';
-const stripePublicKey = process.env.STRIPE_PUBLIC_KEY || 'pk_test_your_test_key';
+const stripePublicKey = process.env.STRIPE_PUBLISHABLE_KEY || 'pk_test_your_test_key';
 
 // Create Stripe instance
 const stripe = new Stripe(stripeSecretKey, {
@@ -22,26 +22,26 @@ export const STRIPE_CONFIG = {
   // API keys
   SECRET_KEY: stripeSecretKey,
   PUBLIC_KEY: stripePublicKey,
-  
+
   // Webhook secret for verifying webhook events
   WEBHOOK_SECRET: process.env.STRIPE_WEBHOOK_SECRET || 'whsec_your_webhook_secret',
-  
+
   // Currency (ISO currency code)
   CURRENCY: process.env.STRIPE_CURRENCY || 'eur',
-  
+
   // Payment methods to accept
   PAYMENT_METHODS: ['card'],
-  
+
   // Success and cancel URLs for checkout sessions
   SUCCESS_URL: process.env.STRIPE_SUCCESS_URL || `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/checkout/success?session_id={CHECKOUT_SESSION_ID}`,
   CANCEL_URL: process.env.STRIPE_CANCEL_URL || `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/checkout/cancel?session_id={CHECKOUT_SESSION_ID}`,
-  
+
   // Automatic tax calculation
   AUTO_TAX: false,
-  
+
   // Expiration time for payment sessions (in seconds)
   PAYMENT_INTENT_EXPIRATION: 30 * 60, // 30 minutes
-  
+
   // Metadata keys
   METADATA: {
     ORDER_ID: 'order_id',
@@ -144,7 +144,7 @@ export function formatAmountForDisplay(amount: number, currency: string = STRIPE
     style: 'currency',
     currency,
   });
-  
+
   return formatter.format(amount / 100);
 }
 
