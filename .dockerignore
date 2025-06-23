@@ -5,7 +5,8 @@ node_modules
 Dockerfile*
 docker-compose*
 README.md
-.env
+# Allow .env file to be included in the Docker build
+# .env
 .vscode
 .idea
 coverage

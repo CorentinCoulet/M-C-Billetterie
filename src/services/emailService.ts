@@ -1,5 +1,5 @@
 import nodemailer from 'nodemailer';
-import { User } from '@prisma/client';
+import { UserWithRelations } from '../types/user';
 
 // This will be imported from the mailer.ts utility file once created
 const transporter = nodemailer.createTransport({
@@ -23,7 +23,7 @@ export class EmailService {
   /**
    * Send a welcome email to a new user
    */
-  async sendWelcomeEmail(user: User): Promise<void> {
+  async sendWelcomeEmail(user: UserWithRelations): Promise<void> {
     const mailOptions = {
       from: `"${APP_NAME}" <${FROM_EMAIL}>`,
       to: user.email,
@@ -51,7 +51,7 @@ export class EmailService {
   /**
    * Send a verification email
    */
-  async sendVerificationEmail(user: User, token: string): Promise<void> {
+  async sendVerificationEmail(user: UserWithRelations, token: string): Promise<void> {
     const verificationLink = `${APP_URL}/verify-email?token=${token}`;
 
     const mailOptions = {
@@ -81,7 +81,7 @@ export class EmailService {
   /**
    * Send a password reset email
    */
-  async sendPasswordResetEmail(user: User, token: string): Promise<void> {
+  async sendPasswordResetEmail(user: UserWithRelations, token: string): Promise<void> {
     const resetLink = `${APP_URL}/reset-password?token=${token}`;
 
     const mailOptions = {
@@ -148,7 +148,7 @@ export class EmailService {
           <h1 style="color: #333;">Confirmation de commande</h1>
           <p>Bonjour ${name || email},</p>
           <p>Nous vous remercions pour votre commande. Voici le récapitulatif de votre achat :</p>
-          
+
           <table style="width: 100%; border-collapse: collapse; margin-top: 20px;">
             <thead>
               <tr style="background-color: #f2f2f2;">
@@ -170,13 +170,13 @@ export class EmailService {
               </tr>
             </tfoot>
           </table>
-          
+
           <p style="margin-top: 20px;">
             <a href="${orderLink}" style="background-color: #4CAF50; color: white; padding: 10px 15px; text-decoration: none; border-radius: 4px; display: inline-block;">
               Voir ma commande
             </a>
           </p>
-          
+
           <p>Vous recevrez vos billets par email dans un message séparé.</p>
           <p>Merci de votre confiance !</p>
           <p>L'équipe ${APP_NAME}</p>
@@ -224,9 +224,9 @@ export class EmailService {
           <h1 style="color: #333;">Vos billets</h1>
           <p>Bonjour ${name || email},</p>
           <p>Veuillez trouver ci-dessous vos billets pour les événements à venir :</p>
-          
+
           ${ticketsList}
-          
+
           <p>Nous vous souhaitons un excellent événement !</p>
           <p>L'équipe ${APP_NAME}</p>
         </div>
@@ -263,21 +263,21 @@ export class EmailService {
           <h1 style="color: #333;">Rappel d'événement</h1>
           <p>Bonjour ${name || email},</p>
           <p>Nous vous rappelons que l'événement <strong>${event.name}</strong> aura lieu demain :</p>
-          
+
           <div style="background-color: #f9f9f9; padding: 15px; border-radius: 8px; margin: 20px 0;">
             <p><strong>Date :</strong> ${formattedDate}</p>
             <p><strong>Lieu :</strong> ${event.location}</p>
             <p><strong>Description :</strong> ${event.description}</p>
           </div>
-          
+
           <p>N'oubliez pas d'apporter vos billets (format électronique ou imprimé).</p>
-          
+
           <p>
             <a href="${eventLink}" style="background-color: #4CAF50; color: white; padding: 10px 15px; text-decoration: none; border-radius: 4px; display: inline-block; margin-top: 10px;">
               Voir les détails de l'événement
             </a>
           </p>
-          
+
           <p>À très bientôt !</p>
           <p>L'équipe ${APP_NAME}</p>
         </div>

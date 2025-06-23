@@ -1,6 +1,14 @@
 import prisma from '@/lib/prisma';
-import { User, Prisma } from '@prisma/client';
+import { Role } from '@prisma/client';
 import bcrypt from 'bcryptjs';
+import { 
+  UserWithRelations, 
+  UserCreateInput, 
+  UserUpdateInput, 
+  UserWhereInput, 
+  UserOrderByInput, 
+  UserProfileUpdateInput 
+} from '../types/user';
 
 const SALT_ROUNDS = 10;
 
@@ -11,19 +19,25 @@ export class UserService {
   /**
    * Get a user by ID
    */
-  async getUserById(id: string): Promise<User | null> {
+  async getUserById(id: string): Promise<UserWithRelations | null> {
     return prisma.user.findUnique({
-      where: { id }
-    });
+      where: { id },
+      include: {
+        blockedUser: true
+      }
+    }) as Promise<UserWithRelations | null>;
   }
 
   /**
    * Get a user by email
    */
-  async getUserByEmail(email: string): Promise<User | null> {
+  async getUserByEmail(email: string): Promise<UserWithRelations | null> {
     return prisma.user.findUnique({
-      where: { email }
-    });
+      where: { email },
+      include: {
+        blockedUser: true
+      }
+    }) as Promise<UserWithRelations | null>;
   }
 
   /**
@@ -32,84 +46,97 @@ export class UserService {
   async getUsers(params: {
     skip?: number;
     take?: number;
-    where?: Prisma.UserWhereInput;
-    orderBy?: Prisma.UserOrderByWithRelationInput;
-  }): Promise<User[]> {
+    where?: UserWhereInput;
+    orderBy?: UserOrderByInput;
+  }): Promise<UserWithRelations[]> {
     const { skip, take, where, orderBy } = params;
     return prisma.user.findMany({
       skip,
       take,
       where,
       orderBy,
-    });
+      include: {
+        blockedUser: true
+      }
+    }) as Promise<UserWithRelations[]>;
   }
 
   /**
    * Create a new user
    */
-  async createUser(data: Prisma.UserCreateInput): Promise<User> {
+  async createUser(data: UserCreateInput): Promise<UserWithRelations> {
     if (data.password) {
       data.password = await bcrypt.hash(data.password, SALT_ROUNDS);
     }
-    
+
     return prisma.user.create({
-      data
-    });
+      data,
+      include: {
+        blockedUser: true
+      }
+    }) as Promise<UserWithRelations>;
   }
 
   /**
    * Update a user
    */
-  async updateUser(id: string, data: Prisma.UserUpdateInput): Promise<User> {
+  async updateUser(id: string, data: UserUpdateInput): Promise<UserWithRelations> {
     if (data.password && typeof data.password === 'string') {
       data.password = await bcrypt.hash(data.password, SALT_ROUNDS);
     }
-    
+
     return prisma.user.update({
       where: { id },
-      data
-    });
+      data,
+      include: {
+        blockedUser: true
+      }
+    }) as Promise<UserWithRelations>;
   }
 
   /**
    * Delete a user
    */
-  async deleteUser(id: string): Promise<User> {
+  async deleteUser(id: string): Promise<UserWithRelations> {
     return prisma.user.delete({
-      where: { id }
-    });
+      where: { id },
+      include: {
+        blockedUser: true
+      }
+    }) as Promise<UserWithRelations>;
   }
 
   /**
    * Count users with optional filtering
    */
-  async countUsers(where?: Prisma.UserWhereInput): Promise<number> {
+  async countUsers(where?: UserWhereInput): Promise<number> {
     return prisma.user.count({ where });
   }
 
   /**
    * Update user profile
    */
-  async updateProfile(id: string, data: {
-    name?: string;
-    email?: string;
-    phone?: string;
-    address?: string;
-  }): Promise<User> {
+  async updateProfile(id: string, data: UserProfileUpdateInput): Promise<UserWithRelations> {
     return prisma.user.update({
       where: { id },
-      data
-    });
+      data,
+      include: {
+        blockedUser: true
+      }
+    }) as Promise<UserWithRelations>;
   }
 
   /**
    * Change user role
    */
-  async changeUserRole(id: string, role: 'USER' | 'ADMIN' | 'ORGANISATEUR'): Promise<User> {
+  async changeUserRole(id: string, role: Role): Promise<UserWithRelations> {
     return prisma.user.update({
       where: { id },
-      data: { role }
-    });
+      data: { role },
+      include: {
+        blockedUser: true
+      }
+    }) as Promise<UserWithRelations>;
   }
 
   /**

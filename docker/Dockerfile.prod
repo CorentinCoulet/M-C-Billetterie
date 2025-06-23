@@ -5,6 +5,8 @@ COPY package*.json ./
 RUN npm install
 
 COPY . .
+# Generate Prisma client before building
+RUN npx prisma generate
 RUN npm run build
 
 # --- Runtime image
@@ -15,6 +17,10 @@ COPY --from=builder /app ./
 ENV NODE_ENV=production
 
 RUN npm install --omit=dev
+# Generate Prisma client again in the runtime image
+RUN npx prisma generate
+
 EXPOSE 3000
 
-CMD ["npm", "run", "start"]
+# Use a shell to run multiple commands
+CMD ["sh", "-c", "npx prisma migrate deploy && npm run start"]

@@ -1,6 +1,110 @@
 import prisma from '@/lib/prisma';
-import { Order, Prisma, OrderStatus } from '@prisma/client';
+import { OrderStatus } from '@prisma/client';
 import ticketService from './ticketService';
+
+// Types spécifiques pour les relations
+type UserBasic = {
+  id: string;
+  name: string | null;
+  email: string;
+}
+
+type EventBasic = {
+  id: string;
+  title: string;
+  date: Date;
+  location: string;
+}
+
+type TicketBasic = {
+  id: string;
+  name: string;
+  description: string | null;
+  price: number;
+  quantity: number;
+  type: string | null;
+  eventId: string;
+  reserved: number;
+  createdAt: Date;
+  updatedAt: Date;
+  event: EventBasic;
+}
+
+type OrderTicketBasic = {
+  id: string;
+  orderId: string;
+  ticketId: string;
+  quantity: number;
+  unitPrice: number;
+  ticket: TicketBasic;
+}
+
+type PaymentBasic = {
+  id: string;
+  orderId: string;
+  amount: number;
+  status: string;
+  provider: string;
+  paymentIntentId: string | null;
+  createdAt: Date;
+}
+
+type OrderWithRelations = {
+  id: string;
+  userId: string;
+  status: OrderStatus;
+  totalAmount: number;
+  customerName: string | null;
+  customerEmail: string | null;
+  customerPhone: string | null;
+  createdAt: Date;
+  updatedAt: Date;
+  user: UserBasic | null;
+  tickets: OrderTicketBasic[];
+  payment: PaymentBasic | null;
+}
+
+// Types d'entrée pour les opérations
+type OrderCreateInput = {
+  userId: string;
+  tickets: Array<{
+    ticketId: string;
+    quantity: number;
+  }>;
+  customerInfo?: {
+    name?: string;
+    email?: string;
+    phone?: string;
+  };
+}
+
+type OrderWhereInput = {
+  id?: string;
+  userId?: string;
+  status?: OrderStatus;
+  createdAt?: {
+    gte?: Date;
+    lte?: Date;
+  };
+  AND?: OrderWhereInput[];
+  OR?: OrderWhereInput[];
+}
+
+type OrderOrderByInput = {
+  id?: 'asc' | 'desc';
+  createdAt?: 'asc' | 'desc';
+  updatedAt?: 'asc' | 'desc';
+  status?: 'asc' | 'desc';
+  totalAmount?: 'asc' | 'desc';
+}
+
+type OrderStatistics = {
+  totalOrders: number;
+  completedOrders: number;
+  pendingOrders: number;
+  cancelledOrders: number;
+  totalRevenue: number;
+}
 
 /**
  * Service for order management operations
@@ -9,7 +113,7 @@ export class OrderService {
   /**
    * Get an order by ID
    */
-  async getOrderById(id: string): Promise<Order | null> {
+  async getOrderById(id: string): Promise<OrderWithRelations | null> {
     return prisma.order.findUnique({
       where: { id },
       include: {
@@ -31,7 +135,7 @@ export class OrderService {
         },
         payment: true
       }
-    });
+    }) as Promise<OrderWithRelations | null>;
   }
 
   /**
@@ -40,9 +144,9 @@ export class OrderService {
   async getOrders(params: {
     skip?: number;
     take?: number;
-    where?: Prisma.OrderWhereInput;
-    orderBy?: Prisma.OrderOrderByWithRelationInput;
-  }): Promise<Order[]> {
+    where?: OrderWhereInput;
+    orderBy?: OrderOrderByInput;
+  }): Promise<OrderWithRelations[]> {
     const { skip, take, where, orderBy } = params;
     return prisma.order.findMany({
       skip,
@@ -59,29 +163,22 @@ export class OrderService {
         },
         tickets: {
           include: {
-            ticket: true
+            ticket: {
+              include: {
+                event: true
+              }
+            }
           }
         },
         payment: true
       }
-    });
+    }) as Promise<OrderWithRelations[]>;
   }
 
   /**
    * Create a new order
    */
-  async createOrder(data: {
-    userId: string;
-    tickets: Array<{
-      ticketId: string;
-      quantity: number;
-    }>;
-    customerInfo?: {
-      name?: string;
-      email?: string;
-      phone?: string;
-    };
-  }): Promise<Order> {
+  async createOrder(data: OrderCreateInput): Promise<OrderWithRelations> {
     const { userId, tickets, customerInfo } = data;
 
     // Calculate total amount and validate ticket availability
@@ -154,7 +251,7 @@ export class OrderService {
           }
         });
 
-        return order;
+        return order as OrderWithRelations;
       });
     } catch (error) {
       // If anything fails, release the reserved tickets
@@ -168,24 +265,36 @@ export class OrderService {
   /**
    * Update order status
    */
-  async updateOrderStatus(id: string, status: OrderStatus): Promise<Order> {
+  async updateOrderStatus(id: string, status: OrderStatus): Promise<OrderWithRelations> {
     return prisma.order.update({
       where: { id },
       data: { status },
       include: {
+        user: {
+          select: {
+            id: true,
+            name: true,
+            email: true
+          }
+        },
         tickets: {
           include: {
-            ticket: true
+            ticket: {
+              include: {
+                event: true
+              }
+            }
           }
-        }
+        },
+        payment: true
       }
-    });
+    }) as Promise<OrderWithRelations>;
   }
 
   /**
    * Cancel an order
    */
-  async cancelOrder(id: string): Promise<Order> {
+  async cancelOrder(id: string): Promise<OrderWithRelations> {
     const order = await prisma.order.findUnique({
       where: { id },
       include: {
@@ -215,46 +324,13 @@ export class OrderService {
         status: 'CANCELLED'
       },
       include: {
-        tickets: {
-          include: {
-            ticket: true
-          }
-        }
-      }
-    });
-  }
-
-  /**
-   * Complete an order after payment
-   */
-  async completeOrder(id: string, paymentId: string): Promise<Order> {
-    return prisma.order.update({
-      where: { id },
-      data: {
-        status: 'COMPLETED',
-        payment: {
-          connect: { id: paymentId }
-        }
-      },
-      include: {
-        tickets: {
-          include: {
-            ticket: true
+        user: {
+          select: {
+            id: true,
+            name: true,
+            email: true
           }
         },
-        payment: true
-      }
-    });
-  }
-
-  /**
-   * Get orders by user
-   */
-  async getUserOrders(userId: string): Promise<Order[]> {
-    return prisma.order.findMany({
-      where: { userId },
-      orderBy: { createdAt: 'desc' },
-      include: {
         tickets: {
           include: {
             ticket: {
@@ -266,19 +342,76 @@ export class OrderService {
         },
         payment: true
       }
-    });
+    }) as Promise<OrderWithRelations>;
+  }
+
+  /**
+   * Complete an order after payment
+   */
+  async completeOrder(id: string, paymentId: string): Promise<OrderWithRelations> {
+    return prisma.order.update({
+      where: { id },
+      data: {
+        status: 'COMPLETED',
+        payment: {
+          connect: { id: paymentId }
+        }
+      },
+      include: {
+        user: {
+          select: {
+            id: true,
+            name: true,
+            email: true
+          }
+        },
+        tickets: {
+          include: {
+            ticket: {
+              include: {
+                event: true
+              }
+            }
+          }
+        },
+        payment: true
+      }
+    }) as Promise<OrderWithRelations>;
+  }
+
+  /**
+   * Get orders by user
+   */
+  async getUserOrders(userId: string): Promise<OrderWithRelations[]> {
+    return prisma.order.findMany({
+      where: { userId },
+      orderBy: { createdAt: 'desc' },
+      include: {
+        user: {
+          select: {
+            id: true,
+            name: true,
+            email: true
+          }
+        },
+        tickets: {
+          include: {
+            ticket: {
+              include: {
+                event: true
+              }
+            }
+          }
+        },
+        payment: true
+      }
+    }) as Promise<OrderWithRelations[]>;
   }
 
   /**
    * Get order statistics
    */
-  async getOrderStatistics(): Promise<{
-    totalOrders: number;
-    completedOrders: number;
-    pendingOrders: number;
-    cancelledOrders: number;
-    totalRevenue: number;
-  }> {
+  async getOrderStatistics(): Promise<OrderStatistics> {
     const [
       totalOrders,
       completedOrders,

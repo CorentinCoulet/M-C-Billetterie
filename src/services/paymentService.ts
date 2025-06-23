@@ -1,7 +1,100 @@
 import prisma from '@/lib/prisma';
-import { Payment, Prisma } from '@prisma/client';
+import { PaymentStatus, OrderStatus } from '@prisma/client';
 import Stripe from 'stripe';
 import orderService from './orderService';
+
+// Types spécifiques pour les relations
+type UserBasic = {
+  id: string;
+  name: string | null;
+  email: string;
+}
+
+type OrderBasic = {
+  id: string;
+  userId: string;
+  status: OrderStatus;
+  totalAmount: number;
+  customerEmail: string | null;
+  createdAt: Date;
+  user: UserBasic | null;
+}
+
+type PaymentWithRelations = {
+  id: string;
+  orderId: string;
+  amount: number;
+  currency: string;
+  status: PaymentStatus;
+  provider: string;
+  providerPaymentId: string | null;
+  providerRefundId: string | null;
+  providerResponse: string | null;
+  errorMessage: string | null;
+  refundedAmount: number | null;
+  refundReason: string | null;
+  paidAt: Date | null;
+  createdAt: Date;
+  updatedAt: Date;
+  order: OrderBasic | null;
+}
+
+// Types d'entrée pour les opérations
+type PaymentCreateInput = {
+  orderId: string;
+  amount: number;
+  currency: string;
+  status: PaymentStatus;
+  provider: string;
+  providerPaymentId?: string | null;
+  providerResponse?: string | null;
+}
+
+type PaymentUpdateInput = {
+  status?: PaymentStatus;
+  providerPaymentId?: string | null;
+  providerRefundId?: string | null;
+  providerResponse?: string | null;
+  errorMessage?: string | null;
+  refundedAmount?: number | null;
+  refundReason?: string | null;
+  paidAt?: Date | null;
+}
+
+type PaymentWhereInput = {
+  id?: string;
+  orderId?: string;
+  status?: PaymentStatus;
+  provider?: string;
+  createdAt?: {
+    gte?: Date;
+    lte?: Date;
+  };
+  AND?: PaymentWhereInput[];
+  OR?: PaymentWhereInput[];
+}
+
+type PaymentOrderByInput = {
+  id?: 'asc' | 'desc';
+  createdAt?: 'asc' | 'desc';
+  updatedAt?: 'asc' | 'desc';
+  status?: 'asc' | 'desc';
+  amount?: 'asc' | 'desc';
+}
+
+type PaymentIntentResult = {
+  clientSecret: string;
+  paymentId: string;
+}
+
+type PaymentStatistics = {
+  totalPayments: number;
+  successfulPayments: number;
+  failedPayments: number;
+  refundedPayments: number;
+  totalRevenue: number;
+  totalRefunded: number;
+}
 
 // This will be imported from the stripe.ts utility file once created
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', {
@@ -15,13 +108,23 @@ export class PaymentService {
   /**
    * Get a payment by ID
    */
-  async getPaymentById(id: string): Promise<Payment | null> {
+  async getPaymentById(id: string): Promise<PaymentWithRelations | null> {
     return prisma.payment.findUnique({
       where: { id },
       include: {
-        order: true
+        order: {
+          include: {
+            user: {
+              select: {
+                id: true,
+                name: true,
+                email: true
+              }
+            }
+          }
+        }
       }
-    });
+    }) as Promise<PaymentWithRelations | null>;
   }
 
   /**
@@ -30,9 +133,9 @@ export class PaymentService {
   async getPayments(params: {
     skip?: number;
     take?: number;
-    where?: Prisma.PaymentWhereInput;
-    orderBy?: Prisma.PaymentOrderByWithRelationInput;
-  }): Promise<Payment[]> {
+    where?: PaymentWhereInput;
+    orderBy?: PaymentOrderByInput;
+  }): Promise<PaymentWithRelations[]> {
     const { skip, take, where, orderBy } = params;
     return prisma.payment.findMany({
       skip,
@@ -52,16 +155,13 @@ export class PaymentService {
           }
         }
       }
-    });
+    }) as Promise<PaymentWithRelations[]>;
   }
 
   /**
    * Create a payment intent with Stripe
    */
-  async createPaymentIntent(orderId: string): Promise<{
-    clientSecret: string;
-    paymentId: string;
-  }> {
+  async createPaymentIntent(orderId: string): Promise<PaymentIntentResult> {
     const order = await prisma.order.findUnique({
       where: { id: orderId },
       include: {
@@ -131,10 +231,10 @@ export class PaymentService {
   /**
    * Process a successful payment
    */
-  async processSuccessfulPayment(paymentIntentId: string): Promise<Payment> {
+  async processSuccessfulPayment(paymentIntentId: string): Promise<PaymentWithRelations> {
     // Retrieve the payment intent from Stripe
     const paymentIntent = await stripe.paymentIntents.retrieve(paymentIntentId);
-    
+
     if (paymentIntent.status !== 'succeeded') {
       throw new Error('Payment has not succeeded');
     }
@@ -156,9 +256,19 @@ export class PaymentService {
         paidAt: new Date()
       },
       include: {
-        order: true
+        order: {
+          include: {
+            user: {
+              select: {
+                id: true,
+                name: true,
+                email: true
+              }
+            }
+          }
+        }
       }
-    });
+    }) as Promise<PaymentWithRelations>;
 
     // Complete the order
     await orderService.completeOrder(orderId, paymentId);
@@ -169,10 +279,10 @@ export class PaymentService {
   /**
    * Handle a failed payment
    */
-  async handleFailedPayment(paymentIntentId: string, error?: string): Promise<Payment> {
+  async handleFailedPayment(paymentIntentId: string, error?: string): Promise<PaymentWithRelations> {
     // Retrieve the payment intent from Stripe
     const paymentIntent = await stripe.paymentIntents.retrieve(paymentIntentId);
-    
+
     const paymentId = paymentIntent.metadata.paymentId;
 
     if (!paymentId) {
@@ -189,15 +299,25 @@ export class PaymentService {
         errorMessage: error || 'Payment failed'
       },
       include: {
-        order: true
+        order: {
+          include: {
+            user: {
+              select: {
+                id: true,
+                name: true,
+                email: true
+              }
+            }
+          }
+        }
       }
-    });
+    }) as Promise<PaymentWithRelations>;
   }
 
   /**
    * Create a refund
    */
-  async createRefund(paymentId: string, amount?: number, reason?: string): Promise<Payment> {
+  async createRefund(paymentId: string, amount?: number, reason?: string): Promise<PaymentWithRelations> {
     const payment = await prisma.payment.findUnique({
       where: { id: paymentId }
     });
@@ -235,22 +355,25 @@ export class PaymentService {
         updatedAt: new Date()
       },
       include: {
-        order: true
+        order: {
+          include: {
+            user: {
+              select: {
+                id: true,
+                name: true,
+                email: true
+              }
+            }
+          }
+        }
       }
-    });
+    }) as Promise<PaymentWithRelations>;
   }
 
   /**
    * Get payment statistics
    */
-  async getPaymentStatistics(): Promise<{
-    totalPayments: number;
-    successfulPayments: number;
-    failedPayments: number;
-    refundedPayments: number;
-    totalRevenue: number;
-    totalRefunded: number;
-  }> {
+  async getPaymentStatistics(): Promise<PaymentStatistics> {
     const [
       totalPayments,
       successfulPayments,
