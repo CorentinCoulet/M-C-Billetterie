@@ -1,0 +1,11 @@
+{
+  "app": {
+    "title": "Ticketing System",
+    "welcome": "Welcome to our ticketing platform"
+  },
+  "common": {
+    "login": "Login",
+    "register": "Register",
+    "logout": "Logout"
+  }
+}

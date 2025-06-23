@@ -1,4 +1,6 @@
 {
+  "welcome": "Bienvenue à Billetterie",
+  "description": "Votre solution complète pour la billetterie d'événements",
   "auth": {
     "login": "Connexion",
     "logout": "Déconnexion",
