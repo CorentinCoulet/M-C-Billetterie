@@ -1,0 +1,553 @@
+import { NextApiResponse } from 'next';
+import { testPrisma, setupTests, teardownTests } from '../../../utils/setup';
+import {
+  createMockRequest,
+  createAuthenticatedRequest,
+  expectSuccess,
+  expectError,
+  expectValidationError,
+  expectUnauthorized,
+  expectForbidden,
+  expectNotFound,
+  hashTestPassword,
+  generateRandomEmail
+} from '../../../utils/helpers';
+import * as userController from '@/modules/user/user.controller';
+
+describe('Users API', () => {
+  beforeAll(async () => {
+    await setupTests();
+  });
+
+  afterAll(async () => {
+    await teardownTests();
+  });
+
+  beforeEach(async () => {
+    await testPrisma.user.deleteMany();
+  });
+
+  describe('GET /api/users', () => {
+    it('should return all users for admin', async () => {
+      // Create some test users
+      const user1 = await testPrisma.user.create({
+        data: {
+          email: generateRandomEmail(),
+          password: await hashTestPassword('Password123!'),
+          name: 'Test User 1',
+          isEmailVerified: true
+        }
+      });
+
+      const user2 = await testPrisma.user.create({
+        data: {
+          email: generateRandomEmail(),
+          password: await hashTestPassword('Password123!'),
+          name: 'Test User 2',
+          isEmailVerified: true
+        }
+      });
+
+      // Create admin user
+      const adminUser = await testPrisma.user.create({
+        data: {
+          email: generateRandomEmail(),
+          password: await hashTestPassword('Password123!'),
+          name: 'Admin User',
+          role: 'ADMIN',
+          isEmailVerified: true
+        }
+      });
+
+      const { req, res } = createAuthenticatedRequest(adminUser);
+
+      await userController.list(req as any, res as NextApiResponse);
+
+      expectSuccess(res, 200);
+      const users = res._getJSONData();
+      expect(Array.isArray(users)).toBe(true);
+      expect(users.length).toBeGreaterThanOrEqual(3); // At least the 3 users we created
+      expect(users.some((u: any) => u.id === user1.id)).toBe(true);
+      expect(users.some((u: any) => u.id === user2.id)).toBe(true);
+      expect(users.some((u: any) => u.id === adminUser.id)).toBe(true);
+    });
+
+    it('should return forbidden for non-admin users', async () => {
+      // Create regular user
+      const regularUser = await testPrisma.user.create({
+        data: {
+          email: generateRandomEmail(),
+          password: await hashTestPassword('Password123!'),
+          name: 'Regular User',
+          isEmailVerified: true
+        }
+      });
+
+      const { req, res } = createAuthenticatedRequest(regularUser);
+
+      await userController.list(req as any, res as NextApiResponse);
+
+      expectForbidden(res);
+    });
+
+    it('should return unauthorized for unauthenticated requests', async () => {
+      const { req, res } = createMockRequest({
+        method: 'GET'
+      });
+
+      await userController.list(req as any, res as NextApiResponse);
+
+      expectUnauthorized(res);
+    });
+  });
+
+  describe('GET /api/users/:id', () => {
+    it('should return user by ID for the user themselves', async () => {
+      // Create a user
+      const user = await testPrisma.user.create({
+        data: {
+          email: generateRandomEmail(),
+          password: await hashTestPassword('Password123!'),
+          name: 'Test User',
+          isEmailVerified: true
+        }
+      });
+
+      const { req, res } = createAuthenticatedRequest(user, {
+        method: 'GET',
+        query: { id: user.id.toString() }
+      });
+
+      await userController.getById(req as any, res as NextApiResponse);
+
+      expectSuccess(res, 200);
+      expect(res._getJSONData()).toHaveProperty('id', user.id);
+      expect(res._getJSONData()).toHaveProperty('email', user.email);
+      expect(res._getJSONData()).not.toHaveProperty('password');
+    });
+
+    it('should return user by ID for admin', async () => {
+      // Create a regular user
+      const regularUser = await testPrisma.user.create({
+        data: {
+          email: generateRandomEmail(),
+          password: await hashTestPassword('Password123!'),
+          name: 'Regular User',
+          isEmailVerified: true
+        }
+      });
+
+      // Create admin user
+      const adminUser = await testPrisma.user.create({
+        data: {
+          email: generateRandomEmail(),
+          password: await hashTestPassword('Password123!'),
+          name: 'Admin User',
+          role: 'ADMIN',
+          isEmailVerified: true
+        }
+      });
+
+      const { req, res } = createAuthenticatedRequest(adminUser, {
+        method: 'GET',
+        query: { id: regularUser.id.toString() }
+      });
+
+      await userController.getById(req as any, res as NextApiResponse);
+
+      expectSuccess(res, 200);
+      expect(res._getJSONData()).toHaveProperty('id', regularUser.id);
+      expect(res._getJSONData()).toHaveProperty('email', regularUser.email);
+    });
+
+    it('should return forbidden for other users', async () => {
+      // Create two regular users
+      const user1 = await testPrisma.user.create({
+        data: {
+          email: generateRandomEmail(),
+          password: await hashTestPassword('Password123!'),
+          name: 'User 1',
+          isEmailVerified: true
+        }
+      });
+
+      const user2 = await testPrisma.user.create({
+        data: {
+          email: generateRandomEmail(),
+          password: await hashTestPassword('Password123!'),
+          name: 'User 2',
+          isEmailVerified: true
+        }
+      });
+
+      const { req, res } = createAuthenticatedRequest(user1, {
+        method: 'GET',
+        query: { id: user2.id.toString() }
+      });
+
+      await userController.getById(req as any, res as NextApiResponse);
+
+      expectForbidden(res);
+    });
+
+    it('should return not found for non-existent user', async () => {
+      // Create admin user
+      const adminUser = await testPrisma.user.create({
+        data: {
+          email: generateRandomEmail(),
+          password: await hashTestPassword('Password123!'),
+          name: 'Admin User',
+          role: 'ADMIN',
+          isEmailVerified: true
+        }
+      });
+
+      const { req, res } = createAuthenticatedRequest(adminUser, {
+        method: 'GET',
+        query: { id: '99999' } // Non-existent ID
+      });
+
+      await userController.getById(req as any, res as NextApiResponse);
+
+      expectNotFound(res);
+    });
+
+    it('should return bad request for invalid ID', async () => {
+      // Create a user
+      const user = await testPrisma.user.create({
+        data: {
+          email: generateRandomEmail(),
+          password: await hashTestPassword('Password123!'),
+          name: 'Test User',
+          isEmailVerified: true
+        }
+      });
+
+      const { req, res } = createAuthenticatedRequest(user, {
+        method: 'GET',
+        query: { id: 'invalid-id' }
+      });
+
+      await userController.getById(req as any, res as NextApiResponse);
+
+      expectError(res, 400);
+      expect(res._getJSONData().message).toMatch(/invalid.*id/i);
+    });
+  });
+
+  describe('PUT /api/users/:id', () => {
+    it('should update user by ID for the user themselves', async () => {
+      // Create a user
+      const user = await testPrisma.user.create({
+        data: {
+          email: generateRandomEmail(),
+          password: await hashTestPassword('Password123!'),
+          name: 'Test User',
+          isEmailVerified: true
+        }
+      });
+
+      const newName = 'Updated Name';
+      const { req, res } = createAuthenticatedRequest(user, {
+        method: 'PUT',
+        query: { id: user.id.toString() },
+        body: { name: newName }
+      });
+
+      await userController.updateById(req as any, res as NextApiResponse);
+
+      expectSuccess(res, 200);
+      expect(res._getJSONData()).toHaveProperty('id', user.id);
+      expect(res._getJSONData()).toHaveProperty('name', newName);
+    });
+
+    it('should update user by ID for admin', async () => {
+      // Create a regular user
+      const regularUser = await testPrisma.user.create({
+        data: {
+          email: generateRandomEmail(),
+          password: await hashTestPassword('Password123!'),
+          name: 'Regular User',
+          isEmailVerified: true
+        }
+      });
+
+      // Create admin user
+      const adminUser = await testPrisma.user.create({
+        data: {
+          email: generateRandomEmail(),
+          password: await hashTestPassword('Password123!'),
+          name: 'Admin User',
+          role: 'ADMIN',
+          isEmailVerified: true
+        }
+      });
+
+      const newName = 'Admin Updated Name';
+      const { req, res } = createAuthenticatedRequest(adminUser, {
+        method: 'PUT',
+        query: { id: regularUser.id.toString() },
+        body: { name: newName }
+      });
+
+      await userController.updateById(req as any, res as NextApiResponse);
+
+      expectSuccess(res, 200);
+      expect(res._getJSONData()).toHaveProperty('id', regularUser.id);
+      expect(res._getJSONData()).toHaveProperty('name', newName);
+    });
+
+    it('should return forbidden for other users', async () => {
+      // Create two regular users
+      const user1 = await testPrisma.user.create({
+        data: {
+          email: generateRandomEmail(),
+          password: await hashTestPassword('Password123!'),
+          name: 'User 1',
+          isEmailVerified: true
+        }
+      });
+
+      const user2 = await testPrisma.user.create({
+        data: {
+          email: generateRandomEmail(),
+          password: await hashTestPassword('Password123!'),
+          name: 'User 2',
+          isEmailVerified: true
+        }
+      });
+
+      const { req, res } = createAuthenticatedRequest(user1, {
+        method: 'PUT',
+        query: { id: user2.id.toString() },
+        body: { name: 'Attempted Update' }
+      });
+
+      await userController.updateById(req as any, res as NextApiResponse);
+
+      expectForbidden(res);
+    });
+
+    it('should return validation error for invalid input', async () => {
+      // Create a user
+      const user = await testPrisma.user.create({
+        data: {
+          email: generateRandomEmail(),
+          password: await hashTestPassword('Password123!'),
+          name: 'Test User',
+          isEmailVerified: true
+        }
+      });
+
+      const { req, res } = createAuthenticatedRequest(user, {
+        method: 'PUT',
+        query: { id: user.id.toString() },
+        body: { email: 'invalid-email' }
+      });
+
+      await userController.updateById(req as any, res as NextApiResponse);
+
+      expectValidationError(res, 'email');
+    });
+  });
+
+  describe('DELETE /api/users/:id', () => {
+    it('should delete user by ID for admin', async () => {
+      // Create a regular user
+      const regularUser = await testPrisma.user.create({
+        data: {
+          email: generateRandomEmail(),
+          password: await hashTestPassword('Password123!'),
+          name: 'Regular User',
+          isEmailVerified: true
+        }
+      });
+
+      // Create admin user
+      const adminUser = await testPrisma.user.create({
+        data: {
+          email: generateRandomEmail(),
+          password: await hashTestPassword('Password123!'),
+          name: 'Admin User',
+          role: 'ADMIN',
+          isEmailVerified: true
+        }
+      });
+
+      const { req, res } = createAuthenticatedRequest(adminUser, {
+        method: 'DELETE',
+        query: { id: regularUser.id.toString() }
+      });
+
+      await userController.deleteById(req as any, res as NextApiResponse);
+
+      expectSuccess(res, 200);
+      expect(res._getJSONData().message).toMatch(/deleted/i);
+
+      // Verify user was deleted
+      const deletedUser = await testPrisma.user.findUnique({
+        where: { id: regularUser.id }
+      });
+      expect(deletedUser).toBeNull();
+    });
+
+    it('should return forbidden for non-admin users', async () => {
+      // Create two regular users
+      const user1 = await testPrisma.user.create({
+        data: {
+          email: generateRandomEmail(),
+          password: await hashTestPassword('Password123!'),
+          name: 'User 1',
+          isEmailVerified: true
+        }
+      });
+
+      const user2 = await testPrisma.user.create({
+        data: {
+          email: generateRandomEmail(),
+          password: await hashTestPassword('Password123!'),
+          name: 'User 2',
+          isEmailVerified: true
+        }
+      });
+
+      const { req, res } = createAuthenticatedRequest(user1, {
+        method: 'DELETE',
+        query: { id: user2.id.toString() }
+      });
+
+      await userController.deleteById(req as any, res as NextApiResponse);
+
+      expectForbidden(res);
+
+      // Verify user was not deleted
+      const notDeletedUser = await testPrisma.user.findUnique({
+        where: { id: user2.id }
+      });
+      expect(notDeletedUser).not.toBeNull();
+    });
+  });
+
+  describe('GET /api/users/profile', () => {
+    it('should return current user profile', async () => {
+      // Create a user
+      const user = await testPrisma.user.create({
+        data: {
+          email: generateRandomEmail(),
+          password: await hashTestPassword('Password123!'),
+          name: 'Test User',
+          isEmailVerified: true
+        }
+      });
+
+      const { req, res } = createAuthenticatedRequest(user);
+
+      await userController.getProfile(req as any, res as NextApiResponse);
+
+      expectSuccess(res, 200);
+      expect(res._getJSONData()).toHaveProperty('id', user.id);
+      expect(res._getJSONData()).toHaveProperty('email', user.email);
+      expect(res._getJSONData()).not.toHaveProperty('password');
+    });
+
+    it('should return unauthorized for unauthenticated requests', async () => {
+      const { req, res } = createMockRequest({
+        method: 'GET'
+      });
+
+      await userController.getProfile(req as any, res as NextApiResponse);
+
+      expectUnauthorized(res);
+    });
+  });
+
+  describe('PUT /api/users/profile', () => {
+    it('should update current user profile', async () => {
+      // Create a user
+      const user = await testPrisma.user.create({
+        data: {
+          email: generateRandomEmail(),
+          password: await hashTestPassword('Password123!'),
+          name: 'Test User',
+          isEmailVerified: true
+        }
+      });
+
+      const newName = 'Updated Profile Name';
+      const { req, res } = createAuthenticatedRequest(user, {
+        method: 'PUT',
+        body: { name: newName }
+      });
+
+      await userController.updateProfile(req as any, res as NextApiResponse);
+
+      expectSuccess(res, 200);
+      expect(res._getJSONData()).toHaveProperty('id', user.id);
+      expect(res._getJSONData()).toHaveProperty('name', newName);
+    });
+
+    it('should return validation error for invalid input', async () => {
+      // Create a user
+      const user = await testPrisma.user.create({
+        data: {
+          email: generateRandomEmail(),
+          password: await hashTestPassword('Password123!'),
+          name: 'Test User',
+          isEmailVerified: true
+        }
+      });
+
+      const { req, res } = createAuthenticatedRequest(user, {
+        method: 'PUT',
+        body: { email: 'invalid-email' }
+      });
+
+      await userController.updateProfile(req as any, res as NextApiResponse);
+
+      expectValidationError(res, 'email');
+    });
+
+    it('should return unauthorized for unauthenticated requests', async () => {
+      const { req, res } = createMockRequest({
+        method: 'PUT',
+        body: { name: 'Unauthorized Update' }
+      });
+
+      await userController.updateProfile(req as any, res as NextApiResponse);
+
+      expectUnauthorized(res);
+    });
+  });
+
+  describe('GET /api/users/stats', () => {
+    it('should return user stats', async () => {
+      // Create a user
+      const user = await testPrisma.user.create({
+        data: {
+          email: generateRandomEmail(),
+          password: await hashTestPassword('Password123!'),
+          name: 'Test User',
+          isEmailVerified: true
+        }
+      });
+
+      const { req, res } = createAuthenticatedRequest(user);
+
+      await userController.getStats(req as any, res as NextApiResponse);
+
+      expectSuccess(res, 200);
+      // The exact structure of stats would depend on the implementation
+      // but we can at least verify it returns a successful response
+    });
+
+    it('should return unauthorized for unauthenticated requests', async () => {
+      const { req, res } = createMockRequest({
+        method: 'GET'
+      });
+
+      await userController.getStats(req as any, res as NextApiResponse);
+
+      expectUnauthorized(res);
+    });
+  });
+});

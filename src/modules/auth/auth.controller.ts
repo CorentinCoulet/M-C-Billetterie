@@ -26,6 +26,12 @@ const resetPasswordSchema = z.object({
   token: z.string().min(10),
   newPassword: z.string().min(6),
 });
+const verifyEmailSchema = z.object({
+  token: z.string().min(10),
+});
+const refreshTokenSchema = z.object({
+  refreshToken: z.string().min(10),
+});
 
 export class AuthController {
    async register(req: NextApiRequest, res: NextApiResponse) {
@@ -185,6 +191,41 @@ export class AuthController {
     } catch (error: unknown) {
       const message = error instanceof Error ? error.message : 'An error occurred';
       return res.status(400).json({ message });
+    }
+  }
+
+  async verifyEmail(req: NextApiRequest, res: NextApiResponse) {
+    try {
+      const parse = verifyEmailSchema.safeParse(req.query);
+      if (!parse.success) {
+        return res.status(400).json({ message: 'Invalid input', errors: parse.error.errors });
+      }
+      await authService.verifyEmail(parse.data.token);
+      return res.status(200).json({ message: 'Email verified successfully' });
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : 'An error occurred';
+      return res.status(400).json({ message });
+    }
+  }
+
+  async refreshToken(req: NextApiRequest, res: NextApiResponse) {
+    try {
+      const parse = refreshTokenSchema.safeParse(req.body);
+      if (!parse.success) {
+        return res.status(400).json({ message: 'Invalid input', errors: parse.error.errors });
+      }
+      const result = await authService.refreshToken(parse.data.refreshToken);
+      res.setHeader('Set-Cookie', serialize('token', result.token, {
+        httpOnly: true,
+        path: '/',
+        maxAge: 60 * 60 * 24 * 7,
+        sameSite: 'strict',
+        secure: isProd,
+      }));
+      return res.status(200).json(result);
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : 'An error occurred';
+      return res.status(401).json({ message });
     }
   }
 }
