@@ -1,19 +1,28 @@
-import { ReactNode } from 'react'
+import { CartSidebar } from '@/components/cart/CartSidebar';
+import { Navigation } from '@/components/layout/Navigation';
+import { CartProvider } from '@/contexts/CartContext';
+import { ReactNode } from 'react';
 
 export default function LocaleLayout({
   children,
   params,
 }: {
-  children: ReactNode
-  params: { locale: string }
+  children: ReactNode;
+  params: { locale: string };
 }) {
   return (
     <html lang={params.locale} suppressHydrationWarning>
       <body suppressHydrationWarning>
-        <div id="root">
-          {children}
-        </div>
+        <CartProvider>
+          <div id="root">
+            <Navigation />
+            <main>
+              {children}
+            </main>
+            <CartSidebar />
+          </div>
+        </CartProvider>
       </body>
     </html>
-  )
+  );
 }

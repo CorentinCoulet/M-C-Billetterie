@@ -1,5 +1,6 @@
 import prisma from '@/lib/prisma';
 import { TicketType } from '@prisma/client';
+import { BaseService } from './baseService';
 
 // Types spécifiques pour les relations
 type EventBasic = {
@@ -85,34 +86,34 @@ type UserTicket = {
   purchaseDate: Date;
 }
 
+// Standard relations to include in ticket queries
+const ticketIncludes = {
+  event: true,
+  orders: true
+};
+
 /**
  * Service for ticket management operations
  */
-export class TicketService {
+export class TicketService extends BaseService<TicketWithRelations> {
+  constructor() {
+    super(prisma.ticket, ticketIncludes);
+  }
+
   /**
    * Get a ticket by ID
    */
   async getTicketById(id: string): Promise<TicketWithRelations | null> {
-    return prisma.ticket.findUnique({
-      where: { id },
-      include: {
-        event: true,
-        orders: true
-      }
-    }) as Promise<TicketWithRelations | null>;
+    return this.getById(id);
   }
 
   /**
    * Get all tickets for an event
    */
   async getTicketsByEvent(eventId: string): Promise<TicketWithRelations[]> {
-    return prisma.ticket.findMany({
-      where: { eventId },
-      include: {
-        event: true,
-        orders: true
-      }
-    }) as Promise<TicketWithRelations[]>;
+    return this.getAll({
+      where: { eventId }
+    });
   }
 
   /**
@@ -124,35 +125,19 @@ export class TicketService {
     where?: TicketWhereInput;
     orderBy?: TicketOrderByInput;
   }): Promise<TicketWithRelations[]> {
-    const { skip, take, where, orderBy } = params;
-    return prisma.ticket.findMany({
-      skip,
-      take,
-      where,
-      orderBy,
-      include: {
-        event: true,
-        orders: true
-      }
-    }) as Promise<TicketWithRelations[]>;
+    return this.getAll(params);
   }
 
   /**
    * Create a new ticket
    */
   async createTicket(data: TicketCreateInput): Promise<TicketWithRelations> {
-    return prisma.ticket.create({
-      data: {
-        ...data,
-        event: {
-          connect: { id: data.eventId }
-        }
-      },
-      include: {
-        event: true,
-        orders: true
+    return this.create({
+      ...data,
+      event: {
+        connect: { id: data.eventId }
       }
-    }) as Promise<TicketWithRelations>;
+    });
   }
 
   /**
@@ -168,18 +153,12 @@ export class TicketService {
     const createdTickets: TicketWithRelations[] = [];
 
     for (const ticket of tickets) {
-      const createdTicket = await prisma.ticket.create({
-        data: {
-          ...ticket,
-          event: {
-            connect: { id: eventId }
-          }
-        },
-        include: {
-          event: true,
-          orders: true
+      const createdTicket = await this.create({
+        ...ticket,
+        event: {
+          connect: { id: eventId }
         }
-      }) as TicketWithRelations;
+      });
       createdTickets.push(createdTicket);
     }
 
@@ -190,39 +169,21 @@ export class TicketService {
    * Update a ticket
    */
   async updateTicket(id: string, data: TicketUpdateInput): Promise<TicketWithRelations> {
-    return prisma.ticket.update({
-      where: { id },
-      data,
-      include: {
-        event: true,
-        orders: true
-      }
-    }) as Promise<TicketWithRelations>;
+    return this.update(id, data);
   }
 
   /**
    * Delete a ticket
    */
   async deleteTicket(id: string): Promise<TicketWithRelations> {
-    return prisma.ticket.delete({
-      where: { id },
-      include: {
-        event: true,
-        orders: true
-      }
-    }) as Promise<TicketWithRelations>;
+    return this.delete(id);
   }
 
   /**
    * Check ticket availability
    */
   async checkAvailability(id: string): Promise<TicketAvailability> {
-    const ticket = await prisma.ticket.findUnique({
-      where: { id },
-      include: {
-        orders: true
-      }
-    });
+    const ticket = await this.getById(id);
 
     if (!ticket) {
       throw new Error('Ticket not found');
@@ -250,27 +211,18 @@ export class TicketService {
 
     // In a real implementation, you might want to use a transaction
     // to ensure atomicity when reserving tickets
-    return prisma.ticket.update({
-      where: { id },
-      data: {
-        reserved: {
-          increment: quantity
-        }
-      },
-      include: {
-        event: true,
-        orders: true
+    return this.update(id, {
+      reserved: {
+        increment: quantity
       }
-    }) as Promise<TicketWithRelations>;
+    });
   }
 
   /**
    * Release reserved tickets
    */
   async releaseReservedTickets(id: string, quantity: number): Promise<TicketWithRelations> {
-    const ticket = await prisma.ticket.findUnique({
-      where: { id }
-    });
+    const ticket = await this.getById(id);
 
     if (!ticket) {
       throw new Error('Ticket not found');
@@ -278,16 +230,9 @@ export class TicketService {
 
     const newReservedValue = Math.max(0, ticket.reserved - quantity);
 
-    return prisma.ticket.update({
-      where: { id },
-      data: {
-        reserved: newReservedValue
-      },
-      include: {
-        event: true,
-        orders: true
-      }
-    }) as Promise<TicketWithRelations>;
+    return this.update(id, {
+      reserved: newReservedValue
+    });
   }
 
   /**

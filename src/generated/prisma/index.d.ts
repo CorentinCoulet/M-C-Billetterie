@@ -64,10 +64,15 @@ export type Review = $Result.DefaultSelection<Prisma.$ReviewPayload>
  */
 export type TeamMember = $Result.DefaultSelection<Prisma.$TeamMemberPayload>
 /**
- * Model EventSetting
+ * Model Theme
  * 
  */
-export type EventSetting = $Result.DefaultSelection<Prisma.$EventSettingPayload>
+export type Theme = $Result.DefaultSelection<Prisma.$ThemePayload>
+/**
+ * Model QRCode
+ * 
+ */
+export type QRCode = $Result.DefaultSelection<Prisma.$QRCodePayload>
 /**
  * Model ActivityLog
  * 
@@ -358,14 +363,24 @@ export class PrismaClient<
   get teamMember(): Prisma.TeamMemberDelegate<ExtArgs, ClientOptions>;
 
   /**
-   * `prisma.eventSetting`: Exposes CRUD operations for the **EventSetting** model.
+   * `prisma.theme`: Exposes CRUD operations for the **Theme** model.
     * Example usage:
     * ```ts
-    * // Fetch zero or more EventSettings
-    * const eventSettings = await prisma.eventSetting.findMany()
+    * // Fetch zero or more Themes
+    * const themes = await prisma.theme.findMany()
     * ```
     */
-  get eventSetting(): Prisma.EventSettingDelegate<ExtArgs, ClientOptions>;
+  get theme(): Prisma.ThemeDelegate<ExtArgs, ClientOptions>;
+
+  /**
+   * `prisma.qRCode`: Exposes CRUD operations for the **QRCode** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more QRCodes
+    * const qRCodes = await prisma.qRCode.findMany()
+    * ```
+    */
+  get qRCode(): Prisma.QRCodeDelegate<ExtArgs, ClientOptions>;
 
   /**
    * `prisma.activityLog`: Exposes CRUD operations for the **ActivityLog** model.
@@ -484,8 +499,8 @@ export namespace Prisma {
   export import Exact = $Public.Exact
 
   /**
-   * Prisma Client JS version: 6.9.0
-   * Query Engine version: 81e4af48011447c3cc503a190e86995b66d2a28e
+   * Prisma Client JS version: 6.10.1
+   * Query Engine version: 9b628578b3b7cae625e8c927178f15a170e74a9c
    */
   export type PrismaVersion = {
     client: string
@@ -876,7 +891,8 @@ export namespace Prisma {
     Venue: 'Venue',
     Review: 'Review',
     TeamMember: 'TeamMember',
-    EventSetting: 'EventSetting',
+    Theme: 'Theme',
+    QRCode: 'QRCode',
     ActivityLog: 'ActivityLog',
     EventLog: 'EventLog',
     Notification: 'Notification',
@@ -901,7 +917,7 @@ export namespace Prisma {
       omit: GlobalOmitOptions
     }
     meta: {
-      modelProps: "user" | "organizer" | "event" | "order" | "ticket" | "payment" | "category" | "venue" | "review" | "teamMember" | "eventSetting" | "activityLog" | "eventLog" | "notification" | "session" | "blockedUser" | "translation"
+      modelProps: "user" | "organizer" | "event" | "order" | "ticket" | "payment" | "category" | "venue" | "review" | "teamMember" | "theme" | "qRCode" | "activityLog" | "eventLog" | "notification" | "session" | "blockedUser" | "translation"
       txIsolationLevel: Prisma.TransactionIsolationLevel
     }
     model: {
@@ -1645,77 +1661,151 @@ export namespace Prisma {
           }
         }
       }
-      EventSetting: {
-        payload: Prisma.$EventSettingPayload<ExtArgs>
-        fields: Prisma.EventSettingFieldRefs
+      Theme: {
+        payload: Prisma.$ThemePayload<ExtArgs>
+        fields: Prisma.ThemeFieldRefs
         operations: {
           findUnique: {
-            args: Prisma.EventSettingFindUniqueArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$EventSettingPayload> | null
+            args: Prisma.ThemeFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ThemePayload> | null
           }
           findUniqueOrThrow: {
-            args: Prisma.EventSettingFindUniqueOrThrowArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$EventSettingPayload>
+            args: Prisma.ThemeFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ThemePayload>
           }
           findFirst: {
-            args: Prisma.EventSettingFindFirstArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$EventSettingPayload> | null
+            args: Prisma.ThemeFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ThemePayload> | null
           }
           findFirstOrThrow: {
-            args: Prisma.EventSettingFindFirstOrThrowArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$EventSettingPayload>
+            args: Prisma.ThemeFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ThemePayload>
           }
           findMany: {
-            args: Prisma.EventSettingFindManyArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$EventSettingPayload>[]
+            args: Prisma.ThemeFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ThemePayload>[]
           }
           create: {
-            args: Prisma.EventSettingCreateArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$EventSettingPayload>
+            args: Prisma.ThemeCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ThemePayload>
           }
           createMany: {
-            args: Prisma.EventSettingCreateManyArgs<ExtArgs>
+            args: Prisma.ThemeCreateManyArgs<ExtArgs>
             result: BatchPayload
           }
           createManyAndReturn: {
-            args: Prisma.EventSettingCreateManyAndReturnArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$EventSettingPayload>[]
+            args: Prisma.ThemeCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ThemePayload>[]
           }
           delete: {
-            args: Prisma.EventSettingDeleteArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$EventSettingPayload>
+            args: Prisma.ThemeDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ThemePayload>
           }
           update: {
-            args: Prisma.EventSettingUpdateArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$EventSettingPayload>
+            args: Prisma.ThemeUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ThemePayload>
           }
           deleteMany: {
-            args: Prisma.EventSettingDeleteManyArgs<ExtArgs>
+            args: Prisma.ThemeDeleteManyArgs<ExtArgs>
             result: BatchPayload
           }
           updateMany: {
-            args: Prisma.EventSettingUpdateManyArgs<ExtArgs>
+            args: Prisma.ThemeUpdateManyArgs<ExtArgs>
             result: BatchPayload
           }
           updateManyAndReturn: {
-            args: Prisma.EventSettingUpdateManyAndReturnArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$EventSettingPayload>[]
+            args: Prisma.ThemeUpdateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ThemePayload>[]
           }
           upsert: {
-            args: Prisma.EventSettingUpsertArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$EventSettingPayload>
+            args: Prisma.ThemeUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ThemePayload>
           }
           aggregate: {
-            args: Prisma.EventSettingAggregateArgs<ExtArgs>
-            result: $Utils.Optional<AggregateEventSetting>
+            args: Prisma.ThemeAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateTheme>
           }
           groupBy: {
-            args: Prisma.EventSettingGroupByArgs<ExtArgs>
-            result: $Utils.Optional<EventSettingGroupByOutputType>[]
+            args: Prisma.ThemeGroupByArgs<ExtArgs>
+            result: $Utils.Optional<ThemeGroupByOutputType>[]
           }
           count: {
-            args: Prisma.EventSettingCountArgs<ExtArgs>
-            result: $Utils.Optional<EventSettingCountAggregateOutputType> | number
+            args: Prisma.ThemeCountArgs<ExtArgs>
+            result: $Utils.Optional<ThemeCountAggregateOutputType> | number
+          }
+        }
+      }
+      QRCode: {
+        payload: Prisma.$QRCodePayload<ExtArgs>
+        fields: Prisma.QRCodeFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.QRCodeFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$QRCodePayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.QRCodeFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$QRCodePayload>
+          }
+          findFirst: {
+            args: Prisma.QRCodeFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$QRCodePayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.QRCodeFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$QRCodePayload>
+          }
+          findMany: {
+            args: Prisma.QRCodeFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$QRCodePayload>[]
+          }
+          create: {
+            args: Prisma.QRCodeCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$QRCodePayload>
+          }
+          createMany: {
+            args: Prisma.QRCodeCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.QRCodeCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$QRCodePayload>[]
+          }
+          delete: {
+            args: Prisma.QRCodeDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$QRCodePayload>
+          }
+          update: {
+            args: Prisma.QRCodeUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$QRCodePayload>
+          }
+          deleteMany: {
+            args: Prisma.QRCodeDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.QRCodeUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateManyAndReturn: {
+            args: Prisma.QRCodeUpdateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$QRCodePayload>[]
+          }
+          upsert: {
+            args: Prisma.QRCodeUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$QRCodePayload>
+          }
+          aggregate: {
+            args: Prisma.QRCodeAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateQRCode>
+          }
+          groupBy: {
+            args: Prisma.QRCodeGroupByArgs<ExtArgs>
+            result: $Utils.Optional<QRCodeGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.QRCodeCountArgs<ExtArgs>
+            result: $Utils.Optional<QRCodeCountAggregateOutputType> | number
           }
         }
       }
@@ -2257,7 +2347,8 @@ export namespace Prisma {
     venue?: VenueOmit
     review?: ReviewOmit
     teamMember?: TeamMemberOmit
-    eventSetting?: EventSettingOmit
+    theme?: ThemeOmit
+    qRCode?: QRCodeOmit
     activityLog?: ActivityLogOmit
     eventLog?: EventLogOmit
     notification?: NotificationOmit
@@ -2621,6 +2712,37 @@ export namespace Prisma {
 
 
   /**
+   * Count Type ThemeCountOutputType
+   */
+
+  export type ThemeCountOutputType = {
+    events: number
+  }
+
+  export type ThemeCountOutputTypeSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    events?: boolean | ThemeCountOutputTypeCountEventsArgs
+  }
+
+  // Custom InputTypes
+  /**
+   * ThemeCountOutputType without action
+   */
+  export type ThemeCountOutputTypeDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ThemeCountOutputType
+     */
+    select?: ThemeCountOutputTypeSelect<ExtArgs> | null
+  }
+
+  /**
+   * ThemeCountOutputType without action
+   */
+  export type ThemeCountOutputTypeCountEventsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: EventWhereInput
+  }
+
+
+  /**
    * Models
    */
 
@@ -2639,6 +2761,9 @@ export namespace Prisma {
     email: string | null
     name: string | null
     password: string | null
+    isVerified: boolean | null
+    lastLogin: Date | null
+    role: string | null
     createdAt: Date | null
     updatedAt: Date | null
   }
@@ -2648,6 +2773,9 @@ export namespace Prisma {
     email: string | null
     name: string | null
     password: string | null
+    isVerified: boolean | null
+    lastLogin: Date | null
+    role: string | null
     createdAt: Date | null
     updatedAt: Date | null
   }
@@ -2657,6 +2785,9 @@ export namespace Prisma {
     email: number
     name: number
     password: number
+    isVerified: number
+    lastLogin: number
+    role: number
     metadata: number
     createdAt: number
     updatedAt: number
@@ -2669,6 +2800,9 @@ export namespace Prisma {
     email?: true
     name?: true
     password?: true
+    isVerified?: true
+    lastLogin?: true
+    role?: true
     createdAt?: true
     updatedAt?: true
   }
@@ -2678,6 +2812,9 @@ export namespace Prisma {
     email?: true
     name?: true
     password?: true
+    isVerified?: true
+    lastLogin?: true
+    role?: true
     createdAt?: true
     updatedAt?: true
   }
@@ -2687,6 +2824,9 @@ export namespace Prisma {
     email?: true
     name?: true
     password?: true
+    isVerified?: true
+    lastLogin?: true
+    role?: true
     metadata?: true
     createdAt?: true
     updatedAt?: true
@@ -2770,6 +2910,9 @@ export namespace Prisma {
     email: string
     name: string | null
     password: string
+    isVerified: boolean
+    lastLogin: Date | null
+    role: string
     metadata: JsonValue | null
     createdAt: Date
     updatedAt: Date
@@ -2797,6 +2940,9 @@ export namespace Prisma {
     email?: boolean
     name?: boolean
     password?: boolean
+    isVerified?: boolean
+    lastLogin?: boolean
+    role?: boolean
     metadata?: boolean
     createdAt?: boolean
     updatedAt?: boolean
@@ -2817,6 +2963,9 @@ export namespace Prisma {
     email?: boolean
     name?: boolean
     password?: boolean
+    isVerified?: boolean
+    lastLogin?: boolean
+    role?: boolean
     metadata?: boolean
     createdAt?: boolean
     updatedAt?: boolean
@@ -2827,6 +2976,9 @@ export namespace Prisma {
     email?: boolean
     name?: boolean
     password?: boolean
+    isVerified?: boolean
+    lastLogin?: boolean
+    role?: boolean
     metadata?: boolean
     createdAt?: boolean
     updatedAt?: boolean
@@ -2837,12 +2989,15 @@ export namespace Prisma {
     email?: boolean
     name?: boolean
     password?: boolean
+    isVerified?: boolean
+    lastLogin?: boolean
+    role?: boolean
     metadata?: boolean
     createdAt?: boolean
     updatedAt?: boolean
   }
 
-  export type UserOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "email" | "name" | "password" | "metadata" | "createdAt" | "updatedAt", ExtArgs["result"]["user"]>
+  export type UserOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "email" | "name" | "password" | "isVerified" | "lastLogin" | "role" | "metadata" | "createdAt" | "updatedAt", ExtArgs["result"]["user"]>
   export type UserInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     tickets?: boolean | User$ticketsArgs<ExtArgs>
     orders?: boolean | User$ordersArgs<ExtArgs>
@@ -2876,6 +3031,9 @@ export namespace Prisma {
       email: string
       name: string | null
       password: string
+      isVerified: boolean
+      lastLogin: Date | null
+      role: string
       metadata: Prisma.JsonValue | null
       createdAt: Date
       updatedAt: Date
@@ -3315,6 +3473,9 @@ export namespace Prisma {
     readonly email: FieldRef<"User", 'String'>
     readonly name: FieldRef<"User", 'String'>
     readonly password: FieldRef<"User", 'String'>
+    readonly isVerified: FieldRef<"User", 'Boolean'>
+    readonly lastLogin: FieldRef<"User", 'DateTime'>
+    readonly role: FieldRef<"User", 'String'>
     readonly metadata: FieldRef<"User", 'Json'>
     readonly createdAt: FieldRef<"User", 'DateTime'>
     readonly updatedAt: FieldRef<"User", 'DateTime'>
@@ -3547,7 +3708,6 @@ export namespace Prisma {
      * The data used to create many Users.
      */
     data: UserCreateManyInput | UserCreateManyInput[]
-    skipDuplicates?: boolean
   }
 
   /**
@@ -3566,7 +3726,6 @@ export namespace Prisma {
      * The data used to create many Users.
      */
     data: UserCreateManyInput | UserCreateManyInput[]
-    skipDuplicates?: boolean
   }
 
   /**
@@ -4795,7 +4954,6 @@ export namespace Prisma {
      * The data used to create many Organizers.
      */
     data: OrganizerCreateManyInput | OrganizerCreateManyInput[]
-    skipDuplicates?: boolean
   }
 
   /**
@@ -4814,7 +4972,6 @@ export namespace Prisma {
      * The data used to create many Organizers.
      */
     data: OrganizerCreateManyInput | OrganizerCreateManyInput[]
-    skipDuplicates?: boolean
   }
 
   /**
@@ -5049,9 +5206,12 @@ export namespace Prisma {
     maxCapacity: number | null
     isPublished: boolean | null
     isCancelled: boolean | null
+    allowAnonymousPurchase: boolean | null
+    allowTransfer: boolean | null
     categoryId: string | null
     venueId: string | null
     organizerId: string | null
+    themeId: string | null
     createdAt: Date | null
     updatedAt: Date | null
   }
@@ -5065,9 +5225,12 @@ export namespace Prisma {
     maxCapacity: number | null
     isPublished: boolean | null
     isCancelled: boolean | null
+    allowAnonymousPurchase: boolean | null
+    allowTransfer: boolean | null
     categoryId: string | null
     venueId: string | null
     organizerId: string | null
+    themeId: string | null
     createdAt: Date | null
     updatedAt: Date | null
   }
@@ -5081,9 +5244,12 @@ export namespace Prisma {
     maxCapacity: number
     isPublished: number
     isCancelled: number
+    allowAnonymousPurchase: number
+    allowTransfer: number
     categoryId: number
     venueId: number
     organizerId: number
+    themeId: number
     metadata: number
     createdAt: number
     updatedAt: number
@@ -5108,9 +5274,12 @@ export namespace Prisma {
     maxCapacity?: true
     isPublished?: true
     isCancelled?: true
+    allowAnonymousPurchase?: true
+    allowTransfer?: true
     categoryId?: true
     venueId?: true
     organizerId?: true
+    themeId?: true
     createdAt?: true
     updatedAt?: true
   }
@@ -5124,9 +5293,12 @@ export namespace Prisma {
     maxCapacity?: true
     isPublished?: true
     isCancelled?: true
+    allowAnonymousPurchase?: true
+    allowTransfer?: true
     categoryId?: true
     venueId?: true
     organizerId?: true
+    themeId?: true
     createdAt?: true
     updatedAt?: true
   }
@@ -5140,9 +5312,12 @@ export namespace Prisma {
     maxCapacity?: true
     isPublished?: true
     isCancelled?: true
+    allowAnonymousPurchase?: true
+    allowTransfer?: true
     categoryId?: true
     venueId?: true
     organizerId?: true
+    themeId?: true
     metadata?: true
     createdAt?: true
     updatedAt?: true
@@ -5244,9 +5419,12 @@ export namespace Prisma {
     maxCapacity: number | null
     isPublished: boolean
     isCancelled: boolean
+    allowAnonymousPurchase: boolean
+    allowTransfer: boolean
     categoryId: string | null
     venueId: string | null
     organizerId: string
+    themeId: string | null
     metadata: JsonValue | null
     createdAt: Date
     updatedAt: Date
@@ -5280,18 +5458,21 @@ export namespace Prisma {
     maxCapacity?: boolean
     isPublished?: boolean
     isCancelled?: boolean
+    allowAnonymousPurchase?: boolean
+    allowTransfer?: boolean
     categoryId?: boolean
     venueId?: boolean
     organizerId?: boolean
+    themeId?: boolean
     metadata?: boolean
     createdAt?: boolean
     updatedAt?: boolean
     tickets?: boolean | Event$ticketsArgs<ExtArgs>
     reviews?: boolean | Event$reviewsArgs<ExtArgs>
-    eventSetting?: boolean | Event$eventSettingArgs<ExtArgs>
     category?: boolean | Event$categoryArgs<ExtArgs>
     venue?: boolean | Event$venueArgs<ExtArgs>
     organizer?: boolean | OrganizerDefaultArgs<ExtArgs>
+    theme?: boolean | Event$themeArgs<ExtArgs>
     _count?: boolean | EventCountOutputTypeDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["event"]>
 
@@ -5304,15 +5485,19 @@ export namespace Prisma {
     maxCapacity?: boolean
     isPublished?: boolean
     isCancelled?: boolean
+    allowAnonymousPurchase?: boolean
+    allowTransfer?: boolean
     categoryId?: boolean
     venueId?: boolean
     organizerId?: boolean
+    themeId?: boolean
     metadata?: boolean
     createdAt?: boolean
     updatedAt?: boolean
     category?: boolean | Event$categoryArgs<ExtArgs>
     venue?: boolean | Event$venueArgs<ExtArgs>
     organizer?: boolean | OrganizerDefaultArgs<ExtArgs>
+    theme?: boolean | Event$themeArgs<ExtArgs>
   }, ExtArgs["result"]["event"]>
 
   export type EventSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
@@ -5324,15 +5509,19 @@ export namespace Prisma {
     maxCapacity?: boolean
     isPublished?: boolean
     isCancelled?: boolean
+    allowAnonymousPurchase?: boolean
+    allowTransfer?: boolean
     categoryId?: boolean
     venueId?: boolean
     organizerId?: boolean
+    themeId?: boolean
     metadata?: boolean
     createdAt?: boolean
     updatedAt?: boolean
     category?: boolean | Event$categoryArgs<ExtArgs>
     venue?: boolean | Event$venueArgs<ExtArgs>
     organizer?: boolean | OrganizerDefaultArgs<ExtArgs>
+    theme?: boolean | Event$themeArgs<ExtArgs>
   }, ExtArgs["result"]["event"]>
 
   export type EventSelectScalar = {
@@ -5344,33 +5533,38 @@ export namespace Prisma {
     maxCapacity?: boolean
     isPublished?: boolean
     isCancelled?: boolean
+    allowAnonymousPurchase?: boolean
+    allowTransfer?: boolean
     categoryId?: boolean
     venueId?: boolean
     organizerId?: boolean
+    themeId?: boolean
     metadata?: boolean
     createdAt?: boolean
     updatedAt?: boolean
   }
 
-  export type EventOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "title" | "description" | "date" | "location" | "maxCapacity" | "isPublished" | "isCancelled" | "categoryId" | "venueId" | "organizerId" | "metadata" | "createdAt" | "updatedAt", ExtArgs["result"]["event"]>
+  export type EventOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "title" | "description" | "date" | "location" | "maxCapacity" | "isPublished" | "isCancelled" | "allowAnonymousPurchase" | "allowTransfer" | "categoryId" | "venueId" | "organizerId" | "themeId" | "metadata" | "createdAt" | "updatedAt", ExtArgs["result"]["event"]>
   export type EventInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     tickets?: boolean | Event$ticketsArgs<ExtArgs>
     reviews?: boolean | Event$reviewsArgs<ExtArgs>
-    eventSetting?: boolean | Event$eventSettingArgs<ExtArgs>
     category?: boolean | Event$categoryArgs<ExtArgs>
     venue?: boolean | Event$venueArgs<ExtArgs>
     organizer?: boolean | OrganizerDefaultArgs<ExtArgs>
+    theme?: boolean | Event$themeArgs<ExtArgs>
     _count?: boolean | EventCountOutputTypeDefaultArgs<ExtArgs>
   }
   export type EventIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     category?: boolean | Event$categoryArgs<ExtArgs>
     venue?: boolean | Event$venueArgs<ExtArgs>
     organizer?: boolean | OrganizerDefaultArgs<ExtArgs>
+    theme?: boolean | Event$themeArgs<ExtArgs>
   }
   export type EventIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     category?: boolean | Event$categoryArgs<ExtArgs>
     venue?: boolean | Event$venueArgs<ExtArgs>
     organizer?: boolean | OrganizerDefaultArgs<ExtArgs>
+    theme?: boolean | Event$themeArgs<ExtArgs>
   }
 
   export type $EventPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
@@ -5378,10 +5572,10 @@ export namespace Prisma {
     objects: {
       tickets: Prisma.$TicketPayload<ExtArgs>[]
       reviews: Prisma.$ReviewPayload<ExtArgs>[]
-      eventSetting: Prisma.$EventSettingPayload<ExtArgs> | null
       category: Prisma.$CategoryPayload<ExtArgs> | null
       venue: Prisma.$VenuePayload<ExtArgs> | null
       organizer: Prisma.$OrganizerPayload<ExtArgs>
+      theme: Prisma.$ThemePayload<ExtArgs> | null
     }
     scalars: $Extensions.GetPayloadResult<{
       id: string
@@ -5392,9 +5586,12 @@ export namespace Prisma {
       maxCapacity: number | null
       isPublished: boolean
       isCancelled: boolean
+      allowAnonymousPurchase: boolean
+      allowTransfer: boolean
       categoryId: string | null
       venueId: string | null
       organizerId: string
+      themeId: string | null
       metadata: Prisma.JsonValue | null
       createdAt: Date
       updatedAt: Date
@@ -5794,10 +5991,10 @@ export namespace Prisma {
     readonly [Symbol.toStringTag]: "PrismaPromise"
     tickets<T extends Event$ticketsArgs<ExtArgs> = {}>(args?: Subset<T, Event$ticketsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$TicketPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     reviews<T extends Event$reviewsArgs<ExtArgs> = {}>(args?: Subset<T, Event$reviewsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ReviewPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
-    eventSetting<T extends Event$eventSettingArgs<ExtArgs> = {}>(args?: Subset<T, Event$eventSettingArgs<ExtArgs>>): Prisma__EventSettingClient<$Result.GetResult<Prisma.$EventSettingPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
     category<T extends Event$categoryArgs<ExtArgs> = {}>(args?: Subset<T, Event$categoryArgs<ExtArgs>>): Prisma__CategoryClient<$Result.GetResult<Prisma.$CategoryPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
     venue<T extends Event$venueArgs<ExtArgs> = {}>(args?: Subset<T, Event$venueArgs<ExtArgs>>): Prisma__VenueClient<$Result.GetResult<Prisma.$VenuePayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
     organizer<T extends OrganizerDefaultArgs<ExtArgs> = {}>(args?: Subset<T, OrganizerDefaultArgs<ExtArgs>>): Prisma__OrganizerClient<$Result.GetResult<Prisma.$OrganizerPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+    theme<T extends Event$themeArgs<ExtArgs> = {}>(args?: Subset<T, Event$themeArgs<ExtArgs>>): Prisma__ThemeClient<$Result.GetResult<Prisma.$ThemePayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
      * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -5835,9 +6032,12 @@ export namespace Prisma {
     readonly maxCapacity: FieldRef<"Event", 'Int'>
     readonly isPublished: FieldRef<"Event", 'Boolean'>
     readonly isCancelled: FieldRef<"Event", 'Boolean'>
+    readonly allowAnonymousPurchase: FieldRef<"Event", 'Boolean'>
+    readonly allowTransfer: FieldRef<"Event", 'Boolean'>
     readonly categoryId: FieldRef<"Event", 'String'>
     readonly venueId: FieldRef<"Event", 'String'>
     readonly organizerId: FieldRef<"Event", 'String'>
+    readonly themeId: FieldRef<"Event", 'String'>
     readonly metadata: FieldRef<"Event", 'Json'>
     readonly createdAt: FieldRef<"Event", 'DateTime'>
     readonly updatedAt: FieldRef<"Event", 'DateTime'>
@@ -6070,7 +6270,6 @@ export namespace Prisma {
      * The data used to create many Events.
      */
     data: EventCreateManyInput | EventCreateManyInput[]
-    skipDuplicates?: boolean
   }
 
   /**
@@ -6089,7 +6288,6 @@ export namespace Prisma {
      * The data used to create many Events.
      */
     data: EventCreateManyInput | EventCreateManyInput[]
-    skipDuplicates?: boolean
     /**
      * Choose, which related nodes to fetch as well
      */
@@ -6285,25 +6483,6 @@ export namespace Prisma {
   }
 
   /**
-   * Event.eventSetting
-   */
-  export type Event$eventSettingArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * Select specific fields to fetch from the EventSetting
-     */
-    select?: EventSettingSelect<ExtArgs> | null
-    /**
-     * Omit specific fields from the EventSetting
-     */
-    omit?: EventSettingOmit<ExtArgs> | null
-    /**
-     * Choose, which related nodes to fetch as well
-     */
-    include?: EventSettingInclude<ExtArgs> | null
-    where?: EventSettingWhereInput
-  }
-
-  /**
    * Event.category
    */
   export type Event$categoryArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
@@ -6339,6 +6518,25 @@ export namespace Prisma {
      */
     include?: VenueInclude<ExtArgs> | null
     where?: VenueWhereInput
+  }
+
+  /**
+   * Event.theme
+   */
+  export type Event$themeArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Theme
+     */
+    select?: ThemeSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Theme
+     */
+    omit?: ThemeOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ThemeInclude<ExtArgs> | null
+    where?: ThemeWhereInput
   }
 
   /**
@@ -7342,7 +7540,6 @@ export namespace Prisma {
      * The data used to create many Orders.
      */
     data: OrderCreateManyInput | OrderCreateManyInput[]
-    skipDuplicates?: boolean
   }
 
   /**
@@ -7361,7 +7558,6 @@ export namespace Prisma {
      * The data used to create many Orders.
      */
     data: OrderCreateManyInput | OrderCreateManyInput[]
-    skipDuplicates?: boolean
     /**
      * Choose, which related nodes to fetch as well
      */
@@ -7588,7 +7784,6 @@ export namespace Prisma {
     code: string | null
     status: $Enums.TicketStatus | null
     seatNumber: string | null
-    qrCode: string | null
     usedAt: Date | null
     purchasedAt: Date | null
   }
@@ -7601,7 +7796,6 @@ export namespace Prisma {
     code: string | null
     status: $Enums.TicketStatus | null
     seatNumber: string | null
-    qrCode: string | null
     usedAt: Date | null
     purchasedAt: Date | null
   }
@@ -7614,7 +7808,6 @@ export namespace Prisma {
     code: number
     status: number
     seatNumber: number
-    qrCode: number
     usedAt: number
     purchasedAt: number
     metadata: number
@@ -7630,7 +7823,6 @@ export namespace Prisma {
     code?: true
     status?: true
     seatNumber?: true
-    qrCode?: true
     usedAt?: true
     purchasedAt?: true
   }
@@ -7643,7 +7835,6 @@ export namespace Prisma {
     code?: true
     status?: true
     seatNumber?: true
-    qrCode?: true
     usedAt?: true
     purchasedAt?: true
   }
@@ -7656,7 +7847,6 @@ export namespace Prisma {
     code?: true
     status?: true
     seatNumber?: true
-    qrCode?: true
     usedAt?: true
     purchasedAt?: true
     metadata?: true
@@ -7743,7 +7933,6 @@ export namespace Prisma {
     code: string
     status: $Enums.TicketStatus
     seatNumber: string | null
-    qrCode: string | null
     usedAt: Date | null
     purchasedAt: Date
     metadata: JsonValue | null
@@ -7774,13 +7963,13 @@ export namespace Prisma {
     code?: boolean
     status?: boolean
     seatNumber?: boolean
-    qrCode?: boolean
     usedAt?: boolean
     purchasedAt?: boolean
     metadata?: boolean
     user?: boolean | Ticket$userArgs<ExtArgs>
     event?: boolean | EventDefaultArgs<ExtArgs>
     order?: boolean | Ticket$orderArgs<ExtArgs>
+    qrCode?: boolean | Ticket$qrCodeArgs<ExtArgs>
   }, ExtArgs["result"]["ticket"]>
 
   export type TicketSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
@@ -7791,7 +7980,6 @@ export namespace Prisma {
     code?: boolean
     status?: boolean
     seatNumber?: boolean
-    qrCode?: boolean
     usedAt?: boolean
     purchasedAt?: boolean
     metadata?: boolean
@@ -7808,7 +7996,6 @@ export namespace Prisma {
     code?: boolean
     status?: boolean
     seatNumber?: boolean
-    qrCode?: boolean
     usedAt?: boolean
     purchasedAt?: boolean
     metadata?: boolean
@@ -7825,17 +8012,17 @@ export namespace Prisma {
     code?: boolean
     status?: boolean
     seatNumber?: boolean
-    qrCode?: boolean
     usedAt?: boolean
     purchasedAt?: boolean
     metadata?: boolean
   }
 
-  export type TicketOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "userId" | "eventId" | "orderId" | "code" | "status" | "seatNumber" | "qrCode" | "usedAt" | "purchasedAt" | "metadata", ExtArgs["result"]["ticket"]>
+  export type TicketOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "userId" | "eventId" | "orderId" | "code" | "status" | "seatNumber" | "usedAt" | "purchasedAt" | "metadata", ExtArgs["result"]["ticket"]>
   export type TicketInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     user?: boolean | Ticket$userArgs<ExtArgs>
     event?: boolean | EventDefaultArgs<ExtArgs>
     order?: boolean | Ticket$orderArgs<ExtArgs>
+    qrCode?: boolean | Ticket$qrCodeArgs<ExtArgs>
   }
   export type TicketIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     user?: boolean | Ticket$userArgs<ExtArgs>
@@ -7854,6 +8041,7 @@ export namespace Prisma {
       user: Prisma.$UserPayload<ExtArgs> | null
       event: Prisma.$EventPayload<ExtArgs>
       order: Prisma.$OrderPayload<ExtArgs> | null
+      qrCode: Prisma.$QRCodePayload<ExtArgs> | null
     }
     scalars: $Extensions.GetPayloadResult<{
       id: string
@@ -7863,7 +8051,6 @@ export namespace Prisma {
       code: string
       status: $Enums.TicketStatus
       seatNumber: string | null
-      qrCode: string | null
       usedAt: Date | null
       purchasedAt: Date
       metadata: Prisma.JsonValue | null
@@ -8264,6 +8451,7 @@ export namespace Prisma {
     user<T extends Ticket$userArgs<ExtArgs> = {}>(args?: Subset<T, Ticket$userArgs<ExtArgs>>): Prisma__UserClient<$Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
     event<T extends EventDefaultArgs<ExtArgs> = {}>(args?: Subset<T, EventDefaultArgs<ExtArgs>>): Prisma__EventClient<$Result.GetResult<Prisma.$EventPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
     order<T extends Ticket$orderArgs<ExtArgs> = {}>(args?: Subset<T, Ticket$orderArgs<ExtArgs>>): Prisma__OrderClient<$Result.GetResult<Prisma.$OrderPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+    qrCode<T extends Ticket$qrCodeArgs<ExtArgs> = {}>(args?: Subset<T, Ticket$qrCodeArgs<ExtArgs>>): Prisma__QRCodeClient<$Result.GetResult<Prisma.$QRCodePayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
      * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -8300,7 +8488,6 @@ export namespace Prisma {
     readonly code: FieldRef<"Ticket", 'String'>
     readonly status: FieldRef<"Ticket", 'TicketStatus'>
     readonly seatNumber: FieldRef<"Ticket", 'String'>
-    readonly qrCode: FieldRef<"Ticket", 'String'>
     readonly usedAt: FieldRef<"Ticket", 'DateTime'>
     readonly purchasedAt: FieldRef<"Ticket", 'DateTime'>
     readonly metadata: FieldRef<"Ticket", 'Json'>
@@ -8533,7 +8720,6 @@ export namespace Prisma {
      * The data used to create many Tickets.
      */
     data: TicketCreateManyInput | TicketCreateManyInput[]
-    skipDuplicates?: boolean
   }
 
   /**
@@ -8552,7 +8738,6 @@ export namespace Prisma {
      * The data used to create many Tickets.
      */
     data: TicketCreateManyInput | TicketCreateManyInput[]
-    skipDuplicates?: boolean
     /**
      * Choose, which related nodes to fetch as well
      */
@@ -8735,6 +8920,25 @@ export namespace Prisma {
      */
     include?: OrderInclude<ExtArgs> | null
     where?: OrderWhereInput
+  }
+
+  /**
+   * Ticket.qrCode
+   */
+  export type Ticket$qrCodeArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the QRCode
+     */
+    select?: QRCodeSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the QRCode
+     */
+    omit?: QRCodeOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: QRCodeInclude<ExtArgs> | null
+    where?: QRCodeWhereInput
   }
 
   /**
@@ -9655,7 +9859,6 @@ export namespace Prisma {
      * The data used to create many Payments.
      */
     data: PaymentCreateManyInput | PaymentCreateManyInput[]
-    skipDuplicates?: boolean
   }
 
   /**
@@ -9674,7 +9877,6 @@ export namespace Prisma {
      * The data used to create many Payments.
      */
     data: PaymentCreateManyInput | PaymentCreateManyInput[]
-    skipDuplicates?: boolean
     /**
      * Choose, which related nodes to fetch as well
      */
@@ -10670,7 +10872,6 @@ export namespace Prisma {
      * The data used to create many Categories.
      */
     data: CategoryCreateManyInput | CategoryCreateManyInput[]
-    skipDuplicates?: boolean
   }
 
   /**
@@ -10689,7 +10890,6 @@ export namespace Prisma {
      * The data used to create many Categories.
      */
     data: CategoryCreateManyInput | CategoryCreateManyInput[]
-    skipDuplicates?: boolean
   }
 
   /**
@@ -11761,7 +11961,6 @@ export namespace Prisma {
      * The data used to create many Venues.
      */
     data: VenueCreateManyInput | VenueCreateManyInput[]
-    skipDuplicates?: boolean
   }
 
   /**
@@ -11780,7 +11979,6 @@ export namespace Prisma {
      * The data used to create many Venues.
      */
     data: VenueCreateManyInput | VenueCreateManyInput[]
-    skipDuplicates?: boolean
   }
 
   /**
@@ -12890,7 +13088,6 @@ export namespace Prisma {
      * The data used to create many Reviews.
      */
     data: ReviewCreateManyInput | ReviewCreateManyInput[]
-    skipDuplicates?: boolean
   }
 
   /**
@@ -12909,7 +13106,6 @@ export namespace Prisma {
      * The data used to create many Reviews.
      */
     data: ReviewCreateManyInput | ReviewCreateManyInput[]
-    skipDuplicates?: boolean
     /**
      * Choose, which related nodes to fetch as well
      */
@@ -13956,7 +14152,6 @@ export namespace Prisma {
      * The data used to create many TeamMembers.
      */
     data: TeamMemberCreateManyInput | TeamMemberCreateManyInput[]
-    skipDuplicates?: boolean
   }
 
   /**
@@ -13975,7 +14170,6 @@ export namespace Prisma {
      * The data used to create many TeamMembers.
      */
     data: TeamMemberCreateManyInput | TeamMemberCreateManyInput[]
-    skipDuplicates?: boolean
     /**
      * Choose, which related nodes to fetch as well
      */
@@ -14142,374 +14336,378 @@ export namespace Prisma {
 
 
   /**
-   * Model EventSetting
+   * Model Theme
    */
 
-  export type AggregateEventSetting = {
-    _count: EventSettingCountAggregateOutputType | null
-    _min: EventSettingMinAggregateOutputType | null
-    _max: EventSettingMaxAggregateOutputType | null
+  export type AggregateTheme = {
+    _count: ThemeCountAggregateOutputType | null
+    _min: ThemeMinAggregateOutputType | null
+    _max: ThemeMaxAggregateOutputType | null
   }
 
-  export type EventSettingMinAggregateOutputType = {
+  export type ThemeMinAggregateOutputType = {
     id: string | null
-    eventId: string | null
-    theme: string | null
-    allowAnonymousPurchase: boolean | null
-    allowTransfer: boolean | null
+    name: string | null
+    description: string | null
+    imagePath: string | null
+    color: string | null
     createdAt: Date | null
     updatedAt: Date | null
   }
 
-  export type EventSettingMaxAggregateOutputType = {
+  export type ThemeMaxAggregateOutputType = {
     id: string | null
-    eventId: string | null
-    theme: string | null
-    allowAnonymousPurchase: boolean | null
-    allowTransfer: boolean | null
+    name: string | null
+    description: string | null
+    imagePath: string | null
+    color: string | null
     createdAt: Date | null
     updatedAt: Date | null
   }
 
-  export type EventSettingCountAggregateOutputType = {
+  export type ThemeCountAggregateOutputType = {
     id: number
-    eventId: number
-    theme: number
-    allowAnonymousPurchase: number
-    allowTransfer: number
+    name: number
+    description: number
+    imagePath: number
+    color: number
+    metadata: number
     createdAt: number
     updatedAt: number
     _all: number
   }
 
 
-  export type EventSettingMinAggregateInputType = {
+  export type ThemeMinAggregateInputType = {
     id?: true
-    eventId?: true
-    theme?: true
-    allowAnonymousPurchase?: true
-    allowTransfer?: true
+    name?: true
+    description?: true
+    imagePath?: true
+    color?: true
     createdAt?: true
     updatedAt?: true
   }
 
-  export type EventSettingMaxAggregateInputType = {
+  export type ThemeMaxAggregateInputType = {
     id?: true
-    eventId?: true
-    theme?: true
-    allowAnonymousPurchase?: true
-    allowTransfer?: true
+    name?: true
+    description?: true
+    imagePath?: true
+    color?: true
     createdAt?: true
     updatedAt?: true
   }
 
-  export type EventSettingCountAggregateInputType = {
+  export type ThemeCountAggregateInputType = {
     id?: true
-    eventId?: true
-    theme?: true
-    allowAnonymousPurchase?: true
-    allowTransfer?: true
+    name?: true
+    description?: true
+    imagePath?: true
+    color?: true
+    metadata?: true
     createdAt?: true
     updatedAt?: true
     _all?: true
   }
 
-  export type EventSettingAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type ThemeAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
-     * Filter which EventSetting to aggregate.
+     * Filter which Theme to aggregate.
      */
-    where?: EventSettingWhereInput
+    where?: ThemeWhereInput
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
      * 
-     * Determine the order of EventSettings to fetch.
+     * Determine the order of Themes to fetch.
      */
-    orderBy?: EventSettingOrderByWithRelationInput | EventSettingOrderByWithRelationInput[]
+    orderBy?: ThemeOrderByWithRelationInput | ThemeOrderByWithRelationInput[]
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
      * 
      * Sets the start position
      */
-    cursor?: EventSettingWhereUniqueInput
+    cursor?: ThemeWhereUniqueInput
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
      * 
-     * Take `±n` EventSettings from the position of the cursor.
+     * Take `±n` Themes from the position of the cursor.
      */
     take?: number
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
      * 
-     * Skip the first `n` EventSettings.
+     * Skip the first `n` Themes.
      */
     skip?: number
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
      * 
-     * Count returned EventSettings
+     * Count returned Themes
     **/
-    _count?: true | EventSettingCountAggregateInputType
+    _count?: true | ThemeCountAggregateInputType
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
      * 
      * Select which fields to find the minimum value
     **/
-    _min?: EventSettingMinAggregateInputType
+    _min?: ThemeMinAggregateInputType
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
      * 
      * Select which fields to find the maximum value
     **/
-    _max?: EventSettingMaxAggregateInputType
+    _max?: ThemeMaxAggregateInputType
   }
 
-  export type GetEventSettingAggregateType<T extends EventSettingAggregateArgs> = {
-        [P in keyof T & keyof AggregateEventSetting]: P extends '_count' | 'count'
+  export type GetThemeAggregateType<T extends ThemeAggregateArgs> = {
+        [P in keyof T & keyof AggregateTheme]: P extends '_count' | 'count'
       ? T[P] extends true
         ? number
-        : GetScalarType<T[P], AggregateEventSetting[P]>
-      : GetScalarType<T[P], AggregateEventSetting[P]>
+        : GetScalarType<T[P], AggregateTheme[P]>
+      : GetScalarType<T[P], AggregateTheme[P]>
   }
 
 
 
 
-  export type EventSettingGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    where?: EventSettingWhereInput
-    orderBy?: EventSettingOrderByWithAggregationInput | EventSettingOrderByWithAggregationInput[]
-    by: EventSettingScalarFieldEnum[] | EventSettingScalarFieldEnum
-    having?: EventSettingScalarWhereWithAggregatesInput
+  export type ThemeGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: ThemeWhereInput
+    orderBy?: ThemeOrderByWithAggregationInput | ThemeOrderByWithAggregationInput[]
+    by: ThemeScalarFieldEnum[] | ThemeScalarFieldEnum
+    having?: ThemeScalarWhereWithAggregatesInput
     take?: number
     skip?: number
-    _count?: EventSettingCountAggregateInputType | true
-    _min?: EventSettingMinAggregateInputType
-    _max?: EventSettingMaxAggregateInputType
+    _count?: ThemeCountAggregateInputType | true
+    _min?: ThemeMinAggregateInputType
+    _max?: ThemeMaxAggregateInputType
   }
 
-  export type EventSettingGroupByOutputType = {
+  export type ThemeGroupByOutputType = {
     id: string
-    eventId: string
-    theme: string | null
-    allowAnonymousPurchase: boolean
-    allowTransfer: boolean
+    name: string
+    description: string | null
+    imagePath: string
+    color: string | null
+    metadata: JsonValue | null
     createdAt: Date
     updatedAt: Date
-    _count: EventSettingCountAggregateOutputType | null
-    _min: EventSettingMinAggregateOutputType | null
-    _max: EventSettingMaxAggregateOutputType | null
+    _count: ThemeCountAggregateOutputType | null
+    _min: ThemeMinAggregateOutputType | null
+    _max: ThemeMaxAggregateOutputType | null
   }
 
-  type GetEventSettingGroupByPayload<T extends EventSettingGroupByArgs> = Prisma.PrismaPromise<
+  type GetThemeGroupByPayload<T extends ThemeGroupByArgs> = Prisma.PrismaPromise<
     Array<
-      PickEnumerable<EventSettingGroupByOutputType, T['by']> &
+      PickEnumerable<ThemeGroupByOutputType, T['by']> &
         {
-          [P in ((keyof T) & (keyof EventSettingGroupByOutputType))]: P extends '_count'
+          [P in ((keyof T) & (keyof ThemeGroupByOutputType))]: P extends '_count'
             ? T[P] extends boolean
               ? number
-              : GetScalarType<T[P], EventSettingGroupByOutputType[P]>
-            : GetScalarType<T[P], EventSettingGroupByOutputType[P]>
+              : GetScalarType<T[P], ThemeGroupByOutputType[P]>
+            : GetScalarType<T[P], ThemeGroupByOutputType[P]>
         }
       >
     >
 
 
-  export type EventSettingSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+  export type ThemeSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     id?: boolean
-    eventId?: boolean
-    theme?: boolean
-    allowAnonymousPurchase?: boolean
-    allowTransfer?: boolean
+    name?: boolean
+    description?: boolean
+    imagePath?: boolean
+    color?: boolean
+    metadata?: boolean
     createdAt?: boolean
     updatedAt?: boolean
-    event?: boolean | EventDefaultArgs<ExtArgs>
-  }, ExtArgs["result"]["eventSetting"]>
+    events?: boolean | Theme$eventsArgs<ExtArgs>
+    _count?: boolean | ThemeCountOutputTypeDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["theme"]>
 
-  export type EventSettingSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+  export type ThemeSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     id?: boolean
-    eventId?: boolean
-    theme?: boolean
-    allowAnonymousPurchase?: boolean
-    allowTransfer?: boolean
+    name?: boolean
+    description?: boolean
+    imagePath?: boolean
+    color?: boolean
+    metadata?: boolean
     createdAt?: boolean
     updatedAt?: boolean
-    event?: boolean | EventDefaultArgs<ExtArgs>
-  }, ExtArgs["result"]["eventSetting"]>
+  }, ExtArgs["result"]["theme"]>
 
-  export type EventSettingSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+  export type ThemeSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     id?: boolean
-    eventId?: boolean
-    theme?: boolean
-    allowAnonymousPurchase?: boolean
-    allowTransfer?: boolean
+    name?: boolean
+    description?: boolean
+    imagePath?: boolean
+    color?: boolean
+    metadata?: boolean
     createdAt?: boolean
     updatedAt?: boolean
-    event?: boolean | EventDefaultArgs<ExtArgs>
-  }, ExtArgs["result"]["eventSetting"]>
+  }, ExtArgs["result"]["theme"]>
 
-  export type EventSettingSelectScalar = {
+  export type ThemeSelectScalar = {
     id?: boolean
-    eventId?: boolean
-    theme?: boolean
-    allowAnonymousPurchase?: boolean
-    allowTransfer?: boolean
+    name?: boolean
+    description?: boolean
+    imagePath?: boolean
+    color?: boolean
+    metadata?: boolean
     createdAt?: boolean
     updatedAt?: boolean
   }
 
-  export type EventSettingOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "eventId" | "theme" | "allowAnonymousPurchase" | "allowTransfer" | "createdAt" | "updatedAt", ExtArgs["result"]["eventSetting"]>
-  export type EventSettingInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    event?: boolean | EventDefaultArgs<ExtArgs>
+  export type ThemeOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "name" | "description" | "imagePath" | "color" | "metadata" | "createdAt" | "updatedAt", ExtArgs["result"]["theme"]>
+  export type ThemeInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    events?: boolean | Theme$eventsArgs<ExtArgs>
+    _count?: boolean | ThemeCountOutputTypeDefaultArgs<ExtArgs>
   }
-  export type EventSettingIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    event?: boolean | EventDefaultArgs<ExtArgs>
-  }
-  export type EventSettingIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    event?: boolean | EventDefaultArgs<ExtArgs>
-  }
+  export type ThemeIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {}
+  export type ThemeIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {}
 
-  export type $EventSettingPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    name: "EventSetting"
+  export type $ThemePayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "Theme"
     objects: {
-      event: Prisma.$EventPayload<ExtArgs>
+      events: Prisma.$EventPayload<ExtArgs>[]
     }
     scalars: $Extensions.GetPayloadResult<{
       id: string
-      eventId: string
-      theme: string | null
-      allowAnonymousPurchase: boolean
-      allowTransfer: boolean
+      name: string
+      description: string | null
+      imagePath: string
+      color: string | null
+      metadata: Prisma.JsonValue | null
       createdAt: Date
       updatedAt: Date
-    }, ExtArgs["result"]["eventSetting"]>
+    }, ExtArgs["result"]["theme"]>
     composites: {}
   }
 
-  type EventSettingGetPayload<S extends boolean | null | undefined | EventSettingDefaultArgs> = $Result.GetResult<Prisma.$EventSettingPayload, S>
+  type ThemeGetPayload<S extends boolean | null | undefined | ThemeDefaultArgs> = $Result.GetResult<Prisma.$ThemePayload, S>
 
-  type EventSettingCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
-    Omit<EventSettingFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
-      select?: EventSettingCountAggregateInputType | true
+  type ThemeCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    Omit<ThemeFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
+      select?: ThemeCountAggregateInputType | true
     }
 
-  export interface EventSettingDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
-    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['EventSetting'], meta: { name: 'EventSetting' } }
+  export interface ThemeDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['Theme'], meta: { name: 'Theme' } }
     /**
-     * Find zero or one EventSetting that matches the filter.
-     * @param {EventSettingFindUniqueArgs} args - Arguments to find a EventSetting
+     * Find zero or one Theme that matches the filter.
+     * @param {ThemeFindUniqueArgs} args - Arguments to find a Theme
      * @example
-     * // Get one EventSetting
-     * const eventSetting = await prisma.eventSetting.findUnique({
+     * // Get one Theme
+     * const theme = await prisma.theme.findUnique({
      *   where: {
      *     // ... provide filter here
      *   }
      * })
      */
-    findUnique<T extends EventSettingFindUniqueArgs>(args: SelectSubset<T, EventSettingFindUniqueArgs<ExtArgs>>): Prisma__EventSettingClient<$Result.GetResult<Prisma.$EventSettingPayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+    findUnique<T extends ThemeFindUniqueArgs>(args: SelectSubset<T, ThemeFindUniqueArgs<ExtArgs>>): Prisma__ThemeClient<$Result.GetResult<Prisma.$ThemePayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
 
     /**
-     * Find one EventSetting that matches the filter or throw an error with `error.code='P2025'`
+     * Find one Theme that matches the filter or throw an error with `error.code='P2025'`
      * if no matches were found.
-     * @param {EventSettingFindUniqueOrThrowArgs} args - Arguments to find a EventSetting
+     * @param {ThemeFindUniqueOrThrowArgs} args - Arguments to find a Theme
      * @example
-     * // Get one EventSetting
-     * const eventSetting = await prisma.eventSetting.findUniqueOrThrow({
+     * // Get one Theme
+     * const theme = await prisma.theme.findUniqueOrThrow({
      *   where: {
      *     // ... provide filter here
      *   }
      * })
      */
-    findUniqueOrThrow<T extends EventSettingFindUniqueOrThrowArgs>(args: SelectSubset<T, EventSettingFindUniqueOrThrowArgs<ExtArgs>>): Prisma__EventSettingClient<$Result.GetResult<Prisma.$EventSettingPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+    findUniqueOrThrow<T extends ThemeFindUniqueOrThrowArgs>(args: SelectSubset<T, ThemeFindUniqueOrThrowArgs<ExtArgs>>): Prisma__ThemeClient<$Result.GetResult<Prisma.$ThemePayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
 
     /**
-     * Find the first EventSetting that matches the filter.
+     * Find the first Theme that matches the filter.
      * Note, that providing `undefined` is treated as the value not being there.
      * Read more here: https://pris.ly/d/null-undefined
-     * @param {EventSettingFindFirstArgs} args - Arguments to find a EventSetting
+     * @param {ThemeFindFirstArgs} args - Arguments to find a Theme
      * @example
-     * // Get one EventSetting
-     * const eventSetting = await prisma.eventSetting.findFirst({
+     * // Get one Theme
+     * const theme = await prisma.theme.findFirst({
      *   where: {
      *     // ... provide filter here
      *   }
      * })
      */
-    findFirst<T extends EventSettingFindFirstArgs>(args?: SelectSubset<T, EventSettingFindFirstArgs<ExtArgs>>): Prisma__EventSettingClient<$Result.GetResult<Prisma.$EventSettingPayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+    findFirst<T extends ThemeFindFirstArgs>(args?: SelectSubset<T, ThemeFindFirstArgs<ExtArgs>>): Prisma__ThemeClient<$Result.GetResult<Prisma.$ThemePayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
 
     /**
-     * Find the first EventSetting that matches the filter or
+     * Find the first Theme that matches the filter or
      * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
      * Note, that providing `undefined` is treated as the value not being there.
      * Read more here: https://pris.ly/d/null-undefined
-     * @param {EventSettingFindFirstOrThrowArgs} args - Arguments to find a EventSetting
+     * @param {ThemeFindFirstOrThrowArgs} args - Arguments to find a Theme
      * @example
-     * // Get one EventSetting
-     * const eventSetting = await prisma.eventSetting.findFirstOrThrow({
+     * // Get one Theme
+     * const theme = await prisma.theme.findFirstOrThrow({
      *   where: {
      *     // ... provide filter here
      *   }
      * })
      */
-    findFirstOrThrow<T extends EventSettingFindFirstOrThrowArgs>(args?: SelectSubset<T, EventSettingFindFirstOrThrowArgs<ExtArgs>>): Prisma__EventSettingClient<$Result.GetResult<Prisma.$EventSettingPayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+    findFirstOrThrow<T extends ThemeFindFirstOrThrowArgs>(args?: SelectSubset<T, ThemeFindFirstOrThrowArgs<ExtArgs>>): Prisma__ThemeClient<$Result.GetResult<Prisma.$ThemePayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
 
     /**
-     * Find zero or more EventSettings that matches the filter.
+     * Find zero or more Themes that matches the filter.
      * Note, that providing `undefined` is treated as the value not being there.
      * Read more here: https://pris.ly/d/null-undefined
-     * @param {EventSettingFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @param {ThemeFindManyArgs} args - Arguments to filter and select certain fields only.
      * @example
-     * // Get all EventSettings
-     * const eventSettings = await prisma.eventSetting.findMany()
+     * // Get all Themes
+     * const themes = await prisma.theme.findMany()
      * 
-     * // Get first 10 EventSettings
-     * const eventSettings = await prisma.eventSetting.findMany({ take: 10 })
+     * // Get first 10 Themes
+     * const themes = await prisma.theme.findMany({ take: 10 })
      * 
      * // Only select the `id`
-     * const eventSettingWithIdOnly = await prisma.eventSetting.findMany({ select: { id: true } })
+     * const themeWithIdOnly = await prisma.theme.findMany({ select: { id: true } })
      * 
      */
-    findMany<T extends EventSettingFindManyArgs>(args?: SelectSubset<T, EventSettingFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$EventSettingPayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
+    findMany<T extends ThemeFindManyArgs>(args?: SelectSubset<T, ThemeFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ThemePayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
 
     /**
-     * Create a EventSetting.
-     * @param {EventSettingCreateArgs} args - Arguments to create a EventSetting.
+     * Create a Theme.
+     * @param {ThemeCreateArgs} args - Arguments to create a Theme.
      * @example
-     * // Create one EventSetting
-     * const EventSetting = await prisma.eventSetting.create({
+     * // Create one Theme
+     * const Theme = await prisma.theme.create({
      *   data: {
-     *     // ... data to create a EventSetting
+     *     // ... data to create a Theme
      *   }
      * })
      * 
      */
-    create<T extends EventSettingCreateArgs>(args: SelectSubset<T, EventSettingCreateArgs<ExtArgs>>): Prisma__EventSettingClient<$Result.GetResult<Prisma.$EventSettingPayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+    create<T extends ThemeCreateArgs>(args: SelectSubset<T, ThemeCreateArgs<ExtArgs>>): Prisma__ThemeClient<$Result.GetResult<Prisma.$ThemePayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
 
     /**
-     * Create many EventSettings.
-     * @param {EventSettingCreateManyArgs} args - Arguments to create many EventSettings.
+     * Create many Themes.
+     * @param {ThemeCreateManyArgs} args - Arguments to create many Themes.
      * @example
-     * // Create many EventSettings
-     * const eventSetting = await prisma.eventSetting.createMany({
+     * // Create many Themes
+     * const theme = await prisma.theme.createMany({
      *   data: [
      *     // ... provide data here
      *   ]
      * })
      *     
      */
-    createMany<T extends EventSettingCreateManyArgs>(args?: SelectSubset<T, EventSettingCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+    createMany<T extends ThemeCreateManyArgs>(args?: SelectSubset<T, ThemeCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
 
     /**
-     * Create many EventSettings and returns the data saved in the database.
-     * @param {EventSettingCreateManyAndReturnArgs} args - Arguments to create many EventSettings.
+     * Create many Themes and returns the data saved in the database.
+     * @param {ThemeCreateManyAndReturnArgs} args - Arguments to create many Themes.
      * @example
-     * // Create many EventSettings
-     * const eventSetting = await prisma.eventSetting.createManyAndReturn({
+     * // Create many Themes
+     * const theme = await prisma.theme.createManyAndReturn({
      *   data: [
      *     // ... provide data here
      *   ]
      * })
      * 
-     * // Create many EventSettings and only return the `id`
-     * const eventSettingWithIdOnly = await prisma.eventSetting.createManyAndReturn({
+     * // Create many Themes and only return the `id`
+     * const themeWithIdOnly = await prisma.theme.createManyAndReturn({
      *   select: { id: true },
      *   data: [
      *     // ... provide data here
@@ -14519,28 +14717,28 @@ export namespace Prisma {
      * Read more here: https://pris.ly/d/null-undefined
      * 
      */
-    createManyAndReturn<T extends EventSettingCreateManyAndReturnArgs>(args?: SelectSubset<T, EventSettingCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$EventSettingPayload<ExtArgs>, T, "createManyAndReturn", GlobalOmitOptions>>
+    createManyAndReturn<T extends ThemeCreateManyAndReturnArgs>(args?: SelectSubset<T, ThemeCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ThemePayload<ExtArgs>, T, "createManyAndReturn", GlobalOmitOptions>>
 
     /**
-     * Delete a EventSetting.
-     * @param {EventSettingDeleteArgs} args - Arguments to delete one EventSetting.
+     * Delete a Theme.
+     * @param {ThemeDeleteArgs} args - Arguments to delete one Theme.
      * @example
-     * // Delete one EventSetting
-     * const EventSetting = await prisma.eventSetting.delete({
+     * // Delete one Theme
+     * const Theme = await prisma.theme.delete({
      *   where: {
-     *     // ... filter to delete one EventSetting
+     *     // ... filter to delete one Theme
      *   }
      * })
      * 
      */
-    delete<T extends EventSettingDeleteArgs>(args: SelectSubset<T, EventSettingDeleteArgs<ExtArgs>>): Prisma__EventSettingClient<$Result.GetResult<Prisma.$EventSettingPayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+    delete<T extends ThemeDeleteArgs>(args: SelectSubset<T, ThemeDeleteArgs<ExtArgs>>): Prisma__ThemeClient<$Result.GetResult<Prisma.$ThemePayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
 
     /**
-     * Update one EventSetting.
-     * @param {EventSettingUpdateArgs} args - Arguments to update one EventSetting.
+     * Update one Theme.
+     * @param {ThemeUpdateArgs} args - Arguments to update one Theme.
      * @example
-     * // Update one EventSetting
-     * const eventSetting = await prisma.eventSetting.update({
+     * // Update one Theme
+     * const theme = await prisma.theme.update({
      *   where: {
      *     // ... provide filter here
      *   },
@@ -14550,30 +14748,30 @@ export namespace Prisma {
      * })
      * 
      */
-    update<T extends EventSettingUpdateArgs>(args: SelectSubset<T, EventSettingUpdateArgs<ExtArgs>>): Prisma__EventSettingClient<$Result.GetResult<Prisma.$EventSettingPayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+    update<T extends ThemeUpdateArgs>(args: SelectSubset<T, ThemeUpdateArgs<ExtArgs>>): Prisma__ThemeClient<$Result.GetResult<Prisma.$ThemePayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
 
     /**
-     * Delete zero or more EventSettings.
-     * @param {EventSettingDeleteManyArgs} args - Arguments to filter EventSettings to delete.
+     * Delete zero or more Themes.
+     * @param {ThemeDeleteManyArgs} args - Arguments to filter Themes to delete.
      * @example
-     * // Delete a few EventSettings
-     * const { count } = await prisma.eventSetting.deleteMany({
+     * // Delete a few Themes
+     * const { count } = await prisma.theme.deleteMany({
      *   where: {
      *     // ... provide filter here
      *   }
      * })
      * 
      */
-    deleteMany<T extends EventSettingDeleteManyArgs>(args?: SelectSubset<T, EventSettingDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+    deleteMany<T extends ThemeDeleteManyArgs>(args?: SelectSubset<T, ThemeDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
 
     /**
-     * Update zero or more EventSettings.
+     * Update zero or more Themes.
      * Note, that providing `undefined` is treated as the value not being there.
      * Read more here: https://pris.ly/d/null-undefined
-     * @param {EventSettingUpdateManyArgs} args - Arguments to update one or more rows.
+     * @param {ThemeUpdateManyArgs} args - Arguments to update one or more rows.
      * @example
-     * // Update many EventSettings
-     * const eventSetting = await prisma.eventSetting.updateMany({
+     * // Update many Themes
+     * const theme = await prisma.theme.updateMany({
      *   where: {
      *     // ... provide filter here
      *   },
@@ -14583,14 +14781,14 @@ export namespace Prisma {
      * })
      * 
      */
-    updateMany<T extends EventSettingUpdateManyArgs>(args: SelectSubset<T, EventSettingUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+    updateMany<T extends ThemeUpdateManyArgs>(args: SelectSubset<T, ThemeUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
 
     /**
-     * Update zero or more EventSettings and returns the data updated in the database.
-     * @param {EventSettingUpdateManyAndReturnArgs} args - Arguments to update many EventSettings.
+     * Update zero or more Themes and returns the data updated in the database.
+     * @param {ThemeUpdateManyAndReturnArgs} args - Arguments to update many Themes.
      * @example
-     * // Update many EventSettings
-     * const eventSetting = await prisma.eventSetting.updateManyAndReturn({
+     * // Update many Themes
+     * const theme = await prisma.theme.updateManyAndReturn({
      *   where: {
      *     // ... provide filter here
      *   },
@@ -14599,8 +14797,8 @@ export namespace Prisma {
      *   ]
      * })
      * 
-     * // Update zero or more EventSettings and only return the `id`
-     * const eventSettingWithIdOnly = await prisma.eventSetting.updateManyAndReturn({
+     * // Update zero or more Themes and only return the `id`
+     * const themeWithIdOnly = await prisma.theme.updateManyAndReturn({
      *   select: { id: true },
      *   where: {
      *     // ... provide filter here
@@ -14613,56 +14811,56 @@ export namespace Prisma {
      * Read more here: https://pris.ly/d/null-undefined
      * 
      */
-    updateManyAndReturn<T extends EventSettingUpdateManyAndReturnArgs>(args: SelectSubset<T, EventSettingUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$EventSettingPayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
+    updateManyAndReturn<T extends ThemeUpdateManyAndReturnArgs>(args: SelectSubset<T, ThemeUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ThemePayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
 
     /**
-     * Create or update one EventSetting.
-     * @param {EventSettingUpsertArgs} args - Arguments to update or create a EventSetting.
+     * Create or update one Theme.
+     * @param {ThemeUpsertArgs} args - Arguments to update or create a Theme.
      * @example
-     * // Update or create a EventSetting
-     * const eventSetting = await prisma.eventSetting.upsert({
+     * // Update or create a Theme
+     * const theme = await prisma.theme.upsert({
      *   create: {
-     *     // ... data to create a EventSetting
+     *     // ... data to create a Theme
      *   },
      *   update: {
      *     // ... in case it already exists, update
      *   },
      *   where: {
-     *     // ... the filter for the EventSetting we want to update
+     *     // ... the filter for the Theme we want to update
      *   }
      * })
      */
-    upsert<T extends EventSettingUpsertArgs>(args: SelectSubset<T, EventSettingUpsertArgs<ExtArgs>>): Prisma__EventSettingClient<$Result.GetResult<Prisma.$EventSettingPayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+    upsert<T extends ThemeUpsertArgs>(args: SelectSubset<T, ThemeUpsertArgs<ExtArgs>>): Prisma__ThemeClient<$Result.GetResult<Prisma.$ThemePayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
 
 
     /**
-     * Count the number of EventSettings.
+     * Count the number of Themes.
      * Note, that providing `undefined` is treated as the value not being there.
      * Read more here: https://pris.ly/d/null-undefined
-     * @param {EventSettingCountArgs} args - Arguments to filter EventSettings to count.
+     * @param {ThemeCountArgs} args - Arguments to filter Themes to count.
      * @example
-     * // Count the number of EventSettings
-     * const count = await prisma.eventSetting.count({
+     * // Count the number of Themes
+     * const count = await prisma.theme.count({
      *   where: {
-     *     // ... the filter for the EventSettings we want to count
+     *     // ... the filter for the Themes we want to count
      *   }
      * })
     **/
-    count<T extends EventSettingCountArgs>(
-      args?: Subset<T, EventSettingCountArgs>,
+    count<T extends ThemeCountArgs>(
+      args?: Subset<T, ThemeCountArgs>,
     ): Prisma.PrismaPromise<
       T extends $Utils.Record<'select', any>
         ? T['select'] extends true
           ? number
-          : GetScalarType<T['select'], EventSettingCountAggregateOutputType>
+          : GetScalarType<T['select'], ThemeCountAggregateOutputType>
         : number
     >
 
     /**
-     * Allows you to perform aggregations operations on a EventSetting.
+     * Allows you to perform aggregations operations on a Theme.
      * Note, that providing `undefined` is treated as the value not being there.
      * Read more here: https://pris.ly/d/null-undefined
-     * @param {EventSettingAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @param {ThemeAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
      * @example
      * // Ordered by age ascending
      * // Where email contains prisma.io
@@ -14682,13 +14880,13 @@ export namespace Prisma {
      *   take: 10,
      * })
     **/
-    aggregate<T extends EventSettingAggregateArgs>(args: Subset<T, EventSettingAggregateArgs>): Prisma.PrismaPromise<GetEventSettingAggregateType<T>>
+    aggregate<T extends ThemeAggregateArgs>(args: Subset<T, ThemeAggregateArgs>): Prisma.PrismaPromise<GetThemeAggregateType<T>>
 
     /**
-     * Group by EventSetting.
+     * Group by Theme.
      * Note, that providing `undefined` is treated as the value not being there.
      * Read more here: https://pris.ly/d/null-undefined
-     * @param {EventSettingGroupByArgs} args - Group by arguments.
+     * @param {ThemeGroupByArgs} args - Group by arguments.
      * @example
      * // Group by city, order by createdAt, get count
      * const result = await prisma.user.groupBy({
@@ -14703,14 +14901,14 @@ export namespace Prisma {
      * 
     **/
     groupBy<
-      T extends EventSettingGroupByArgs,
+      T extends ThemeGroupByArgs,
       HasSelectOrTake extends Or<
         Extends<'skip', Keys<T>>,
         Extends<'take', Keys<T>>
       >,
       OrderByArg extends True extends HasSelectOrTake
-        ? { orderBy: EventSettingGroupByArgs['orderBy'] }
-        : { orderBy?: EventSettingGroupByArgs['orderBy'] },
+        ? { orderBy: ThemeGroupByArgs['orderBy'] }
+        : { orderBy?: ThemeGroupByArgs['orderBy'] },
       OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
       ByFields extends MaybeTupleToUnion<T['by']>,
       ByValid extends Has<ByFields, OrderFields>,
@@ -14759,22 +14957,22 @@ export namespace Prisma {
             ? never
             : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
         }[OrderFields]
-    >(args: SubsetIntersection<T, EventSettingGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetEventSettingGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+    >(args: SubsetIntersection<T, ThemeGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetThemeGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
   /**
-   * Fields of the EventSetting model
+   * Fields of the Theme model
    */
-  readonly fields: EventSettingFieldRefs;
+  readonly fields: ThemeFieldRefs;
   }
 
   /**
-   * The delegate class that acts as a "Promise-like" for EventSetting.
+   * The delegate class that acts as a "Promise-like" for Theme.
    * Why is this prefixed with `Prisma__`?
    * Because we want to prevent naming conflicts as mentioned in
    * https://github.com/prisma/prisma-client-js/issues/707
    */
-  export interface Prisma__EventSettingClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
+  export interface Prisma__ThemeClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
     readonly [Symbol.toStringTag]: "PrismaPromise"
-    event<T extends EventDefaultArgs<ExtArgs> = {}>(args?: Subset<T, EventDefaultArgs<ExtArgs>>): Prisma__EventClient<$Result.GetResult<Prisma.$EventPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+    events<T extends Theme$eventsArgs<ExtArgs> = {}>(args?: Subset<T, Theme$eventsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$EventPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
      * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -14801,427 +14999,1533 @@ export namespace Prisma {
 
 
   /**
-   * Fields of the EventSetting model
+   * Fields of the Theme model
    */
-  interface EventSettingFieldRefs {
-    readonly id: FieldRef<"EventSetting", 'String'>
-    readonly eventId: FieldRef<"EventSetting", 'String'>
-    readonly theme: FieldRef<"EventSetting", 'String'>
-    readonly allowAnonymousPurchase: FieldRef<"EventSetting", 'Boolean'>
-    readonly allowTransfer: FieldRef<"EventSetting", 'Boolean'>
-    readonly createdAt: FieldRef<"EventSetting", 'DateTime'>
-    readonly updatedAt: FieldRef<"EventSetting", 'DateTime'>
+  interface ThemeFieldRefs {
+    readonly id: FieldRef<"Theme", 'String'>
+    readonly name: FieldRef<"Theme", 'String'>
+    readonly description: FieldRef<"Theme", 'String'>
+    readonly imagePath: FieldRef<"Theme", 'String'>
+    readonly color: FieldRef<"Theme", 'String'>
+    readonly metadata: FieldRef<"Theme", 'Json'>
+    readonly createdAt: FieldRef<"Theme", 'DateTime'>
+    readonly updatedAt: FieldRef<"Theme", 'DateTime'>
   }
     
 
   // Custom InputTypes
   /**
-   * EventSetting findUnique
+   * Theme findUnique
    */
-  export type EventSettingFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type ThemeFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
-     * Select specific fields to fetch from the EventSetting
+     * Select specific fields to fetch from the Theme
      */
-    select?: EventSettingSelect<ExtArgs> | null
+    select?: ThemeSelect<ExtArgs> | null
     /**
-     * Omit specific fields from the EventSetting
+     * Omit specific fields from the Theme
      */
-    omit?: EventSettingOmit<ExtArgs> | null
+    omit?: ThemeOmit<ExtArgs> | null
     /**
      * Choose, which related nodes to fetch as well
      */
-    include?: EventSettingInclude<ExtArgs> | null
+    include?: ThemeInclude<ExtArgs> | null
     /**
-     * Filter, which EventSetting to fetch.
+     * Filter, which Theme to fetch.
      */
-    where: EventSettingWhereUniqueInput
+    where: ThemeWhereUniqueInput
   }
 
   /**
-   * EventSetting findUniqueOrThrow
+   * Theme findUniqueOrThrow
    */
-  export type EventSettingFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type ThemeFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
-     * Select specific fields to fetch from the EventSetting
+     * Select specific fields to fetch from the Theme
      */
-    select?: EventSettingSelect<ExtArgs> | null
+    select?: ThemeSelect<ExtArgs> | null
     /**
-     * Omit specific fields from the EventSetting
+     * Omit specific fields from the Theme
      */
-    omit?: EventSettingOmit<ExtArgs> | null
+    omit?: ThemeOmit<ExtArgs> | null
     /**
      * Choose, which related nodes to fetch as well
      */
-    include?: EventSettingInclude<ExtArgs> | null
+    include?: ThemeInclude<ExtArgs> | null
     /**
-     * Filter, which EventSetting to fetch.
+     * Filter, which Theme to fetch.
      */
-    where: EventSettingWhereUniqueInput
+    where: ThemeWhereUniqueInput
   }
 
   /**
-   * EventSetting findFirst
+   * Theme findFirst
    */
-  export type EventSettingFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type ThemeFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
-     * Select specific fields to fetch from the EventSetting
+     * Select specific fields to fetch from the Theme
      */
-    select?: EventSettingSelect<ExtArgs> | null
+    select?: ThemeSelect<ExtArgs> | null
     /**
-     * Omit specific fields from the EventSetting
+     * Omit specific fields from the Theme
      */
-    omit?: EventSettingOmit<ExtArgs> | null
+    omit?: ThemeOmit<ExtArgs> | null
     /**
      * Choose, which related nodes to fetch as well
      */
-    include?: EventSettingInclude<ExtArgs> | null
+    include?: ThemeInclude<ExtArgs> | null
     /**
-     * Filter, which EventSetting to fetch.
+     * Filter, which Theme to fetch.
      */
-    where?: EventSettingWhereInput
+    where?: ThemeWhereInput
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
      * 
-     * Determine the order of EventSettings to fetch.
+     * Determine the order of Themes to fetch.
      */
-    orderBy?: EventSettingOrderByWithRelationInput | EventSettingOrderByWithRelationInput[]
+    orderBy?: ThemeOrderByWithRelationInput | ThemeOrderByWithRelationInput[]
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
      * 
-     * Sets the position for searching for EventSettings.
+     * Sets the position for searching for Themes.
      */
-    cursor?: EventSettingWhereUniqueInput
+    cursor?: ThemeWhereUniqueInput
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
      * 
-     * Take `±n` EventSettings from the position of the cursor.
+     * Take `±n` Themes from the position of the cursor.
      */
     take?: number
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
      * 
-     * Skip the first `n` EventSettings.
+     * Skip the first `n` Themes.
      */
     skip?: number
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
      * 
-     * Filter by unique combinations of EventSettings.
+     * Filter by unique combinations of Themes.
      */
-    distinct?: EventSettingScalarFieldEnum | EventSettingScalarFieldEnum[]
+    distinct?: ThemeScalarFieldEnum | ThemeScalarFieldEnum[]
   }
 
   /**
-   * EventSetting findFirstOrThrow
+   * Theme findFirstOrThrow
    */
-  export type EventSettingFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type ThemeFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
-     * Select specific fields to fetch from the EventSetting
+     * Select specific fields to fetch from the Theme
      */
-    select?: EventSettingSelect<ExtArgs> | null
+    select?: ThemeSelect<ExtArgs> | null
     /**
-     * Omit specific fields from the EventSetting
+     * Omit specific fields from the Theme
      */
-    omit?: EventSettingOmit<ExtArgs> | null
+    omit?: ThemeOmit<ExtArgs> | null
     /**
      * Choose, which related nodes to fetch as well
      */
-    include?: EventSettingInclude<ExtArgs> | null
+    include?: ThemeInclude<ExtArgs> | null
     /**
-     * Filter, which EventSetting to fetch.
+     * Filter, which Theme to fetch.
      */
-    where?: EventSettingWhereInput
+    where?: ThemeWhereInput
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
      * 
-     * Determine the order of EventSettings to fetch.
+     * Determine the order of Themes to fetch.
      */
-    orderBy?: EventSettingOrderByWithRelationInput | EventSettingOrderByWithRelationInput[]
+    orderBy?: ThemeOrderByWithRelationInput | ThemeOrderByWithRelationInput[]
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
      * 
-     * Sets the position for searching for EventSettings.
+     * Sets the position for searching for Themes.
      */
-    cursor?: EventSettingWhereUniqueInput
+    cursor?: ThemeWhereUniqueInput
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
      * 
-     * Take `±n` EventSettings from the position of the cursor.
+     * Take `±n` Themes from the position of the cursor.
      */
     take?: number
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
      * 
-     * Skip the first `n` EventSettings.
+     * Skip the first `n` Themes.
      */
     skip?: number
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
      * 
-     * Filter by unique combinations of EventSettings.
+     * Filter by unique combinations of Themes.
      */
-    distinct?: EventSettingScalarFieldEnum | EventSettingScalarFieldEnum[]
+    distinct?: ThemeScalarFieldEnum | ThemeScalarFieldEnum[]
   }
 
   /**
-   * EventSetting findMany
+   * Theme findMany
    */
-  export type EventSettingFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type ThemeFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
-     * Select specific fields to fetch from the EventSetting
+     * Select specific fields to fetch from the Theme
      */
-    select?: EventSettingSelect<ExtArgs> | null
+    select?: ThemeSelect<ExtArgs> | null
     /**
-     * Omit specific fields from the EventSetting
+     * Omit specific fields from the Theme
      */
-    omit?: EventSettingOmit<ExtArgs> | null
+    omit?: ThemeOmit<ExtArgs> | null
     /**
      * Choose, which related nodes to fetch as well
      */
-    include?: EventSettingInclude<ExtArgs> | null
+    include?: ThemeInclude<ExtArgs> | null
     /**
-     * Filter, which EventSettings to fetch.
+     * Filter, which Themes to fetch.
      */
-    where?: EventSettingWhereInput
+    where?: ThemeWhereInput
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
      * 
-     * Determine the order of EventSettings to fetch.
+     * Determine the order of Themes to fetch.
      */
-    orderBy?: EventSettingOrderByWithRelationInput | EventSettingOrderByWithRelationInput[]
+    orderBy?: ThemeOrderByWithRelationInput | ThemeOrderByWithRelationInput[]
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
      * 
-     * Sets the position for listing EventSettings.
+     * Sets the position for listing Themes.
      */
-    cursor?: EventSettingWhereUniqueInput
+    cursor?: ThemeWhereUniqueInput
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
      * 
-     * Take `±n` EventSettings from the position of the cursor.
+     * Take `±n` Themes from the position of the cursor.
      */
     take?: number
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
      * 
-     * Skip the first `n` EventSettings.
+     * Skip the first `n` Themes.
      */
     skip?: number
-    distinct?: EventSettingScalarFieldEnum | EventSettingScalarFieldEnum[]
+    distinct?: ThemeScalarFieldEnum | ThemeScalarFieldEnum[]
   }
 
   /**
-   * EventSetting create
+   * Theme create
    */
-  export type EventSettingCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type ThemeCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
-     * Select specific fields to fetch from the EventSetting
+     * Select specific fields to fetch from the Theme
      */
-    select?: EventSettingSelect<ExtArgs> | null
+    select?: ThemeSelect<ExtArgs> | null
     /**
-     * Omit specific fields from the EventSetting
+     * Omit specific fields from the Theme
      */
-    omit?: EventSettingOmit<ExtArgs> | null
+    omit?: ThemeOmit<ExtArgs> | null
     /**
      * Choose, which related nodes to fetch as well
      */
-    include?: EventSettingInclude<ExtArgs> | null
+    include?: ThemeInclude<ExtArgs> | null
     /**
-     * The data needed to create a EventSetting.
+     * The data needed to create a Theme.
      */
-    data: XOR<EventSettingCreateInput, EventSettingUncheckedCreateInput>
+    data: XOR<ThemeCreateInput, ThemeUncheckedCreateInput>
   }
 
   /**
-   * EventSetting createMany
+   * Theme createMany
    */
-  export type EventSettingCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type ThemeCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
-     * The data used to create many EventSettings.
+     * The data used to create many Themes.
      */
-    data: EventSettingCreateManyInput | EventSettingCreateManyInput[]
-    skipDuplicates?: boolean
+    data: ThemeCreateManyInput | ThemeCreateManyInput[]
   }
 
   /**
-   * EventSetting createManyAndReturn
+   * Theme createManyAndReturn
    */
-  export type EventSettingCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type ThemeCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
-     * Select specific fields to fetch from the EventSetting
+     * Select specific fields to fetch from the Theme
      */
-    select?: EventSettingSelectCreateManyAndReturn<ExtArgs> | null
+    select?: ThemeSelectCreateManyAndReturn<ExtArgs> | null
     /**
-     * Omit specific fields from the EventSetting
+     * Omit specific fields from the Theme
      */
-    omit?: EventSettingOmit<ExtArgs> | null
+    omit?: ThemeOmit<ExtArgs> | null
     /**
-     * The data used to create many EventSettings.
+     * The data used to create many Themes.
      */
-    data: EventSettingCreateManyInput | EventSettingCreateManyInput[]
-    skipDuplicates?: boolean
+    data: ThemeCreateManyInput | ThemeCreateManyInput[]
+  }
+
+  /**
+   * Theme update
+   */
+  export type ThemeUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Theme
+     */
+    select?: ThemeSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Theme
+     */
+    omit?: ThemeOmit<ExtArgs> | null
     /**
      * Choose, which related nodes to fetch as well
      */
-    include?: EventSettingIncludeCreateManyAndReturn<ExtArgs> | null
+    include?: ThemeInclude<ExtArgs> | null
+    /**
+     * The data needed to update a Theme.
+     */
+    data: XOR<ThemeUpdateInput, ThemeUncheckedUpdateInput>
+    /**
+     * Choose, which Theme to update.
+     */
+    where: ThemeWhereUniqueInput
   }
 
   /**
-   * EventSetting update
+   * Theme updateMany
    */
-  export type EventSettingUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type ThemeUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
-     * Select specific fields to fetch from the EventSetting
+     * The data used to update Themes.
      */
-    select?: EventSettingSelect<ExtArgs> | null
+    data: XOR<ThemeUpdateManyMutationInput, ThemeUncheckedUpdateManyInput>
     /**
-     * Omit specific fields from the EventSetting
+     * Filter which Themes to update
      */
-    omit?: EventSettingOmit<ExtArgs> | null
+    where?: ThemeWhereInput
     /**
-     * Choose, which related nodes to fetch as well
-     */
-    include?: EventSettingInclude<ExtArgs> | null
-    /**
-     * The data needed to update a EventSetting.
-     */
-    data: XOR<EventSettingUpdateInput, EventSettingUncheckedUpdateInput>
-    /**
-     * Choose, which EventSetting to update.
-     */
-    where: EventSettingWhereUniqueInput
-  }
-
-  /**
-   * EventSetting updateMany
-   */
-  export type EventSettingUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * The data used to update EventSettings.
-     */
-    data: XOR<EventSettingUpdateManyMutationInput, EventSettingUncheckedUpdateManyInput>
-    /**
-     * Filter which EventSettings to update
-     */
-    where?: EventSettingWhereInput
-    /**
-     * Limit how many EventSettings to update.
+     * Limit how many Themes to update.
      */
     limit?: number
   }
 
   /**
-   * EventSetting updateManyAndReturn
+   * Theme updateManyAndReturn
    */
-  export type EventSettingUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type ThemeUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
-     * Select specific fields to fetch from the EventSetting
+     * Select specific fields to fetch from the Theme
      */
-    select?: EventSettingSelectUpdateManyAndReturn<ExtArgs> | null
+    select?: ThemeSelectUpdateManyAndReturn<ExtArgs> | null
     /**
-     * Omit specific fields from the EventSetting
+     * Omit specific fields from the Theme
      */
-    omit?: EventSettingOmit<ExtArgs> | null
+    omit?: ThemeOmit<ExtArgs> | null
     /**
-     * The data used to update EventSettings.
+     * The data used to update Themes.
      */
-    data: XOR<EventSettingUpdateManyMutationInput, EventSettingUncheckedUpdateManyInput>
+    data: XOR<ThemeUpdateManyMutationInput, ThemeUncheckedUpdateManyInput>
     /**
-     * Filter which EventSettings to update
+     * Filter which Themes to update
      */
-    where?: EventSettingWhereInput
+    where?: ThemeWhereInput
     /**
-     * Limit how many EventSettings to update.
-     */
-    limit?: number
-    /**
-     * Choose, which related nodes to fetch as well
-     */
-    include?: EventSettingIncludeUpdateManyAndReturn<ExtArgs> | null
-  }
-
-  /**
-   * EventSetting upsert
-   */
-  export type EventSettingUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * Select specific fields to fetch from the EventSetting
-     */
-    select?: EventSettingSelect<ExtArgs> | null
-    /**
-     * Omit specific fields from the EventSetting
-     */
-    omit?: EventSettingOmit<ExtArgs> | null
-    /**
-     * Choose, which related nodes to fetch as well
-     */
-    include?: EventSettingInclude<ExtArgs> | null
-    /**
-     * The filter to search for the EventSetting to update in case it exists.
-     */
-    where: EventSettingWhereUniqueInput
-    /**
-     * In case the EventSetting found by the `where` argument doesn't exist, create a new EventSetting with this data.
-     */
-    create: XOR<EventSettingCreateInput, EventSettingUncheckedCreateInput>
-    /**
-     * In case the EventSetting was found with the provided `where` argument, update it with this data.
-     */
-    update: XOR<EventSettingUpdateInput, EventSettingUncheckedUpdateInput>
-  }
-
-  /**
-   * EventSetting delete
-   */
-  export type EventSettingDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * Select specific fields to fetch from the EventSetting
-     */
-    select?: EventSettingSelect<ExtArgs> | null
-    /**
-     * Omit specific fields from the EventSetting
-     */
-    omit?: EventSettingOmit<ExtArgs> | null
-    /**
-     * Choose, which related nodes to fetch as well
-     */
-    include?: EventSettingInclude<ExtArgs> | null
-    /**
-     * Filter which EventSetting to delete.
-     */
-    where: EventSettingWhereUniqueInput
-  }
-
-  /**
-   * EventSetting deleteMany
-   */
-  export type EventSettingDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * Filter which EventSettings to delete
-     */
-    where?: EventSettingWhereInput
-    /**
-     * Limit how many EventSettings to delete.
+     * Limit how many Themes to update.
      */
     limit?: number
   }
 
   /**
-   * EventSetting without action
+   * Theme upsert
    */
-  export type EventSettingDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type ThemeUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
-     * Select specific fields to fetch from the EventSetting
+     * Select specific fields to fetch from the Theme
      */
-    select?: EventSettingSelect<ExtArgs> | null
+    select?: ThemeSelect<ExtArgs> | null
     /**
-     * Omit specific fields from the EventSetting
+     * Omit specific fields from the Theme
      */
-    omit?: EventSettingOmit<ExtArgs> | null
+    omit?: ThemeOmit<ExtArgs> | null
     /**
      * Choose, which related nodes to fetch as well
      */
-    include?: EventSettingInclude<ExtArgs> | null
+    include?: ThemeInclude<ExtArgs> | null
+    /**
+     * The filter to search for the Theme to update in case it exists.
+     */
+    where: ThemeWhereUniqueInput
+    /**
+     * In case the Theme found by the `where` argument doesn't exist, create a new Theme with this data.
+     */
+    create: XOR<ThemeCreateInput, ThemeUncheckedCreateInput>
+    /**
+     * In case the Theme was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<ThemeUpdateInput, ThemeUncheckedUpdateInput>
+  }
+
+  /**
+   * Theme delete
+   */
+  export type ThemeDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Theme
+     */
+    select?: ThemeSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Theme
+     */
+    omit?: ThemeOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ThemeInclude<ExtArgs> | null
+    /**
+     * Filter which Theme to delete.
+     */
+    where: ThemeWhereUniqueInput
+  }
+
+  /**
+   * Theme deleteMany
+   */
+  export type ThemeDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which Themes to delete
+     */
+    where?: ThemeWhereInput
+    /**
+     * Limit how many Themes to delete.
+     */
+    limit?: number
+  }
+
+  /**
+   * Theme.events
+   */
+  export type Theme$eventsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Event
+     */
+    select?: EventSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Event
+     */
+    omit?: EventOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: EventInclude<ExtArgs> | null
+    where?: EventWhereInput
+    orderBy?: EventOrderByWithRelationInput | EventOrderByWithRelationInput[]
+    cursor?: EventWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: EventScalarFieldEnum | EventScalarFieldEnum[]
+  }
+
+  /**
+   * Theme without action
+   */
+  export type ThemeDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Theme
+     */
+    select?: ThemeSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Theme
+     */
+    omit?: ThemeOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ThemeInclude<ExtArgs> | null
+  }
+
+
+  /**
+   * Model QRCode
+   */
+
+  export type AggregateQRCode = {
+    _count: QRCodeCountAggregateOutputType | null
+    _min: QRCodeMinAggregateOutputType | null
+    _max: QRCodeMaxAggregateOutputType | null
+  }
+
+  export type QRCodeMinAggregateOutputType = {
+    id: string | null
+    ticketId: string | null
+    path: string | null
+    format: string | null
+    createdAt: Date | null
+    expiresAt: Date | null
+    scannedAt: Date | null
+  }
+
+  export type QRCodeMaxAggregateOutputType = {
+    id: string | null
+    ticketId: string | null
+    path: string | null
+    format: string | null
+    createdAt: Date | null
+    expiresAt: Date | null
+    scannedAt: Date | null
+  }
+
+  export type QRCodeCountAggregateOutputType = {
+    id: number
+    ticketId: number
+    path: number
+    format: number
+    createdAt: number
+    expiresAt: number
+    scannedAt: number
+    data: number
+    _all: number
+  }
+
+
+  export type QRCodeMinAggregateInputType = {
+    id?: true
+    ticketId?: true
+    path?: true
+    format?: true
+    createdAt?: true
+    expiresAt?: true
+    scannedAt?: true
+  }
+
+  export type QRCodeMaxAggregateInputType = {
+    id?: true
+    ticketId?: true
+    path?: true
+    format?: true
+    createdAt?: true
+    expiresAt?: true
+    scannedAt?: true
+  }
+
+  export type QRCodeCountAggregateInputType = {
+    id?: true
+    ticketId?: true
+    path?: true
+    format?: true
+    createdAt?: true
+    expiresAt?: true
+    scannedAt?: true
+    data?: true
+    _all?: true
+  }
+
+  export type QRCodeAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which QRCode to aggregate.
+     */
+    where?: QRCodeWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of QRCodes to fetch.
+     */
+    orderBy?: QRCodeOrderByWithRelationInput | QRCodeOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: QRCodeWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` QRCodes from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` QRCodes.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned QRCodes
+    **/
+    _count?: true | QRCodeCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: QRCodeMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: QRCodeMaxAggregateInputType
+  }
+
+  export type GetQRCodeAggregateType<T extends QRCodeAggregateArgs> = {
+        [P in keyof T & keyof AggregateQRCode]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateQRCode[P]>
+      : GetScalarType<T[P], AggregateQRCode[P]>
+  }
+
+
+
+
+  export type QRCodeGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: QRCodeWhereInput
+    orderBy?: QRCodeOrderByWithAggregationInput | QRCodeOrderByWithAggregationInput[]
+    by: QRCodeScalarFieldEnum[] | QRCodeScalarFieldEnum
+    having?: QRCodeScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: QRCodeCountAggregateInputType | true
+    _min?: QRCodeMinAggregateInputType
+    _max?: QRCodeMaxAggregateInputType
+  }
+
+  export type QRCodeGroupByOutputType = {
+    id: string
+    ticketId: string
+    path: string
+    format: string
+    createdAt: Date
+    expiresAt: Date | null
+    scannedAt: Date | null
+    data: JsonValue | null
+    _count: QRCodeCountAggregateOutputType | null
+    _min: QRCodeMinAggregateOutputType | null
+    _max: QRCodeMaxAggregateOutputType | null
+  }
+
+  type GetQRCodeGroupByPayload<T extends QRCodeGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<QRCodeGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof QRCodeGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], QRCodeGroupByOutputType[P]>
+            : GetScalarType<T[P], QRCodeGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type QRCodeSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    ticketId?: boolean
+    path?: boolean
+    format?: boolean
+    createdAt?: boolean
+    expiresAt?: boolean
+    scannedAt?: boolean
+    data?: boolean
+    ticket?: boolean | TicketDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["qRCode"]>
+
+  export type QRCodeSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    ticketId?: boolean
+    path?: boolean
+    format?: boolean
+    createdAt?: boolean
+    expiresAt?: boolean
+    scannedAt?: boolean
+    data?: boolean
+    ticket?: boolean | TicketDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["qRCode"]>
+
+  export type QRCodeSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    ticketId?: boolean
+    path?: boolean
+    format?: boolean
+    createdAt?: boolean
+    expiresAt?: boolean
+    scannedAt?: boolean
+    data?: boolean
+    ticket?: boolean | TicketDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["qRCode"]>
+
+  export type QRCodeSelectScalar = {
+    id?: boolean
+    ticketId?: boolean
+    path?: boolean
+    format?: boolean
+    createdAt?: boolean
+    expiresAt?: boolean
+    scannedAt?: boolean
+    data?: boolean
+  }
+
+  export type QRCodeOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "ticketId" | "path" | "format" | "createdAt" | "expiresAt" | "scannedAt" | "data", ExtArgs["result"]["qRCode"]>
+  export type QRCodeInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    ticket?: boolean | TicketDefaultArgs<ExtArgs>
+  }
+  export type QRCodeIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    ticket?: boolean | TicketDefaultArgs<ExtArgs>
+  }
+  export type QRCodeIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    ticket?: boolean | TicketDefaultArgs<ExtArgs>
+  }
+
+  export type $QRCodePayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "QRCode"
+    objects: {
+      ticket: Prisma.$TicketPayload<ExtArgs>
+    }
+    scalars: $Extensions.GetPayloadResult<{
+      id: string
+      ticketId: string
+      path: string
+      format: string
+      createdAt: Date
+      expiresAt: Date | null
+      scannedAt: Date | null
+      data: Prisma.JsonValue | null
+    }, ExtArgs["result"]["qRCode"]>
+    composites: {}
+  }
+
+  type QRCodeGetPayload<S extends boolean | null | undefined | QRCodeDefaultArgs> = $Result.GetResult<Prisma.$QRCodePayload, S>
+
+  type QRCodeCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    Omit<QRCodeFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
+      select?: QRCodeCountAggregateInputType | true
+    }
+
+  export interface QRCodeDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['QRCode'], meta: { name: 'QRCode' } }
+    /**
+     * Find zero or one QRCode that matches the filter.
+     * @param {QRCodeFindUniqueArgs} args - Arguments to find a QRCode
+     * @example
+     * // Get one QRCode
+     * const qRCode = await prisma.qRCode.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends QRCodeFindUniqueArgs>(args: SelectSubset<T, QRCodeFindUniqueArgs<ExtArgs>>): Prisma__QRCodeClient<$Result.GetResult<Prisma.$QRCodePayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find one QRCode that matches the filter or throw an error with `error.code='P2025'`
+     * if no matches were found.
+     * @param {QRCodeFindUniqueOrThrowArgs} args - Arguments to find a QRCode
+     * @example
+     * // Get one QRCode
+     * const qRCode = await prisma.qRCode.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends QRCodeFindUniqueOrThrowArgs>(args: SelectSubset<T, QRCodeFindUniqueOrThrowArgs<ExtArgs>>): Prisma__QRCodeClient<$Result.GetResult<Prisma.$QRCodePayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first QRCode that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {QRCodeFindFirstArgs} args - Arguments to find a QRCode
+     * @example
+     * // Get one QRCode
+     * const qRCode = await prisma.qRCode.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends QRCodeFindFirstArgs>(args?: SelectSubset<T, QRCodeFindFirstArgs<ExtArgs>>): Prisma__QRCodeClient<$Result.GetResult<Prisma.$QRCodePayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first QRCode that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {QRCodeFindFirstOrThrowArgs} args - Arguments to find a QRCode
+     * @example
+     * // Get one QRCode
+     * const qRCode = await prisma.qRCode.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends QRCodeFindFirstOrThrowArgs>(args?: SelectSubset<T, QRCodeFindFirstOrThrowArgs<ExtArgs>>): Prisma__QRCodeClient<$Result.GetResult<Prisma.$QRCodePayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find zero or more QRCodes that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {QRCodeFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all QRCodes
+     * const qRCodes = await prisma.qRCode.findMany()
+     * 
+     * // Get first 10 QRCodes
+     * const qRCodes = await prisma.qRCode.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const qRCodeWithIdOnly = await prisma.qRCode.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends QRCodeFindManyArgs>(args?: SelectSubset<T, QRCodeFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$QRCodePayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
+
+    /**
+     * Create a QRCode.
+     * @param {QRCodeCreateArgs} args - Arguments to create a QRCode.
+     * @example
+     * // Create one QRCode
+     * const QRCode = await prisma.qRCode.create({
+     *   data: {
+     *     // ... data to create a QRCode
+     *   }
+     * })
+     * 
+     */
+    create<T extends QRCodeCreateArgs>(args: SelectSubset<T, QRCodeCreateArgs<ExtArgs>>): Prisma__QRCodeClient<$Result.GetResult<Prisma.$QRCodePayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Create many QRCodes.
+     * @param {QRCodeCreateManyArgs} args - Arguments to create many QRCodes.
+     * @example
+     * // Create many QRCodes
+     * const qRCode = await prisma.qRCode.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends QRCodeCreateManyArgs>(args?: SelectSubset<T, QRCodeCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many QRCodes and returns the data saved in the database.
+     * @param {QRCodeCreateManyAndReturnArgs} args - Arguments to create many QRCodes.
+     * @example
+     * // Create many QRCodes
+     * const qRCode = await prisma.qRCode.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many QRCodes and only return the `id`
+     * const qRCodeWithIdOnly = await prisma.qRCode.createManyAndReturn({
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends QRCodeCreateManyAndReturnArgs>(args?: SelectSubset<T, QRCodeCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$QRCodePayload<ExtArgs>, T, "createManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Delete a QRCode.
+     * @param {QRCodeDeleteArgs} args - Arguments to delete one QRCode.
+     * @example
+     * // Delete one QRCode
+     * const QRCode = await prisma.qRCode.delete({
+     *   where: {
+     *     // ... filter to delete one QRCode
+     *   }
+     * })
+     * 
+     */
+    delete<T extends QRCodeDeleteArgs>(args: SelectSubset<T, QRCodeDeleteArgs<ExtArgs>>): Prisma__QRCodeClient<$Result.GetResult<Prisma.$QRCodePayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Update one QRCode.
+     * @param {QRCodeUpdateArgs} args - Arguments to update one QRCode.
+     * @example
+     * // Update one QRCode
+     * const qRCode = await prisma.qRCode.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends QRCodeUpdateArgs>(args: SelectSubset<T, QRCodeUpdateArgs<ExtArgs>>): Prisma__QRCodeClient<$Result.GetResult<Prisma.$QRCodePayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Delete zero or more QRCodes.
+     * @param {QRCodeDeleteManyArgs} args - Arguments to filter QRCodes to delete.
+     * @example
+     * // Delete a few QRCodes
+     * const { count } = await prisma.qRCode.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends QRCodeDeleteManyArgs>(args?: SelectSubset<T, QRCodeDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more QRCodes.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {QRCodeUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many QRCodes
+     * const qRCode = await prisma.qRCode.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends QRCodeUpdateManyArgs>(args: SelectSubset<T, QRCodeUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more QRCodes and returns the data updated in the database.
+     * @param {QRCodeUpdateManyAndReturnArgs} args - Arguments to update many QRCodes.
+     * @example
+     * // Update many QRCodes
+     * const qRCode = await prisma.qRCode.updateManyAndReturn({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Update zero or more QRCodes and only return the `id`
+     * const qRCodeWithIdOnly = await prisma.qRCode.updateManyAndReturn({
+     *   select: { id: true },
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    updateManyAndReturn<T extends QRCodeUpdateManyAndReturnArgs>(args: SelectSubset<T, QRCodeUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$QRCodePayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Create or update one QRCode.
+     * @param {QRCodeUpsertArgs} args - Arguments to update or create a QRCode.
+     * @example
+     * // Update or create a QRCode
+     * const qRCode = await prisma.qRCode.upsert({
+     *   create: {
+     *     // ... data to create a QRCode
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the QRCode we want to update
+     *   }
+     * })
+     */
+    upsert<T extends QRCodeUpsertArgs>(args: SelectSubset<T, QRCodeUpsertArgs<ExtArgs>>): Prisma__QRCodeClient<$Result.GetResult<Prisma.$QRCodePayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+
+    /**
+     * Count the number of QRCodes.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {QRCodeCountArgs} args - Arguments to filter QRCodes to count.
+     * @example
+     * // Count the number of QRCodes
+     * const count = await prisma.qRCode.count({
+     *   where: {
+     *     // ... the filter for the QRCodes we want to count
+     *   }
+     * })
+    **/
+    count<T extends QRCodeCountArgs>(
+      args?: Subset<T, QRCodeCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], QRCodeCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a QRCode.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {QRCodeAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends QRCodeAggregateArgs>(args: Subset<T, QRCodeAggregateArgs>): Prisma.PrismaPromise<GetQRCodeAggregateType<T>>
+
+    /**
+     * Group by QRCode.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {QRCodeGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends QRCodeGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: QRCodeGroupByArgs['orderBy'] }
+        : { orderBy?: QRCodeGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, QRCodeGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetQRCodeGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the QRCode model
+   */
+  readonly fields: QRCodeFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for QRCode.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__QRCodeClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    ticket<T extends TicketDefaultArgs<ExtArgs> = {}>(args?: Subset<T, TicketDefaultArgs<ExtArgs>>): Prisma__TicketClient<$Result.GetResult<Prisma.$TicketPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the QRCode model
+   */
+  interface QRCodeFieldRefs {
+    readonly id: FieldRef<"QRCode", 'String'>
+    readonly ticketId: FieldRef<"QRCode", 'String'>
+    readonly path: FieldRef<"QRCode", 'String'>
+    readonly format: FieldRef<"QRCode", 'String'>
+    readonly createdAt: FieldRef<"QRCode", 'DateTime'>
+    readonly expiresAt: FieldRef<"QRCode", 'DateTime'>
+    readonly scannedAt: FieldRef<"QRCode", 'DateTime'>
+    readonly data: FieldRef<"QRCode", 'Json'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * QRCode findUnique
+   */
+  export type QRCodeFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the QRCode
+     */
+    select?: QRCodeSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the QRCode
+     */
+    omit?: QRCodeOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: QRCodeInclude<ExtArgs> | null
+    /**
+     * Filter, which QRCode to fetch.
+     */
+    where: QRCodeWhereUniqueInput
+  }
+
+  /**
+   * QRCode findUniqueOrThrow
+   */
+  export type QRCodeFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the QRCode
+     */
+    select?: QRCodeSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the QRCode
+     */
+    omit?: QRCodeOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: QRCodeInclude<ExtArgs> | null
+    /**
+     * Filter, which QRCode to fetch.
+     */
+    where: QRCodeWhereUniqueInput
+  }
+
+  /**
+   * QRCode findFirst
+   */
+  export type QRCodeFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the QRCode
+     */
+    select?: QRCodeSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the QRCode
+     */
+    omit?: QRCodeOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: QRCodeInclude<ExtArgs> | null
+    /**
+     * Filter, which QRCode to fetch.
+     */
+    where?: QRCodeWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of QRCodes to fetch.
+     */
+    orderBy?: QRCodeOrderByWithRelationInput | QRCodeOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for QRCodes.
+     */
+    cursor?: QRCodeWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` QRCodes from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` QRCodes.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of QRCodes.
+     */
+    distinct?: QRCodeScalarFieldEnum | QRCodeScalarFieldEnum[]
+  }
+
+  /**
+   * QRCode findFirstOrThrow
+   */
+  export type QRCodeFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the QRCode
+     */
+    select?: QRCodeSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the QRCode
+     */
+    omit?: QRCodeOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: QRCodeInclude<ExtArgs> | null
+    /**
+     * Filter, which QRCode to fetch.
+     */
+    where?: QRCodeWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of QRCodes to fetch.
+     */
+    orderBy?: QRCodeOrderByWithRelationInput | QRCodeOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for QRCodes.
+     */
+    cursor?: QRCodeWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` QRCodes from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` QRCodes.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of QRCodes.
+     */
+    distinct?: QRCodeScalarFieldEnum | QRCodeScalarFieldEnum[]
+  }
+
+  /**
+   * QRCode findMany
+   */
+  export type QRCodeFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the QRCode
+     */
+    select?: QRCodeSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the QRCode
+     */
+    omit?: QRCodeOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: QRCodeInclude<ExtArgs> | null
+    /**
+     * Filter, which QRCodes to fetch.
+     */
+    where?: QRCodeWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of QRCodes to fetch.
+     */
+    orderBy?: QRCodeOrderByWithRelationInput | QRCodeOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing QRCodes.
+     */
+    cursor?: QRCodeWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` QRCodes from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` QRCodes.
+     */
+    skip?: number
+    distinct?: QRCodeScalarFieldEnum | QRCodeScalarFieldEnum[]
+  }
+
+  /**
+   * QRCode create
+   */
+  export type QRCodeCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the QRCode
+     */
+    select?: QRCodeSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the QRCode
+     */
+    omit?: QRCodeOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: QRCodeInclude<ExtArgs> | null
+    /**
+     * The data needed to create a QRCode.
+     */
+    data: XOR<QRCodeCreateInput, QRCodeUncheckedCreateInput>
+  }
+
+  /**
+   * QRCode createMany
+   */
+  export type QRCodeCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many QRCodes.
+     */
+    data: QRCodeCreateManyInput | QRCodeCreateManyInput[]
+  }
+
+  /**
+   * QRCode createManyAndReturn
+   */
+  export type QRCodeCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the QRCode
+     */
+    select?: QRCodeSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the QRCode
+     */
+    omit?: QRCodeOmit<ExtArgs> | null
+    /**
+     * The data used to create many QRCodes.
+     */
+    data: QRCodeCreateManyInput | QRCodeCreateManyInput[]
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: QRCodeIncludeCreateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * QRCode update
+   */
+  export type QRCodeUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the QRCode
+     */
+    select?: QRCodeSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the QRCode
+     */
+    omit?: QRCodeOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: QRCodeInclude<ExtArgs> | null
+    /**
+     * The data needed to update a QRCode.
+     */
+    data: XOR<QRCodeUpdateInput, QRCodeUncheckedUpdateInput>
+    /**
+     * Choose, which QRCode to update.
+     */
+    where: QRCodeWhereUniqueInput
+  }
+
+  /**
+   * QRCode updateMany
+   */
+  export type QRCodeUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update QRCodes.
+     */
+    data: XOR<QRCodeUpdateManyMutationInput, QRCodeUncheckedUpdateManyInput>
+    /**
+     * Filter which QRCodes to update
+     */
+    where?: QRCodeWhereInput
+    /**
+     * Limit how many QRCodes to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * QRCode updateManyAndReturn
+   */
+  export type QRCodeUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the QRCode
+     */
+    select?: QRCodeSelectUpdateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the QRCode
+     */
+    omit?: QRCodeOmit<ExtArgs> | null
+    /**
+     * The data used to update QRCodes.
+     */
+    data: XOR<QRCodeUpdateManyMutationInput, QRCodeUncheckedUpdateManyInput>
+    /**
+     * Filter which QRCodes to update
+     */
+    where?: QRCodeWhereInput
+    /**
+     * Limit how many QRCodes to update.
+     */
+    limit?: number
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: QRCodeIncludeUpdateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * QRCode upsert
+   */
+  export type QRCodeUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the QRCode
+     */
+    select?: QRCodeSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the QRCode
+     */
+    omit?: QRCodeOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: QRCodeInclude<ExtArgs> | null
+    /**
+     * The filter to search for the QRCode to update in case it exists.
+     */
+    where: QRCodeWhereUniqueInput
+    /**
+     * In case the QRCode found by the `where` argument doesn't exist, create a new QRCode with this data.
+     */
+    create: XOR<QRCodeCreateInput, QRCodeUncheckedCreateInput>
+    /**
+     * In case the QRCode was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<QRCodeUpdateInput, QRCodeUncheckedUpdateInput>
+  }
+
+  /**
+   * QRCode delete
+   */
+  export type QRCodeDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the QRCode
+     */
+    select?: QRCodeSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the QRCode
+     */
+    omit?: QRCodeOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: QRCodeInclude<ExtArgs> | null
+    /**
+     * Filter which QRCode to delete.
+     */
+    where: QRCodeWhereUniqueInput
+  }
+
+  /**
+   * QRCode deleteMany
+   */
+  export type QRCodeDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which QRCodes to delete
+     */
+    where?: QRCodeWhereInput
+    /**
+     * Limit how many QRCodes to delete.
+     */
+    limit?: number
+  }
+
+  /**
+   * QRCode without action
+   */
+  export type QRCodeDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the QRCode
+     */
+    select?: QRCodeSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the QRCode
+     */
+    omit?: QRCodeOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: QRCodeInclude<ExtArgs> | null
   }
 
 
@@ -16111,7 +17415,6 @@ export namespace Prisma {
      * The data used to create many ActivityLogs.
      */
     data: ActivityLogCreateManyInput | ActivityLogCreateManyInput[]
-    skipDuplicates?: boolean
   }
 
   /**
@@ -16130,7 +17433,6 @@ export namespace Prisma {
      * The data used to create many ActivityLogs.
      */
     data: ActivityLogCreateManyInput | ActivityLogCreateManyInput[]
-    skipDuplicates?: boolean
     /**
      * Choose, which related nodes to fetch as well
      */
@@ -17169,7 +18471,6 @@ export namespace Prisma {
      * The data used to create many EventLogs.
      */
     data: EventLogCreateManyInput | EventLogCreateManyInput[]
-    skipDuplicates?: boolean
   }
 
   /**
@@ -17188,7 +18489,6 @@ export namespace Prisma {
      * The data used to create many EventLogs.
      */
     data: EventLogCreateManyInput | EventLogCreateManyInput[]
-    skipDuplicates?: boolean
     /**
      * Choose, which related nodes to fetch as well
      */
@@ -17388,7 +18688,7 @@ export namespace Prisma {
     userId: string | null
     type: string | null
     message: string | null
-    isRead: boolean | null
+    isRead: Date | null
     sentAt: Date | null
   }
 
@@ -17397,7 +18697,7 @@ export namespace Prisma {
     userId: string | null
     type: string | null
     message: string | null
-    isRead: boolean | null
+    isRead: Date | null
     sentAt: Date | null
   }
 
@@ -17517,7 +18817,7 @@ export namespace Prisma {
     userId: string
     type: string
     message: string
-    isRead: boolean
+    isRead: Date | null
     sentAt: Date
     _count: NotificationCountAggregateOutputType | null
     _min: NotificationMinAggregateOutputType | null
@@ -17598,7 +18898,7 @@ export namespace Prisma {
       userId: string
       type: string
       message: string
-      isRead: boolean
+      isRead: Date | null
       sentAt: Date
     }, ExtArgs["result"]["notification"]>
     composites: {}
@@ -18028,7 +19328,7 @@ export namespace Prisma {
     readonly userId: FieldRef<"Notification", 'String'>
     readonly type: FieldRef<"Notification", 'String'>
     readonly message: FieldRef<"Notification", 'String'>
-    readonly isRead: FieldRef<"Notification", 'Boolean'>
+    readonly isRead: FieldRef<"Notification", 'DateTime'>
     readonly sentAt: FieldRef<"Notification", 'DateTime'>
   }
     
@@ -18259,7 +19559,6 @@ export namespace Prisma {
      * The data used to create many Notifications.
      */
     data: NotificationCreateManyInput | NotificationCreateManyInput[]
-    skipDuplicates?: boolean
   }
 
   /**
@@ -18278,7 +19577,6 @@ export namespace Prisma {
      * The data used to create many Notifications.
      */
     data: NotificationCreateManyInput | NotificationCreateManyInput[]
-    skipDuplicates?: boolean
     /**
      * Choose, which related nodes to fetch as well
      */
@@ -19343,7 +20641,6 @@ export namespace Prisma {
      * The data used to create many Sessions.
      */
     data: SessionCreateManyInput | SessionCreateManyInput[]
-    skipDuplicates?: boolean
   }
 
   /**
@@ -19362,7 +20659,6 @@ export namespace Prisma {
      * The data used to create many Sessions.
      */
     data: SessionCreateManyInput | SessionCreateManyInput[]
-    skipDuplicates?: boolean
     /**
      * Choose, which related nodes to fetch as well
      */
@@ -20388,7 +21684,6 @@ export namespace Prisma {
      * The data used to create many BlockedUsers.
      */
     data: BlockedUserCreateManyInput | BlockedUserCreateManyInput[]
-    skipDuplicates?: boolean
   }
 
   /**
@@ -20407,7 +21702,6 @@ export namespace Prisma {
      * The data used to create many BlockedUsers.
      */
     data: BlockedUserCreateManyInput | BlockedUserCreateManyInput[]
-    skipDuplicates?: boolean
     /**
      * Choose, which related nodes to fetch as well
      */
@@ -21420,7 +22714,6 @@ export namespace Prisma {
      * The data used to create many Translations.
      */
     data: TranslationCreateManyInput | TranslationCreateManyInput[]
-    skipDuplicates?: boolean
   }
 
   /**
@@ -21439,7 +22732,6 @@ export namespace Prisma {
      * The data used to create many Translations.
      */
     data: TranslationCreateManyInput | TranslationCreateManyInput[]
-    skipDuplicates?: boolean
   }
 
   /**
@@ -21586,9 +22878,6 @@ export namespace Prisma {
    */
 
   export const TransactionIsolationLevel: {
-    ReadUncommitted: 'ReadUncommitted',
-    ReadCommitted: 'ReadCommitted',
-    RepeatableRead: 'RepeatableRead',
     Serializable: 'Serializable'
   };
 
@@ -21600,6 +22889,9 @@ export namespace Prisma {
     email: 'email',
     name: 'name',
     password: 'password',
+    isVerified: 'isVerified',
+    lastLogin: 'lastLogin',
+    role: 'role',
     metadata: 'metadata',
     createdAt: 'createdAt',
     updatedAt: 'updatedAt'
@@ -21627,9 +22919,12 @@ export namespace Prisma {
     maxCapacity: 'maxCapacity',
     isPublished: 'isPublished',
     isCancelled: 'isCancelled',
+    allowAnonymousPurchase: 'allowAnonymousPurchase',
+    allowTransfer: 'allowTransfer',
     categoryId: 'categoryId',
     venueId: 'venueId',
     organizerId: 'organizerId',
+    themeId: 'themeId',
     metadata: 'metadata',
     createdAt: 'createdAt',
     updatedAt: 'updatedAt'
@@ -21662,7 +22957,6 @@ export namespace Prisma {
     code: 'code',
     status: 'status',
     seatNumber: 'seatNumber',
-    qrCode: 'qrCode',
     usedAt: 'usedAt',
     purchasedAt: 'purchasedAt',
     metadata: 'metadata'
@@ -21725,17 +23019,32 @@ export namespace Prisma {
   export type TeamMemberScalarFieldEnum = (typeof TeamMemberScalarFieldEnum)[keyof typeof TeamMemberScalarFieldEnum]
 
 
-  export const EventSettingScalarFieldEnum: {
+  export const ThemeScalarFieldEnum: {
     id: 'id',
-    eventId: 'eventId',
-    theme: 'theme',
-    allowAnonymousPurchase: 'allowAnonymousPurchase',
-    allowTransfer: 'allowTransfer',
+    name: 'name',
+    description: 'description',
+    imagePath: 'imagePath',
+    color: 'color',
+    metadata: 'metadata',
     createdAt: 'createdAt',
     updatedAt: 'updatedAt'
   };
 
-  export type EventSettingScalarFieldEnum = (typeof EventSettingScalarFieldEnum)[keyof typeof EventSettingScalarFieldEnum]
+  export type ThemeScalarFieldEnum = (typeof ThemeScalarFieldEnum)[keyof typeof ThemeScalarFieldEnum]
+
+
+  export const QRCodeScalarFieldEnum: {
+    id: 'id',
+    ticketId: 'ticketId',
+    path: 'path',
+    format: 'format',
+    createdAt: 'createdAt',
+    expiresAt: 'expiresAt',
+    scannedAt: 'scannedAt',
+    data: 'data'
+  };
+
+  export type QRCodeScalarFieldEnum = (typeof QRCodeScalarFieldEnum)[keyof typeof QRCodeScalarFieldEnum]
 
 
   export const ActivityLogScalarFieldEnum: {
@@ -21824,14 +23133,6 @@ export namespace Prisma {
   export type NullableJsonNullValueInput = (typeof NullableJsonNullValueInput)[keyof typeof NullableJsonNullValueInput]
 
 
-  export const QueryMode: {
-    default: 'default',
-    insensitive: 'insensitive'
-  };
-
-  export type QueryMode = (typeof QueryMode)[keyof typeof QueryMode]
-
-
   export const JsonNullValueFilter: {
     DbNull: typeof DbNull,
     JsonNull: typeof JsonNull,
@@ -21839,6 +23140,14 @@ export namespace Prisma {
   };
 
   export type JsonNullValueFilter = (typeof JsonNullValueFilter)[keyof typeof JsonNullValueFilter]
+
+
+  export const QueryMode: {
+    default: 'default',
+    insensitive: 'insensitive'
+  };
+
+  export type QueryMode = (typeof QueryMode)[keyof typeof QueryMode]
 
 
   export const NullsOrder: {
@@ -21862,9 +23171,16 @@ export namespace Prisma {
 
 
   /**
-   * Reference to a field of type 'String[]'
+   * Reference to a field of type 'Boolean'
    */
-  export type ListStringFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'String[]'>
+  export type BooleanFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Boolean'>
+    
+
+
+  /**
+   * Reference to a field of type 'DateTime'
+   */
+  export type DateTimeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'DateTime'>
     
 
 
@@ -21883,37 +23199,9 @@ export namespace Prisma {
 
 
   /**
-   * Reference to a field of type 'DateTime'
-   */
-  export type DateTimeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'DateTime'>
-    
-
-
-  /**
-   * Reference to a field of type 'DateTime[]'
-   */
-  export type ListDateTimeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'DateTime[]'>
-    
-
-
-  /**
    * Reference to a field of type 'Int'
    */
   export type IntFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Int'>
-    
-
-
-  /**
-   * Reference to a field of type 'Int[]'
-   */
-  export type ListIntFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Int[]'>
-    
-
-
-  /**
-   * Reference to a field of type 'Boolean'
-   */
-  export type BooleanFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Boolean'>
     
 
 
@@ -21925,13 +23213,6 @@ export namespace Prisma {
 
 
   /**
-   * Reference to a field of type 'Float[]'
-   */
-  export type ListFloatFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Float[]'>
-    
-
-
-  /**
    * Reference to a field of type 'OrderStatus'
    */
   export type EnumOrderStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'OrderStatus'>
@@ -21939,23 +23220,9 @@ export namespace Prisma {
 
 
   /**
-   * Reference to a field of type 'OrderStatus[]'
-   */
-  export type ListEnumOrderStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'OrderStatus[]'>
-    
-
-
-  /**
    * Reference to a field of type 'TicketStatus'
    */
   export type EnumTicketStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'TicketStatus'>
-    
-
-
-  /**
-   * Reference to a field of type 'TicketStatus[]'
-   */
-  export type ListEnumTicketStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'TicketStatus[]'>
     
   /**
    * Deep Input Types
@@ -21970,6 +23237,9 @@ export namespace Prisma {
     email?: StringFilter<"User"> | string
     name?: StringNullableFilter<"User"> | string | null
     password?: StringFilter<"User"> | string
+    isVerified?: BoolFilter<"User"> | boolean
+    lastLogin?: DateTimeNullableFilter<"User"> | Date | string | null
+    role?: StringFilter<"User"> | string
     metadata?: JsonNullableFilter<"User">
     createdAt?: DateTimeFilter<"User"> | Date | string
     updatedAt?: DateTimeFilter<"User"> | Date | string
@@ -21989,6 +23259,9 @@ export namespace Prisma {
     email?: SortOrder
     name?: SortOrderInput | SortOrder
     password?: SortOrder
+    isVerified?: SortOrder
+    lastLogin?: SortOrderInput | SortOrder
+    role?: SortOrder
     metadata?: SortOrderInput | SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
@@ -22011,6 +23284,9 @@ export namespace Prisma {
     NOT?: UserWhereInput | UserWhereInput[]
     name?: StringNullableFilter<"User"> | string | null
     password?: StringFilter<"User"> | string
+    isVerified?: BoolFilter<"User"> | boolean
+    lastLogin?: DateTimeNullableFilter<"User"> | Date | string | null
+    role?: StringFilter<"User"> | string
     metadata?: JsonNullableFilter<"User">
     createdAt?: DateTimeFilter<"User"> | Date | string
     updatedAt?: DateTimeFilter<"User"> | Date | string
@@ -22030,6 +23306,9 @@ export namespace Prisma {
     email?: SortOrder
     name?: SortOrderInput | SortOrder
     password?: SortOrder
+    isVerified?: SortOrder
+    lastLogin?: SortOrderInput | SortOrder
+    role?: SortOrder
     metadata?: SortOrderInput | SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
@@ -22046,6 +23325,9 @@ export namespace Prisma {
     email?: StringWithAggregatesFilter<"User"> | string
     name?: StringNullableWithAggregatesFilter<"User"> | string | null
     password?: StringWithAggregatesFilter<"User"> | string
+    isVerified?: BoolWithAggregatesFilter<"User"> | boolean
+    lastLogin?: DateTimeNullableWithAggregatesFilter<"User"> | Date | string | null
+    role?: StringWithAggregatesFilter<"User"> | string
     metadata?: JsonNullableWithAggregatesFilter<"User">
     createdAt?: DateTimeWithAggregatesFilter<"User"> | Date | string
     updatedAt?: DateTimeWithAggregatesFilter<"User"> | Date | string
@@ -22116,18 +23398,21 @@ export namespace Prisma {
     maxCapacity?: IntNullableFilter<"Event"> | number | null
     isPublished?: BoolFilter<"Event"> | boolean
     isCancelled?: BoolFilter<"Event"> | boolean
+    allowAnonymousPurchase?: BoolFilter<"Event"> | boolean
+    allowTransfer?: BoolFilter<"Event"> | boolean
     categoryId?: StringNullableFilter<"Event"> | string | null
     venueId?: StringNullableFilter<"Event"> | string | null
     organizerId?: StringFilter<"Event"> | string
+    themeId?: StringNullableFilter<"Event"> | string | null
     metadata?: JsonNullableFilter<"Event">
     createdAt?: DateTimeFilter<"Event"> | Date | string
     updatedAt?: DateTimeFilter<"Event"> | Date | string
     tickets?: TicketListRelationFilter
     reviews?: ReviewListRelationFilter
-    eventSetting?: XOR<EventSettingNullableScalarRelationFilter, EventSettingWhereInput> | null
     category?: XOR<CategoryNullableScalarRelationFilter, CategoryWhereInput> | null
     venue?: XOR<VenueNullableScalarRelationFilter, VenueWhereInput> | null
     organizer?: XOR<OrganizerScalarRelationFilter, OrganizerWhereInput>
+    theme?: XOR<ThemeNullableScalarRelationFilter, ThemeWhereInput> | null
   }
 
   export type EventOrderByWithRelationInput = {
@@ -22139,18 +23424,21 @@ export namespace Prisma {
     maxCapacity?: SortOrderInput | SortOrder
     isPublished?: SortOrder
     isCancelled?: SortOrder
+    allowAnonymousPurchase?: SortOrder
+    allowTransfer?: SortOrder
     categoryId?: SortOrderInput | SortOrder
     venueId?: SortOrderInput | SortOrder
     organizerId?: SortOrder
+    themeId?: SortOrderInput | SortOrder
     metadata?: SortOrderInput | SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
     tickets?: TicketOrderByRelationAggregateInput
     reviews?: ReviewOrderByRelationAggregateInput
-    eventSetting?: EventSettingOrderByWithRelationInput
     category?: CategoryOrderByWithRelationInput
     venue?: VenueOrderByWithRelationInput
     organizer?: OrganizerOrderByWithRelationInput
+    theme?: ThemeOrderByWithRelationInput
   }
 
   export type EventWhereUniqueInput = Prisma.AtLeast<{
@@ -22165,18 +23453,21 @@ export namespace Prisma {
     maxCapacity?: IntNullableFilter<"Event"> | number | null
     isPublished?: BoolFilter<"Event"> | boolean
     isCancelled?: BoolFilter<"Event"> | boolean
+    allowAnonymousPurchase?: BoolFilter<"Event"> | boolean
+    allowTransfer?: BoolFilter<"Event"> | boolean
     categoryId?: StringNullableFilter<"Event"> | string | null
     venueId?: StringNullableFilter<"Event"> | string | null
     organizerId?: StringFilter<"Event"> | string
+    themeId?: StringNullableFilter<"Event"> | string | null
     metadata?: JsonNullableFilter<"Event">
     createdAt?: DateTimeFilter<"Event"> | Date | string
     updatedAt?: DateTimeFilter<"Event"> | Date | string
     tickets?: TicketListRelationFilter
     reviews?: ReviewListRelationFilter
-    eventSetting?: XOR<EventSettingNullableScalarRelationFilter, EventSettingWhereInput> | null
     category?: XOR<CategoryNullableScalarRelationFilter, CategoryWhereInput> | null
     venue?: XOR<VenueNullableScalarRelationFilter, VenueWhereInput> | null
     organizer?: XOR<OrganizerScalarRelationFilter, OrganizerWhereInput>
+    theme?: XOR<ThemeNullableScalarRelationFilter, ThemeWhereInput> | null
   }, "id">
 
   export type EventOrderByWithAggregationInput = {
@@ -22188,9 +23479,12 @@ export namespace Prisma {
     maxCapacity?: SortOrderInput | SortOrder
     isPublished?: SortOrder
     isCancelled?: SortOrder
+    allowAnonymousPurchase?: SortOrder
+    allowTransfer?: SortOrder
     categoryId?: SortOrderInput | SortOrder
     venueId?: SortOrderInput | SortOrder
     organizerId?: SortOrder
+    themeId?: SortOrderInput | SortOrder
     metadata?: SortOrderInput | SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
@@ -22213,9 +23507,12 @@ export namespace Prisma {
     maxCapacity?: IntNullableWithAggregatesFilter<"Event"> | number | null
     isPublished?: BoolWithAggregatesFilter<"Event"> | boolean
     isCancelled?: BoolWithAggregatesFilter<"Event"> | boolean
+    allowAnonymousPurchase?: BoolWithAggregatesFilter<"Event"> | boolean
+    allowTransfer?: BoolWithAggregatesFilter<"Event"> | boolean
     categoryId?: StringNullableWithAggregatesFilter<"Event"> | string | null
     venueId?: StringNullableWithAggregatesFilter<"Event"> | string | null
     organizerId?: StringWithAggregatesFilter<"Event"> | string
+    themeId?: StringNullableWithAggregatesFilter<"Event"> | string | null
     metadata?: JsonNullableWithAggregatesFilter<"Event">
     createdAt?: DateTimeWithAggregatesFilter<"Event"> | Date | string
     updatedAt?: DateTimeWithAggregatesFilter<"Event"> | Date | string
@@ -22320,13 +23617,13 @@ export namespace Prisma {
     code?: StringFilter<"Ticket"> | string
     status?: EnumTicketStatusFilter<"Ticket"> | $Enums.TicketStatus
     seatNumber?: StringNullableFilter<"Ticket"> | string | null
-    qrCode?: StringNullableFilter<"Ticket"> | string | null
     usedAt?: DateTimeNullableFilter<"Ticket"> | Date | string | null
     purchasedAt?: DateTimeFilter<"Ticket"> | Date | string
     metadata?: JsonNullableFilter<"Ticket">
     user?: XOR<UserNullableScalarRelationFilter, UserWhereInput> | null
     event?: XOR<EventScalarRelationFilter, EventWhereInput>
     order?: XOR<OrderNullableScalarRelationFilter, OrderWhereInput> | null
+    qrCode?: XOR<QRCodeNullableScalarRelationFilter, QRCodeWhereInput> | null
   }
 
   export type TicketOrderByWithRelationInput = {
@@ -22337,13 +23634,13 @@ export namespace Prisma {
     code?: SortOrder
     status?: SortOrder
     seatNumber?: SortOrderInput | SortOrder
-    qrCode?: SortOrderInput | SortOrder
     usedAt?: SortOrderInput | SortOrder
     purchasedAt?: SortOrder
     metadata?: SortOrderInput | SortOrder
     user?: UserOrderByWithRelationInput
     event?: EventOrderByWithRelationInput
     order?: OrderOrderByWithRelationInput
+    qrCode?: QRCodeOrderByWithRelationInput
   }
 
   export type TicketWhereUniqueInput = Prisma.AtLeast<{
@@ -22357,13 +23654,13 @@ export namespace Prisma {
     orderId?: StringNullableFilter<"Ticket"> | string | null
     status?: EnumTicketStatusFilter<"Ticket"> | $Enums.TicketStatus
     seatNumber?: StringNullableFilter<"Ticket"> | string | null
-    qrCode?: StringNullableFilter<"Ticket"> | string | null
     usedAt?: DateTimeNullableFilter<"Ticket"> | Date | string | null
     purchasedAt?: DateTimeFilter<"Ticket"> | Date | string
     metadata?: JsonNullableFilter<"Ticket">
     user?: XOR<UserNullableScalarRelationFilter, UserWhereInput> | null
     event?: XOR<EventScalarRelationFilter, EventWhereInput>
     order?: XOR<OrderNullableScalarRelationFilter, OrderWhereInput> | null
+    qrCode?: XOR<QRCodeNullableScalarRelationFilter, QRCodeWhereInput> | null
   }, "id" | "code">
 
   export type TicketOrderByWithAggregationInput = {
@@ -22374,7 +23671,6 @@ export namespace Prisma {
     code?: SortOrder
     status?: SortOrder
     seatNumber?: SortOrderInput | SortOrder
-    qrCode?: SortOrderInput | SortOrder
     usedAt?: SortOrderInput | SortOrder
     purchasedAt?: SortOrder
     metadata?: SortOrderInput | SortOrder
@@ -22394,7 +23690,6 @@ export namespace Prisma {
     code?: StringWithAggregatesFilter<"Ticket"> | string
     status?: EnumTicketStatusWithAggregatesFilter<"Ticket"> | $Enums.TicketStatus
     seatNumber?: StringNullableWithAggregatesFilter<"Ticket"> | string | null
-    qrCode?: StringNullableWithAggregatesFilter<"Ticket"> | string | null
     usedAt?: DateTimeNullableWithAggregatesFilter<"Ticket"> | Date | string | null
     purchasedAt?: DateTimeWithAggregatesFilter<"Ticket"> | Date | string
     metadata?: JsonNullableWithAggregatesFilter<"Ticket">
@@ -22680,69 +23975,144 @@ export namespace Prisma {
     joinedAt?: DateTimeWithAggregatesFilter<"TeamMember"> | Date | string
   }
 
-  export type EventSettingWhereInput = {
-    AND?: EventSettingWhereInput | EventSettingWhereInput[]
-    OR?: EventSettingWhereInput[]
-    NOT?: EventSettingWhereInput | EventSettingWhereInput[]
-    id?: StringFilter<"EventSetting"> | string
-    eventId?: StringFilter<"EventSetting"> | string
-    theme?: StringNullableFilter<"EventSetting"> | string | null
-    allowAnonymousPurchase?: BoolFilter<"EventSetting"> | boolean
-    allowTransfer?: BoolFilter<"EventSetting"> | boolean
-    createdAt?: DateTimeFilter<"EventSetting"> | Date | string
-    updatedAt?: DateTimeFilter<"EventSetting"> | Date | string
-    event?: XOR<EventScalarRelationFilter, EventWhereInput>
+  export type ThemeWhereInput = {
+    AND?: ThemeWhereInput | ThemeWhereInput[]
+    OR?: ThemeWhereInput[]
+    NOT?: ThemeWhereInput | ThemeWhereInput[]
+    id?: StringFilter<"Theme"> | string
+    name?: StringFilter<"Theme"> | string
+    description?: StringNullableFilter<"Theme"> | string | null
+    imagePath?: StringFilter<"Theme"> | string
+    color?: StringNullableFilter<"Theme"> | string | null
+    metadata?: JsonNullableFilter<"Theme">
+    createdAt?: DateTimeFilter<"Theme"> | Date | string
+    updatedAt?: DateTimeFilter<"Theme"> | Date | string
+    events?: EventListRelationFilter
   }
 
-  export type EventSettingOrderByWithRelationInput = {
+  export type ThemeOrderByWithRelationInput = {
     id?: SortOrder
-    eventId?: SortOrder
-    theme?: SortOrderInput | SortOrder
-    allowAnonymousPurchase?: SortOrder
-    allowTransfer?: SortOrder
+    name?: SortOrder
+    description?: SortOrderInput | SortOrder
+    imagePath?: SortOrder
+    color?: SortOrderInput | SortOrder
+    metadata?: SortOrderInput | SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
-    event?: EventOrderByWithRelationInput
+    events?: EventOrderByRelationAggregateInput
   }
 
-  export type EventSettingWhereUniqueInput = Prisma.AtLeast<{
+  export type ThemeWhereUniqueInput = Prisma.AtLeast<{
     id?: string
-    eventId?: string
-    AND?: EventSettingWhereInput | EventSettingWhereInput[]
-    OR?: EventSettingWhereInput[]
-    NOT?: EventSettingWhereInput | EventSettingWhereInput[]
-    theme?: StringNullableFilter<"EventSetting"> | string | null
-    allowAnonymousPurchase?: BoolFilter<"EventSetting"> | boolean
-    allowTransfer?: BoolFilter<"EventSetting"> | boolean
-    createdAt?: DateTimeFilter<"EventSetting"> | Date | string
-    updatedAt?: DateTimeFilter<"EventSetting"> | Date | string
-    event?: XOR<EventScalarRelationFilter, EventWhereInput>
-  }, "id" | "eventId">
+    AND?: ThemeWhereInput | ThemeWhereInput[]
+    OR?: ThemeWhereInput[]
+    NOT?: ThemeWhereInput | ThemeWhereInput[]
+    name?: StringFilter<"Theme"> | string
+    description?: StringNullableFilter<"Theme"> | string | null
+    imagePath?: StringFilter<"Theme"> | string
+    color?: StringNullableFilter<"Theme"> | string | null
+    metadata?: JsonNullableFilter<"Theme">
+    createdAt?: DateTimeFilter<"Theme"> | Date | string
+    updatedAt?: DateTimeFilter<"Theme"> | Date | string
+    events?: EventListRelationFilter
+  }, "id">
 
-  export type EventSettingOrderByWithAggregationInput = {
+  export type ThemeOrderByWithAggregationInput = {
     id?: SortOrder
-    eventId?: SortOrder
-    theme?: SortOrderInput | SortOrder
-    allowAnonymousPurchase?: SortOrder
-    allowTransfer?: SortOrder
+    name?: SortOrder
+    description?: SortOrderInput | SortOrder
+    imagePath?: SortOrder
+    color?: SortOrderInput | SortOrder
+    metadata?: SortOrderInput | SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
-    _count?: EventSettingCountOrderByAggregateInput
-    _max?: EventSettingMaxOrderByAggregateInput
-    _min?: EventSettingMinOrderByAggregateInput
+    _count?: ThemeCountOrderByAggregateInput
+    _max?: ThemeMaxOrderByAggregateInput
+    _min?: ThemeMinOrderByAggregateInput
   }
 
-  export type EventSettingScalarWhereWithAggregatesInput = {
-    AND?: EventSettingScalarWhereWithAggregatesInput | EventSettingScalarWhereWithAggregatesInput[]
-    OR?: EventSettingScalarWhereWithAggregatesInput[]
-    NOT?: EventSettingScalarWhereWithAggregatesInput | EventSettingScalarWhereWithAggregatesInput[]
-    id?: StringWithAggregatesFilter<"EventSetting"> | string
-    eventId?: StringWithAggregatesFilter<"EventSetting"> | string
-    theme?: StringNullableWithAggregatesFilter<"EventSetting"> | string | null
-    allowAnonymousPurchase?: BoolWithAggregatesFilter<"EventSetting"> | boolean
-    allowTransfer?: BoolWithAggregatesFilter<"EventSetting"> | boolean
-    createdAt?: DateTimeWithAggregatesFilter<"EventSetting"> | Date | string
-    updatedAt?: DateTimeWithAggregatesFilter<"EventSetting"> | Date | string
+  export type ThemeScalarWhereWithAggregatesInput = {
+    AND?: ThemeScalarWhereWithAggregatesInput | ThemeScalarWhereWithAggregatesInput[]
+    OR?: ThemeScalarWhereWithAggregatesInput[]
+    NOT?: ThemeScalarWhereWithAggregatesInput | ThemeScalarWhereWithAggregatesInput[]
+    id?: StringWithAggregatesFilter<"Theme"> | string
+    name?: StringWithAggregatesFilter<"Theme"> | string
+    description?: StringNullableWithAggregatesFilter<"Theme"> | string | null
+    imagePath?: StringWithAggregatesFilter<"Theme"> | string
+    color?: StringNullableWithAggregatesFilter<"Theme"> | string | null
+    metadata?: JsonNullableWithAggregatesFilter<"Theme">
+    createdAt?: DateTimeWithAggregatesFilter<"Theme"> | Date | string
+    updatedAt?: DateTimeWithAggregatesFilter<"Theme"> | Date | string
+  }
+
+  export type QRCodeWhereInput = {
+    AND?: QRCodeWhereInput | QRCodeWhereInput[]
+    OR?: QRCodeWhereInput[]
+    NOT?: QRCodeWhereInput | QRCodeWhereInput[]
+    id?: StringFilter<"QRCode"> | string
+    ticketId?: StringFilter<"QRCode"> | string
+    path?: StringFilter<"QRCode"> | string
+    format?: StringFilter<"QRCode"> | string
+    createdAt?: DateTimeFilter<"QRCode"> | Date | string
+    expiresAt?: DateTimeNullableFilter<"QRCode"> | Date | string | null
+    scannedAt?: DateTimeNullableFilter<"QRCode"> | Date | string | null
+    data?: JsonNullableFilter<"QRCode">
+    ticket?: XOR<TicketScalarRelationFilter, TicketWhereInput>
+  }
+
+  export type QRCodeOrderByWithRelationInput = {
+    id?: SortOrder
+    ticketId?: SortOrder
+    path?: SortOrder
+    format?: SortOrder
+    createdAt?: SortOrder
+    expiresAt?: SortOrderInput | SortOrder
+    scannedAt?: SortOrderInput | SortOrder
+    data?: SortOrderInput | SortOrder
+    ticket?: TicketOrderByWithRelationInput
+  }
+
+  export type QRCodeWhereUniqueInput = Prisma.AtLeast<{
+    id?: string
+    ticketId?: string
+    AND?: QRCodeWhereInput | QRCodeWhereInput[]
+    OR?: QRCodeWhereInput[]
+    NOT?: QRCodeWhereInput | QRCodeWhereInput[]
+    path?: StringFilter<"QRCode"> | string
+    format?: StringFilter<"QRCode"> | string
+    createdAt?: DateTimeFilter<"QRCode"> | Date | string
+    expiresAt?: DateTimeNullableFilter<"QRCode"> | Date | string | null
+    scannedAt?: DateTimeNullableFilter<"QRCode"> | Date | string | null
+    data?: JsonNullableFilter<"QRCode">
+    ticket?: XOR<TicketScalarRelationFilter, TicketWhereInput>
+  }, "id" | "ticketId">
+
+  export type QRCodeOrderByWithAggregationInput = {
+    id?: SortOrder
+    ticketId?: SortOrder
+    path?: SortOrder
+    format?: SortOrder
+    createdAt?: SortOrder
+    expiresAt?: SortOrderInput | SortOrder
+    scannedAt?: SortOrderInput | SortOrder
+    data?: SortOrderInput | SortOrder
+    _count?: QRCodeCountOrderByAggregateInput
+    _max?: QRCodeMaxOrderByAggregateInput
+    _min?: QRCodeMinOrderByAggregateInput
+  }
+
+  export type QRCodeScalarWhereWithAggregatesInput = {
+    AND?: QRCodeScalarWhereWithAggregatesInput | QRCodeScalarWhereWithAggregatesInput[]
+    OR?: QRCodeScalarWhereWithAggregatesInput[]
+    NOT?: QRCodeScalarWhereWithAggregatesInput | QRCodeScalarWhereWithAggregatesInput[]
+    id?: StringWithAggregatesFilter<"QRCode"> | string
+    ticketId?: StringWithAggregatesFilter<"QRCode"> | string
+    path?: StringWithAggregatesFilter<"QRCode"> | string
+    format?: StringWithAggregatesFilter<"QRCode"> | string
+    createdAt?: DateTimeWithAggregatesFilter<"QRCode"> | Date | string
+    expiresAt?: DateTimeNullableWithAggregatesFilter<"QRCode"> | Date | string | null
+    scannedAt?: DateTimeNullableWithAggregatesFilter<"QRCode"> | Date | string | null
+    data?: JsonNullableWithAggregatesFilter<"QRCode">
   }
 
   export type ActivityLogWhereInput = {
@@ -22868,7 +24238,7 @@ export namespace Prisma {
     userId?: StringFilter<"Notification"> | string
     type?: StringFilter<"Notification"> | string
     message?: StringFilter<"Notification"> | string
-    isRead?: BoolFilter<"Notification"> | boolean
+    isRead?: DateTimeNullableFilter<"Notification"> | Date | string | null
     sentAt?: DateTimeFilter<"Notification"> | Date | string
     user?: XOR<UserScalarRelationFilter, UserWhereInput>
   }
@@ -22878,7 +24248,7 @@ export namespace Prisma {
     userId?: SortOrder
     type?: SortOrder
     message?: SortOrder
-    isRead?: SortOrder
+    isRead?: SortOrderInput | SortOrder
     sentAt?: SortOrder
     user?: UserOrderByWithRelationInput
   }
@@ -22891,7 +24261,7 @@ export namespace Prisma {
     userId?: StringFilter<"Notification"> | string
     type?: StringFilter<"Notification"> | string
     message?: StringFilter<"Notification"> | string
-    isRead?: BoolFilter<"Notification"> | boolean
+    isRead?: DateTimeNullableFilter<"Notification"> | Date | string | null
     sentAt?: DateTimeFilter<"Notification"> | Date | string
     user?: XOR<UserScalarRelationFilter, UserWhereInput>
   }, "id">
@@ -22901,7 +24271,7 @@ export namespace Prisma {
     userId?: SortOrder
     type?: SortOrder
     message?: SortOrder
-    isRead?: SortOrder
+    isRead?: SortOrderInput | SortOrder
     sentAt?: SortOrder
     _count?: NotificationCountOrderByAggregateInput
     _max?: NotificationMaxOrderByAggregateInput
@@ -22916,7 +24286,7 @@ export namespace Prisma {
     userId?: StringWithAggregatesFilter<"Notification"> | string
     type?: StringWithAggregatesFilter<"Notification"> | string
     message?: StringWithAggregatesFilter<"Notification"> | string
-    isRead?: BoolWithAggregatesFilter<"Notification"> | boolean
+    isRead?: DateTimeNullableWithAggregatesFilter<"Notification"> | Date | string | null
     sentAt?: DateTimeWithAggregatesFilter<"Notification"> | Date | string
   }
 
@@ -23097,6 +24467,9 @@ export namespace Prisma {
     email: string
     name?: string | null
     password: string
+    isVerified?: boolean
+    lastLogin?: Date | string | null
+    role?: string
     metadata?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -23116,6 +24489,9 @@ export namespace Prisma {
     email: string
     name?: string | null
     password: string
+    isVerified?: boolean
+    lastLogin?: Date | string | null
+    role?: string
     metadata?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -23135,6 +24511,9 @@ export namespace Prisma {
     email?: StringFieldUpdateOperationsInput | string
     name?: NullableStringFieldUpdateOperationsInput | string | null
     password?: StringFieldUpdateOperationsInput | string
+    isVerified?: BoolFieldUpdateOperationsInput | boolean
+    lastLogin?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    role?: StringFieldUpdateOperationsInput | string
     metadata?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -23154,6 +24533,9 @@ export namespace Prisma {
     email?: StringFieldUpdateOperationsInput | string
     name?: NullableStringFieldUpdateOperationsInput | string | null
     password?: StringFieldUpdateOperationsInput | string
+    isVerified?: BoolFieldUpdateOperationsInput | boolean
+    lastLogin?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    role?: StringFieldUpdateOperationsInput | string
     metadata?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -23173,6 +24555,9 @@ export namespace Prisma {
     email: string
     name?: string | null
     password: string
+    isVerified?: boolean
+    lastLogin?: Date | string | null
+    role?: string
     metadata?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -23183,6 +24568,9 @@ export namespace Prisma {
     email?: StringFieldUpdateOperationsInput | string
     name?: NullableStringFieldUpdateOperationsInput | string | null
     password?: StringFieldUpdateOperationsInput | string
+    isVerified?: BoolFieldUpdateOperationsInput | boolean
+    lastLogin?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    role?: StringFieldUpdateOperationsInput | string
     metadata?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -23193,6 +24581,9 @@ export namespace Prisma {
     email?: StringFieldUpdateOperationsInput | string
     name?: NullableStringFieldUpdateOperationsInput | string | null
     password?: StringFieldUpdateOperationsInput | string
+    isVerified?: BoolFieldUpdateOperationsInput | boolean
+    lastLogin?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    role?: StringFieldUpdateOperationsInput | string
     metadata?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -23264,15 +24655,17 @@ export namespace Prisma {
     maxCapacity?: number | null
     isPublished?: boolean
     isCancelled?: boolean
+    allowAnonymousPurchase?: boolean
+    allowTransfer?: boolean
     metadata?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: Date | string
     updatedAt?: Date | string
     tickets?: TicketCreateNestedManyWithoutEventInput
     reviews?: ReviewCreateNestedManyWithoutEventInput
-    eventSetting?: EventSettingCreateNestedOneWithoutEventInput
     category?: CategoryCreateNestedOneWithoutEventsInput
     venue?: VenueCreateNestedOneWithoutEventsInput
     organizer: OrganizerCreateNestedOneWithoutEventsInput
+    theme?: ThemeCreateNestedOneWithoutEventsInput
   }
 
   export type EventUncheckedCreateInput = {
@@ -23284,15 +24677,17 @@ export namespace Prisma {
     maxCapacity?: number | null
     isPublished?: boolean
     isCancelled?: boolean
+    allowAnonymousPurchase?: boolean
+    allowTransfer?: boolean
     categoryId?: string | null
     venueId?: string | null
     organizerId: string
+    themeId?: string | null
     metadata?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: Date | string
     updatedAt?: Date | string
     tickets?: TicketUncheckedCreateNestedManyWithoutEventInput
     reviews?: ReviewUncheckedCreateNestedManyWithoutEventInput
-    eventSetting?: EventSettingUncheckedCreateNestedOneWithoutEventInput
   }
 
   export type EventUpdateInput = {
@@ -23304,15 +24699,17 @@ export namespace Prisma {
     maxCapacity?: NullableIntFieldUpdateOperationsInput | number | null
     isPublished?: BoolFieldUpdateOperationsInput | boolean
     isCancelled?: BoolFieldUpdateOperationsInput | boolean
+    allowAnonymousPurchase?: BoolFieldUpdateOperationsInput | boolean
+    allowTransfer?: BoolFieldUpdateOperationsInput | boolean
     metadata?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     tickets?: TicketUpdateManyWithoutEventNestedInput
     reviews?: ReviewUpdateManyWithoutEventNestedInput
-    eventSetting?: EventSettingUpdateOneWithoutEventNestedInput
     category?: CategoryUpdateOneWithoutEventsNestedInput
     venue?: VenueUpdateOneWithoutEventsNestedInput
     organizer?: OrganizerUpdateOneRequiredWithoutEventsNestedInput
+    theme?: ThemeUpdateOneWithoutEventsNestedInput
   }
 
   export type EventUncheckedUpdateInput = {
@@ -23324,15 +24721,17 @@ export namespace Prisma {
     maxCapacity?: NullableIntFieldUpdateOperationsInput | number | null
     isPublished?: BoolFieldUpdateOperationsInput | boolean
     isCancelled?: BoolFieldUpdateOperationsInput | boolean
+    allowAnonymousPurchase?: BoolFieldUpdateOperationsInput | boolean
+    allowTransfer?: BoolFieldUpdateOperationsInput | boolean
     categoryId?: NullableStringFieldUpdateOperationsInput | string | null
     venueId?: NullableStringFieldUpdateOperationsInput | string | null
     organizerId?: StringFieldUpdateOperationsInput | string
+    themeId?: NullableStringFieldUpdateOperationsInput | string | null
     metadata?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     tickets?: TicketUncheckedUpdateManyWithoutEventNestedInput
     reviews?: ReviewUncheckedUpdateManyWithoutEventNestedInput
-    eventSetting?: EventSettingUncheckedUpdateOneWithoutEventNestedInput
   }
 
   export type EventCreateManyInput = {
@@ -23344,9 +24743,12 @@ export namespace Prisma {
     maxCapacity?: number | null
     isPublished?: boolean
     isCancelled?: boolean
+    allowAnonymousPurchase?: boolean
+    allowTransfer?: boolean
     categoryId?: string | null
     venueId?: string | null
     organizerId: string
+    themeId?: string | null
     metadata?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -23361,6 +24763,8 @@ export namespace Prisma {
     maxCapacity?: NullableIntFieldUpdateOperationsInput | number | null
     isPublished?: BoolFieldUpdateOperationsInput | boolean
     isCancelled?: BoolFieldUpdateOperationsInput | boolean
+    allowAnonymousPurchase?: BoolFieldUpdateOperationsInput | boolean
+    allowTransfer?: BoolFieldUpdateOperationsInput | boolean
     metadata?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -23375,9 +24779,12 @@ export namespace Prisma {
     maxCapacity?: NullableIntFieldUpdateOperationsInput | number | null
     isPublished?: BoolFieldUpdateOperationsInput | boolean
     isCancelled?: BoolFieldUpdateOperationsInput | boolean
+    allowAnonymousPurchase?: BoolFieldUpdateOperationsInput | boolean
+    allowTransfer?: BoolFieldUpdateOperationsInput | boolean
     categoryId?: NullableStringFieldUpdateOperationsInput | string | null
     venueId?: NullableStringFieldUpdateOperationsInput | string | null
     organizerId?: StringFieldUpdateOperationsInput | string
+    themeId?: NullableStringFieldUpdateOperationsInput | string | null
     metadata?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -23486,13 +24893,13 @@ export namespace Prisma {
     code: string
     status?: $Enums.TicketStatus
     seatNumber?: string | null
-    qrCode?: string | null
     usedAt?: Date | string | null
     purchasedAt?: Date | string
     metadata?: NullableJsonNullValueInput | InputJsonValue
     user?: UserCreateNestedOneWithoutTicketsInput
     event: EventCreateNestedOneWithoutTicketsInput
     order?: OrderCreateNestedOneWithoutTicketsInput
+    qrCode?: QRCodeCreateNestedOneWithoutTicketInput
   }
 
   export type TicketUncheckedCreateInput = {
@@ -23503,10 +24910,10 @@ export namespace Prisma {
     code: string
     status?: $Enums.TicketStatus
     seatNumber?: string | null
-    qrCode?: string | null
     usedAt?: Date | string | null
     purchasedAt?: Date | string
     metadata?: NullableJsonNullValueInput | InputJsonValue
+    qrCode?: QRCodeUncheckedCreateNestedOneWithoutTicketInput
   }
 
   export type TicketUpdateInput = {
@@ -23514,13 +24921,13 @@ export namespace Prisma {
     code?: StringFieldUpdateOperationsInput | string
     status?: EnumTicketStatusFieldUpdateOperationsInput | $Enums.TicketStatus
     seatNumber?: NullableStringFieldUpdateOperationsInput | string | null
-    qrCode?: NullableStringFieldUpdateOperationsInput | string | null
     usedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     purchasedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     metadata?: NullableJsonNullValueInput | InputJsonValue
     user?: UserUpdateOneWithoutTicketsNestedInput
     event?: EventUpdateOneRequiredWithoutTicketsNestedInput
     order?: OrderUpdateOneWithoutTicketsNestedInput
+    qrCode?: QRCodeUpdateOneWithoutTicketNestedInput
   }
 
   export type TicketUncheckedUpdateInput = {
@@ -23531,10 +24938,10 @@ export namespace Prisma {
     code?: StringFieldUpdateOperationsInput | string
     status?: EnumTicketStatusFieldUpdateOperationsInput | $Enums.TicketStatus
     seatNumber?: NullableStringFieldUpdateOperationsInput | string | null
-    qrCode?: NullableStringFieldUpdateOperationsInput | string | null
     usedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     purchasedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     metadata?: NullableJsonNullValueInput | InputJsonValue
+    qrCode?: QRCodeUncheckedUpdateOneWithoutTicketNestedInput
   }
 
   export type TicketCreateManyInput = {
@@ -23545,7 +24952,6 @@ export namespace Prisma {
     code: string
     status?: $Enums.TicketStatus
     seatNumber?: string | null
-    qrCode?: string | null
     usedAt?: Date | string | null
     purchasedAt?: Date | string
     metadata?: NullableJsonNullValueInput | InputJsonValue
@@ -23556,7 +24962,6 @@ export namespace Prisma {
     code?: StringFieldUpdateOperationsInput | string
     status?: EnumTicketStatusFieldUpdateOperationsInput | $Enums.TicketStatus
     seatNumber?: NullableStringFieldUpdateOperationsInput | string | null
-    qrCode?: NullableStringFieldUpdateOperationsInput | string | null
     usedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     purchasedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     metadata?: NullableJsonNullValueInput | InputJsonValue
@@ -23570,7 +24975,6 @@ export namespace Prisma {
     code?: StringFieldUpdateOperationsInput | string
     status?: EnumTicketStatusFieldUpdateOperationsInput | $Enums.TicketStatus
     seatNumber?: NullableStringFieldUpdateOperationsInput | string | null
-    qrCode?: NullableStringFieldUpdateOperationsInput | string | null
     usedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     purchasedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     metadata?: NullableJsonNullValueInput | InputJsonValue
@@ -23852,73 +25256,161 @@ export namespace Prisma {
     joinedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
-  export type EventSettingCreateInput = {
+  export type ThemeCreateInput = {
     id?: string
-    theme?: string | null
-    allowAnonymousPurchase?: boolean
-    allowTransfer?: boolean
+    name: string
+    description?: string | null
+    imagePath: string
+    color?: string | null
+    metadata?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: Date | string
     updatedAt?: Date | string
-    event: EventCreateNestedOneWithoutEventSettingInput
+    events?: EventCreateNestedManyWithoutThemeInput
   }
 
-  export type EventSettingUncheckedCreateInput = {
+  export type ThemeUncheckedCreateInput = {
     id?: string
-    eventId: string
-    theme?: string | null
-    allowAnonymousPurchase?: boolean
-    allowTransfer?: boolean
+    name: string
+    description?: string | null
+    imagePath: string
+    color?: string | null
+    metadata?: NullableJsonNullValueInput | InputJsonValue
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    events?: EventUncheckedCreateNestedManyWithoutThemeInput
+  }
+
+  export type ThemeUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    description?: NullableStringFieldUpdateOperationsInput | string | null
+    imagePath?: StringFieldUpdateOperationsInput | string
+    color?: NullableStringFieldUpdateOperationsInput | string | null
+    metadata?: NullableJsonNullValueInput | InputJsonValue
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    events?: EventUpdateManyWithoutThemeNestedInput
+  }
+
+  export type ThemeUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    description?: NullableStringFieldUpdateOperationsInput | string | null
+    imagePath?: StringFieldUpdateOperationsInput | string
+    color?: NullableStringFieldUpdateOperationsInput | string | null
+    metadata?: NullableJsonNullValueInput | InputJsonValue
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    events?: EventUncheckedUpdateManyWithoutThemeNestedInput
+  }
+
+  export type ThemeCreateManyInput = {
+    id?: string
+    name: string
+    description?: string | null
+    imagePath: string
+    color?: string | null
+    metadata?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: Date | string
     updatedAt?: Date | string
   }
 
-  export type EventSettingUpdateInput = {
+  export type ThemeUpdateManyMutationInput = {
     id?: StringFieldUpdateOperationsInput | string
-    theme?: NullableStringFieldUpdateOperationsInput | string | null
-    allowAnonymousPurchase?: BoolFieldUpdateOperationsInput | boolean
-    allowTransfer?: BoolFieldUpdateOperationsInput | boolean
-    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    event?: EventUpdateOneRequiredWithoutEventSettingNestedInput
-  }
-
-  export type EventSettingUncheckedUpdateInput = {
-    id?: StringFieldUpdateOperationsInput | string
-    eventId?: StringFieldUpdateOperationsInput | string
-    theme?: NullableStringFieldUpdateOperationsInput | string | null
-    allowAnonymousPurchase?: BoolFieldUpdateOperationsInput | boolean
-    allowTransfer?: BoolFieldUpdateOperationsInput | boolean
+    name?: StringFieldUpdateOperationsInput | string
+    description?: NullableStringFieldUpdateOperationsInput | string | null
+    imagePath?: StringFieldUpdateOperationsInput | string
+    color?: NullableStringFieldUpdateOperationsInput | string | null
+    metadata?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
-  export type EventSettingCreateManyInput = {
+  export type ThemeUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    description?: NullableStringFieldUpdateOperationsInput | string | null
+    imagePath?: StringFieldUpdateOperationsInput | string
+    color?: NullableStringFieldUpdateOperationsInput | string | null
+    metadata?: NullableJsonNullValueInput | InputJsonValue
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type QRCodeCreateInput = {
     id?: string
-    eventId: string
-    theme?: string | null
-    allowAnonymousPurchase?: boolean
-    allowTransfer?: boolean
+    path: string
+    format: string
     createdAt?: Date | string
-    updatedAt?: Date | string
+    expiresAt?: Date | string | null
+    scannedAt?: Date | string | null
+    data?: NullableJsonNullValueInput | InputJsonValue
+    ticket: TicketCreateNestedOneWithoutQrCodeInput
   }
 
-  export type EventSettingUpdateManyMutationInput = {
-    id?: StringFieldUpdateOperationsInput | string
-    theme?: NullableStringFieldUpdateOperationsInput | string | null
-    allowAnonymousPurchase?: BoolFieldUpdateOperationsInput | boolean
-    allowTransfer?: BoolFieldUpdateOperationsInput | boolean
-    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  export type QRCodeUncheckedCreateInput = {
+    id?: string
+    ticketId: string
+    path: string
+    format: string
+    createdAt?: Date | string
+    expiresAt?: Date | string | null
+    scannedAt?: Date | string | null
+    data?: NullableJsonNullValueInput | InputJsonValue
   }
 
-  export type EventSettingUncheckedUpdateManyInput = {
+  export type QRCodeUpdateInput = {
     id?: StringFieldUpdateOperationsInput | string
-    eventId?: StringFieldUpdateOperationsInput | string
-    theme?: NullableStringFieldUpdateOperationsInput | string | null
-    allowAnonymousPurchase?: BoolFieldUpdateOperationsInput | boolean
-    allowTransfer?: BoolFieldUpdateOperationsInput | boolean
+    path?: StringFieldUpdateOperationsInput | string
+    format?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    expiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    scannedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    data?: NullableJsonNullValueInput | InputJsonValue
+    ticket?: TicketUpdateOneRequiredWithoutQrCodeNestedInput
+  }
+
+  export type QRCodeUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    ticketId?: StringFieldUpdateOperationsInput | string
+    path?: StringFieldUpdateOperationsInput | string
+    format?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    expiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    scannedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    data?: NullableJsonNullValueInput | InputJsonValue
+  }
+
+  export type QRCodeCreateManyInput = {
+    id?: string
+    ticketId: string
+    path: string
+    format: string
+    createdAt?: Date | string
+    expiresAt?: Date | string | null
+    scannedAt?: Date | string | null
+    data?: NullableJsonNullValueInput | InputJsonValue
+  }
+
+  export type QRCodeUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    path?: StringFieldUpdateOperationsInput | string
+    format?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    expiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    scannedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    data?: NullableJsonNullValueInput | InputJsonValue
+  }
+
+  export type QRCodeUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    ticketId?: StringFieldUpdateOperationsInput | string
+    path?: StringFieldUpdateOperationsInput | string
+    format?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    expiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    scannedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    data?: NullableJsonNullValueInput | InputJsonValue
   }
 
   export type ActivityLogCreateInput = {
@@ -24042,7 +25534,7 @@ export namespace Prisma {
     id?: string
     type: string
     message: string
-    isRead?: boolean
+    isRead?: Date | string | null
     sentAt: Date | string
     user: UserCreateNestedOneWithoutNotificationsInput
   }
@@ -24052,7 +25544,7 @@ export namespace Prisma {
     userId: string
     type: string
     message: string
-    isRead?: boolean
+    isRead?: Date | string | null
     sentAt: Date | string
   }
 
@@ -24060,7 +25552,7 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     type?: StringFieldUpdateOperationsInput | string
     message?: StringFieldUpdateOperationsInput | string
-    isRead?: BoolFieldUpdateOperationsInput | boolean
+    isRead?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     sentAt?: DateTimeFieldUpdateOperationsInput | Date | string
     user?: UserUpdateOneRequiredWithoutNotificationsNestedInput
   }
@@ -24070,7 +25562,7 @@ export namespace Prisma {
     userId?: StringFieldUpdateOperationsInput | string
     type?: StringFieldUpdateOperationsInput | string
     message?: StringFieldUpdateOperationsInput | string
-    isRead?: BoolFieldUpdateOperationsInput | boolean
+    isRead?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     sentAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
@@ -24079,7 +25571,7 @@ export namespace Prisma {
     userId: string
     type: string
     message: string
-    isRead?: boolean
+    isRead?: Date | string | null
     sentAt: Date | string
   }
 
@@ -24087,7 +25579,7 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     type?: StringFieldUpdateOperationsInput | string
     message?: StringFieldUpdateOperationsInput | string
-    isRead?: BoolFieldUpdateOperationsInput | boolean
+    isRead?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     sentAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
@@ -24096,7 +25588,7 @@ export namespace Prisma {
     userId?: StringFieldUpdateOperationsInput | string
     type?: StringFieldUpdateOperationsInput | string
     message?: StringFieldUpdateOperationsInput | string
-    isRead?: BoolFieldUpdateOperationsInput | boolean
+    isRead?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     sentAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
@@ -24282,8 +25774,8 @@ export namespace Prisma {
 
   export type StringFilter<$PrismaModel = never> = {
     equals?: string | StringFieldRefInput<$PrismaModel>
-    in?: string[] | ListStringFieldRefInput<$PrismaModel>
-    notIn?: string[] | ListStringFieldRefInput<$PrismaModel>
+    in?: string[]
+    notIn?: string[]
     lt?: string | StringFieldRefInput<$PrismaModel>
     lte?: string | StringFieldRefInput<$PrismaModel>
     gt?: string | StringFieldRefInput<$PrismaModel>
@@ -24291,14 +25783,13 @@ export namespace Prisma {
     contains?: string | StringFieldRefInput<$PrismaModel>
     startsWith?: string | StringFieldRefInput<$PrismaModel>
     endsWith?: string | StringFieldRefInput<$PrismaModel>
-    mode?: QueryMode
     not?: NestedStringFilter<$PrismaModel> | string
   }
 
   export type StringNullableFilter<$PrismaModel = never> = {
     equals?: string | StringFieldRefInput<$PrismaModel> | null
-    in?: string[] | ListStringFieldRefInput<$PrismaModel> | null
-    notIn?: string[] | ListStringFieldRefInput<$PrismaModel> | null
+    in?: string[] | null
+    notIn?: string[] | null
     lt?: string | StringFieldRefInput<$PrismaModel>
     lte?: string | StringFieldRefInput<$PrismaModel>
     gt?: string | StringFieldRefInput<$PrismaModel>
@@ -24306,8 +25797,23 @@ export namespace Prisma {
     contains?: string | StringFieldRefInput<$PrismaModel>
     startsWith?: string | StringFieldRefInput<$PrismaModel>
     endsWith?: string | StringFieldRefInput<$PrismaModel>
-    mode?: QueryMode
     not?: NestedStringNullableFilter<$PrismaModel> | string | null
+  }
+
+  export type BoolFilter<$PrismaModel = never> = {
+    equals?: boolean | BooleanFieldRefInput<$PrismaModel>
+    not?: NestedBoolFilter<$PrismaModel> | boolean
+  }
+
+  export type DateTimeNullableFilter<$PrismaModel = never> = {
+    equals?: Date | string | DateTimeFieldRefInput<$PrismaModel> | null
+    in?: Date[] | string[] | null
+    notIn?: Date[] | string[] | null
+    lt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    lte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    gt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    gte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    not?: NestedDateTimeNullableFilter<$PrismaModel> | Date | string | null
   }
   export type JsonNullableFilter<$PrismaModel = never> =
     | PatchUndefined<
@@ -24318,25 +25824,20 @@ export namespace Prisma {
 
   export type JsonNullableFilterBase<$PrismaModel = never> = {
     equals?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
-    path?: string[]
+    path?: string
     mode?: QueryMode | EnumQueryModeFieldRefInput<$PrismaModel>
     string_contains?: string | StringFieldRefInput<$PrismaModel>
     string_starts_with?: string | StringFieldRefInput<$PrismaModel>
     string_ends_with?: string | StringFieldRefInput<$PrismaModel>
     array_starts_with?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
     array_ends_with?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
-    array_contains?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
-    lt?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
-    lte?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
-    gt?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
-    gte?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
     not?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
   }
 
   export type DateTimeFilter<$PrismaModel = never> = {
     equals?: Date | string | DateTimeFieldRefInput<$PrismaModel>
-    in?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel>
-    notIn?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel>
+    in?: Date[] | string[]
+    notIn?: Date[] | string[]
     lt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
     lte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
     gt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
@@ -24439,6 +25940,9 @@ export namespace Prisma {
     email?: SortOrder
     name?: SortOrder
     password?: SortOrder
+    isVerified?: SortOrder
+    lastLogin?: SortOrder
+    role?: SortOrder
     metadata?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
@@ -24449,6 +25953,9 @@ export namespace Prisma {
     email?: SortOrder
     name?: SortOrder
     password?: SortOrder
+    isVerified?: SortOrder
+    lastLogin?: SortOrder
+    role?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
   }
@@ -24458,14 +25965,17 @@ export namespace Prisma {
     email?: SortOrder
     name?: SortOrder
     password?: SortOrder
+    isVerified?: SortOrder
+    lastLogin?: SortOrder
+    role?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
   }
 
   export type StringWithAggregatesFilter<$PrismaModel = never> = {
     equals?: string | StringFieldRefInput<$PrismaModel>
-    in?: string[] | ListStringFieldRefInput<$PrismaModel>
-    notIn?: string[] | ListStringFieldRefInput<$PrismaModel>
+    in?: string[]
+    notIn?: string[]
     lt?: string | StringFieldRefInput<$PrismaModel>
     lte?: string | StringFieldRefInput<$PrismaModel>
     gt?: string | StringFieldRefInput<$PrismaModel>
@@ -24473,7 +25983,6 @@ export namespace Prisma {
     contains?: string | StringFieldRefInput<$PrismaModel>
     startsWith?: string | StringFieldRefInput<$PrismaModel>
     endsWith?: string | StringFieldRefInput<$PrismaModel>
-    mode?: QueryMode
     not?: NestedStringWithAggregatesFilter<$PrismaModel> | string
     _count?: NestedIntFilter<$PrismaModel>
     _min?: NestedStringFilter<$PrismaModel>
@@ -24482,8 +25991,8 @@ export namespace Prisma {
 
   export type StringNullableWithAggregatesFilter<$PrismaModel = never> = {
     equals?: string | StringFieldRefInput<$PrismaModel> | null
-    in?: string[] | ListStringFieldRefInput<$PrismaModel> | null
-    notIn?: string[] | ListStringFieldRefInput<$PrismaModel> | null
+    in?: string[] | null
+    notIn?: string[] | null
     lt?: string | StringFieldRefInput<$PrismaModel>
     lte?: string | StringFieldRefInput<$PrismaModel>
     gt?: string | StringFieldRefInput<$PrismaModel>
@@ -24491,11 +26000,32 @@ export namespace Prisma {
     contains?: string | StringFieldRefInput<$PrismaModel>
     startsWith?: string | StringFieldRefInput<$PrismaModel>
     endsWith?: string | StringFieldRefInput<$PrismaModel>
-    mode?: QueryMode
     not?: NestedStringNullableWithAggregatesFilter<$PrismaModel> | string | null
     _count?: NestedIntNullableFilter<$PrismaModel>
     _min?: NestedStringNullableFilter<$PrismaModel>
     _max?: NestedStringNullableFilter<$PrismaModel>
+  }
+
+  export type BoolWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: boolean | BooleanFieldRefInput<$PrismaModel>
+    not?: NestedBoolWithAggregatesFilter<$PrismaModel> | boolean
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedBoolFilter<$PrismaModel>
+    _max?: NestedBoolFilter<$PrismaModel>
+  }
+
+  export type DateTimeNullableWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: Date | string | DateTimeFieldRefInput<$PrismaModel> | null
+    in?: Date[] | string[] | null
+    notIn?: Date[] | string[] | null
+    lt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    lte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    gt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    gte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    not?: NestedDateTimeNullableWithAggregatesFilter<$PrismaModel> | Date | string | null
+    _count?: NestedIntNullableFilter<$PrismaModel>
+    _min?: NestedDateTimeNullableFilter<$PrismaModel>
+    _max?: NestedDateTimeNullableFilter<$PrismaModel>
   }
   export type JsonNullableWithAggregatesFilter<$PrismaModel = never> =
     | PatchUndefined<
@@ -24506,18 +26036,13 @@ export namespace Prisma {
 
   export type JsonNullableWithAggregatesFilterBase<$PrismaModel = never> = {
     equals?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
-    path?: string[]
+    path?: string
     mode?: QueryMode | EnumQueryModeFieldRefInput<$PrismaModel>
     string_contains?: string | StringFieldRefInput<$PrismaModel>
     string_starts_with?: string | StringFieldRefInput<$PrismaModel>
     string_ends_with?: string | StringFieldRefInput<$PrismaModel>
     array_starts_with?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
     array_ends_with?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
-    array_contains?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
-    lt?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
-    lte?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
-    gt?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
-    gte?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
     not?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
     _count?: NestedIntNullableFilter<$PrismaModel>
     _min?: NestedJsonNullableFilter<$PrismaModel>
@@ -24526,8 +26051,8 @@ export namespace Prisma {
 
   export type DateTimeWithAggregatesFilter<$PrismaModel = never> = {
     equals?: Date | string | DateTimeFieldRefInput<$PrismaModel>
-    in?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel>
-    notIn?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel>
+    in?: Date[] | string[]
+    notIn?: Date[] | string[]
     lt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
     lte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
     gt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
@@ -24571,23 +26096,13 @@ export namespace Prisma {
 
   export type IntNullableFilter<$PrismaModel = never> = {
     equals?: number | IntFieldRefInput<$PrismaModel> | null
-    in?: number[] | ListIntFieldRefInput<$PrismaModel> | null
-    notIn?: number[] | ListIntFieldRefInput<$PrismaModel> | null
+    in?: number[] | null
+    notIn?: number[] | null
     lt?: number | IntFieldRefInput<$PrismaModel>
     lte?: number | IntFieldRefInput<$PrismaModel>
     gt?: number | IntFieldRefInput<$PrismaModel>
     gte?: number | IntFieldRefInput<$PrismaModel>
     not?: NestedIntNullableFilter<$PrismaModel> | number | null
-  }
-
-  export type BoolFilter<$PrismaModel = never> = {
-    equals?: boolean | BooleanFieldRefInput<$PrismaModel>
-    not?: NestedBoolFilter<$PrismaModel> | boolean
-  }
-
-  export type EventSettingNullableScalarRelationFilter = {
-    is?: EventSettingWhereInput | null
-    isNot?: EventSettingWhereInput | null
   }
 
   export type CategoryNullableScalarRelationFilter = {
@@ -24605,6 +26120,11 @@ export namespace Prisma {
     isNot?: OrganizerWhereInput
   }
 
+  export type ThemeNullableScalarRelationFilter = {
+    is?: ThemeWhereInput | null
+    isNot?: ThemeWhereInput | null
+  }
+
   export type EventCountOrderByAggregateInput = {
     id?: SortOrder
     title?: SortOrder
@@ -24614,9 +26134,12 @@ export namespace Prisma {
     maxCapacity?: SortOrder
     isPublished?: SortOrder
     isCancelled?: SortOrder
+    allowAnonymousPurchase?: SortOrder
+    allowTransfer?: SortOrder
     categoryId?: SortOrder
     venueId?: SortOrder
     organizerId?: SortOrder
+    themeId?: SortOrder
     metadata?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
@@ -24635,9 +26158,12 @@ export namespace Prisma {
     maxCapacity?: SortOrder
     isPublished?: SortOrder
     isCancelled?: SortOrder
+    allowAnonymousPurchase?: SortOrder
+    allowTransfer?: SortOrder
     categoryId?: SortOrder
     venueId?: SortOrder
     organizerId?: SortOrder
+    themeId?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
   }
@@ -24651,9 +26177,12 @@ export namespace Prisma {
     maxCapacity?: SortOrder
     isPublished?: SortOrder
     isCancelled?: SortOrder
+    allowAnonymousPurchase?: SortOrder
+    allowTransfer?: SortOrder
     categoryId?: SortOrder
     venueId?: SortOrder
     organizerId?: SortOrder
+    themeId?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
   }
@@ -24664,8 +26193,8 @@ export namespace Prisma {
 
   export type IntNullableWithAggregatesFilter<$PrismaModel = never> = {
     equals?: number | IntFieldRefInput<$PrismaModel> | null
-    in?: number[] | ListIntFieldRefInput<$PrismaModel> | null
-    notIn?: number[] | ListIntFieldRefInput<$PrismaModel> | null
+    in?: number[] | null
+    notIn?: number[] | null
     lt?: number | IntFieldRefInput<$PrismaModel>
     lte?: number | IntFieldRefInput<$PrismaModel>
     gt?: number | IntFieldRefInput<$PrismaModel>
@@ -24678,18 +26207,10 @@ export namespace Prisma {
     _max?: NestedIntNullableFilter<$PrismaModel>
   }
 
-  export type BoolWithAggregatesFilter<$PrismaModel = never> = {
-    equals?: boolean | BooleanFieldRefInput<$PrismaModel>
-    not?: NestedBoolWithAggregatesFilter<$PrismaModel> | boolean
-    _count?: NestedIntFilter<$PrismaModel>
-    _min?: NestedBoolFilter<$PrismaModel>
-    _max?: NestedBoolFilter<$PrismaModel>
-  }
-
   export type FloatFilter<$PrismaModel = never> = {
     equals?: number | FloatFieldRefInput<$PrismaModel>
-    in?: number[] | ListFloatFieldRefInput<$PrismaModel>
-    notIn?: number[] | ListFloatFieldRefInput<$PrismaModel>
+    in?: number[]
+    notIn?: number[]
     lt?: number | FloatFieldRefInput<$PrismaModel>
     lte?: number | FloatFieldRefInput<$PrismaModel>
     gt?: number | FloatFieldRefInput<$PrismaModel>
@@ -24699,15 +26220,15 @@ export namespace Prisma {
 
   export type EnumOrderStatusFilter<$PrismaModel = never> = {
     equals?: $Enums.OrderStatus | EnumOrderStatusFieldRefInput<$PrismaModel>
-    in?: $Enums.OrderStatus[] | ListEnumOrderStatusFieldRefInput<$PrismaModel>
-    notIn?: $Enums.OrderStatus[] | ListEnumOrderStatusFieldRefInput<$PrismaModel>
+    in?: $Enums.OrderStatus[]
+    notIn?: $Enums.OrderStatus[]
     not?: NestedEnumOrderStatusFilter<$PrismaModel> | $Enums.OrderStatus
   }
 
   export type FloatNullableFilter<$PrismaModel = never> = {
     equals?: number | FloatFieldRefInput<$PrismaModel> | null
-    in?: number[] | ListFloatFieldRefInput<$PrismaModel> | null
-    notIn?: number[] | ListFloatFieldRefInput<$PrismaModel> | null
+    in?: number[] | null
+    notIn?: number[] | null
     lt?: number | FloatFieldRefInput<$PrismaModel>
     lte?: number | FloatFieldRefInput<$PrismaModel>
     gt?: number | FloatFieldRefInput<$PrismaModel>
@@ -24774,8 +26295,8 @@ export namespace Prisma {
 
   export type FloatWithAggregatesFilter<$PrismaModel = never> = {
     equals?: number | FloatFieldRefInput<$PrismaModel>
-    in?: number[] | ListFloatFieldRefInput<$PrismaModel>
-    notIn?: number[] | ListFloatFieldRefInput<$PrismaModel>
+    in?: number[]
+    notIn?: number[]
     lt?: number | FloatFieldRefInput<$PrismaModel>
     lte?: number | FloatFieldRefInput<$PrismaModel>
     gt?: number | FloatFieldRefInput<$PrismaModel>
@@ -24790,8 +26311,8 @@ export namespace Prisma {
 
   export type EnumOrderStatusWithAggregatesFilter<$PrismaModel = never> = {
     equals?: $Enums.OrderStatus | EnumOrderStatusFieldRefInput<$PrismaModel>
-    in?: $Enums.OrderStatus[] | ListEnumOrderStatusFieldRefInput<$PrismaModel>
-    notIn?: $Enums.OrderStatus[] | ListEnumOrderStatusFieldRefInput<$PrismaModel>
+    in?: $Enums.OrderStatus[]
+    notIn?: $Enums.OrderStatus[]
     not?: NestedEnumOrderStatusWithAggregatesFilter<$PrismaModel> | $Enums.OrderStatus
     _count?: NestedIntFilter<$PrismaModel>
     _min?: NestedEnumOrderStatusFilter<$PrismaModel>
@@ -24800,8 +26321,8 @@ export namespace Prisma {
 
   export type FloatNullableWithAggregatesFilter<$PrismaModel = never> = {
     equals?: number | FloatFieldRefInput<$PrismaModel> | null
-    in?: number[] | ListFloatFieldRefInput<$PrismaModel> | null
-    notIn?: number[] | ListFloatFieldRefInput<$PrismaModel> | null
+    in?: number[] | null
+    notIn?: number[] | null
     lt?: number | FloatFieldRefInput<$PrismaModel>
     lte?: number | FloatFieldRefInput<$PrismaModel>
     gt?: number | FloatFieldRefInput<$PrismaModel>
@@ -24816,20 +26337,9 @@ export namespace Prisma {
 
   export type EnumTicketStatusFilter<$PrismaModel = never> = {
     equals?: $Enums.TicketStatus | EnumTicketStatusFieldRefInput<$PrismaModel>
-    in?: $Enums.TicketStatus[] | ListEnumTicketStatusFieldRefInput<$PrismaModel>
-    notIn?: $Enums.TicketStatus[] | ListEnumTicketStatusFieldRefInput<$PrismaModel>
+    in?: $Enums.TicketStatus[]
+    notIn?: $Enums.TicketStatus[]
     not?: NestedEnumTicketStatusFilter<$PrismaModel> | $Enums.TicketStatus
-  }
-
-  export type DateTimeNullableFilter<$PrismaModel = never> = {
-    equals?: Date | string | DateTimeFieldRefInput<$PrismaModel> | null
-    in?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel> | null
-    notIn?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel> | null
-    lt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
-    lte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
-    gt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
-    gte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
-    not?: NestedDateTimeNullableFilter<$PrismaModel> | Date | string | null
   }
 
   export type UserNullableScalarRelationFilter = {
@@ -24847,6 +26357,11 @@ export namespace Prisma {
     isNot?: OrderWhereInput | null
   }
 
+  export type QRCodeNullableScalarRelationFilter = {
+    is?: QRCodeWhereInput | null
+    isNot?: QRCodeWhereInput | null
+  }
+
   export type TicketCountOrderByAggregateInput = {
     id?: SortOrder
     userId?: SortOrder
@@ -24855,7 +26370,6 @@ export namespace Prisma {
     code?: SortOrder
     status?: SortOrder
     seatNumber?: SortOrder
-    qrCode?: SortOrder
     usedAt?: SortOrder
     purchasedAt?: SortOrder
     metadata?: SortOrder
@@ -24869,7 +26383,6 @@ export namespace Prisma {
     code?: SortOrder
     status?: SortOrder
     seatNumber?: SortOrder
-    qrCode?: SortOrder
     usedAt?: SortOrder
     purchasedAt?: SortOrder
   }
@@ -24882,33 +26395,18 @@ export namespace Prisma {
     code?: SortOrder
     status?: SortOrder
     seatNumber?: SortOrder
-    qrCode?: SortOrder
     usedAt?: SortOrder
     purchasedAt?: SortOrder
   }
 
   export type EnumTicketStatusWithAggregatesFilter<$PrismaModel = never> = {
     equals?: $Enums.TicketStatus | EnumTicketStatusFieldRefInput<$PrismaModel>
-    in?: $Enums.TicketStatus[] | ListEnumTicketStatusFieldRefInput<$PrismaModel>
-    notIn?: $Enums.TicketStatus[] | ListEnumTicketStatusFieldRefInput<$PrismaModel>
+    in?: $Enums.TicketStatus[]
+    notIn?: $Enums.TicketStatus[]
     not?: NestedEnumTicketStatusWithAggregatesFilter<$PrismaModel> | $Enums.TicketStatus
     _count?: NestedIntFilter<$PrismaModel>
     _min?: NestedEnumTicketStatusFilter<$PrismaModel>
     _max?: NestedEnumTicketStatusFilter<$PrismaModel>
-  }
-
-  export type DateTimeNullableWithAggregatesFilter<$PrismaModel = never> = {
-    equals?: Date | string | DateTimeFieldRefInput<$PrismaModel> | null
-    in?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel> | null
-    notIn?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel> | null
-    lt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
-    lte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
-    gt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
-    gte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
-    not?: NestedDateTimeNullableWithAggregatesFilter<$PrismaModel> | Date | string | null
-    _count?: NestedIntNullableFilter<$PrismaModel>
-    _min?: NestedDateTimeNullableFilter<$PrismaModel>
-    _max?: NestedDateTimeNullableFilter<$PrismaModel>
   }
 
   export type OrderScalarRelationFilter = {
@@ -24963,8 +26461,8 @@ export namespace Prisma {
 
   export type IntFilter<$PrismaModel = never> = {
     equals?: number | IntFieldRefInput<$PrismaModel>
-    in?: number[] | ListIntFieldRefInput<$PrismaModel>
-    notIn?: number[] | ListIntFieldRefInput<$PrismaModel>
+    in?: number[]
+    notIn?: number[]
     lt?: number | IntFieldRefInput<$PrismaModel>
     lte?: number | IntFieldRefInput<$PrismaModel>
     gt?: number | IntFieldRefInput<$PrismaModel>
@@ -25003,8 +26501,8 @@ export namespace Prisma {
 
   export type IntWithAggregatesFilter<$PrismaModel = never> = {
     equals?: number | IntFieldRefInput<$PrismaModel>
-    in?: number[] | ListIntFieldRefInput<$PrismaModel>
-    notIn?: number[] | ListIntFieldRefInput<$PrismaModel>
+    in?: number[]
+    notIn?: number[]
     lt?: number | IntFieldRefInput<$PrismaModel>
     lte?: number | IntFieldRefInput<$PrismaModel>
     gt?: number | IntFieldRefInput<$PrismaModel>
@@ -25076,34 +26574,71 @@ export namespace Prisma {
     joinedAt?: SortOrder
   }
 
-  export type EventSettingCountOrderByAggregateInput = {
+  export type ThemeCountOrderByAggregateInput = {
     id?: SortOrder
-    eventId?: SortOrder
-    theme?: SortOrder
-    allowAnonymousPurchase?: SortOrder
-    allowTransfer?: SortOrder
+    name?: SortOrder
+    description?: SortOrder
+    imagePath?: SortOrder
+    color?: SortOrder
+    metadata?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
   }
 
-  export type EventSettingMaxOrderByAggregateInput = {
+  export type ThemeMaxOrderByAggregateInput = {
     id?: SortOrder
-    eventId?: SortOrder
-    theme?: SortOrder
-    allowAnonymousPurchase?: SortOrder
-    allowTransfer?: SortOrder
+    name?: SortOrder
+    description?: SortOrder
+    imagePath?: SortOrder
+    color?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
   }
 
-  export type EventSettingMinOrderByAggregateInput = {
+  export type ThemeMinOrderByAggregateInput = {
     id?: SortOrder
-    eventId?: SortOrder
-    theme?: SortOrder
-    allowAnonymousPurchase?: SortOrder
-    allowTransfer?: SortOrder
+    name?: SortOrder
+    description?: SortOrder
+    imagePath?: SortOrder
+    color?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
+  }
+
+  export type TicketScalarRelationFilter = {
+    is?: TicketWhereInput
+    isNot?: TicketWhereInput
+  }
+
+  export type QRCodeCountOrderByAggregateInput = {
+    id?: SortOrder
+    ticketId?: SortOrder
+    path?: SortOrder
+    format?: SortOrder
+    createdAt?: SortOrder
+    expiresAt?: SortOrder
+    scannedAt?: SortOrder
+    data?: SortOrder
+  }
+
+  export type QRCodeMaxOrderByAggregateInput = {
+    id?: SortOrder
+    ticketId?: SortOrder
+    path?: SortOrder
+    format?: SortOrder
+    createdAt?: SortOrder
+    expiresAt?: SortOrder
+    scannedAt?: SortOrder
+  }
+
+  export type QRCodeMinOrderByAggregateInput = {
+    id?: SortOrder
+    ticketId?: SortOrder
+    path?: SortOrder
+    format?: SortOrder
+    createdAt?: SortOrder
+    expiresAt?: SortOrder
+    scannedAt?: SortOrder
   }
 
   export type ActivityLogCountOrderByAggregateInput = {
@@ -25392,6 +26927,14 @@ export namespace Prisma {
 
   export type NullableStringFieldUpdateOperationsInput = {
     set?: string | null
+  }
+
+  export type BoolFieldUpdateOperationsInput = {
+    set?: boolean
+  }
+
+  export type NullableDateTimeFieldUpdateOperationsInput = {
+    set?: Date | string | null
   }
 
   export type DateTimeFieldUpdateOperationsInput = {
@@ -25740,12 +27283,6 @@ export namespace Prisma {
     connect?: ReviewWhereUniqueInput | ReviewWhereUniqueInput[]
   }
 
-  export type EventSettingCreateNestedOneWithoutEventInput = {
-    create?: XOR<EventSettingCreateWithoutEventInput, EventSettingUncheckedCreateWithoutEventInput>
-    connectOrCreate?: EventSettingCreateOrConnectWithoutEventInput
-    connect?: EventSettingWhereUniqueInput
-  }
-
   export type CategoryCreateNestedOneWithoutEventsInput = {
     create?: XOR<CategoryCreateWithoutEventsInput, CategoryUncheckedCreateWithoutEventsInput>
     connectOrCreate?: CategoryCreateOrConnectWithoutEventsInput
@@ -25764,6 +27301,12 @@ export namespace Prisma {
     connect?: OrganizerWhereUniqueInput
   }
 
+  export type ThemeCreateNestedOneWithoutEventsInput = {
+    create?: XOR<ThemeCreateWithoutEventsInput, ThemeUncheckedCreateWithoutEventsInput>
+    connectOrCreate?: ThemeCreateOrConnectWithoutEventsInput
+    connect?: ThemeWhereUniqueInput
+  }
+
   export type TicketUncheckedCreateNestedManyWithoutEventInput = {
     create?: XOR<TicketCreateWithoutEventInput, TicketUncheckedCreateWithoutEventInput> | TicketCreateWithoutEventInput[] | TicketUncheckedCreateWithoutEventInput[]
     connectOrCreate?: TicketCreateOrConnectWithoutEventInput | TicketCreateOrConnectWithoutEventInput[]
@@ -25778,22 +27321,12 @@ export namespace Prisma {
     connect?: ReviewWhereUniqueInput | ReviewWhereUniqueInput[]
   }
 
-  export type EventSettingUncheckedCreateNestedOneWithoutEventInput = {
-    create?: XOR<EventSettingCreateWithoutEventInput, EventSettingUncheckedCreateWithoutEventInput>
-    connectOrCreate?: EventSettingCreateOrConnectWithoutEventInput
-    connect?: EventSettingWhereUniqueInput
-  }
-
   export type NullableIntFieldUpdateOperationsInput = {
     set?: number | null
     increment?: number
     decrement?: number
     multiply?: number
     divide?: number
-  }
-
-  export type BoolFieldUpdateOperationsInput = {
-    set?: boolean
   }
 
   export type TicketUpdateManyWithoutEventNestedInput = {
@@ -25824,16 +27357,6 @@ export namespace Prisma {
     deleteMany?: ReviewScalarWhereInput | ReviewScalarWhereInput[]
   }
 
-  export type EventSettingUpdateOneWithoutEventNestedInput = {
-    create?: XOR<EventSettingCreateWithoutEventInput, EventSettingUncheckedCreateWithoutEventInput>
-    connectOrCreate?: EventSettingCreateOrConnectWithoutEventInput
-    upsert?: EventSettingUpsertWithoutEventInput
-    disconnect?: EventSettingWhereInput | boolean
-    delete?: EventSettingWhereInput | boolean
-    connect?: EventSettingWhereUniqueInput
-    update?: XOR<XOR<EventSettingUpdateToOneWithWhereWithoutEventInput, EventSettingUpdateWithoutEventInput>, EventSettingUncheckedUpdateWithoutEventInput>
-  }
-
   export type CategoryUpdateOneWithoutEventsNestedInput = {
     create?: XOR<CategoryCreateWithoutEventsInput, CategoryUncheckedCreateWithoutEventsInput>
     connectOrCreate?: CategoryCreateOrConnectWithoutEventsInput
@@ -25862,6 +27385,16 @@ export namespace Prisma {
     update?: XOR<XOR<OrganizerUpdateToOneWithWhereWithoutEventsInput, OrganizerUpdateWithoutEventsInput>, OrganizerUncheckedUpdateWithoutEventsInput>
   }
 
+  export type ThemeUpdateOneWithoutEventsNestedInput = {
+    create?: XOR<ThemeCreateWithoutEventsInput, ThemeUncheckedCreateWithoutEventsInput>
+    connectOrCreate?: ThemeCreateOrConnectWithoutEventsInput
+    upsert?: ThemeUpsertWithoutEventsInput
+    disconnect?: ThemeWhereInput | boolean
+    delete?: ThemeWhereInput | boolean
+    connect?: ThemeWhereUniqueInput
+    update?: XOR<XOR<ThemeUpdateToOneWithWhereWithoutEventsInput, ThemeUpdateWithoutEventsInput>, ThemeUncheckedUpdateWithoutEventsInput>
+  }
+
   export type TicketUncheckedUpdateManyWithoutEventNestedInput = {
     create?: XOR<TicketCreateWithoutEventInput, TicketUncheckedCreateWithoutEventInput> | TicketCreateWithoutEventInput[] | TicketUncheckedCreateWithoutEventInput[]
     connectOrCreate?: TicketCreateOrConnectWithoutEventInput | TicketCreateOrConnectWithoutEventInput[]
@@ -25888,16 +27421,6 @@ export namespace Prisma {
     update?: ReviewUpdateWithWhereUniqueWithoutEventInput | ReviewUpdateWithWhereUniqueWithoutEventInput[]
     updateMany?: ReviewUpdateManyWithWhereWithoutEventInput | ReviewUpdateManyWithWhereWithoutEventInput[]
     deleteMany?: ReviewScalarWhereInput | ReviewScalarWhereInput[]
-  }
-
-  export type EventSettingUncheckedUpdateOneWithoutEventNestedInput = {
-    create?: XOR<EventSettingCreateWithoutEventInput, EventSettingUncheckedCreateWithoutEventInput>
-    connectOrCreate?: EventSettingCreateOrConnectWithoutEventInput
-    upsert?: EventSettingUpsertWithoutEventInput
-    disconnect?: EventSettingWhereInput | boolean
-    delete?: EventSettingWhereInput | boolean
-    connect?: EventSettingWhereUniqueInput
-    update?: XOR<XOR<EventSettingUpdateToOneWithWhereWithoutEventInput, EventSettingUpdateWithoutEventInput>, EventSettingUncheckedUpdateWithoutEventInput>
   }
 
   export type UserCreateNestedOneWithoutOrdersInput = {
@@ -26026,12 +27549,20 @@ export namespace Prisma {
     connect?: OrderWhereUniqueInput
   }
 
-  export type EnumTicketStatusFieldUpdateOperationsInput = {
-    set?: $Enums.TicketStatus
+  export type QRCodeCreateNestedOneWithoutTicketInput = {
+    create?: XOR<QRCodeCreateWithoutTicketInput, QRCodeUncheckedCreateWithoutTicketInput>
+    connectOrCreate?: QRCodeCreateOrConnectWithoutTicketInput
+    connect?: QRCodeWhereUniqueInput
   }
 
-  export type NullableDateTimeFieldUpdateOperationsInput = {
-    set?: Date | string | null
+  export type QRCodeUncheckedCreateNestedOneWithoutTicketInput = {
+    create?: XOR<QRCodeCreateWithoutTicketInput, QRCodeUncheckedCreateWithoutTicketInput>
+    connectOrCreate?: QRCodeCreateOrConnectWithoutTicketInput
+    connect?: QRCodeWhereUniqueInput
+  }
+
+  export type EnumTicketStatusFieldUpdateOperationsInput = {
+    set?: $Enums.TicketStatus
   }
 
   export type UserUpdateOneWithoutTicketsNestedInput = {
@@ -26060,6 +27591,26 @@ export namespace Prisma {
     delete?: OrderWhereInput | boolean
     connect?: OrderWhereUniqueInput
     update?: XOR<XOR<OrderUpdateToOneWithWhereWithoutTicketsInput, OrderUpdateWithoutTicketsInput>, OrderUncheckedUpdateWithoutTicketsInput>
+  }
+
+  export type QRCodeUpdateOneWithoutTicketNestedInput = {
+    create?: XOR<QRCodeCreateWithoutTicketInput, QRCodeUncheckedCreateWithoutTicketInput>
+    connectOrCreate?: QRCodeCreateOrConnectWithoutTicketInput
+    upsert?: QRCodeUpsertWithoutTicketInput
+    disconnect?: QRCodeWhereInput | boolean
+    delete?: QRCodeWhereInput | boolean
+    connect?: QRCodeWhereUniqueInput
+    update?: XOR<XOR<QRCodeUpdateToOneWithWhereWithoutTicketInput, QRCodeUpdateWithoutTicketInput>, QRCodeUncheckedUpdateWithoutTicketInput>
+  }
+
+  export type QRCodeUncheckedUpdateOneWithoutTicketNestedInput = {
+    create?: XOR<QRCodeCreateWithoutTicketInput, QRCodeUncheckedCreateWithoutTicketInput>
+    connectOrCreate?: QRCodeCreateOrConnectWithoutTicketInput
+    upsert?: QRCodeUpsertWithoutTicketInput
+    disconnect?: QRCodeWhereInput | boolean
+    delete?: QRCodeWhereInput | boolean
+    connect?: QRCodeWhereUniqueInput
+    update?: XOR<XOR<QRCodeUpdateToOneWithWhereWithoutTicketInput, QRCodeUpdateWithoutTicketInput>, QRCodeUncheckedUpdateWithoutTicketInput>
   }
 
   export type OrderCreateNestedOneWithoutPaymentInput = {
@@ -26224,18 +27775,60 @@ export namespace Prisma {
     update?: XOR<XOR<UserUpdateToOneWithWhereWithoutTeamRolesInput, UserUpdateWithoutTeamRolesInput>, UserUncheckedUpdateWithoutTeamRolesInput>
   }
 
-  export type EventCreateNestedOneWithoutEventSettingInput = {
-    create?: XOR<EventCreateWithoutEventSettingInput, EventUncheckedCreateWithoutEventSettingInput>
-    connectOrCreate?: EventCreateOrConnectWithoutEventSettingInput
-    connect?: EventWhereUniqueInput
+  export type EventCreateNestedManyWithoutThemeInput = {
+    create?: XOR<EventCreateWithoutThemeInput, EventUncheckedCreateWithoutThemeInput> | EventCreateWithoutThemeInput[] | EventUncheckedCreateWithoutThemeInput[]
+    connectOrCreate?: EventCreateOrConnectWithoutThemeInput | EventCreateOrConnectWithoutThemeInput[]
+    createMany?: EventCreateManyThemeInputEnvelope
+    connect?: EventWhereUniqueInput | EventWhereUniqueInput[]
   }
 
-  export type EventUpdateOneRequiredWithoutEventSettingNestedInput = {
-    create?: XOR<EventCreateWithoutEventSettingInput, EventUncheckedCreateWithoutEventSettingInput>
-    connectOrCreate?: EventCreateOrConnectWithoutEventSettingInput
-    upsert?: EventUpsertWithoutEventSettingInput
-    connect?: EventWhereUniqueInput
-    update?: XOR<XOR<EventUpdateToOneWithWhereWithoutEventSettingInput, EventUpdateWithoutEventSettingInput>, EventUncheckedUpdateWithoutEventSettingInput>
+  export type EventUncheckedCreateNestedManyWithoutThemeInput = {
+    create?: XOR<EventCreateWithoutThemeInput, EventUncheckedCreateWithoutThemeInput> | EventCreateWithoutThemeInput[] | EventUncheckedCreateWithoutThemeInput[]
+    connectOrCreate?: EventCreateOrConnectWithoutThemeInput | EventCreateOrConnectWithoutThemeInput[]
+    createMany?: EventCreateManyThemeInputEnvelope
+    connect?: EventWhereUniqueInput | EventWhereUniqueInput[]
+  }
+
+  export type EventUpdateManyWithoutThemeNestedInput = {
+    create?: XOR<EventCreateWithoutThemeInput, EventUncheckedCreateWithoutThemeInput> | EventCreateWithoutThemeInput[] | EventUncheckedCreateWithoutThemeInput[]
+    connectOrCreate?: EventCreateOrConnectWithoutThemeInput | EventCreateOrConnectWithoutThemeInput[]
+    upsert?: EventUpsertWithWhereUniqueWithoutThemeInput | EventUpsertWithWhereUniqueWithoutThemeInput[]
+    createMany?: EventCreateManyThemeInputEnvelope
+    set?: EventWhereUniqueInput | EventWhereUniqueInput[]
+    disconnect?: EventWhereUniqueInput | EventWhereUniqueInput[]
+    delete?: EventWhereUniqueInput | EventWhereUniqueInput[]
+    connect?: EventWhereUniqueInput | EventWhereUniqueInput[]
+    update?: EventUpdateWithWhereUniqueWithoutThemeInput | EventUpdateWithWhereUniqueWithoutThemeInput[]
+    updateMany?: EventUpdateManyWithWhereWithoutThemeInput | EventUpdateManyWithWhereWithoutThemeInput[]
+    deleteMany?: EventScalarWhereInput | EventScalarWhereInput[]
+  }
+
+  export type EventUncheckedUpdateManyWithoutThemeNestedInput = {
+    create?: XOR<EventCreateWithoutThemeInput, EventUncheckedCreateWithoutThemeInput> | EventCreateWithoutThemeInput[] | EventUncheckedCreateWithoutThemeInput[]
+    connectOrCreate?: EventCreateOrConnectWithoutThemeInput | EventCreateOrConnectWithoutThemeInput[]
+    upsert?: EventUpsertWithWhereUniqueWithoutThemeInput | EventUpsertWithWhereUniqueWithoutThemeInput[]
+    createMany?: EventCreateManyThemeInputEnvelope
+    set?: EventWhereUniqueInput | EventWhereUniqueInput[]
+    disconnect?: EventWhereUniqueInput | EventWhereUniqueInput[]
+    delete?: EventWhereUniqueInput | EventWhereUniqueInput[]
+    connect?: EventWhereUniqueInput | EventWhereUniqueInput[]
+    update?: EventUpdateWithWhereUniqueWithoutThemeInput | EventUpdateWithWhereUniqueWithoutThemeInput[]
+    updateMany?: EventUpdateManyWithWhereWithoutThemeInput | EventUpdateManyWithWhereWithoutThemeInput[]
+    deleteMany?: EventScalarWhereInput | EventScalarWhereInput[]
+  }
+
+  export type TicketCreateNestedOneWithoutQrCodeInput = {
+    create?: XOR<TicketCreateWithoutQrCodeInput, TicketUncheckedCreateWithoutQrCodeInput>
+    connectOrCreate?: TicketCreateOrConnectWithoutQrCodeInput
+    connect?: TicketWhereUniqueInput
+  }
+
+  export type TicketUpdateOneRequiredWithoutQrCodeNestedInput = {
+    create?: XOR<TicketCreateWithoutQrCodeInput, TicketUncheckedCreateWithoutQrCodeInput>
+    connectOrCreate?: TicketCreateOrConnectWithoutQrCodeInput
+    upsert?: TicketUpsertWithoutQrCodeInput
+    connect?: TicketWhereUniqueInput
+    update?: XOR<XOR<TicketUpdateToOneWithWhereWithoutQrCodeInput, TicketUpdateWithoutQrCodeInput>, TicketUncheckedUpdateWithoutQrCodeInput>
   }
 
   export type UserCreateNestedOneWithoutLogsInput = {
@@ -26312,8 +27905,8 @@ export namespace Prisma {
 
   export type NestedStringFilter<$PrismaModel = never> = {
     equals?: string | StringFieldRefInput<$PrismaModel>
-    in?: string[] | ListStringFieldRefInput<$PrismaModel>
-    notIn?: string[] | ListStringFieldRefInput<$PrismaModel>
+    in?: string[]
+    notIn?: string[]
     lt?: string | StringFieldRefInput<$PrismaModel>
     lte?: string | StringFieldRefInput<$PrismaModel>
     gt?: string | StringFieldRefInput<$PrismaModel>
@@ -26326,8 +27919,8 @@ export namespace Prisma {
 
   export type NestedStringNullableFilter<$PrismaModel = never> = {
     equals?: string | StringFieldRefInput<$PrismaModel> | null
-    in?: string[] | ListStringFieldRefInput<$PrismaModel> | null
-    notIn?: string[] | ListStringFieldRefInput<$PrismaModel> | null
+    in?: string[] | null
+    notIn?: string[] | null
     lt?: string | StringFieldRefInput<$PrismaModel>
     lte?: string | StringFieldRefInput<$PrismaModel>
     gt?: string | StringFieldRefInput<$PrismaModel>
@@ -26338,10 +27931,26 @@ export namespace Prisma {
     not?: NestedStringNullableFilter<$PrismaModel> | string | null
   }
 
+  export type NestedBoolFilter<$PrismaModel = never> = {
+    equals?: boolean | BooleanFieldRefInput<$PrismaModel>
+    not?: NestedBoolFilter<$PrismaModel> | boolean
+  }
+
+  export type NestedDateTimeNullableFilter<$PrismaModel = never> = {
+    equals?: Date | string | DateTimeFieldRefInput<$PrismaModel> | null
+    in?: Date[] | string[] | null
+    notIn?: Date[] | string[] | null
+    lt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    lte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    gt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    gte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    not?: NestedDateTimeNullableFilter<$PrismaModel> | Date | string | null
+  }
+
   export type NestedDateTimeFilter<$PrismaModel = never> = {
     equals?: Date | string | DateTimeFieldRefInput<$PrismaModel>
-    in?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel>
-    notIn?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel>
+    in?: Date[] | string[]
+    notIn?: Date[] | string[]
     lt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
     lte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
     gt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
@@ -26351,8 +27960,8 @@ export namespace Prisma {
 
   export type NestedStringWithAggregatesFilter<$PrismaModel = never> = {
     equals?: string | StringFieldRefInput<$PrismaModel>
-    in?: string[] | ListStringFieldRefInput<$PrismaModel>
-    notIn?: string[] | ListStringFieldRefInput<$PrismaModel>
+    in?: string[]
+    notIn?: string[]
     lt?: string | StringFieldRefInput<$PrismaModel>
     lte?: string | StringFieldRefInput<$PrismaModel>
     gt?: string | StringFieldRefInput<$PrismaModel>
@@ -26368,8 +27977,8 @@ export namespace Prisma {
 
   export type NestedIntFilter<$PrismaModel = never> = {
     equals?: number | IntFieldRefInput<$PrismaModel>
-    in?: number[] | ListIntFieldRefInput<$PrismaModel>
-    notIn?: number[] | ListIntFieldRefInput<$PrismaModel>
+    in?: number[]
+    notIn?: number[]
     lt?: number | IntFieldRefInput<$PrismaModel>
     lte?: number | IntFieldRefInput<$PrismaModel>
     gt?: number | IntFieldRefInput<$PrismaModel>
@@ -26379,8 +27988,8 @@ export namespace Prisma {
 
   export type NestedStringNullableWithAggregatesFilter<$PrismaModel = never> = {
     equals?: string | StringFieldRefInput<$PrismaModel> | null
-    in?: string[] | ListStringFieldRefInput<$PrismaModel> | null
-    notIn?: string[] | ListStringFieldRefInput<$PrismaModel> | null
+    in?: string[] | null
+    notIn?: string[] | null
     lt?: string | StringFieldRefInput<$PrismaModel>
     lte?: string | StringFieldRefInput<$PrismaModel>
     gt?: string | StringFieldRefInput<$PrismaModel>
@@ -26396,13 +28005,35 @@ export namespace Prisma {
 
   export type NestedIntNullableFilter<$PrismaModel = never> = {
     equals?: number | IntFieldRefInput<$PrismaModel> | null
-    in?: number[] | ListIntFieldRefInput<$PrismaModel> | null
-    notIn?: number[] | ListIntFieldRefInput<$PrismaModel> | null
+    in?: number[] | null
+    notIn?: number[] | null
     lt?: number | IntFieldRefInput<$PrismaModel>
     lte?: number | IntFieldRefInput<$PrismaModel>
     gt?: number | IntFieldRefInput<$PrismaModel>
     gte?: number | IntFieldRefInput<$PrismaModel>
     not?: NestedIntNullableFilter<$PrismaModel> | number | null
+  }
+
+  export type NestedBoolWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: boolean | BooleanFieldRefInput<$PrismaModel>
+    not?: NestedBoolWithAggregatesFilter<$PrismaModel> | boolean
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedBoolFilter<$PrismaModel>
+    _max?: NestedBoolFilter<$PrismaModel>
+  }
+
+  export type NestedDateTimeNullableWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: Date | string | DateTimeFieldRefInput<$PrismaModel> | null
+    in?: Date[] | string[] | null
+    notIn?: Date[] | string[] | null
+    lt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    lte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    gt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    gte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    not?: NestedDateTimeNullableWithAggregatesFilter<$PrismaModel> | Date | string | null
+    _count?: NestedIntNullableFilter<$PrismaModel>
+    _min?: NestedDateTimeNullableFilter<$PrismaModel>
+    _max?: NestedDateTimeNullableFilter<$PrismaModel>
   }
   export type NestedJsonNullableFilter<$PrismaModel = never> =
     | PatchUndefined<
@@ -26413,25 +28044,20 @@ export namespace Prisma {
 
   export type NestedJsonNullableFilterBase<$PrismaModel = never> = {
     equals?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
-    path?: string[]
+    path?: string
     mode?: QueryMode | EnumQueryModeFieldRefInput<$PrismaModel>
     string_contains?: string | StringFieldRefInput<$PrismaModel>
     string_starts_with?: string | StringFieldRefInput<$PrismaModel>
     string_ends_with?: string | StringFieldRefInput<$PrismaModel>
     array_starts_with?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
     array_ends_with?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
-    array_contains?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
-    lt?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
-    lte?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
-    gt?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
-    gte?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
     not?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
   }
 
   export type NestedDateTimeWithAggregatesFilter<$PrismaModel = never> = {
     equals?: Date | string | DateTimeFieldRefInput<$PrismaModel>
-    in?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel>
-    notIn?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel>
+    in?: Date[] | string[]
+    notIn?: Date[] | string[]
     lt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
     lte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
     gt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
@@ -26442,15 +28068,10 @@ export namespace Prisma {
     _max?: NestedDateTimeFilter<$PrismaModel>
   }
 
-  export type NestedBoolFilter<$PrismaModel = never> = {
-    equals?: boolean | BooleanFieldRefInput<$PrismaModel>
-    not?: NestedBoolFilter<$PrismaModel> | boolean
-  }
-
   export type NestedIntNullableWithAggregatesFilter<$PrismaModel = never> = {
     equals?: number | IntFieldRefInput<$PrismaModel> | null
-    in?: number[] | ListIntFieldRefInput<$PrismaModel> | null
-    notIn?: number[] | ListIntFieldRefInput<$PrismaModel> | null
+    in?: number[] | null
+    notIn?: number[] | null
     lt?: number | IntFieldRefInput<$PrismaModel>
     lte?: number | IntFieldRefInput<$PrismaModel>
     gt?: number | IntFieldRefInput<$PrismaModel>
@@ -26465,8 +28086,8 @@ export namespace Prisma {
 
   export type NestedFloatNullableFilter<$PrismaModel = never> = {
     equals?: number | FloatFieldRefInput<$PrismaModel> | null
-    in?: number[] | ListFloatFieldRefInput<$PrismaModel> | null
-    notIn?: number[] | ListFloatFieldRefInput<$PrismaModel> | null
+    in?: number[] | null
+    notIn?: number[] | null
     lt?: number | FloatFieldRefInput<$PrismaModel>
     lte?: number | FloatFieldRefInput<$PrismaModel>
     gt?: number | FloatFieldRefInput<$PrismaModel>
@@ -26474,18 +28095,10 @@ export namespace Prisma {
     not?: NestedFloatNullableFilter<$PrismaModel> | number | null
   }
 
-  export type NestedBoolWithAggregatesFilter<$PrismaModel = never> = {
-    equals?: boolean | BooleanFieldRefInput<$PrismaModel>
-    not?: NestedBoolWithAggregatesFilter<$PrismaModel> | boolean
-    _count?: NestedIntFilter<$PrismaModel>
-    _min?: NestedBoolFilter<$PrismaModel>
-    _max?: NestedBoolFilter<$PrismaModel>
-  }
-
   export type NestedFloatFilter<$PrismaModel = never> = {
     equals?: number | FloatFieldRefInput<$PrismaModel>
-    in?: number[] | ListFloatFieldRefInput<$PrismaModel>
-    notIn?: number[] | ListFloatFieldRefInput<$PrismaModel>
+    in?: number[]
+    notIn?: number[]
     lt?: number | FloatFieldRefInput<$PrismaModel>
     lte?: number | FloatFieldRefInput<$PrismaModel>
     gt?: number | FloatFieldRefInput<$PrismaModel>
@@ -26495,15 +28108,15 @@ export namespace Prisma {
 
   export type NestedEnumOrderStatusFilter<$PrismaModel = never> = {
     equals?: $Enums.OrderStatus | EnumOrderStatusFieldRefInput<$PrismaModel>
-    in?: $Enums.OrderStatus[] | ListEnumOrderStatusFieldRefInput<$PrismaModel>
-    notIn?: $Enums.OrderStatus[] | ListEnumOrderStatusFieldRefInput<$PrismaModel>
+    in?: $Enums.OrderStatus[]
+    notIn?: $Enums.OrderStatus[]
     not?: NestedEnumOrderStatusFilter<$PrismaModel> | $Enums.OrderStatus
   }
 
   export type NestedFloatWithAggregatesFilter<$PrismaModel = never> = {
     equals?: number | FloatFieldRefInput<$PrismaModel>
-    in?: number[] | ListFloatFieldRefInput<$PrismaModel>
-    notIn?: number[] | ListFloatFieldRefInput<$PrismaModel>
+    in?: number[]
+    notIn?: number[]
     lt?: number | FloatFieldRefInput<$PrismaModel>
     lte?: number | FloatFieldRefInput<$PrismaModel>
     gt?: number | FloatFieldRefInput<$PrismaModel>
@@ -26518,8 +28131,8 @@ export namespace Prisma {
 
   export type NestedEnumOrderStatusWithAggregatesFilter<$PrismaModel = never> = {
     equals?: $Enums.OrderStatus | EnumOrderStatusFieldRefInput<$PrismaModel>
-    in?: $Enums.OrderStatus[] | ListEnumOrderStatusFieldRefInput<$PrismaModel>
-    notIn?: $Enums.OrderStatus[] | ListEnumOrderStatusFieldRefInput<$PrismaModel>
+    in?: $Enums.OrderStatus[]
+    notIn?: $Enums.OrderStatus[]
     not?: NestedEnumOrderStatusWithAggregatesFilter<$PrismaModel> | $Enums.OrderStatus
     _count?: NestedIntFilter<$PrismaModel>
     _min?: NestedEnumOrderStatusFilter<$PrismaModel>
@@ -26528,8 +28141,8 @@ export namespace Prisma {
 
   export type NestedFloatNullableWithAggregatesFilter<$PrismaModel = never> = {
     equals?: number | FloatFieldRefInput<$PrismaModel> | null
-    in?: number[] | ListFloatFieldRefInput<$PrismaModel> | null
-    notIn?: number[] | ListFloatFieldRefInput<$PrismaModel> | null
+    in?: number[] | null
+    notIn?: number[] | null
     lt?: number | FloatFieldRefInput<$PrismaModel>
     lte?: number | FloatFieldRefInput<$PrismaModel>
     gt?: number | FloatFieldRefInput<$PrismaModel>
@@ -26544,50 +28157,25 @@ export namespace Prisma {
 
   export type NestedEnumTicketStatusFilter<$PrismaModel = never> = {
     equals?: $Enums.TicketStatus | EnumTicketStatusFieldRefInput<$PrismaModel>
-    in?: $Enums.TicketStatus[] | ListEnumTicketStatusFieldRefInput<$PrismaModel>
-    notIn?: $Enums.TicketStatus[] | ListEnumTicketStatusFieldRefInput<$PrismaModel>
+    in?: $Enums.TicketStatus[]
+    notIn?: $Enums.TicketStatus[]
     not?: NestedEnumTicketStatusFilter<$PrismaModel> | $Enums.TicketStatus
-  }
-
-  export type NestedDateTimeNullableFilter<$PrismaModel = never> = {
-    equals?: Date | string | DateTimeFieldRefInput<$PrismaModel> | null
-    in?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel> | null
-    notIn?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel> | null
-    lt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
-    lte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
-    gt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
-    gte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
-    not?: NestedDateTimeNullableFilter<$PrismaModel> | Date | string | null
   }
 
   export type NestedEnumTicketStatusWithAggregatesFilter<$PrismaModel = never> = {
     equals?: $Enums.TicketStatus | EnumTicketStatusFieldRefInput<$PrismaModel>
-    in?: $Enums.TicketStatus[] | ListEnumTicketStatusFieldRefInput<$PrismaModel>
-    notIn?: $Enums.TicketStatus[] | ListEnumTicketStatusFieldRefInput<$PrismaModel>
+    in?: $Enums.TicketStatus[]
+    notIn?: $Enums.TicketStatus[]
     not?: NestedEnumTicketStatusWithAggregatesFilter<$PrismaModel> | $Enums.TicketStatus
     _count?: NestedIntFilter<$PrismaModel>
     _min?: NestedEnumTicketStatusFilter<$PrismaModel>
     _max?: NestedEnumTicketStatusFilter<$PrismaModel>
   }
 
-  export type NestedDateTimeNullableWithAggregatesFilter<$PrismaModel = never> = {
-    equals?: Date | string | DateTimeFieldRefInput<$PrismaModel> | null
-    in?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel> | null
-    notIn?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel> | null
-    lt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
-    lte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
-    gt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
-    gte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
-    not?: NestedDateTimeNullableWithAggregatesFilter<$PrismaModel> | Date | string | null
-    _count?: NestedIntNullableFilter<$PrismaModel>
-    _min?: NestedDateTimeNullableFilter<$PrismaModel>
-    _max?: NestedDateTimeNullableFilter<$PrismaModel>
-  }
-
   export type NestedIntWithAggregatesFilter<$PrismaModel = never> = {
     equals?: number | IntFieldRefInput<$PrismaModel>
-    in?: number[] | ListIntFieldRefInput<$PrismaModel>
-    notIn?: number[] | ListIntFieldRefInput<$PrismaModel>
+    in?: number[]
+    notIn?: number[]
     lt?: number | IntFieldRefInput<$PrismaModel>
     lte?: number | IntFieldRefInput<$PrismaModel>
     gt?: number | IntFieldRefInput<$PrismaModel>
@@ -26605,12 +28193,12 @@ export namespace Prisma {
     code: string
     status?: $Enums.TicketStatus
     seatNumber?: string | null
-    qrCode?: string | null
     usedAt?: Date | string | null
     purchasedAt?: Date | string
     metadata?: NullableJsonNullValueInput | InputJsonValue
     event: EventCreateNestedOneWithoutTicketsInput
     order?: OrderCreateNestedOneWithoutTicketsInput
+    qrCode?: QRCodeCreateNestedOneWithoutTicketInput
   }
 
   export type TicketUncheckedCreateWithoutUserInput = {
@@ -26620,10 +28208,10 @@ export namespace Prisma {
     code: string
     status?: $Enums.TicketStatus
     seatNumber?: string | null
-    qrCode?: string | null
     usedAt?: Date | string | null
     purchasedAt?: Date | string
     metadata?: NullableJsonNullValueInput | InputJsonValue
+    qrCode?: QRCodeUncheckedCreateNestedOneWithoutTicketInput
   }
 
   export type TicketCreateOrConnectWithoutUserInput = {
@@ -26633,7 +28221,6 @@ export namespace Prisma {
 
   export type TicketCreateManyUserInputEnvelope = {
     data: TicketCreateManyUserInput | TicketCreateManyUserInput[]
-    skipDuplicates?: boolean
   }
 
   export type OrderCreateWithoutUserInput = {
@@ -26671,7 +28258,6 @@ export namespace Prisma {
 
   export type OrderCreateManyUserInputEnvelope = {
     data: OrderCreateManyUserInput | OrderCreateManyUserInput[]
-    skipDuplicates?: boolean
   }
 
   export type SessionCreateWithoutUserInput = {
@@ -26699,7 +28285,6 @@ export namespace Prisma {
 
   export type SessionCreateManyUserInputEnvelope = {
     data: SessionCreateManyUserInput | SessionCreateManyUserInput[]
-    skipDuplicates?: boolean
   }
 
   export type ReviewCreateWithoutUserInput = {
@@ -26725,7 +28310,6 @@ export namespace Prisma {
 
   export type ReviewCreateManyUserInputEnvelope = {
     data: ReviewCreateManyUserInput | ReviewCreateManyUserInput[]
-    skipDuplicates?: boolean
   }
 
   export type TeamMemberCreateWithoutUserInput = {
@@ -26749,7 +28333,6 @@ export namespace Prisma {
 
   export type TeamMemberCreateManyUserInputEnvelope = {
     data: TeamMemberCreateManyUserInput | TeamMemberCreateManyUserInput[]
-    skipDuplicates?: boolean
   }
 
   export type ActivityLogCreateWithoutUserInput = {
@@ -26775,14 +28358,13 @@ export namespace Prisma {
 
   export type ActivityLogCreateManyUserInputEnvelope = {
     data: ActivityLogCreateManyUserInput | ActivityLogCreateManyUserInput[]
-    skipDuplicates?: boolean
   }
 
   export type NotificationCreateWithoutUserInput = {
     id?: string
     type: string
     message: string
-    isRead?: boolean
+    isRead?: Date | string | null
     sentAt: Date | string
   }
 
@@ -26790,7 +28372,7 @@ export namespace Prisma {
     id?: string
     type: string
     message: string
-    isRead?: boolean
+    isRead?: Date | string | null
     sentAt: Date | string
   }
 
@@ -26801,7 +28383,6 @@ export namespace Prisma {
 
   export type NotificationCreateManyUserInputEnvelope = {
     data: NotificationCreateManyUserInput | NotificationCreateManyUserInput[]
-    skipDuplicates?: boolean
   }
 
   export type EventLogCreateWithoutUserInput = {
@@ -26825,7 +28406,6 @@ export namespace Prisma {
 
   export type EventLogCreateManyUserInputEnvelope = {
     data: EventLogCreateManyUserInput | EventLogCreateManyUserInput[]
-    skipDuplicates?: boolean
   }
 
   export type BlockedUserCreateWithoutUserInput = {
@@ -26872,7 +28452,6 @@ export namespace Prisma {
     code?: StringFilter<"Ticket"> | string
     status?: EnumTicketStatusFilter<"Ticket"> | $Enums.TicketStatus
     seatNumber?: StringNullableFilter<"Ticket"> | string | null
-    qrCode?: StringNullableFilter<"Ticket"> | string | null
     usedAt?: DateTimeNullableFilter<"Ticket"> | Date | string | null
     purchasedAt?: DateTimeFilter<"Ticket"> | Date | string
     metadata?: JsonNullableFilter<"Ticket">
@@ -27046,7 +28625,7 @@ export namespace Prisma {
     userId?: StringFilter<"Notification"> | string
     type?: StringFilter<"Notification"> | string
     message?: StringFilter<"Notification"> | string
-    isRead?: BoolFilter<"Notification"> | boolean
+    isRead?: DateTimeNullableFilter<"Notification"> | Date | string | null
     sentAt?: DateTimeFilter<"Notification"> | Date | string
   }
 
@@ -27109,14 +28688,16 @@ export namespace Prisma {
     maxCapacity?: number | null
     isPublished?: boolean
     isCancelled?: boolean
+    allowAnonymousPurchase?: boolean
+    allowTransfer?: boolean
     metadata?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: Date | string
     updatedAt?: Date | string
     tickets?: TicketCreateNestedManyWithoutEventInput
     reviews?: ReviewCreateNestedManyWithoutEventInput
-    eventSetting?: EventSettingCreateNestedOneWithoutEventInput
     category?: CategoryCreateNestedOneWithoutEventsInput
     venue?: VenueCreateNestedOneWithoutEventsInput
+    theme?: ThemeCreateNestedOneWithoutEventsInput
   }
 
   export type EventUncheckedCreateWithoutOrganizerInput = {
@@ -27128,14 +28709,16 @@ export namespace Prisma {
     maxCapacity?: number | null
     isPublished?: boolean
     isCancelled?: boolean
+    allowAnonymousPurchase?: boolean
+    allowTransfer?: boolean
     categoryId?: string | null
     venueId?: string | null
+    themeId?: string | null
     metadata?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: Date | string
     updatedAt?: Date | string
     tickets?: TicketUncheckedCreateNestedManyWithoutEventInput
     reviews?: ReviewUncheckedCreateNestedManyWithoutEventInput
-    eventSetting?: EventSettingUncheckedCreateNestedOneWithoutEventInput
   }
 
   export type EventCreateOrConnectWithoutOrganizerInput = {
@@ -27145,7 +28728,6 @@ export namespace Prisma {
 
   export type EventCreateManyOrganizerInputEnvelope = {
     data: EventCreateManyOrganizerInput | EventCreateManyOrganizerInput[]
-    skipDuplicates?: boolean
   }
 
   export type TeamMemberCreateWithoutOrganizerInput = {
@@ -27169,7 +28751,6 @@ export namespace Prisma {
 
   export type TeamMemberCreateManyOrganizerInputEnvelope = {
     data: TeamMemberCreateManyOrganizerInput | TeamMemberCreateManyOrganizerInput[]
-    skipDuplicates?: boolean
   }
 
   export type EventUpsertWithWhereUniqueWithoutOrganizerInput = {
@@ -27200,9 +28781,12 @@ export namespace Prisma {
     maxCapacity?: IntNullableFilter<"Event"> | number | null
     isPublished?: BoolFilter<"Event"> | boolean
     isCancelled?: BoolFilter<"Event"> | boolean
+    allowAnonymousPurchase?: BoolFilter<"Event"> | boolean
+    allowTransfer?: BoolFilter<"Event"> | boolean
     categoryId?: StringNullableFilter<"Event"> | string | null
     venueId?: StringNullableFilter<"Event"> | string | null
     organizerId?: StringFilter<"Event"> | string
+    themeId?: StringNullableFilter<"Event"> | string | null
     metadata?: JsonNullableFilter<"Event">
     createdAt?: DateTimeFilter<"Event"> | Date | string
     updatedAt?: DateTimeFilter<"Event"> | Date | string
@@ -27229,12 +28813,12 @@ export namespace Prisma {
     code: string
     status?: $Enums.TicketStatus
     seatNumber?: string | null
-    qrCode?: string | null
     usedAt?: Date | string | null
     purchasedAt?: Date | string
     metadata?: NullableJsonNullValueInput | InputJsonValue
     user?: UserCreateNestedOneWithoutTicketsInput
     order?: OrderCreateNestedOneWithoutTicketsInput
+    qrCode?: QRCodeCreateNestedOneWithoutTicketInput
   }
 
   export type TicketUncheckedCreateWithoutEventInput = {
@@ -27244,10 +28828,10 @@ export namespace Prisma {
     code: string
     status?: $Enums.TicketStatus
     seatNumber?: string | null
-    qrCode?: string | null
     usedAt?: Date | string | null
     purchasedAt?: Date | string
     metadata?: NullableJsonNullValueInput | InputJsonValue
+    qrCode?: QRCodeUncheckedCreateNestedOneWithoutTicketInput
   }
 
   export type TicketCreateOrConnectWithoutEventInput = {
@@ -27257,7 +28841,6 @@ export namespace Prisma {
 
   export type TicketCreateManyEventInputEnvelope = {
     data: TicketCreateManyEventInput | TicketCreateManyEventInput[]
-    skipDuplicates?: boolean
   }
 
   export type ReviewCreateWithoutEventInput = {
@@ -27283,30 +28866,6 @@ export namespace Prisma {
 
   export type ReviewCreateManyEventInputEnvelope = {
     data: ReviewCreateManyEventInput | ReviewCreateManyEventInput[]
-    skipDuplicates?: boolean
-  }
-
-  export type EventSettingCreateWithoutEventInput = {
-    id?: string
-    theme?: string | null
-    allowAnonymousPurchase?: boolean
-    allowTransfer?: boolean
-    createdAt?: Date | string
-    updatedAt?: Date | string
-  }
-
-  export type EventSettingUncheckedCreateWithoutEventInput = {
-    id?: string
-    theme?: string | null
-    allowAnonymousPurchase?: boolean
-    allowTransfer?: boolean
-    createdAt?: Date | string
-    updatedAt?: Date | string
-  }
-
-  export type EventSettingCreateOrConnectWithoutEventInput = {
-    where: EventSettingWhereUniqueInput
-    create: XOR<EventSettingCreateWithoutEventInput, EventSettingUncheckedCreateWithoutEventInput>
   }
 
   export type CategoryCreateWithoutEventsInput = {
@@ -27364,6 +28923,33 @@ export namespace Prisma {
     create: XOR<OrganizerCreateWithoutEventsInput, OrganizerUncheckedCreateWithoutEventsInput>
   }
 
+  export type ThemeCreateWithoutEventsInput = {
+    id?: string
+    name: string
+    description?: string | null
+    imagePath: string
+    color?: string | null
+    metadata?: NullableJsonNullValueInput | InputJsonValue
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type ThemeUncheckedCreateWithoutEventsInput = {
+    id?: string
+    name: string
+    description?: string | null
+    imagePath: string
+    color?: string | null
+    metadata?: NullableJsonNullValueInput | InputJsonValue
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type ThemeCreateOrConnectWithoutEventsInput = {
+    where: ThemeWhereUniqueInput
+    create: XOR<ThemeCreateWithoutEventsInput, ThemeUncheckedCreateWithoutEventsInput>
+  }
+
   export type TicketUpsertWithWhereUniqueWithoutEventInput = {
     where: TicketWhereUniqueInput
     update: XOR<TicketUpdateWithoutEventInput, TicketUncheckedUpdateWithoutEventInput>
@@ -27394,35 +28980,6 @@ export namespace Prisma {
   export type ReviewUpdateManyWithWhereWithoutEventInput = {
     where: ReviewScalarWhereInput
     data: XOR<ReviewUpdateManyMutationInput, ReviewUncheckedUpdateManyWithoutEventInput>
-  }
-
-  export type EventSettingUpsertWithoutEventInput = {
-    update: XOR<EventSettingUpdateWithoutEventInput, EventSettingUncheckedUpdateWithoutEventInput>
-    create: XOR<EventSettingCreateWithoutEventInput, EventSettingUncheckedCreateWithoutEventInput>
-    where?: EventSettingWhereInput
-  }
-
-  export type EventSettingUpdateToOneWithWhereWithoutEventInput = {
-    where?: EventSettingWhereInput
-    data: XOR<EventSettingUpdateWithoutEventInput, EventSettingUncheckedUpdateWithoutEventInput>
-  }
-
-  export type EventSettingUpdateWithoutEventInput = {
-    id?: StringFieldUpdateOperationsInput | string
-    theme?: NullableStringFieldUpdateOperationsInput | string | null
-    allowAnonymousPurchase?: BoolFieldUpdateOperationsInput | boolean
-    allowTransfer?: BoolFieldUpdateOperationsInput | boolean
-    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
-  }
-
-  export type EventSettingUncheckedUpdateWithoutEventInput = {
-    id?: StringFieldUpdateOperationsInput | string
-    theme?: NullableStringFieldUpdateOperationsInput | string | null
-    allowAnonymousPurchase?: BoolFieldUpdateOperationsInput | boolean
-    allowTransfer?: BoolFieldUpdateOperationsInput | boolean
-    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
   export type CategoryUpsertWithoutEventsInput = {
@@ -27498,11 +29055,47 @@ export namespace Prisma {
     team?: TeamMemberUncheckedUpdateManyWithoutOrganizerNestedInput
   }
 
+  export type ThemeUpsertWithoutEventsInput = {
+    update: XOR<ThemeUpdateWithoutEventsInput, ThemeUncheckedUpdateWithoutEventsInput>
+    create: XOR<ThemeCreateWithoutEventsInput, ThemeUncheckedCreateWithoutEventsInput>
+    where?: ThemeWhereInput
+  }
+
+  export type ThemeUpdateToOneWithWhereWithoutEventsInput = {
+    where?: ThemeWhereInput
+    data: XOR<ThemeUpdateWithoutEventsInput, ThemeUncheckedUpdateWithoutEventsInput>
+  }
+
+  export type ThemeUpdateWithoutEventsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    description?: NullableStringFieldUpdateOperationsInput | string | null
+    imagePath?: StringFieldUpdateOperationsInput | string
+    color?: NullableStringFieldUpdateOperationsInput | string | null
+    metadata?: NullableJsonNullValueInput | InputJsonValue
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type ThemeUncheckedUpdateWithoutEventsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    description?: NullableStringFieldUpdateOperationsInput | string | null
+    imagePath?: StringFieldUpdateOperationsInput | string
+    color?: NullableStringFieldUpdateOperationsInput | string | null
+    metadata?: NullableJsonNullValueInput | InputJsonValue
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
   export type UserCreateWithoutOrdersInput = {
     id?: string
     email: string
     name?: string | null
     password: string
+    isVerified?: boolean
+    lastLogin?: Date | string | null
+    role?: string
     metadata?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -27521,6 +29114,9 @@ export namespace Prisma {
     email: string
     name?: string | null
     password: string
+    isVerified?: boolean
+    lastLogin?: Date | string | null
+    role?: string
     metadata?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -27544,12 +29140,12 @@ export namespace Prisma {
     code: string
     status?: $Enums.TicketStatus
     seatNumber?: string | null
-    qrCode?: string | null
     usedAt?: Date | string | null
     purchasedAt?: Date | string
     metadata?: NullableJsonNullValueInput | InputJsonValue
     user?: UserCreateNestedOneWithoutTicketsInput
     event: EventCreateNestedOneWithoutTicketsInput
+    qrCode?: QRCodeCreateNestedOneWithoutTicketInput
   }
 
   export type TicketUncheckedCreateWithoutOrderInput = {
@@ -27559,10 +29155,10 @@ export namespace Prisma {
     code: string
     status?: $Enums.TicketStatus
     seatNumber?: string | null
-    qrCode?: string | null
     usedAt?: Date | string | null
     purchasedAt?: Date | string
     metadata?: NullableJsonNullValueInput | InputJsonValue
+    qrCode?: QRCodeUncheckedCreateNestedOneWithoutTicketInput
   }
 
   export type TicketCreateOrConnectWithoutOrderInput = {
@@ -27572,7 +29168,6 @@ export namespace Prisma {
 
   export type TicketCreateManyOrderInputEnvelope = {
     data: TicketCreateManyOrderInput | TicketCreateManyOrderInput[]
-    skipDuplicates?: boolean
   }
 
   export type PaymentCreateWithoutOrderInput = {
@@ -27614,6 +29209,9 @@ export namespace Prisma {
     email?: StringFieldUpdateOperationsInput | string
     name?: NullableStringFieldUpdateOperationsInput | string | null
     password?: StringFieldUpdateOperationsInput | string
+    isVerified?: BoolFieldUpdateOperationsInput | boolean
+    lastLogin?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    role?: StringFieldUpdateOperationsInput | string
     metadata?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -27632,6 +29230,9 @@ export namespace Prisma {
     email?: StringFieldUpdateOperationsInput | string
     name?: NullableStringFieldUpdateOperationsInput | string | null
     password?: StringFieldUpdateOperationsInput | string
+    isVerified?: BoolFieldUpdateOperationsInput | boolean
+    lastLogin?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    role?: StringFieldUpdateOperationsInput | string
     metadata?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -27695,6 +29296,9 @@ export namespace Prisma {
     email: string
     name?: string | null
     password: string
+    isVerified?: boolean
+    lastLogin?: Date | string | null
+    role?: string
     metadata?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -27713,6 +29317,9 @@ export namespace Prisma {
     email: string
     name?: string | null
     password: string
+    isVerified?: boolean
+    lastLogin?: Date | string | null
+    role?: string
     metadata?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -27740,14 +29347,16 @@ export namespace Prisma {
     maxCapacity?: number | null
     isPublished?: boolean
     isCancelled?: boolean
+    allowAnonymousPurchase?: boolean
+    allowTransfer?: boolean
     metadata?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: Date | string
     updatedAt?: Date | string
     reviews?: ReviewCreateNestedManyWithoutEventInput
-    eventSetting?: EventSettingCreateNestedOneWithoutEventInput
     category?: CategoryCreateNestedOneWithoutEventsInput
     venue?: VenueCreateNestedOneWithoutEventsInput
     organizer: OrganizerCreateNestedOneWithoutEventsInput
+    theme?: ThemeCreateNestedOneWithoutEventsInput
   }
 
   export type EventUncheckedCreateWithoutTicketsInput = {
@@ -27759,14 +29368,16 @@ export namespace Prisma {
     maxCapacity?: number | null
     isPublished?: boolean
     isCancelled?: boolean
+    allowAnonymousPurchase?: boolean
+    allowTransfer?: boolean
     categoryId?: string | null
     venueId?: string | null
     organizerId: string
+    themeId?: string | null
     metadata?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: Date | string
     updatedAt?: Date | string
     reviews?: ReviewUncheckedCreateNestedManyWithoutEventInput
-    eventSetting?: EventSettingUncheckedCreateNestedOneWithoutEventInput
   }
 
   export type EventCreateOrConnectWithoutTicketsInput = {
@@ -27807,6 +29418,31 @@ export namespace Prisma {
     create: XOR<OrderCreateWithoutTicketsInput, OrderUncheckedCreateWithoutTicketsInput>
   }
 
+  export type QRCodeCreateWithoutTicketInput = {
+    id?: string
+    path: string
+    format: string
+    createdAt?: Date | string
+    expiresAt?: Date | string | null
+    scannedAt?: Date | string | null
+    data?: NullableJsonNullValueInput | InputJsonValue
+  }
+
+  export type QRCodeUncheckedCreateWithoutTicketInput = {
+    id?: string
+    path: string
+    format: string
+    createdAt?: Date | string
+    expiresAt?: Date | string | null
+    scannedAt?: Date | string | null
+    data?: NullableJsonNullValueInput | InputJsonValue
+  }
+
+  export type QRCodeCreateOrConnectWithoutTicketInput = {
+    where: QRCodeWhereUniqueInput
+    create: XOR<QRCodeCreateWithoutTicketInput, QRCodeUncheckedCreateWithoutTicketInput>
+  }
+
   export type UserUpsertWithoutTicketsInput = {
     update: XOR<UserUpdateWithoutTicketsInput, UserUncheckedUpdateWithoutTicketsInput>
     create: XOR<UserCreateWithoutTicketsInput, UserUncheckedCreateWithoutTicketsInput>
@@ -27823,6 +29459,9 @@ export namespace Prisma {
     email?: StringFieldUpdateOperationsInput | string
     name?: NullableStringFieldUpdateOperationsInput | string | null
     password?: StringFieldUpdateOperationsInput | string
+    isVerified?: BoolFieldUpdateOperationsInput | boolean
+    lastLogin?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    role?: StringFieldUpdateOperationsInput | string
     metadata?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -27841,6 +29480,9 @@ export namespace Prisma {
     email?: StringFieldUpdateOperationsInput | string
     name?: NullableStringFieldUpdateOperationsInput | string | null
     password?: StringFieldUpdateOperationsInput | string
+    isVerified?: BoolFieldUpdateOperationsInput | boolean
+    lastLogin?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    role?: StringFieldUpdateOperationsInput | string
     metadata?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -27874,14 +29516,16 @@ export namespace Prisma {
     maxCapacity?: NullableIntFieldUpdateOperationsInput | number | null
     isPublished?: BoolFieldUpdateOperationsInput | boolean
     isCancelled?: BoolFieldUpdateOperationsInput | boolean
+    allowAnonymousPurchase?: BoolFieldUpdateOperationsInput | boolean
+    allowTransfer?: BoolFieldUpdateOperationsInput | boolean
     metadata?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     reviews?: ReviewUpdateManyWithoutEventNestedInput
-    eventSetting?: EventSettingUpdateOneWithoutEventNestedInput
     category?: CategoryUpdateOneWithoutEventsNestedInput
     venue?: VenueUpdateOneWithoutEventsNestedInput
     organizer?: OrganizerUpdateOneRequiredWithoutEventsNestedInput
+    theme?: ThemeUpdateOneWithoutEventsNestedInput
   }
 
   export type EventUncheckedUpdateWithoutTicketsInput = {
@@ -27893,14 +29537,16 @@ export namespace Prisma {
     maxCapacity?: NullableIntFieldUpdateOperationsInput | number | null
     isPublished?: BoolFieldUpdateOperationsInput | boolean
     isCancelled?: BoolFieldUpdateOperationsInput | boolean
+    allowAnonymousPurchase?: BoolFieldUpdateOperationsInput | boolean
+    allowTransfer?: BoolFieldUpdateOperationsInput | boolean
     categoryId?: NullableStringFieldUpdateOperationsInput | string | null
     venueId?: NullableStringFieldUpdateOperationsInput | string | null
     organizerId?: StringFieldUpdateOperationsInput | string
+    themeId?: NullableStringFieldUpdateOperationsInput | string | null
     metadata?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     reviews?: ReviewUncheckedUpdateManyWithoutEventNestedInput
-    eventSetting?: EventSettingUncheckedUpdateOneWithoutEventNestedInput
   }
 
   export type OrderUpsertWithoutTicketsInput = {
@@ -27940,6 +29586,37 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     payment?: PaymentUncheckedUpdateOneWithoutOrderNestedInput
+  }
+
+  export type QRCodeUpsertWithoutTicketInput = {
+    update: XOR<QRCodeUpdateWithoutTicketInput, QRCodeUncheckedUpdateWithoutTicketInput>
+    create: XOR<QRCodeCreateWithoutTicketInput, QRCodeUncheckedCreateWithoutTicketInput>
+    where?: QRCodeWhereInput
+  }
+
+  export type QRCodeUpdateToOneWithWhereWithoutTicketInput = {
+    where?: QRCodeWhereInput
+    data: XOR<QRCodeUpdateWithoutTicketInput, QRCodeUncheckedUpdateWithoutTicketInput>
+  }
+
+  export type QRCodeUpdateWithoutTicketInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    path?: StringFieldUpdateOperationsInput | string
+    format?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    expiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    scannedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    data?: NullableJsonNullValueInput | InputJsonValue
+  }
+
+  export type QRCodeUncheckedUpdateWithoutTicketInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    path?: StringFieldUpdateOperationsInput | string
+    format?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    expiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    scannedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    data?: NullableJsonNullValueInput | InputJsonValue
   }
 
   export type OrderCreateWithoutPaymentInput = {
@@ -28023,14 +29700,16 @@ export namespace Prisma {
     maxCapacity?: number | null
     isPublished?: boolean
     isCancelled?: boolean
+    allowAnonymousPurchase?: boolean
+    allowTransfer?: boolean
     metadata?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: Date | string
     updatedAt?: Date | string
     tickets?: TicketCreateNestedManyWithoutEventInput
     reviews?: ReviewCreateNestedManyWithoutEventInput
-    eventSetting?: EventSettingCreateNestedOneWithoutEventInput
     venue?: VenueCreateNestedOneWithoutEventsInput
     organizer: OrganizerCreateNestedOneWithoutEventsInput
+    theme?: ThemeCreateNestedOneWithoutEventsInput
   }
 
   export type EventUncheckedCreateWithoutCategoryInput = {
@@ -28042,14 +29721,16 @@ export namespace Prisma {
     maxCapacity?: number | null
     isPublished?: boolean
     isCancelled?: boolean
+    allowAnonymousPurchase?: boolean
+    allowTransfer?: boolean
     venueId?: string | null
     organizerId: string
+    themeId?: string | null
     metadata?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: Date | string
     updatedAt?: Date | string
     tickets?: TicketUncheckedCreateNestedManyWithoutEventInput
     reviews?: ReviewUncheckedCreateNestedManyWithoutEventInput
-    eventSetting?: EventSettingUncheckedCreateNestedOneWithoutEventInput
   }
 
   export type EventCreateOrConnectWithoutCategoryInput = {
@@ -28059,7 +29740,6 @@ export namespace Prisma {
 
   export type EventCreateManyCategoryInputEnvelope = {
     data: EventCreateManyCategoryInput | EventCreateManyCategoryInput[]
-    skipDuplicates?: boolean
   }
 
   export type EventUpsertWithWhereUniqueWithoutCategoryInput = {
@@ -28087,14 +29767,16 @@ export namespace Prisma {
     maxCapacity?: number | null
     isPublished?: boolean
     isCancelled?: boolean
+    allowAnonymousPurchase?: boolean
+    allowTransfer?: boolean
     metadata?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: Date | string
     updatedAt?: Date | string
     tickets?: TicketCreateNestedManyWithoutEventInput
     reviews?: ReviewCreateNestedManyWithoutEventInput
-    eventSetting?: EventSettingCreateNestedOneWithoutEventInput
     category?: CategoryCreateNestedOneWithoutEventsInput
     organizer: OrganizerCreateNestedOneWithoutEventsInput
+    theme?: ThemeCreateNestedOneWithoutEventsInput
   }
 
   export type EventUncheckedCreateWithoutVenueInput = {
@@ -28106,14 +29788,16 @@ export namespace Prisma {
     maxCapacity?: number | null
     isPublished?: boolean
     isCancelled?: boolean
+    allowAnonymousPurchase?: boolean
+    allowTransfer?: boolean
     categoryId?: string | null
     organizerId: string
+    themeId?: string | null
     metadata?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: Date | string
     updatedAt?: Date | string
     tickets?: TicketUncheckedCreateNestedManyWithoutEventInput
     reviews?: ReviewUncheckedCreateNestedManyWithoutEventInput
-    eventSetting?: EventSettingUncheckedCreateNestedOneWithoutEventInput
   }
 
   export type EventCreateOrConnectWithoutVenueInput = {
@@ -28123,7 +29807,6 @@ export namespace Prisma {
 
   export type EventCreateManyVenueInputEnvelope = {
     data: EventCreateManyVenueInput | EventCreateManyVenueInput[]
-    skipDuplicates?: boolean
   }
 
   export type EventUpsertWithWhereUniqueWithoutVenueInput = {
@@ -28147,6 +29830,9 @@ export namespace Prisma {
     email: string
     name?: string | null
     password: string
+    isVerified?: boolean
+    lastLogin?: Date | string | null
+    role?: string
     metadata?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -28165,6 +29851,9 @@ export namespace Prisma {
     email: string
     name?: string | null
     password: string
+    isVerified?: boolean
+    lastLogin?: Date | string | null
+    role?: string
     metadata?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -28192,14 +29881,16 @@ export namespace Prisma {
     maxCapacity?: number | null
     isPublished?: boolean
     isCancelled?: boolean
+    allowAnonymousPurchase?: boolean
+    allowTransfer?: boolean
     metadata?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: Date | string
     updatedAt?: Date | string
     tickets?: TicketCreateNestedManyWithoutEventInput
-    eventSetting?: EventSettingCreateNestedOneWithoutEventInput
     category?: CategoryCreateNestedOneWithoutEventsInput
     venue?: VenueCreateNestedOneWithoutEventsInput
     organizer: OrganizerCreateNestedOneWithoutEventsInput
+    theme?: ThemeCreateNestedOneWithoutEventsInput
   }
 
   export type EventUncheckedCreateWithoutReviewsInput = {
@@ -28211,14 +29902,16 @@ export namespace Prisma {
     maxCapacity?: number | null
     isPublished?: boolean
     isCancelled?: boolean
+    allowAnonymousPurchase?: boolean
+    allowTransfer?: boolean
     categoryId?: string | null
     venueId?: string | null
     organizerId: string
+    themeId?: string | null
     metadata?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: Date | string
     updatedAt?: Date | string
     tickets?: TicketUncheckedCreateNestedManyWithoutEventInput
-    eventSetting?: EventSettingUncheckedCreateNestedOneWithoutEventInput
   }
 
   export type EventCreateOrConnectWithoutReviewsInput = {
@@ -28242,6 +29935,9 @@ export namespace Prisma {
     email?: StringFieldUpdateOperationsInput | string
     name?: NullableStringFieldUpdateOperationsInput | string | null
     password?: StringFieldUpdateOperationsInput | string
+    isVerified?: BoolFieldUpdateOperationsInput | boolean
+    lastLogin?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    role?: StringFieldUpdateOperationsInput | string
     metadata?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -28260,6 +29956,9 @@ export namespace Prisma {
     email?: StringFieldUpdateOperationsInput | string
     name?: NullableStringFieldUpdateOperationsInput | string | null
     password?: StringFieldUpdateOperationsInput | string
+    isVerified?: BoolFieldUpdateOperationsInput | boolean
+    lastLogin?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    role?: StringFieldUpdateOperationsInput | string
     metadata?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -28293,14 +29992,16 @@ export namespace Prisma {
     maxCapacity?: NullableIntFieldUpdateOperationsInput | number | null
     isPublished?: BoolFieldUpdateOperationsInput | boolean
     isCancelled?: BoolFieldUpdateOperationsInput | boolean
+    allowAnonymousPurchase?: BoolFieldUpdateOperationsInput | boolean
+    allowTransfer?: BoolFieldUpdateOperationsInput | boolean
     metadata?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     tickets?: TicketUpdateManyWithoutEventNestedInput
-    eventSetting?: EventSettingUpdateOneWithoutEventNestedInput
     category?: CategoryUpdateOneWithoutEventsNestedInput
     venue?: VenueUpdateOneWithoutEventsNestedInput
     organizer?: OrganizerUpdateOneRequiredWithoutEventsNestedInput
+    theme?: ThemeUpdateOneWithoutEventsNestedInput
   }
 
   export type EventUncheckedUpdateWithoutReviewsInput = {
@@ -28312,14 +30013,16 @@ export namespace Prisma {
     maxCapacity?: NullableIntFieldUpdateOperationsInput | number | null
     isPublished?: BoolFieldUpdateOperationsInput | boolean
     isCancelled?: BoolFieldUpdateOperationsInput | boolean
+    allowAnonymousPurchase?: BoolFieldUpdateOperationsInput | boolean
+    allowTransfer?: BoolFieldUpdateOperationsInput | boolean
     categoryId?: NullableStringFieldUpdateOperationsInput | string | null
     venueId?: NullableStringFieldUpdateOperationsInput | string | null
     organizerId?: StringFieldUpdateOperationsInput | string
+    themeId?: NullableStringFieldUpdateOperationsInput | string | null
     metadata?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     tickets?: TicketUncheckedUpdateManyWithoutEventNestedInput
-    eventSetting?: EventSettingUncheckedUpdateOneWithoutEventNestedInput
   }
 
   export type OrganizerCreateWithoutTeamInput = {
@@ -28348,6 +30051,9 @@ export namespace Prisma {
     email: string
     name?: string | null
     password: string
+    isVerified?: boolean
+    lastLogin?: Date | string | null
+    role?: string
     metadata?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -28366,6 +30072,9 @@ export namespace Prisma {
     email: string
     name?: string | null
     password: string
+    isVerified?: boolean
+    lastLogin?: Date | string | null
+    role?: string
     metadata?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -28427,6 +30136,9 @@ export namespace Prisma {
     email?: StringFieldUpdateOperationsInput | string
     name?: NullableStringFieldUpdateOperationsInput | string | null
     password?: StringFieldUpdateOperationsInput | string
+    isVerified?: BoolFieldUpdateOperationsInput | boolean
+    lastLogin?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    role?: StringFieldUpdateOperationsInput | string
     metadata?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -28445,6 +30157,9 @@ export namespace Prisma {
     email?: StringFieldUpdateOperationsInput | string
     name?: NullableStringFieldUpdateOperationsInput | string | null
     password?: StringFieldUpdateOperationsInput | string
+    isVerified?: BoolFieldUpdateOperationsInput | boolean
+    lastLogin?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    role?: StringFieldUpdateOperationsInput | string
     metadata?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -28458,7 +30173,7 @@ export namespace Prisma {
     blocked?: BlockedUserUncheckedUpdateOneWithoutUserNestedInput
   }
 
-  export type EventCreateWithoutEventSettingInput = {
+  export type EventCreateWithoutThemeInput = {
     id?: string
     title: string
     description?: string | null
@@ -28467,6 +30182,8 @@ export namespace Prisma {
     maxCapacity?: number | null
     isPublished?: boolean
     isCancelled?: boolean
+    allowAnonymousPurchase?: boolean
+    allowTransfer?: boolean
     metadata?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -28477,7 +30194,7 @@ export namespace Prisma {
     organizer: OrganizerCreateNestedOneWithoutEventsInput
   }
 
-  export type EventUncheckedCreateWithoutEventSettingInput = {
+  export type EventUncheckedCreateWithoutThemeInput = {
     id?: string
     title: string
     description?: string | null
@@ -28486,6 +30203,8 @@ export namespace Prisma {
     maxCapacity?: number | null
     isPublished?: boolean
     isCancelled?: boolean
+    allowAnonymousPurchase?: boolean
+    allowTransfer?: boolean
     categoryId?: string | null
     venueId?: string | null
     organizerId: string
@@ -28496,58 +30215,97 @@ export namespace Prisma {
     reviews?: ReviewUncheckedCreateNestedManyWithoutEventInput
   }
 
-  export type EventCreateOrConnectWithoutEventSettingInput = {
+  export type EventCreateOrConnectWithoutThemeInput = {
     where: EventWhereUniqueInput
-    create: XOR<EventCreateWithoutEventSettingInput, EventUncheckedCreateWithoutEventSettingInput>
+    create: XOR<EventCreateWithoutThemeInput, EventUncheckedCreateWithoutThemeInput>
   }
 
-  export type EventUpsertWithoutEventSettingInput = {
-    update: XOR<EventUpdateWithoutEventSettingInput, EventUncheckedUpdateWithoutEventSettingInput>
-    create: XOR<EventCreateWithoutEventSettingInput, EventUncheckedCreateWithoutEventSettingInput>
-    where?: EventWhereInput
+  export type EventCreateManyThemeInputEnvelope = {
+    data: EventCreateManyThemeInput | EventCreateManyThemeInput[]
   }
 
-  export type EventUpdateToOneWithWhereWithoutEventSettingInput = {
-    where?: EventWhereInput
-    data: XOR<EventUpdateWithoutEventSettingInput, EventUncheckedUpdateWithoutEventSettingInput>
+  export type EventUpsertWithWhereUniqueWithoutThemeInput = {
+    where: EventWhereUniqueInput
+    update: XOR<EventUpdateWithoutThemeInput, EventUncheckedUpdateWithoutThemeInput>
+    create: XOR<EventCreateWithoutThemeInput, EventUncheckedCreateWithoutThemeInput>
   }
 
-  export type EventUpdateWithoutEventSettingInput = {
-    id?: StringFieldUpdateOperationsInput | string
-    title?: StringFieldUpdateOperationsInput | string
-    description?: NullableStringFieldUpdateOperationsInput | string | null
-    date?: DateTimeFieldUpdateOperationsInput | Date | string
-    location?: StringFieldUpdateOperationsInput | string
-    maxCapacity?: NullableIntFieldUpdateOperationsInput | number | null
-    isPublished?: BoolFieldUpdateOperationsInput | boolean
-    isCancelled?: BoolFieldUpdateOperationsInput | boolean
+  export type EventUpdateWithWhereUniqueWithoutThemeInput = {
+    where: EventWhereUniqueInput
+    data: XOR<EventUpdateWithoutThemeInput, EventUncheckedUpdateWithoutThemeInput>
+  }
+
+  export type EventUpdateManyWithWhereWithoutThemeInput = {
+    where: EventScalarWhereInput
+    data: XOR<EventUpdateManyMutationInput, EventUncheckedUpdateManyWithoutThemeInput>
+  }
+
+  export type TicketCreateWithoutQrCodeInput = {
+    id?: string
+    code: string
+    status?: $Enums.TicketStatus
+    seatNumber?: string | null
+    usedAt?: Date | string | null
+    purchasedAt?: Date | string
     metadata?: NullableJsonNullValueInput | InputJsonValue
-    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    tickets?: TicketUpdateManyWithoutEventNestedInput
-    reviews?: ReviewUpdateManyWithoutEventNestedInput
-    category?: CategoryUpdateOneWithoutEventsNestedInput
-    venue?: VenueUpdateOneWithoutEventsNestedInput
-    organizer?: OrganizerUpdateOneRequiredWithoutEventsNestedInput
+    user?: UserCreateNestedOneWithoutTicketsInput
+    event: EventCreateNestedOneWithoutTicketsInput
+    order?: OrderCreateNestedOneWithoutTicketsInput
   }
 
-  export type EventUncheckedUpdateWithoutEventSettingInput = {
-    id?: StringFieldUpdateOperationsInput | string
-    title?: StringFieldUpdateOperationsInput | string
-    description?: NullableStringFieldUpdateOperationsInput | string | null
-    date?: DateTimeFieldUpdateOperationsInput | Date | string
-    location?: StringFieldUpdateOperationsInput | string
-    maxCapacity?: NullableIntFieldUpdateOperationsInput | number | null
-    isPublished?: BoolFieldUpdateOperationsInput | boolean
-    isCancelled?: BoolFieldUpdateOperationsInput | boolean
-    categoryId?: NullableStringFieldUpdateOperationsInput | string | null
-    venueId?: NullableStringFieldUpdateOperationsInput | string | null
-    organizerId?: StringFieldUpdateOperationsInput | string
+  export type TicketUncheckedCreateWithoutQrCodeInput = {
+    id?: string
+    userId?: string | null
+    eventId: string
+    orderId?: string | null
+    code: string
+    status?: $Enums.TicketStatus
+    seatNumber?: string | null
+    usedAt?: Date | string | null
+    purchasedAt?: Date | string
     metadata?: NullableJsonNullValueInput | InputJsonValue
-    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    tickets?: TicketUncheckedUpdateManyWithoutEventNestedInput
-    reviews?: ReviewUncheckedUpdateManyWithoutEventNestedInput
+  }
+
+  export type TicketCreateOrConnectWithoutQrCodeInput = {
+    where: TicketWhereUniqueInput
+    create: XOR<TicketCreateWithoutQrCodeInput, TicketUncheckedCreateWithoutQrCodeInput>
+  }
+
+  export type TicketUpsertWithoutQrCodeInput = {
+    update: XOR<TicketUpdateWithoutQrCodeInput, TicketUncheckedUpdateWithoutQrCodeInput>
+    create: XOR<TicketCreateWithoutQrCodeInput, TicketUncheckedCreateWithoutQrCodeInput>
+    where?: TicketWhereInput
+  }
+
+  export type TicketUpdateToOneWithWhereWithoutQrCodeInput = {
+    where?: TicketWhereInput
+    data: XOR<TicketUpdateWithoutQrCodeInput, TicketUncheckedUpdateWithoutQrCodeInput>
+  }
+
+  export type TicketUpdateWithoutQrCodeInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    code?: StringFieldUpdateOperationsInput | string
+    status?: EnumTicketStatusFieldUpdateOperationsInput | $Enums.TicketStatus
+    seatNumber?: NullableStringFieldUpdateOperationsInput | string | null
+    usedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    purchasedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    metadata?: NullableJsonNullValueInput | InputJsonValue
+    user?: UserUpdateOneWithoutTicketsNestedInput
+    event?: EventUpdateOneRequiredWithoutTicketsNestedInput
+    order?: OrderUpdateOneWithoutTicketsNestedInput
+  }
+
+  export type TicketUncheckedUpdateWithoutQrCodeInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    userId?: NullableStringFieldUpdateOperationsInput | string | null
+    eventId?: StringFieldUpdateOperationsInput | string
+    orderId?: NullableStringFieldUpdateOperationsInput | string | null
+    code?: StringFieldUpdateOperationsInput | string
+    status?: EnumTicketStatusFieldUpdateOperationsInput | $Enums.TicketStatus
+    seatNumber?: NullableStringFieldUpdateOperationsInput | string | null
+    usedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    purchasedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    metadata?: NullableJsonNullValueInput | InputJsonValue
   }
 
   export type UserCreateWithoutLogsInput = {
@@ -28555,6 +30313,9 @@ export namespace Prisma {
     email: string
     name?: string | null
     password: string
+    isVerified?: boolean
+    lastLogin?: Date | string | null
+    role?: string
     metadata?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -28573,6 +30334,9 @@ export namespace Prisma {
     email: string
     name?: string | null
     password: string
+    isVerified?: boolean
+    lastLogin?: Date | string | null
+    role?: string
     metadata?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -28607,6 +30371,9 @@ export namespace Prisma {
     email?: StringFieldUpdateOperationsInput | string
     name?: NullableStringFieldUpdateOperationsInput | string | null
     password?: StringFieldUpdateOperationsInput | string
+    isVerified?: BoolFieldUpdateOperationsInput | boolean
+    lastLogin?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    role?: StringFieldUpdateOperationsInput | string
     metadata?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -28625,6 +30392,9 @@ export namespace Prisma {
     email?: StringFieldUpdateOperationsInput | string
     name?: NullableStringFieldUpdateOperationsInput | string | null
     password?: StringFieldUpdateOperationsInput | string
+    isVerified?: BoolFieldUpdateOperationsInput | boolean
+    lastLogin?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    role?: StringFieldUpdateOperationsInput | string
     metadata?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -28643,6 +30413,9 @@ export namespace Prisma {
     email: string
     name?: string | null
     password: string
+    isVerified?: boolean
+    lastLogin?: Date | string | null
+    role?: string
     metadata?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -28661,6 +30434,9 @@ export namespace Prisma {
     email: string
     name?: string | null
     password: string
+    isVerified?: boolean
+    lastLogin?: Date | string | null
+    role?: string
     metadata?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -28695,6 +30471,9 @@ export namespace Prisma {
     email?: StringFieldUpdateOperationsInput | string
     name?: NullableStringFieldUpdateOperationsInput | string | null
     password?: StringFieldUpdateOperationsInput | string
+    isVerified?: BoolFieldUpdateOperationsInput | boolean
+    lastLogin?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    role?: StringFieldUpdateOperationsInput | string
     metadata?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -28713,6 +30492,9 @@ export namespace Prisma {
     email?: StringFieldUpdateOperationsInput | string
     name?: NullableStringFieldUpdateOperationsInput | string | null
     password?: StringFieldUpdateOperationsInput | string
+    isVerified?: BoolFieldUpdateOperationsInput | boolean
+    lastLogin?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    role?: StringFieldUpdateOperationsInput | string
     metadata?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -28731,6 +30513,9 @@ export namespace Prisma {
     email: string
     name?: string | null
     password: string
+    isVerified?: boolean
+    lastLogin?: Date | string | null
+    role?: string
     metadata?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -28749,6 +30534,9 @@ export namespace Prisma {
     email: string
     name?: string | null
     password: string
+    isVerified?: boolean
+    lastLogin?: Date | string | null
+    role?: string
     metadata?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -28783,6 +30571,9 @@ export namespace Prisma {
     email?: StringFieldUpdateOperationsInput | string
     name?: NullableStringFieldUpdateOperationsInput | string | null
     password?: StringFieldUpdateOperationsInput | string
+    isVerified?: BoolFieldUpdateOperationsInput | boolean
+    lastLogin?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    role?: StringFieldUpdateOperationsInput | string
     metadata?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -28801,6 +30592,9 @@ export namespace Prisma {
     email?: StringFieldUpdateOperationsInput | string
     name?: NullableStringFieldUpdateOperationsInput | string | null
     password?: StringFieldUpdateOperationsInput | string
+    isVerified?: BoolFieldUpdateOperationsInput | boolean
+    lastLogin?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    role?: StringFieldUpdateOperationsInput | string
     metadata?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -28819,6 +30613,9 @@ export namespace Prisma {
     email: string
     name?: string | null
     password: string
+    isVerified?: boolean
+    lastLogin?: Date | string | null
+    role?: string
     metadata?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -28837,6 +30634,9 @@ export namespace Prisma {
     email: string
     name?: string | null
     password: string
+    isVerified?: boolean
+    lastLogin?: Date | string | null
+    role?: string
     metadata?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -28871,6 +30671,9 @@ export namespace Prisma {
     email?: StringFieldUpdateOperationsInput | string
     name?: NullableStringFieldUpdateOperationsInput | string | null
     password?: StringFieldUpdateOperationsInput | string
+    isVerified?: BoolFieldUpdateOperationsInput | boolean
+    lastLogin?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    role?: StringFieldUpdateOperationsInput | string
     metadata?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -28889,6 +30692,9 @@ export namespace Prisma {
     email?: StringFieldUpdateOperationsInput | string
     name?: NullableStringFieldUpdateOperationsInput | string | null
     password?: StringFieldUpdateOperationsInput | string
+    isVerified?: BoolFieldUpdateOperationsInput | boolean
+    lastLogin?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    role?: StringFieldUpdateOperationsInput | string
     metadata?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -28907,6 +30713,9 @@ export namespace Prisma {
     email: string
     name?: string | null
     password: string
+    isVerified?: boolean
+    lastLogin?: Date | string | null
+    role?: string
     metadata?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -28925,6 +30734,9 @@ export namespace Prisma {
     email: string
     name?: string | null
     password: string
+    isVerified?: boolean
+    lastLogin?: Date | string | null
+    role?: string
     metadata?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -28959,6 +30771,9 @@ export namespace Prisma {
     email?: StringFieldUpdateOperationsInput | string
     name?: NullableStringFieldUpdateOperationsInput | string | null
     password?: StringFieldUpdateOperationsInput | string
+    isVerified?: BoolFieldUpdateOperationsInput | boolean
+    lastLogin?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    role?: StringFieldUpdateOperationsInput | string
     metadata?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -28977,6 +30792,9 @@ export namespace Prisma {
     email?: StringFieldUpdateOperationsInput | string
     name?: NullableStringFieldUpdateOperationsInput | string | null
     password?: StringFieldUpdateOperationsInput | string
+    isVerified?: BoolFieldUpdateOperationsInput | boolean
+    lastLogin?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    role?: StringFieldUpdateOperationsInput | string
     metadata?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -28997,7 +30815,6 @@ export namespace Prisma {
     code: string
     status?: $Enums.TicketStatus
     seatNumber?: string | null
-    qrCode?: string | null
     usedAt?: Date | string | null
     purchasedAt?: Date | string
     metadata?: NullableJsonNullValueInput | InputJsonValue
@@ -29051,7 +30868,7 @@ export namespace Prisma {
     id?: string
     type: string
     message: string
-    isRead?: boolean
+    isRead?: Date | string | null
     sentAt: Date | string
   }
 
@@ -29067,12 +30884,12 @@ export namespace Prisma {
     code?: StringFieldUpdateOperationsInput | string
     status?: EnumTicketStatusFieldUpdateOperationsInput | $Enums.TicketStatus
     seatNumber?: NullableStringFieldUpdateOperationsInput | string | null
-    qrCode?: NullableStringFieldUpdateOperationsInput | string | null
     usedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     purchasedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     metadata?: NullableJsonNullValueInput | InputJsonValue
     event?: EventUpdateOneRequiredWithoutTicketsNestedInput
     order?: OrderUpdateOneWithoutTicketsNestedInput
+    qrCode?: QRCodeUpdateOneWithoutTicketNestedInput
   }
 
   export type TicketUncheckedUpdateWithoutUserInput = {
@@ -29082,10 +30899,10 @@ export namespace Prisma {
     code?: StringFieldUpdateOperationsInput | string
     status?: EnumTicketStatusFieldUpdateOperationsInput | $Enums.TicketStatus
     seatNumber?: NullableStringFieldUpdateOperationsInput | string | null
-    qrCode?: NullableStringFieldUpdateOperationsInput | string | null
     usedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     purchasedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     metadata?: NullableJsonNullValueInput | InputJsonValue
+    qrCode?: QRCodeUncheckedUpdateOneWithoutTicketNestedInput
   }
 
   export type TicketUncheckedUpdateManyWithoutUserInput = {
@@ -29095,7 +30912,6 @@ export namespace Prisma {
     code?: StringFieldUpdateOperationsInput | string
     status?: EnumTicketStatusFieldUpdateOperationsInput | $Enums.TicketStatus
     seatNumber?: NullableStringFieldUpdateOperationsInput | string | null
-    qrCode?: NullableStringFieldUpdateOperationsInput | string | null
     usedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     purchasedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     metadata?: NullableJsonNullValueInput | InputJsonValue
@@ -29241,7 +31057,7 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     type?: StringFieldUpdateOperationsInput | string
     message?: StringFieldUpdateOperationsInput | string
-    isRead?: BoolFieldUpdateOperationsInput | boolean
+    isRead?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     sentAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
@@ -29249,7 +31065,7 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     type?: StringFieldUpdateOperationsInput | string
     message?: StringFieldUpdateOperationsInput | string
-    isRead?: BoolFieldUpdateOperationsInput | boolean
+    isRead?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     sentAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
@@ -29257,7 +31073,7 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     type?: StringFieldUpdateOperationsInput | string
     message?: StringFieldUpdateOperationsInput | string
-    isRead?: BoolFieldUpdateOperationsInput | boolean
+    isRead?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     sentAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
@@ -29291,8 +31107,11 @@ export namespace Prisma {
     maxCapacity?: number | null
     isPublished?: boolean
     isCancelled?: boolean
+    allowAnonymousPurchase?: boolean
+    allowTransfer?: boolean
     categoryId?: string | null
     venueId?: string | null
+    themeId?: string | null
     metadata?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -29314,14 +31133,16 @@ export namespace Prisma {
     maxCapacity?: NullableIntFieldUpdateOperationsInput | number | null
     isPublished?: BoolFieldUpdateOperationsInput | boolean
     isCancelled?: BoolFieldUpdateOperationsInput | boolean
+    allowAnonymousPurchase?: BoolFieldUpdateOperationsInput | boolean
+    allowTransfer?: BoolFieldUpdateOperationsInput | boolean
     metadata?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     tickets?: TicketUpdateManyWithoutEventNestedInput
     reviews?: ReviewUpdateManyWithoutEventNestedInput
-    eventSetting?: EventSettingUpdateOneWithoutEventNestedInput
     category?: CategoryUpdateOneWithoutEventsNestedInput
     venue?: VenueUpdateOneWithoutEventsNestedInput
+    theme?: ThemeUpdateOneWithoutEventsNestedInput
   }
 
   export type EventUncheckedUpdateWithoutOrganizerInput = {
@@ -29333,14 +31154,16 @@ export namespace Prisma {
     maxCapacity?: NullableIntFieldUpdateOperationsInput | number | null
     isPublished?: BoolFieldUpdateOperationsInput | boolean
     isCancelled?: BoolFieldUpdateOperationsInput | boolean
+    allowAnonymousPurchase?: BoolFieldUpdateOperationsInput | boolean
+    allowTransfer?: BoolFieldUpdateOperationsInput | boolean
     categoryId?: NullableStringFieldUpdateOperationsInput | string | null
     venueId?: NullableStringFieldUpdateOperationsInput | string | null
+    themeId?: NullableStringFieldUpdateOperationsInput | string | null
     metadata?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     tickets?: TicketUncheckedUpdateManyWithoutEventNestedInput
     reviews?: ReviewUncheckedUpdateManyWithoutEventNestedInput
-    eventSetting?: EventSettingUncheckedUpdateOneWithoutEventNestedInput
   }
 
   export type EventUncheckedUpdateManyWithoutOrganizerInput = {
@@ -29352,8 +31175,11 @@ export namespace Prisma {
     maxCapacity?: NullableIntFieldUpdateOperationsInput | number | null
     isPublished?: BoolFieldUpdateOperationsInput | boolean
     isCancelled?: BoolFieldUpdateOperationsInput | boolean
+    allowAnonymousPurchase?: BoolFieldUpdateOperationsInput | boolean
+    allowTransfer?: BoolFieldUpdateOperationsInput | boolean
     categoryId?: NullableStringFieldUpdateOperationsInput | string | null
     venueId?: NullableStringFieldUpdateOperationsInput | string | null
+    themeId?: NullableStringFieldUpdateOperationsInput | string | null
     metadata?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -29387,7 +31213,6 @@ export namespace Prisma {
     code: string
     status?: $Enums.TicketStatus
     seatNumber?: string | null
-    qrCode?: string | null
     usedAt?: Date | string | null
     purchasedAt?: Date | string
     metadata?: NullableJsonNullValueInput | InputJsonValue
@@ -29406,12 +31231,12 @@ export namespace Prisma {
     code?: StringFieldUpdateOperationsInput | string
     status?: EnumTicketStatusFieldUpdateOperationsInput | $Enums.TicketStatus
     seatNumber?: NullableStringFieldUpdateOperationsInput | string | null
-    qrCode?: NullableStringFieldUpdateOperationsInput | string | null
     usedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     purchasedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     metadata?: NullableJsonNullValueInput | InputJsonValue
     user?: UserUpdateOneWithoutTicketsNestedInput
     order?: OrderUpdateOneWithoutTicketsNestedInput
+    qrCode?: QRCodeUpdateOneWithoutTicketNestedInput
   }
 
   export type TicketUncheckedUpdateWithoutEventInput = {
@@ -29421,10 +31246,10 @@ export namespace Prisma {
     code?: StringFieldUpdateOperationsInput | string
     status?: EnumTicketStatusFieldUpdateOperationsInput | $Enums.TicketStatus
     seatNumber?: NullableStringFieldUpdateOperationsInput | string | null
-    qrCode?: NullableStringFieldUpdateOperationsInput | string | null
     usedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     purchasedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     metadata?: NullableJsonNullValueInput | InputJsonValue
+    qrCode?: QRCodeUncheckedUpdateOneWithoutTicketNestedInput
   }
 
   export type TicketUncheckedUpdateManyWithoutEventInput = {
@@ -29434,7 +31259,6 @@ export namespace Prisma {
     code?: StringFieldUpdateOperationsInput | string
     status?: EnumTicketStatusFieldUpdateOperationsInput | $Enums.TicketStatus
     seatNumber?: NullableStringFieldUpdateOperationsInput | string | null
-    qrCode?: NullableStringFieldUpdateOperationsInput | string | null
     usedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     purchasedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     metadata?: NullableJsonNullValueInput | InputJsonValue
@@ -29471,7 +31295,6 @@ export namespace Prisma {
     code: string
     status?: $Enums.TicketStatus
     seatNumber?: string | null
-    qrCode?: string | null
     usedAt?: Date | string | null
     purchasedAt?: Date | string
     metadata?: NullableJsonNullValueInput | InputJsonValue
@@ -29482,12 +31305,12 @@ export namespace Prisma {
     code?: StringFieldUpdateOperationsInput | string
     status?: EnumTicketStatusFieldUpdateOperationsInput | $Enums.TicketStatus
     seatNumber?: NullableStringFieldUpdateOperationsInput | string | null
-    qrCode?: NullableStringFieldUpdateOperationsInput | string | null
     usedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     purchasedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     metadata?: NullableJsonNullValueInput | InputJsonValue
     user?: UserUpdateOneWithoutTicketsNestedInput
     event?: EventUpdateOneRequiredWithoutTicketsNestedInput
+    qrCode?: QRCodeUpdateOneWithoutTicketNestedInput
   }
 
   export type TicketUncheckedUpdateWithoutOrderInput = {
@@ -29497,10 +31320,10 @@ export namespace Prisma {
     code?: StringFieldUpdateOperationsInput | string
     status?: EnumTicketStatusFieldUpdateOperationsInput | $Enums.TicketStatus
     seatNumber?: NullableStringFieldUpdateOperationsInput | string | null
-    qrCode?: NullableStringFieldUpdateOperationsInput | string | null
     usedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     purchasedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     metadata?: NullableJsonNullValueInput | InputJsonValue
+    qrCode?: QRCodeUncheckedUpdateOneWithoutTicketNestedInput
   }
 
   export type TicketUncheckedUpdateManyWithoutOrderInput = {
@@ -29510,7 +31333,6 @@ export namespace Prisma {
     code?: StringFieldUpdateOperationsInput | string
     status?: EnumTicketStatusFieldUpdateOperationsInput | $Enums.TicketStatus
     seatNumber?: NullableStringFieldUpdateOperationsInput | string | null
-    qrCode?: NullableStringFieldUpdateOperationsInput | string | null
     usedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     purchasedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     metadata?: NullableJsonNullValueInput | InputJsonValue
@@ -29525,8 +31347,11 @@ export namespace Prisma {
     maxCapacity?: number | null
     isPublished?: boolean
     isCancelled?: boolean
+    allowAnonymousPurchase?: boolean
+    allowTransfer?: boolean
     venueId?: string | null
     organizerId: string
+    themeId?: string | null
     metadata?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -29541,14 +31366,16 @@ export namespace Prisma {
     maxCapacity?: NullableIntFieldUpdateOperationsInput | number | null
     isPublished?: BoolFieldUpdateOperationsInput | boolean
     isCancelled?: BoolFieldUpdateOperationsInput | boolean
+    allowAnonymousPurchase?: BoolFieldUpdateOperationsInput | boolean
+    allowTransfer?: BoolFieldUpdateOperationsInput | boolean
     metadata?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     tickets?: TicketUpdateManyWithoutEventNestedInput
     reviews?: ReviewUpdateManyWithoutEventNestedInput
-    eventSetting?: EventSettingUpdateOneWithoutEventNestedInput
     venue?: VenueUpdateOneWithoutEventsNestedInput
     organizer?: OrganizerUpdateOneRequiredWithoutEventsNestedInput
+    theme?: ThemeUpdateOneWithoutEventsNestedInput
   }
 
   export type EventUncheckedUpdateWithoutCategoryInput = {
@@ -29560,14 +31387,16 @@ export namespace Prisma {
     maxCapacity?: NullableIntFieldUpdateOperationsInput | number | null
     isPublished?: BoolFieldUpdateOperationsInput | boolean
     isCancelled?: BoolFieldUpdateOperationsInput | boolean
+    allowAnonymousPurchase?: BoolFieldUpdateOperationsInput | boolean
+    allowTransfer?: BoolFieldUpdateOperationsInput | boolean
     venueId?: NullableStringFieldUpdateOperationsInput | string | null
     organizerId?: StringFieldUpdateOperationsInput | string
+    themeId?: NullableStringFieldUpdateOperationsInput | string | null
     metadata?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     tickets?: TicketUncheckedUpdateManyWithoutEventNestedInput
     reviews?: ReviewUncheckedUpdateManyWithoutEventNestedInput
-    eventSetting?: EventSettingUncheckedUpdateOneWithoutEventNestedInput
   }
 
   export type EventUncheckedUpdateManyWithoutCategoryInput = {
@@ -29579,8 +31408,11 @@ export namespace Prisma {
     maxCapacity?: NullableIntFieldUpdateOperationsInput | number | null
     isPublished?: BoolFieldUpdateOperationsInput | boolean
     isCancelled?: BoolFieldUpdateOperationsInput | boolean
+    allowAnonymousPurchase?: BoolFieldUpdateOperationsInput | boolean
+    allowTransfer?: BoolFieldUpdateOperationsInput | boolean
     venueId?: NullableStringFieldUpdateOperationsInput | string | null
     organizerId?: StringFieldUpdateOperationsInput | string
+    themeId?: NullableStringFieldUpdateOperationsInput | string | null
     metadata?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -29595,8 +31427,11 @@ export namespace Prisma {
     maxCapacity?: number | null
     isPublished?: boolean
     isCancelled?: boolean
+    allowAnonymousPurchase?: boolean
+    allowTransfer?: boolean
     categoryId?: string | null
     organizerId: string
+    themeId?: string | null
     metadata?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -29611,14 +31446,16 @@ export namespace Prisma {
     maxCapacity?: NullableIntFieldUpdateOperationsInput | number | null
     isPublished?: BoolFieldUpdateOperationsInput | boolean
     isCancelled?: BoolFieldUpdateOperationsInput | boolean
+    allowAnonymousPurchase?: BoolFieldUpdateOperationsInput | boolean
+    allowTransfer?: BoolFieldUpdateOperationsInput | boolean
     metadata?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     tickets?: TicketUpdateManyWithoutEventNestedInput
     reviews?: ReviewUpdateManyWithoutEventNestedInput
-    eventSetting?: EventSettingUpdateOneWithoutEventNestedInput
     category?: CategoryUpdateOneWithoutEventsNestedInput
     organizer?: OrganizerUpdateOneRequiredWithoutEventsNestedInput
+    theme?: ThemeUpdateOneWithoutEventsNestedInput
   }
 
   export type EventUncheckedUpdateWithoutVenueInput = {
@@ -29630,14 +31467,16 @@ export namespace Prisma {
     maxCapacity?: NullableIntFieldUpdateOperationsInput | number | null
     isPublished?: BoolFieldUpdateOperationsInput | boolean
     isCancelled?: BoolFieldUpdateOperationsInput | boolean
+    allowAnonymousPurchase?: BoolFieldUpdateOperationsInput | boolean
+    allowTransfer?: BoolFieldUpdateOperationsInput | boolean
     categoryId?: NullableStringFieldUpdateOperationsInput | string | null
     organizerId?: StringFieldUpdateOperationsInput | string
+    themeId?: NullableStringFieldUpdateOperationsInput | string | null
     metadata?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     tickets?: TicketUncheckedUpdateManyWithoutEventNestedInput
     reviews?: ReviewUncheckedUpdateManyWithoutEventNestedInput
-    eventSetting?: EventSettingUncheckedUpdateOneWithoutEventNestedInput
   }
 
   export type EventUncheckedUpdateManyWithoutVenueInput = {
@@ -29649,7 +31488,90 @@ export namespace Prisma {
     maxCapacity?: NullableIntFieldUpdateOperationsInput | number | null
     isPublished?: BoolFieldUpdateOperationsInput | boolean
     isCancelled?: BoolFieldUpdateOperationsInput | boolean
+    allowAnonymousPurchase?: BoolFieldUpdateOperationsInput | boolean
+    allowTransfer?: BoolFieldUpdateOperationsInput | boolean
     categoryId?: NullableStringFieldUpdateOperationsInput | string | null
+    organizerId?: StringFieldUpdateOperationsInput | string
+    themeId?: NullableStringFieldUpdateOperationsInput | string | null
+    metadata?: NullableJsonNullValueInput | InputJsonValue
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type EventCreateManyThemeInput = {
+    id?: string
+    title: string
+    description?: string | null
+    date: Date | string
+    location: string
+    maxCapacity?: number | null
+    isPublished?: boolean
+    isCancelled?: boolean
+    allowAnonymousPurchase?: boolean
+    allowTransfer?: boolean
+    categoryId?: string | null
+    venueId?: string | null
+    organizerId: string
+    metadata?: NullableJsonNullValueInput | InputJsonValue
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type EventUpdateWithoutThemeInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    title?: StringFieldUpdateOperationsInput | string
+    description?: NullableStringFieldUpdateOperationsInput | string | null
+    date?: DateTimeFieldUpdateOperationsInput | Date | string
+    location?: StringFieldUpdateOperationsInput | string
+    maxCapacity?: NullableIntFieldUpdateOperationsInput | number | null
+    isPublished?: BoolFieldUpdateOperationsInput | boolean
+    isCancelled?: BoolFieldUpdateOperationsInput | boolean
+    allowAnonymousPurchase?: BoolFieldUpdateOperationsInput | boolean
+    allowTransfer?: BoolFieldUpdateOperationsInput | boolean
+    metadata?: NullableJsonNullValueInput | InputJsonValue
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    tickets?: TicketUpdateManyWithoutEventNestedInput
+    reviews?: ReviewUpdateManyWithoutEventNestedInput
+    category?: CategoryUpdateOneWithoutEventsNestedInput
+    venue?: VenueUpdateOneWithoutEventsNestedInput
+    organizer?: OrganizerUpdateOneRequiredWithoutEventsNestedInput
+  }
+
+  export type EventUncheckedUpdateWithoutThemeInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    title?: StringFieldUpdateOperationsInput | string
+    description?: NullableStringFieldUpdateOperationsInput | string | null
+    date?: DateTimeFieldUpdateOperationsInput | Date | string
+    location?: StringFieldUpdateOperationsInput | string
+    maxCapacity?: NullableIntFieldUpdateOperationsInput | number | null
+    isPublished?: BoolFieldUpdateOperationsInput | boolean
+    isCancelled?: BoolFieldUpdateOperationsInput | boolean
+    allowAnonymousPurchase?: BoolFieldUpdateOperationsInput | boolean
+    allowTransfer?: BoolFieldUpdateOperationsInput | boolean
+    categoryId?: NullableStringFieldUpdateOperationsInput | string | null
+    venueId?: NullableStringFieldUpdateOperationsInput | string | null
+    organizerId?: StringFieldUpdateOperationsInput | string
+    metadata?: NullableJsonNullValueInput | InputJsonValue
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    tickets?: TicketUncheckedUpdateManyWithoutEventNestedInput
+    reviews?: ReviewUncheckedUpdateManyWithoutEventNestedInput
+  }
+
+  export type EventUncheckedUpdateManyWithoutThemeInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    title?: StringFieldUpdateOperationsInput | string
+    description?: NullableStringFieldUpdateOperationsInput | string | null
+    date?: DateTimeFieldUpdateOperationsInput | Date | string
+    location?: StringFieldUpdateOperationsInput | string
+    maxCapacity?: NullableIntFieldUpdateOperationsInput | number | null
+    isPublished?: BoolFieldUpdateOperationsInput | boolean
+    isCancelled?: BoolFieldUpdateOperationsInput | boolean
+    allowAnonymousPurchase?: BoolFieldUpdateOperationsInput | boolean
+    allowTransfer?: BoolFieldUpdateOperationsInput | boolean
+    categoryId?: NullableStringFieldUpdateOperationsInput | string | null
+    venueId?: NullableStringFieldUpdateOperationsInput | string | null
     organizerId?: StringFieldUpdateOperationsInput | string
     metadata?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string

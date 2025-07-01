@@ -1,6 +1,5 @@
 import { Role } from '@prisma/client';
 
-// Types spécifiques pour les relations
 export type BlockedUserBasic = {
   id: string;
   userId: string;
@@ -21,7 +20,6 @@ export type UserWithRelations = {
   blockedUser: BlockedUserBasic | null;
 }
 
-// Types d'entrée pour les opérations
 export type UserCreateInput = {
   name?: string | null;
   email: string;

@@ -20,12 +20,12 @@ exports.Prisma = Prisma
 exports.$Enums = {}
 
 /**
- * Prisma Client JS version: 6.9.0
- * Query Engine version: 81e4af48011447c3cc503a190e86995b66d2a28e
+ * Prisma Client JS version: 6.10.1
+ * Query Engine version: 9b628578b3b7cae625e8c927178f15a170e74a9c
  */
 Prisma.prismaVersion = {
-  client: "6.9.0",
-  engine: "81e4af48011447c3cc503a190e86995b66d2a28e"
+  client: "6.10.1",
+  engine: "9b628578b3b7cae625e8c927178f15a170e74a9c"
 }
 
 Prisma.PrismaClientKnownRequestError = () => {
@@ -114,9 +114,6 @@ Prisma.NullTypes = {
  */
 
 exports.Prisma.TransactionIsolationLevel = makeStrictEnum({
-  ReadUncommitted: 'ReadUncommitted',
-  ReadCommitted: 'ReadCommitted',
-  RepeatableRead: 'RepeatableRead',
   Serializable: 'Serializable'
 });
 
@@ -125,6 +122,9 @@ exports.Prisma.UserScalarFieldEnum = {
   email: 'email',
   name: 'name',
   password: 'password',
+  isVerified: 'isVerified',
+  lastLogin: 'lastLogin',
+  role: 'role',
   metadata: 'metadata',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
@@ -146,9 +146,12 @@ exports.Prisma.EventScalarFieldEnum = {
   maxCapacity: 'maxCapacity',
   isPublished: 'isPublished',
   isCancelled: 'isCancelled',
+  allowAnonymousPurchase: 'allowAnonymousPurchase',
+  allowTransfer: 'allowTransfer',
   categoryId: 'categoryId',
   venueId: 'venueId',
   organizerId: 'organizerId',
+  themeId: 'themeId',
   metadata: 'metadata',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
@@ -175,7 +178,6 @@ exports.Prisma.TicketScalarFieldEnum = {
   code: 'code',
   status: 'status',
   seatNumber: 'seatNumber',
-  qrCode: 'qrCode',
   usedAt: 'usedAt',
   purchasedAt: 'purchasedAt',
   metadata: 'metadata'
@@ -220,14 +222,26 @@ exports.Prisma.TeamMemberScalarFieldEnum = {
   joinedAt: 'joinedAt'
 };
 
-exports.Prisma.EventSettingScalarFieldEnum = {
+exports.Prisma.ThemeScalarFieldEnum = {
   id: 'id',
-  eventId: 'eventId',
-  theme: 'theme',
-  allowAnonymousPurchase: 'allowAnonymousPurchase',
-  allowTransfer: 'allowTransfer',
+  name: 'name',
+  description: 'description',
+  imagePath: 'imagePath',
+  color: 'color',
+  metadata: 'metadata',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
+};
+
+exports.Prisma.QRCodeScalarFieldEnum = {
+  id: 'id',
+  ticketId: 'ticketId',
+  path: 'path',
+  format: 'format',
+  createdAt: 'createdAt',
+  expiresAt: 'expiresAt',
+  scannedAt: 'scannedAt',
+  data: 'data'
 };
 
 exports.Prisma.ActivityLogScalarFieldEnum = {
@@ -292,15 +306,15 @@ exports.Prisma.NullableJsonNullValueInput = {
   JsonNull: Prisma.JsonNull
 };
 
-exports.Prisma.QueryMode = {
-  default: 'default',
-  insensitive: 'insensitive'
-};
-
 exports.Prisma.JsonNullValueFilter = {
   DbNull: Prisma.DbNull,
   JsonNull: Prisma.JsonNull,
   AnyNull: Prisma.AnyNull
+};
+
+exports.Prisma.QueryMode = {
+  default: 'default',
+  insensitive: 'insensitive'
 };
 
 exports.Prisma.NullsOrder = {
@@ -332,7 +346,8 @@ exports.Prisma.ModelName = {
   Venue: 'Venue',
   Review: 'Review',
   TeamMember: 'TeamMember',
-  EventSetting: 'EventSetting',
+  Theme: 'Theme',
+  QRCode: 'QRCode',
   ActivityLog: 'ActivityLog',
   EventLog: 'EventLog',
   Notification: 'Notification',

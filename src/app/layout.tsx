@@ -1,4 +1,6 @@
-import './globals.css'
+// Initialize QR code rotation service server-side
+import '@/lib/qr-rotation-init';
+import './globals.css';
 
 export const metadata = {
   title: 'M&C Society - Billetterie',

@@ -1,26 +1,27 @@
-import React from 'react';
-import Link from 'next/link';
-import { 
-  NavigationMenu, 
-  NavigationMenuContent, 
-  NavigationMenuItem, 
-  NavigationMenuLink, 
-  NavigationMenuList, 
-  NavigationMenuTrigger,
-  navigationMenuTriggerStyle
-} from '@/components/ui/navigation-menu';
-import { 
-  DropdownMenu, 
-  DropdownMenuContent, 
-  DropdownMenuItem, 
-  DropdownMenuLabel, 
-  DropdownMenuSeparator, 
-  DropdownMenuTrigger 
-} from '@/components/ui/dropdown-menu';
+'use client';
+
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
-import { Container } from './Container';
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuLabel,
+    DropdownMenuSeparator,
+    DropdownMenuTrigger
+} from '@/components/ui/dropdown-menu';
+import {
+    NavigationMenu,
+    NavigationMenuContent,
+    NavigationMenuItem,
+    NavigationMenuLink,
+    NavigationMenuList,
+    NavigationMenuTrigger,
+    navigationMenuTriggerStyle
+} from '@/components/ui/navigation-menu';
 import { useAppStore } from '@/store';
+import Link from 'next/link';
+import { Container } from './Container';
 
 export function Toolbar() {
   // Get authentication state from the store
@@ -62,7 +63,7 @@ export function Toolbar() {
                   <ul className="grid gap-3 p-4 w-[400px] md:w-[500px] lg:w-[600px] grid-cols-2">
                     <li className="row-span-3">
                       <NavigationMenuLink asChild>
-                        <a
+                        <Link
                           className="flex h-full w-full select-none flex-col justify-end rounded-md bg-gradient-to-b from-primary/50 to-primary p-6 no-underline outline-none focus:shadow-md"
                           href="/events"
                         >
@@ -72,12 +73,12 @@ export function Toolbar() {
                           <p className="text-sm leading-tight text-white/90">
                             Découvrez tous nos événements à venir et réservez vos billets.
                           </p>
-                        </a>
+                        </Link>
                       </NavigationMenuLink>
                     </li>
                     <li>
                       <NavigationMenuLink asChild>
-                        <a
+                        <Link
                           className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground"
                           href="/events/concerts"
                         >
@@ -85,12 +86,12 @@ export function Toolbar() {
                           <p className="line-clamp-2 text-sm leading-snug text-muted-foreground">
                             Concerts et performances musicales
                           </p>
-                        </a>
+                        </Link>
                       </NavigationMenuLink>
                     </li>
                     <li>
                       <NavigationMenuLink asChild>
-                        <a
+                        <Link
                           className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground"
                           href="/events/festivals"
                         >
@@ -98,12 +99,12 @@ export function Toolbar() {
                           <p className="line-clamp-2 text-sm leading-snug text-muted-foreground">
                             Festivals et événements culturels
                           </p>
-                        </a>
+                        </Link>
                       </NavigationMenuLink>
                     </li>
                     <li>
                       <NavigationMenuLink asChild>
-                        <a
+                        <Link
                           className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground"
                           href="/events/theater"
                         >
@@ -111,7 +112,7 @@ export function Toolbar() {
                           <p className="line-clamp-2 text-sm leading-snug text-muted-foreground">
                             Pièces de théâtre et spectacles
                           </p>
-                        </a>
+                        </Link>
                       </NavigationMenuLink>
                     </li>
                   </ul>
@@ -121,6 +122,20 @@ export function Toolbar() {
                 <Link href="/about" legacyBehavior passHref>
                   <NavigationMenuLink className={navigationMenuTriggerStyle()}>
                     À propos
+                  </NavigationMenuLink>
+                </Link>
+              </NavigationMenuItem>
+              <NavigationMenuItem>
+                <Link href="/demo" legacyBehavior passHref>
+                  <NavigationMenuLink className={navigationMenuTriggerStyle()}>
+                    Démonstration
+                  </NavigationMenuLink>
+                </Link>
+              </NavigationMenuItem>
+              <NavigationMenuItem>
+                <Link href="/qr-scanner" legacyBehavior passHref>
+                  <NavigationMenuLink className={navigationMenuTriggerStyle()}>
+                    Scanner QR
                   </NavigationMenuLink>
                 </Link>
               </NavigationMenuItem>
@@ -188,7 +203,7 @@ export function Toolbar() {
                 </Button>
                 <Button size="sm" asChild>
                   <Link href="/register">
-                    S'inscrire
+                    S&apos;inscrire
                   </Link>
                 </Button>
               </>

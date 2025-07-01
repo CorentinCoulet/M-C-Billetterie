@@ -1,9 +1,5 @@
+import type { Event, Payment, User } from '@/generated/prisma';
 import prisma from '@/lib/prisma';
-import { User, Event, Order, Payment, Prisma } from '@prisma/client';
-import userService from './userService';
-import eventService from './eventService';
-import orderService from './orderService';
-import paymentService from './paymentService';
 
 /**
  * Service for administrative operations

@@ -1,4 +1,5 @@
 import prisma from '@/lib/prisma';
+import { BaseService } from './baseService';
 
 // Types spécifiques pour les relations
 type TicketBasic = {
@@ -154,25 +155,29 @@ type EventStatistics = {
   totalReviews: number;
 }
 
+// Standard relations to include in event queries
+const eventIncludes = {
+  tickets: true,
+  reviews: true,
+  eventSetting: true,
+  category: true,
+  venue: true,
+  organizer: true,
+};
+
 /**
  * Service for event management operations
  */
-export class EventService {
+export class EventService extends BaseService<EventWithRelations> {
+  constructor() {
+    super(prisma.event, eventIncludes);
+  }
+
   /**
    * Get an event by ID
    */
   async getEventById(id: string): Promise<EventWithRelations | null> {
-    return prisma.event.findUnique({
-      where: { id },
-      include: {
-        tickets: true,
-        reviews: true,
-        eventSetting: true,
-        category: true,
-        venue: true,
-        organizer: true,
-      }
-    }) as Promise<EventWithRelations | null>;
+    return this.getById(id);
   }
 
   /**
@@ -186,55 +191,32 @@ export class EventService {
     includePast?: boolean;
   }): Promise<EventWithRelations[]> {
     const { skip, take, where, orderBy, includePast = false } = params;
-    
+
     const dateFilter = includePast ? {} : {
       date: {
         gte: new Date()
       }
     };
 
-    return prisma.event.findMany({
+    return this.getAll({
       skip,
       take,
       where: {
         ...where,
         ...dateFilter
       },
-      orderBy: orderBy || { date: 'asc' },
-      include: {
-        tickets: true,
-        reviews: true,
-        eventSetting: true,
-        category: true,
-        venue: true,
-        organizer: {
-          select: {
-            id: true,
-            name: true
-          }
-        }
-      }
-    }) as Promise<EventWithRelations[]>;
+      orderBy: orderBy || { date: 'asc' }
+    });
   }
 
   /**
    * Create a new event
    */
   async createEvent(data: EventCreateInput): Promise<EventWithRelations> {
-    return prisma.event.create({
-      data: {
-        ...data,
-        date: new Date(data.date)
-      },
-      include: {
-        tickets: true,
-        reviews: true,
-        eventSetting: true,
-        category: true,
-        venue: true,
-        organizer: true
-      }
-    }) as Promise<EventWithRelations>;
+    return this.create({
+      ...data,
+      date: new Date(data.date)
+    });
   }
 
   /**
@@ -246,49 +228,28 @@ export class EventService {
       updateData.date = new Date(data.date);
     }
 
-    return prisma.event.update({
-      where: { id },
-      data: updateData,
-      include: {
-        tickets: true,
-        reviews: true,
-        eventSetting: true,
-        category: true,
-        venue: true,
-        organizer: true
-      }
-    }) as Promise<EventWithRelations>;
+    return this.update(id, updateData);
   }
 
   /**
    * Delete an event
    */
   async deleteEvent(id: string): Promise<EventWithRelations> {
-    return prisma.event.delete({
-      where: { id },
-      include: {
-        tickets: true,
-        reviews: true,
-        eventSetting: true,
-        category: true,
-        venue: true,
-        organizer: true
-      }
-    }) as Promise<EventWithRelations>;
+    return this.delete(id);
   }
 
   /**
    * Count events with optional filtering
    */
   async countEvents(where?: EventWhereInput): Promise<number> {
-    return prisma.event.count({ where });
+    return this.count(where);
   }
 
   /**
    * Get upcoming events
    */
   async getUpcomingEvents(limit: number = 10): Promise<EventWithRelations[]> {
-    return prisma.event.findMany({
+    return this.getAll({
       where: {
         date: {
           gte: new Date()
@@ -299,50 +260,29 @@ export class EventService {
       orderBy: {
         date: 'asc'
       },
-      take: limit,
-      include: {
-        tickets: true,
-        reviews: true,
-        eventSetting: true,
-        category: true,
-        venue: true,
-        organizer: {
-          select: {
-            id: true,
-            name: true
-          }
-        }
-      }
-    }) as Promise<EventWithRelations[]>;
+      take: limit
+    });
   }
 
   /**
    * Get events by organizer
    */
   async getEventsByOrganizer(organizerId: string): Promise<EventWithRelations[]> {
-    return prisma.event.findMany({
+    return this.getAll({
       where: {
         organizerId
-      },
-      include: {
-        tickets: true,
-        reviews: true,
-        eventSetting: true,
-        category: true,
-        venue: true,
-        organizer: true
       },
       orderBy: {
         date: 'desc'
       }
-    }) as Promise<EventWithRelations[]>;
+    });
   }
 
   /**
    * Search events by name, location or description
    */
   async searchEvents(query: string): Promise<EventWithRelations[]> {
-    return prisma.event.findMany({
+    return this.getAll({
       where: {
         AND: [
           { isPublished: true },
@@ -370,57 +310,22 @@ export class EventService {
             ]
           }
         ]
-      },
-      include: {
-        tickets: true,
-        reviews: true,
-        eventSetting: true,
-        category: true,
-        venue: true,
-        organizer: {
-          select: {
-            id: true,
-            name: true
-          }
-        }
       }
-    }) as Promise<EventWithRelations[]>;
+    });
   }
 
   /**
    * Publish or unpublish an event
    */
   async toggleEventPublished(id: string, isPublished: boolean): Promise<EventWithRelations> {
-    return prisma.event.update({
-      where: { id },
-      data: { isPublished },
-      include: {
-        tickets: true,
-        reviews: true,
-        eventSetting: true,
-        category: true,
-        venue: true,
-        organizer: true
-      }
-    }) as Promise<EventWithRelations>;
+    return this.update(id, { isPublished });
   }
 
   /**
    * Cancel or uncancel an event
    */
   async toggleEventCancelled(id: string, isCancelled: boolean): Promise<EventWithRelations> {
-    return prisma.event.update({
-      where: { id },
-      data: { isCancelled },
-      include: {
-        tickets: true,
-        reviews: true,
-        eventSetting: true,
-        category: true,
-        venue: true,
-        organizer: true
-      }
-    }) as Promise<EventWithRelations>;
+    return this.update(id, { isCancelled });
   }
 
   /**
@@ -473,60 +378,34 @@ export class EventService {
    * Get events by category
    */
   async getEventsByCategory(categoryId: string, limit?: number): Promise<EventWithRelations[]> {
-    return prisma.event.findMany({
+    return this.getAll({
       where: {
         categoryId,
         isPublished: true,
         isCancelled: false
       },
       take: limit,
-      include: {
-        tickets: true,
-        reviews: true,
-        eventSetting: true,
-        category: true,
-        venue: true,
-        organizer: {
-          select: {
-            id: true,
-            name: true
-          }
-        }
-      },
       orderBy: {
         date: 'asc'
       }
-    }) as Promise<EventWithRelations[]>;
+    });
   }
 
   /**
    * Get events by venue
    */
   async getEventsByVenue(venueId: string, limit?: number): Promise<EventWithRelations[]> {
-    return prisma.event.findMany({
+    return this.getAll({
       where: {
         venueId,
         isPublished: true,
         isCancelled: false
       },
       take: limit,
-      include: {
-        tickets: true,
-        reviews: true,
-        eventSetting: true,
-        category: true,
-        venue: true,
-        organizer: {
-          select: {
-            id: true,
-            name: true
-          }
-        }
-      },
       orderBy: {
         date: 'asc'
       }
-    }) as Promise<EventWithRelations[]>;
+    });
   }
 }
 

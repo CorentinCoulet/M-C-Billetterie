@@ -30,6 +30,9 @@ model User {
   email     String     @unique
   name      String?
   password  String
+  isVerified Boolean   @default(false)
+  lastLogin DateTime?
+  role      String     @default("USER")
   tickets   Ticket[]
   orders    Order[]
   sessions  Session[]
@@ -62,15 +65,18 @@ model Event {
   maxCapacity  Int?
   isPublished  Boolean       @default(false)
   isCancelled  Boolean       @default(false)
+  allowAnonymousPurchase Boolean @default(false)
+  allowTransfer          Boolean @default(false)
   tickets      Ticket[]
   reviews      Review[]
-  eventSetting EventSetting?
   category     Category?     @relation(fields: [categoryId], references: [id])
   categoryId   String?
   venue        Venue?        @relation(fields: [venueId], references: [id])
   venueId      String?
   organizer    Organizer     @relation(fields: [organizerId], references: [id])
   organizerId  String
+  theme        Theme?        @relation(fields: [themeId], references: [id])
+  themeId      String?
   metadata     Json?         
   createdAt    DateTime      @default(now())
   updatedAt    DateTime      @updatedAt
@@ -103,7 +109,7 @@ model Ticket {
   code       String   @unique
   status     TicketStatus @default(paid)
   seatNumber String?
-  qrCode     String?
+  qrCode     QRCode?
   usedAt     DateTime?
   purchasedAt DateTime @default(now())
   metadata   Json?    
@@ -155,15 +161,28 @@ model TeamMember {
   joinedAt    DateTime   @default(now())
 }
 
-model EventSetting {
-  id                     String   @id @default(uuid())
-  event                  Event    @relation(fields: [eventId], references: [id])
-  eventId                String   @unique
-  theme                  String?
-  allowAnonymousPurchase Boolean  @default(false)
-  allowTransfer          Boolean  @default(false)
-  createdAt              DateTime @default(now())
-  updatedAt              DateTime @updatedAt
+model Theme {
+  id          String   @id @default(uuid())
+  name        String
+  description String?
+  imagePath   String
+  color       String?
+  metadata    Json?
+  events      Event[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model QRCode {
+  id         String    @id @default(uuid())
+  ticket     Ticket    @relation(fields: [ticketId], references: [id])
+  ticketId   String    @unique
+  path       String
+  format     String
+  createdAt  DateTime  @default(now())
+  expiresAt  DateTime?
+  scannedAt  DateTime?
+  data       Json?
 }
 
 model ActivityLog {
@@ -191,7 +210,7 @@ model Notification {
   userId    String
   type      String
   message   String
-  isRead    Boolean  @default(false)
+  isRead    DateTime?
   sentAt    DateTime
 }
 

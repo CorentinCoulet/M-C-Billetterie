@@ -1,209 +1,198 @@
+# 🎫 Billetterie - Application Complète
 
-# 🎟️ M&C Society - Plateforme de Billetterie
+**Une application moderne de billetterie construite avec Next.js 15, TypeScript, Prisma et PostgreSQL**
 
-Bienvenue sur le dépôt de **M&C Society**, un système complet de gestion d’événements et de billetterie.  
-Ce projet monolithique repose sur **Next.js** pour le frontend & backend, **Prisma** comme ORM, et **PostgreSQL** en base de données.  
-Le tout est containerisé avec Docker pour un environnement reproductible.
+![Version](https://img.shields.io/badge/version-1.0.0-blue)
+![Next.js](https://img.shields.io/badge/Next.js-15.3.3-black)
+![TypeScript](https://img.shields.io/badge/TypeScript-5.8.3-blue)
+![Prisma](https://img.shields.io/badge/Prisma-6.10.1-2D3748)
 
----
+## ✨ Fonctionnalités
 
-## 🚀 Fonctionnalités principales
+### 🏠 **Interface Utilisateur**
+- **Découverte d'événements** avec filtres et catégories
+- **Pages détail** complètes avec toutes informations
+- **Système de panier** entièrement fonctionnel
+- **Process de checkout** sécurisé
+- **Authentification** login/register
 
-- Authentification (JWT + sessions sécurisées)
-- Création et gestion d’événements
-- Réservation et paiement en ligne (Stripe)
-- Gestion de billets (QR Code, validation, téléchargement)
-- Notifications email (inscription, achat, rappel)
-- Tableau de bord utilisateur
-- Tableau de bord organisateur
-- Interface admin pour la modération
+### 👨‍💼 **Dashboard Administrateur**
+- **Statistiques globales** en temps réel
+- **Gestion utilisateurs** complète
+- **Supervision événements** avec modération
+- **Suivi des commandes** et paiements
+- **Configuration système** avancée
 
----
+### 🎪 **Dashboard Organisateur**
+- **Métriques spécifiques** pour ses événements
+- **Gestion d'événements** CRUD complète
+- **Suivi des ventes** et analytics
+- **Vue des participants** et billets
 
-## 🧱 Stack technique
+## 🚀 Démarrage Rapide
 
-| Technologie      | Rôle                                      |
-|------------------|-------------------------------------------|
-| Next.js          | Frontend + API REST monolithique          |
-| TypeScript       | Typage fort sur tout le projet            |
-| Prisma           | ORM type-safe pour PostgreSQL             |
-| PostgreSQL       | Base de données relationnelle             |
-| Stripe           | Paiement sécurisé                         |
-| Nodemailer       | Notifications par email via SMTP          |
-| Tailwind CSS     | UI moderne responsive                     |
-| Jest / Supertest | Tests unitaires et d’intégration          |
-| Docker / Compose | Conteneurisation locale et CI             |
+### **Prérequis**
+- Node.js 18+
+- Docker Desktop
+- Git
 
----
-
-## 📁 Arborescence simplifiée
-
-```
-├── docker/ # Dockerfiles (prod/dev)
-├── prisma/ # Schéma et seed DB
-├── public/ # Assets statiques
-├── src/
-│ ├── components/ # Composants UI
-│ ├── lib/ # Utilitaires (auth, stripe, db…)
-│ ├── middlewares/ # Middleware back (auth, rate limit…)
-│ ├── pages/ # Pages Next.js et API routes
-│ ├── services/ # Logique métier (event, ticket, user…)
-│ ├── tests/ # Tests unitaires et intégration
-│ ├── types/               
-│   ├── dto/             
-│   └── enums/           
-├── errors/   
-├── constants/   
-├── .env* # Variables d’environnement
-├── docker-compose.yml
-├── jest.config.ts
-├── next.config.js
-└── tsconfig.json
-```
-
----
-
-## ⚙️ Installation locale
-
-### 1. Cloner le repo
-
+### **Installation Automatique**
 ```bash
-git clone https://github.com/CorentinCoulet/M-C-Billetterie.git
-cd M-C-Billetterie
+# Windows PowerShell
+.\setup-billetterie.ps1
+
+# Windows CMD
+setup-billetterie.bat
 ```
 
-### 2. Installer les dépendances
-
+### **Installation Manuelle**
 ```bash
+# 1. Cloner le projet
+git clone <repository-url>
+cd billetterie
+
+# 2. Installer les dépendances
 npm install
-```
 
-### 3. Configurer les variables d’environnement
+# 3. Démarrer Docker Desktop puis :
+docker-compose up -d
 
-Crée un fichier `.env` à partir du `.env.example` :
-
-```bash
-cp .env.example .env
-cp .env.example .env.test
-```
-
-À configurer :
-- `DATABASE_URL`
-- `NODE_ENV`
-- `JWT_SECRET`
-- `JWT_EXPIRES_IN`
-
-### 4. Initialiser la base de données
-
-```bash
+# 4. Configuration base de données
 npx prisma migrate dev --name init
 npx prisma db seed
 
-docker exec -it billetterie-app npx prisma migrate dev --name init
-docker exec -it billetterie-app npx prisma db seed
-```
-
-### 5. Lancer le serveur
-
-```bash
-# Pour le mode production avec Docker
-docker-compose up --build
-
-# ou pour le mode dev sans Docker
+# 5. Démarrer l'application
 npm run dev
 ```
 
-L’application sera disponible sur : `http://localhost:3000`
-La base de donnée via Adminer sera disponible sur : `http://localhost:8080`
+**🌐 Application disponible sur : http://localhost:3000**
 
----
+## 🔐 Comptes de Démonstration
 
-## 🧪 Tests
+```
+👤 Utilisateur    : user@demo.com  / demo123
+🎪 Organisateur   : org@demo.com   / demo123  
+👨‍💼 Administrateur : admin@demo.com / demo123
+```
+
+## 🛠️ Technologies
+
+### **Frontend**
+- **Next.js 15** - Framework React moderne
+- **TypeScript** - Typage statique
+- **Tailwind CSS** - Framework CSS utilitaire
+- **Radix UI** - Composants accessibles
+- **React Context** - Gestion d'état globale
+
+### **Backend**
+- **Next.js API Routes** - APIs REST
+- **Prisma** - ORM type-safe
+- **PostgreSQL** - Base de données
+- **JWT** - Authentification
+- **bcryptjs** - Hachage sécurisé
+
+### **Infrastructure**
+- **Docker** - Conteneurisation
+- **Docker Compose** - Orchestration
+
+## 📱 Pages Disponibles
+
+| Page | URL | Description |
+|------|-----|-------------|
+| 🏠 Accueil | `/` | Découverte d'événements |
+| 🎫 Événement | `/events/[id]` | Détail et réservation |
+| 🛒 Panier | Sidebar | Gestion du panier |
+| 💳 Checkout | `/checkout` | Process de paiement |
+| 🔐 Auth | `/auth` | Login/Register |
+| 👨‍💼 Admin | `/admin` | Dashboard admin |
+| 🎪 Organisateur | `/organizer` | Dashboard organisateur |
+
+## 🏗️ Architecture
+
+```
+src/
+├── app/[locale]/              # Pages avec internationalisation
+│   ├── admin/                 # Dashboard administrateur
+│   ├── organizer/             # Dashboard organisateur  
+│   ├── events/[id]/           # Détail événement
+│   ├── checkout/              # Process paiement
+│   └── auth/                  # Authentification
+├── components/                # Composants réutilisables
+│   ├── admin/                 # Composants admin
+│   ├── organizer/             # Composants organisateur
+│   ├── cart/                  # Système panier
+│   ├── events/                # Composants événements
+│   └── ui/                    # Design system
+├── contexts/                  # Contextes React
+├── middleware/                # Sécurité
+├── services/                  # Logique métier
+└── lib/                       # Utilitaires
+```
+
+## 🔒 Sécurité
+
+- ✅ **Authentification JWT** sécurisée
+- ✅ **Protection des routes** par rôle
+- ✅ **Hachage des mots de passe** avec bcrypt
+- ✅ **Validation côté serveur** de toutes données
+- ✅ **Middleware de sécurité** intégré
+
+## 🧪 Scripts Disponibles
 
 ```bash
-# Pour lancer les tests unitaires
-npm run test
+npm run dev          # Démarrage développement
+npm run build        # Build production
+npm run start        # Démarrage production
+npm run lint         # Vérification code
+npm run test         # Tests unitaires
+
+# Base de données
+npm run prisma:generate  # Génération client
+npm run prisma:migrate   # Migrations
+npm run prisma:studio    # Interface graphique
+
+# Docker
+npm run docker:up        # Démarrage conteneurs
+npm run docker:down      # Arrêt conteneurs
 ```
----
 
-## 📌 Roadmap
+## 📊 Statut du Projet
 
-| Fonctionnalité                                                            | MVP |
-|---------------------------------------------------------------------------|:---:|
-| Authentification par email / mot de passe                                 | ✅ |
-| Vérification d’email (token de confirmation)                              | ✅ |
-| Connexion / déconnexion sécurisée (JWT + sessions)                        | ✅ |
-| Tableau de bord utilisateur (billets, commandes, infos perso)             | ✅ |
-| Création et gestion d’événements par les organisateurs                    | ✅ |
-| Page publique d’un événement                                              | ✅ |
-| Réservation de billets                                                    | ✅ |
-| Paiement en ligne via Stripe                                              | ✅ |
-| Génération de QR Code sur les billets                                     | ✅ |
-| Validation de billets (statut utilisé)                                    | ✅ |
-| Système de rôles (Visiteur, Utilisateur, Organisateur, Admin)             | ✅ |
-| Page d’accueil avec listing des événements                                | ✅ |
-| Interface Admin basique (liste utilisateurs/événements)                   | ✅ |
-| Notifications email (confirmation inscription, commande)                  | ✅ |
+### ✅ **Terminé**
+- Interface utilisateur complète
+- Dashboards admin/organisateur
+- Système d'authentification
+- Panier et checkout
+- Base de données
+- Sécurité et protection
+- Design responsive
+- Documentation complète
 
-### 🔜 Fonctionnalités prévues (hors MVP)
+### 🚧 **Améliorations Possibles**
+- Intégration Stripe/PayPal
+- Notifications email
+- QR codes pour billets
+- Analytics avancées
+- Application mobile (PWA)
+- Internationalisation
 
-| Fonctionnalité                                                            | MVP |
-|---------------------------------------------------------------------------| --- |
-| Tableau de bord complet pour les organisateurs (stats, export, etc.)      | ⬜️ |
-| Interface de scan QR pour contrôle d’accès sur mobile                     | ⬜️ |
-| Gestion des remboursements                                                | ⬜️ |
-| Gestion avancée des statuts de commande (remboursé, expiré, etc.)         | ⬜️ |
-| Table de logs d'activité (admin, user)                                    | ⬜️ |
-| Internationalisation (i18n)                                               | ⬜️ |
-| Interface admin avancée (modération, dashboard, gestions rôles)           | ⬜️ |
-| Support multi-devise (€, $, …)                                            | ⬜️ |
-| Gestion de code promo / réductions                                        | ⬜️ |
-| Support mobile / PWA                                                      | ⬜️ |
-| Événements privés / sur invitation                                        | ⬜️ |
-| Historique de connexion                                                   | ⬜️ |
-| Notes et avis sur les événements                                          | ⬜️ |
-| Notifications push / In-app                                               | ⬜️ |
-| Export PDF / CSV des billets ou commandes                                 | ⬜️ |
-| Accès invité (achat sans création de compte)                              | ⬜️ |
+## 📝 Documentation
 
----
+- 📋 [Guide de démarrage](GUIDE_DEMARRAGE.md)
+- 🏗️ [Architecture technique](ARCHITECTURE.md)
+- 📊 [Statut complet](ADMIN_DASHBOARD_STATUS.md)
 
-## 👥 Rôles utilisateurs
+## 🤝 Support
 
-| Rôle         | Droits principaux                                                                |
-|--------------|----------------------------------------------------------------------------------|
-| **Visiteur**     | Navigation publique, inscription                                             |
-| **Utilisateur**  | Réservation, accès à ses billets, profil, réception de notifications         |
-| **Organisateur** | Création, édition et suivi de ses événements, accès au tableau de bord       |
-| **Admin**        | Modération des utilisateurs, gestion des événements, accès aux logs & stats  |
-
-
----
+Pour toute question ou problème :
+1. Vérifiez la documentation
+2. Consultez les issues GitHub
+3. Utilisez les comptes de démonstration
 
 ## 📄 Licence
 
-Ce projet est open-source sous licence **MIT**.  
-Tu peux l’utiliser, le modifier et le redistribuer librement.
+Ce projet est sous licence MIT - voir le fichier [LICENSE](LICENSE) pour plus de détails.
 
 ---
 
-## 🤝 Contribuer
-
-Les contributions sont les bienvenues !  
-Merci de respecter les étapes suivantes :
-
-1. **Fork** le projet
-2. Crée une branche : `feature/ma-fonctionnalité`
-3. Propose une **pull request** claire et documentée
-
-Avant de proposer une PR :
-- Lance les tests : `npm run test`
-- Vérifie le linting : `npm run lint`
-- Respecte la structure projet (services, types, tests…)
-
----
-
-## 🧑‍💻 Auteur
-
-Développé avec ❤️ par [Corentin Coulet](https://github.com/CorentinCoulet)  
-📫 Contact : coulet.corentin@gmail.com
+**🎉 Votre application de billetterie est prête à l'emploi ! 🎫**
