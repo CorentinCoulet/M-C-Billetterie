@@ -4,31 +4,31 @@
 
 ### 1. Installer Artillery
 ```bash
-npm install --save-dev artillery
+yarn add --dev artillery
 ```
 
 ### 2. Démarrer l'application
 ```bash
-npm run dev
+yarn dev
 # Ou en production:
-npm run start
+yarn start
 ```
 
 ## Types de tests disponibles
 
-### 📊 Test de charge standard (`npm run test:performance:load`)
+### 📊 Test de charge standard (`yarn perf:load`)
 - **Durée**: ~7 minutes
 - **Charge**: 5-25 req/s en moyenne
 - **Usage**: Test quotidien de performance
 - **Seuils**: P95 < 500ms, P99 < 1s
 
-### 💥 Test de stress (`npm run test:performance:stress`)
+### 💥 Test de stress (`yarn perf:stress`)
 - **Durée**: ~4,5 minutes  
 - **Charge**: Jusqu'à 100 req/s (simulation Black Friday)
 - **Usage**: Test de résistance aux pics
 - **Seuils**: P95 < 2s, P99 < 5s
 
-### 🎯 Test de capacité (`npm run test:performance:capacity`)
+### 🎯 Test de capacité (`yarn perf:capacity`)
 - **Durée**: ~10 minutes
 - **Charge**: 200-500 req/s
 - **Usage**: Trouver les limites système
@@ -38,15 +38,15 @@ npm run start
 
 ```bash
 # Test unique
-npm run test:performance:load      # Test de charge normal
-npm run test:performance:stress    # Test de stress
-npm run test:performance:capacity  # Test de capacité
+yarn perf:load      # Test de charge normal
+yarn perf:stress    # Test de stress
+yarn perf:capacity  # Test de capacité
 
 # Tous les tests (environ 20 minutes)
-npm run test:performance
+yarn perf:test
 
 # Test manuel avec Artillery
-npx artillery run tests/performance/load-test.yml
+yarn artillery run tests/performance/load-test.yml
 ```
 
 ## Lecture des résultats
@@ -140,9 +140,9 @@ docker stats redis
 # GitHub Actions example
 - name: Performance Tests
   run: |
-    npm run dev &
+    yarn dev &
     sleep 10
-    npm run test:performance:load
+    yarn perf:load
     kill %1
 ```
 

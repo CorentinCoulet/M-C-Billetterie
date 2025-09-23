@@ -3,9 +3,9 @@
  * Production-ready secrets management with external providers support
  * 
  * Optional Dependencies (install as needed):
- * - Azure Key Vault: npm install @azure/identity @azure/keyvault-secrets
- * - AWS Secrets Manager: npm install @aws-sdk/client-secrets-manager
- * - HashiCorp Vault: npm install node-vault
+ * - Azure Key Vault: yarn add @azure/identity @azure/keyvault-secrets
+ * - AWS Secrets Manager: yarn add @aws-sdk/client-secrets-manager
+ * - HashiCorp Vault: yarn add node-vault
  * 
  * Environment Variables:
  * - AZURE_KEY_VAULT_URL: Azure Key Vault URL

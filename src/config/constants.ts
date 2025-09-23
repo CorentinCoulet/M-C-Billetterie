@@ -6,7 +6,7 @@
 // ==================== Application Information ====================
 export const APP_CONFIG = {
   NAME: process.env.APP_NAME || 'M&C Society Billetterie',
-  VERSION: process.env.npm_package_version || '1.0.0',
+  VERSION: process.env.npm_package_version || process.env.VERSION || '1.0.0',
   URL: process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000',
   API_URL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api',
   DEFAULT_LOCALE: process.env.DEFAULT_LOCALE || 'fr',

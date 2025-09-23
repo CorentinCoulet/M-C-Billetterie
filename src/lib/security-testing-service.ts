@@ -264,8 +264,8 @@ export class SecurityTestingService extends EventEmitter {
       
       const { exec } = require('child_process');
       
-      // Run npm audit
-      exec('npm audit --json', (error, stdout, stderr) => {
+      // Run yarn audit
+      exec('yarn audit --json', (error, stdout, stderr) => {
         if (stdout) {
           try {
             const auditResult = JSON.parse(stdout);
@@ -274,13 +274,13 @@ export class SecurityTestingService extends EventEmitter {
               Object.entries(auditResult.vulnerabilities).forEach(([pkg, vuln]: [string, any]) => {
                 findings.push({
                   id: `dep-${Date.now()}-${pkg}`,
-                  severity: this.mapNpmSeverity(vuln.severity),
+                  severity: this.mapYarnSeverity(vuln.severity),
                   title: `Vulnerable Dependency: ${pkg}`,
                   description: vuln.title || `Vulnerability in ${pkg}`,
                   cve: vuln.cwe?.[0],
                   cvss: vuln.cvss?.score,
                   location: `package.json -> ${pkg}`,
-                  evidence: [vuln.url || 'NPM Audit report'],
+                  evidence: [vuln.url || 'Yarn Audit report'],
                   remediation: `Update ${pkg} to version ${vuln.fixAvailable || 'latest'}`,
                   status: 'open',
                   discoveredAt: new Date()
@@ -288,7 +288,7 @@ export class SecurityTestingService extends EventEmitter {
               });
             }
           } catch (parseError) {
-            logger.error('Failed to parse npm audit output:', parseError);
+            logger.error('Failed to parse yarn audit output:', parseError);
           }
         }
       });
@@ -573,7 +573,7 @@ export class SecurityTestingService extends EventEmitter {
     return 'medium';
   }
 
-  private mapNpmSeverity(npmSeverity: string): SecurityFinding['severity'] {
+  private mapYarnSeverity(yarnSeverity: string): SecurityFinding['severity'] {
     const severityMap: { [key: string]: SecurityFinding['severity'] } = {
       'critical': 'critical',
       'high': 'high',
@@ -581,7 +581,7 @@ export class SecurityTestingService extends EventEmitter {
       'low': 'low',
       'info': 'info'
     };
-    return severityMap[npmSeverity] || 'medium';
+    return severityMap[yarnSeverity] || 'medium';
   }
 
   /**

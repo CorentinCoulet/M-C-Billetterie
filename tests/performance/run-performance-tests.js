@@ -63,7 +63,7 @@ function checkPrerequisites() {
     execSync('npx artillery --version', { stdio: 'pipe' });
     log('✅ Artillery installé');
   } catch (error) {
-    log('❌ Artillery n\'est pas installé. Run: npm install --save-dev artillery', 'error');
+    log('❌ Artillery n\'est pas installé. Run: yarn add --dev artillery', 'error');
     process.exit(1);
   }
   
@@ -74,11 +74,11 @@ function checkPrerequisites() {
       log('✅ Application démarrée sur localhost:3000');
     } else {
       log('⚠️  Application non accessible ou non démarrée', 'warn');
-      log('   Assurez-vous que l\'app fonctionne : npm run dev', 'warn');
+      log('   Assurez-vous que l\'app fonctionne : yarn dev', 'warn');
     }
   } catch (error) {
     log('⚠️  Impossible de vérifier l\'état de l\'application', 'warn');
-    log('   Assurez-vous que l\'app fonctionne : npm run dev', 'warn');
+    log('   Assurez-vous que l\'app fonctionne : yarn dev', 'warn');
   }
 }
 

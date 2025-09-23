@@ -30,12 +30,12 @@ function Show-Help {
 
 function Install-Dependencies {
     Write-Host "${Yellow}📦 Installation des dépendances...${Reset}"
-    npm install
+    yarn install
 }
 
 function Start-Dev {
     Write-Host "${Yellow}🚀 Lancement du développement...${Reset}"
-    npm run dev
+    yarn dev
 }
 
 function Start-DevDocker {

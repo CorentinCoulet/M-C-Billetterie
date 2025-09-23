@@ -14,6 +14,18 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
+.yarn-integrity
+
+# Yarn PnP artifacts
+.pnp.*
+.yarn/cache
+.yarn/unplugged
+.yarn/build-state.yml
+.yarn/install-state.gz
+
+# Force yarn usage
+package-lock.json
+pnpm-lock.yaml
 
 # =================================
 # BUILD ARTIFACTS (exclude from build context)
