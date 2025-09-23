@@ -132,6 +132,13 @@ debug.log
 debug-*.log
 *.debug
 
+# Debug files (never commit)
+debug-*.js
+debug-*.ts
+*-debug.*
+quick-test.*
+test-*.js
+
 # =================================
 # OS & EDITOR FILES
 # =================================
