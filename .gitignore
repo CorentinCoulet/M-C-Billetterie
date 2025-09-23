@@ -25,17 +25,21 @@ build/
 tsconfig.tsbuildinfo
 
 # =================================
-# ENVIRONMENT VARIABLES (CRITICAL)
+# ENVIRONMENT VARIABLES (CRITICAL SECURITY)
 # =================================
+# NEVER COMMIT REAL CREDENTIALS!
 .env
 .env.local
-.env.development.local
-.env.test.local
-.env.production.local
+.env.development
+.env.development.*
+.env.test
+.env.test.*
+.env.production
+.env.production.*
 .env.*.local
 .env.d.ts
 
-# Keep example files for documentation
+# Keep ONLY example files for documentation
 !.env.example
 !.env.production.example
 
