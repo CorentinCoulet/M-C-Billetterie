@@ -1,0 +1,47 @@
+@startuml System Overview - Billetterie
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+
+title Vue d'ensemble du système - Billetterie
+
+Person(customer, "Client", "Utilisateur cherchant à acheter des billets")
+Person(organizer, "Organisateur", "Créateur et gestionnaire d'événements")
+Person(admin, "Administrateur", "Gestionnaire de la plateforme")
+
+System_Boundary(billetterie, "Système Billetterie") {
+    Container(webapp, "Application Web", "Next.js 15", "Interface utilisateur responsive")
+    Container(api, "API REST", "Next.js API Routes", "Logique métier et endpoints")
+    Container(auth, "Service d'authentification", "Better Auth", "Gestion des utilisateurs et sessions")
+    Container(payment, "Service de paiement", "Stripe", "Traitement des paiements")
+    Container(qr, "Service QR", "Node.js", "Génération et validation des QR codes")
+    Container(email, "Service Email", "Nodemailer", "Notifications et confirmations")
+    
+    ContainerDb(db, "Base de données", "PostgreSQL", "Stockage des données")
+    ContainerDb(cache, "Cache", "Redis", "Sessions et cache des données")
+    ContainerDb(files, "Stockage fichiers", "Volume Docker", "Images et documents")
+}
+
+System_Ext(stripe_api, "Stripe API", "Service de paiement externe")
+System_Ext(email_provider, "Fournisseur Email", "Service SMTP")
+
+' Relations utilisateurs
+Rel(customer, webapp, "Utilise", "HTTPS")
+Rel(organizer, webapp, "Gère les événements", "HTTPS")
+Rel(admin, webapp, "Administre", "HTTPS")
+
+' Relations internes
+Rel(webapp, api, "Appelle", "JSON/HTTPS")
+Rel(api, auth, "Authentifie", "JWT")
+Rel(api, db, "Lit/Écrit", "SQL")
+Rel(api, cache, "Cache", "Redis Protocol")
+Rel(auth, cache, "Sessions", "Redis Protocol")
+Rel(api, payment, "Traite paiements")
+Rel(api, qr, "Génère QR codes")
+Rel(api, email, "Envoie emails")
+Rel(api, files, "Stocke fichiers")
+
+' Relations externes
+Rel(payment, stripe_api, "Traite paiements", "HTTPS")
+Rel(email, email_provider, "Envoie emails", "SMTP")
+
+SHOW_LEGEND()
+@enduml

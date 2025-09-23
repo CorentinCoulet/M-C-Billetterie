@@ -1,0 +1,51 @@
+@startuml "Publication d'événement - Organisateur"
+
+title Publication d'un événement
+
+actor "Organisateur" as Organizer
+participant "Frontend\n(Next.js)" as Frontend
+participant "API Gateway\n(Rate Limiter)" as API
+participant "Auth Middleware" as Auth
+participant "Event Controller" as EventCtrl
+participant "Event Service" as EventSvc
+participant "Notification Service" as NotifSvc
+participant "Database\n(PostgreSQL)" as DB
+
+== Publication d'événement ==
+Organizer -> Frontend: Publier événement
+Frontend -> API: PUT /api/events/{eventId}/publish
+API -> Auth: Vérifier propriété
+Auth --> API: access granted
+
+API -> EventCtrl: publish(eventId)
+EventCtrl -> EventSvc: validateEventForPublication(eventId)
+EventSvc -> DB: SELECT event WITH ticket_types WHERE id=?
+DB --> EventSvc: complete event data
+
+alt Validation réussie
+    EventSvc -> EventSvc: Vérifier données complètes
+    note right: Titre, description, date, lieu, billets configurés
+    EventSvc -> DB: UPDATE events SET status='published', publishedAt=NOW()
+    DB --> EventSvc: event published
+    
+    EventSvc -> NotifSvc: notifyEventPublished(eventId)
+    NotifSvc -> DB: SELECT users WHERE interests LIKE '%{category}%'
+    DB --> NotifSvc: interested users
+    
+    loop Pour chaque utilisateur intéressé
+        NotifSvc -> NotifSvc: sendEventNotification(userId, eventId)
+    end
+    
+    EventSvc --> EventCtrl: publication success
+    EventCtrl --> API: event published
+    API --> Frontend: publication successful
+    Frontend --> Organizer: "Événement publié !"
+    
+else Validation échouée
+    EventSvc --> EventCtrl: validation errors
+    EventCtrl --> API: 400 Bad Request
+    API --> Frontend: validation failed
+    Frontend --> Organizer: "Données manquantes pour publication"
+end
+
+@enduml

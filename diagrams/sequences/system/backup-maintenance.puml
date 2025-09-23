@@ -1,0 +1,24 @@
+@startuml "Sauvegarde et maintenance"
+
+title Sauvegarde et maintenance
+
+participant "Database\n(PostgreSQL)" as DB
+participant "File Storage\n(AWS S3)" as Storage
+participant "Cache Layer\n(Redis)" as Cache
+participant "Message Queue\n(Bull/Redis)" as Queue
+participant "Monitoring\n(Prometheus)" as Monitoring
+
+note over DB: Daily backup
+DB -> Storage: Export database dump
+Storage --> DB: Backup stored
+
+note over Cache: Memory optimization
+Cache -> Cache: FLUSHDB expired keys
+Cache -> Cache: Optimize memory usage
+
+note over Queue: Queue maintenance
+Queue -> Queue: Clean completed jobs
+Queue -> Queue: Retry failed jobs
+Queue -> Monitoring: Report queue metrics
+
+@enduml

@@ -1,0 +1,13 @@
+apiVersion: 1
+
+providers:
+  - name: 'billetterie-dashboards'
+    orgId: 1
+    folder: 'Billetterie'
+    folderUid: 'billetterie'
+    type: file
+    disableDeletion: false
+    updateIntervalSeconds: 10
+    allowUiUpdates: true
+    options:
+      path: /var/lib/grafana/dashboards

@@ -1,24 +1,10 @@
-import { PrismaClient } from '@prisma/client';
 import * as cron from 'node-cron';
+import {
+    convertToTicketData,
+    getTicketsForRotation,
+    updateTicketQRCode
+} from './database-service';
 import { generateOrUpdateQRCode, shouldRegenerateQRCode, TicketData } from './qrcode';
-
-interface DBTicketData {
-  id: string;
-  orderId: string;
-  eventId: string;
-  userId: string;
-  eventTitle?: string;
-  eventDate?: string;
-  venue?: string;
-  seatInfo?: string;
-  issuedAt: string;
-  validUntil: string;
-  currentQRCode?: string | null;
-  qrCodeGeneratedAt?: string | null;
-  isScanned?: boolean;
-  scannedAt?: string | null;
-  qrRotationInterval?: number;
-}
 
 let qrRotationJobRunning = false;
 let lastJobRun: Date | null = null;
@@ -32,12 +18,11 @@ let rotationStats = {
 
 class QRRotationService {
   private static instance: QRRotationService;
-  private prisma: PrismaClient;
   private job: cron.ScheduledTask | null = null;
   private isRunning = false;
 
   private constructor() {
-    this.prisma = new PrismaClient();
+    // No longer need Prisma client - using database service
   }
 
   public static getInstance(): QRRotationService {
@@ -47,9 +32,6 @@ class QRRotationService {
     return QRRotationService.instance;
   }
 
-  /**
-   * Start QR code rotation job every 12 hours
-   */
   public startRotationJob(): void {
     if (this.job) {
       console.log('⏰ QR rotation job is already running');
@@ -65,9 +47,6 @@ class QRRotationService {
     console.log('🚀 QR rotation job started - runs every 12 hours at 00:00 and 12:00');
   }
 
-  /**
-   * Stop the rotation job
-   */
   public stopRotationJob(): void {
     if (this.job) {
       this.job.stop();
@@ -76,9 +55,6 @@ class QRRotationService {
     }
   }
 
-  /**
-   * Execute QR code rotation manually
-   */
   public async runQRRotation(): Promise<{
     success: boolean;
     stats: typeof rotationStats;
@@ -115,7 +91,7 @@ class QRRotationService {
       let hasMoreTickets = true;
 
       while (hasMoreTickets) {
-        const tickets = await this.getTicketsForRotation(offset, batchSize);
+        const tickets = await getTicketsForRotation(offset, batchSize);
         
         if (tickets.length === 0) {
           hasMoreTickets = false;
@@ -128,30 +104,14 @@ class QRRotationService {
           currentStats.totalProcessed++;
           
           try {
-            const ticketData: TicketData = {
-              id: ticket.id,
-              orderId: ticket.orderId,
-              eventId: ticket.eventId,
-              userId: ticket.userId,
-              eventTitle: ticket.eventTitle || 'Unknown Event',
-              eventDate: ticket.eventDate || new Date().toISOString(),
-              venue: ticket.venue || 'Unknown Venue',
-              seatInfo: ticket.seatInfo,
-              issuedAt: ticket.issuedAt,
-              validUntil: ticket.validUntil,
-              currentQRCode: ticket.currentQRCode || undefined,
-              qrCodeGeneratedAt: ticket.qrCodeGeneratedAt || undefined,
-              isScanned: ticket.isScanned || false,
-              scannedAt: ticket.scannedAt || undefined,
-              qrRotationInterval: ticket.qrRotationInterval || 12,
-            };
+            const ticketData: TicketData = convertToTicketData(ticket);
 
             if (shouldRegenerateQRCode(ticketData)) {
               console.log(`🔄 Regenerating QR code for ticket ${ticket.id}`);
               
               const result = await generateOrUpdateQRCode(ticketData);
               
-              await this.updateTicketQRCode(ticket.id, {
+              await updateTicketQRCode(ticket.id, {
                 currentQRCode: result.qrCodeDataURL,
                 qrCodeGeneratedAt: result.ticketData.qrCodeGeneratedAt!,
               });
@@ -195,71 +155,6 @@ class QRRotationService {
     }
   }
 
-  /**
-   * Get tickets eligible for rotation (mock implementation)
-   */
-  private async getTicketsForRotation(offset: number, limit: number): Promise<DBTicketData[]> {
-    // TODO: Replace with real Prisma query when DB is connected
-    if (offset >= 5) return []; // Simulate 5 total tickets
-    
-    const mockTickets: DBTicketData[] = [
-      {
-        id: 'ticket-1',
-        orderId: 'order-1',
-        eventId: 'event-1',
-        userId: 'user-1',
-        eventTitle: 'Concert Test',
-        eventDate: new Date(Date.now() + 86400000).toISOString(), // Tomorrow
-        venue: 'Venue Test',
-        seatInfo: 'A1',
-        issuedAt: new Date().toISOString(),
-        validUntil: new Date(Date.now() + 86400000).toISOString(),
-        currentQRCode: null,
-        qrCodeGeneratedAt: new Date(Date.now() - 13 * 60 * 60 * 1000).toISOString(), // 13h ago
-        isScanned: false,
-        scannedAt: null,
-        qrRotationInterval: 12,
-      },
-      {
-        id: 'ticket-2',
-        orderId: 'order-1',
-        eventId: 'event-1',
-        userId: 'user-1',
-        eventTitle: 'Concert Test',
-        eventDate: new Date(Date.now() + 86400000).toISOString(),
-        venue: 'Venue Test',
-        seatInfo: 'A2',
-        issuedAt: new Date().toISOString(),
-        validUntil: new Date(Date.now() + 86400000).toISOString(),
-        currentQRCode: null,
-        qrCodeGeneratedAt: new Date(Date.now() - 6 * 60 * 60 * 1000).toISOString(), // 6h ago
-        isScanned: false,
-        scannedAt: null,
-        qrRotationInterval: 12,
-      },
-    ];
-
-    return mockTickets.slice(offset, offset + limit);
-  }
-
-  /**
-   * Update ticket QR code in database (mock implementation)
-   */
-  private async updateTicketQRCode(
-    ticketId: string,
-    updateData: {
-      currentQRCode: string;
-      qrCodeGeneratedAt: string;
-    }
-  ): Promise<void> {
-    // TODO: Replace with real Prisma update
-    console.log(`📝 Mock: Updated ticket ${ticketId} with new QR code`);
-    console.log(`📝 QR code length: ${updateData.currentQRCode.length} chars`);
-  }
-
-  /**
-   * Get service statistics
-   */
   public getStats() {
     return {
       ...rotationStats,
@@ -269,12 +164,9 @@ class QRRotationService {
     };
   }
 
-  /**
-   * Clean up resources
-   */
   public async cleanup(): Promise<void> {
     this.stopRotationJob();
-    await this.prisma.$disconnect();
+    // No longer need to disconnect Prisma - using database service
   }
 }
 

@@ -1,0 +1,53 @@
+<h1>✅ Commande confirmée !</h1>
+
+<p>Bonjour <strong>{{userName}}</strong>,</p>
+
+<p>Merci pour votre commande ! Nous avons bien reçu votre paiement et vos billets sont en cours de préparation.</p>
+
+<div class="event-info">
+    <h2>📋 Récapitulatif de commande</h2>
+    <p><strong>Numéro de commande :</strong> <span class="highlight">#{{orderId}}</span></p>
+    <p><strong>Montant total :</strong> <span class="highlight">{{totalPrice}} {{currency}}</span></p>
+    <p><strong>Date de commande :</strong> {{formatDate createdAt}}</p>
+</div>
+
+<h2>🎫 Vos billets</h2>
+
+{{#each tickets}}
+<div class="ticket-card">
+    <h3>{{eventTitle}}</h3>
+    <p><strong>📅 Date :</strong> {{eventDate}}</p>
+    <p><strong>📍 Lieu :</strong> {{eventLocation}}</p>
+    {{#if seatNumber}}
+    <p><strong>💺 Place :</strong> {{seatNumber}}</p>
+    {{/if}}
+    <p><strong>🎟️ Code billet :</strong> <code>{{ticketCode}}</code></p>
+</div>
+{{/each}}
+
+<div style="background-color: #fef3c7; padding: 20px; border-radius: 8px; margin: 20px 0;">
+    <h3>📧 Prochaines étapes</h3>
+    <p><strong>Vous allez recevoir un email séparé</strong> contenant vos billets avec les QR codes dans les 5 minutes suivantes.</p>
+    <p>Si vous ne recevez pas cet email, vérifiez vos spams ou contactez-nous.</p>
+</div>
+
+<div style="text-align: center; margin: 30px 0;">
+    <a href="{{orderUrl}}" class="button">📋 Voir ma commande</a>
+</div>
+
+<h2>💡 Conseils pratiques</h2>
+<ul>
+    <li><strong>Conservez vos billets</strong> - Téléchargez-les ou gardez l'email</li>
+    <li><strong>Arrivez à l'heure</strong> - Prévoyez du temps pour les contrôles d'entrée</li>
+    <li><strong>Apportez votre téléphone</strong> - Pour présenter vos QR codes</li>
+    <li><strong>Pièce d'identité</strong> - Peut être demandée à l'entrée</li>
+</ul>
+
+<div class="event-info">
+    <p><strong>Besoin d'aide ?</strong> Contactez-nous à <a href="mailto:{{supportEmail}}">{{supportEmail}}</a></p>
+    <p>Notre équipe vous répond généralement dans les 2 heures.</p>
+</div>
+
+<p>Merci pour votre confiance et excellent spectacle ! 🎭</p>
+
+<p>L'équipe Billetterie</p>

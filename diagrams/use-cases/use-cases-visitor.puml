@@ -1,0 +1,59 @@
+@startuml "Diagramme de cas d'utilisation - Visiteur"
+
+title Diagramme de cas d'utilisation - Rôle Visiteur
+
+left to right direction
+
+actor "Visiteur" as Visitor
+
+rectangle "Système de Billetterie" {
+  ' Consultation publique
+  usecase "Consulter les événements" as UC1
+  usecase "Rechercher des événements" as UC2
+  usecase "Filtrer par catégorie" as UC3
+  usecase "Filtrer par date" as UC4
+  usecase "Filtrer par lieu" as UC5
+  usecase "Voir les détails d'un événement" as UC6
+  usecase "Consulter les tarifs" as UC7
+  usecase "Voir la disponibilité" as UC8
+  
+  ' Navigation et information
+  usecase "Consulter les catégories" as UC9
+  usecase "Consulter FAQ" as UC10
+  usecase "Contacter support" as UC11
+  usecase "Consulter conditions générales" as UC12
+  usecase "Consulter politique confidentialité" as UC13
+  
+  ' Authentification
+  usecase "S'inscrire" as UC14
+  usecase "Se connecter" as UC15
+  usecase "Mot de passe oublié" as UC16
+}
+
+' Relations principales
+Visitor --> UC1
+Visitor --> UC2
+Visitor --> UC3
+Visitor --> UC4
+Visitor --> UC5
+Visitor --> UC6
+Visitor --> UC7
+Visitor --> UC8
+Visitor --> UC9
+Visitor --> UC10
+Visitor --> UC11
+Visitor --> UC12
+Visitor --> UC13
+Visitor --> UC14
+Visitor --> UC15
+Visitor --> UC16
+
+' Relations d'inclusion
+UC2 ..> UC3 : include
+UC2 ..> UC4 : include
+UC2 ..> UC5 : include
+UC6 ..> UC7 : include
+UC6 ..> UC8 : include
+UC14 ..> UC15 : extend
+
+@enduml

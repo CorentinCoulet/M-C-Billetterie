@@ -1,0 +1,94 @@
+@startuml configuration
+
+!theme aws-orange
+skinparam linetype ortho
+skinparam backgroundColor #FFFFFF
+
+title Configuration
+
+' ========== ÉNUMÉRATIONS ==========
+
+enum Locale {
+    FR
+    EN
+    ES
+    DE
+}
+
+' ========== CLASSES CONFIGURATION ==========
+
+class Theme {
+    - id: String
+    - name: String
+    - description: String
+    - imagePath: String
+    - color: String
+    - createdAt: DateTime
+    - isActive: boolean
+    --
+    + apply(): void
+    + getStyles(): Object
+    + isDefault(): boolean
+    + activate(): void
+    + deactivate(): void
+}
+
+class Review {
+    - id: String
+    - userId: String
+    - eventId: String
+    - rating: int
+    - comment: String
+    - createdAt: DateTime
+    - isApproved: boolean
+    --
+    + approve(): void
+    + reject(): void
+    + isValid(): boolean
+    + canBeModified(): boolean
+    + getAverageRating(): number
+}
+
+class Translation {
+    - id: String
+    - entityType: String
+    - entityId: String
+    - locale: Locale
+    - field: String
+    - value: String
+    --
+    + translate(locale: Locale): String
+    + setTranslation(locale: Locale, value: String): void
+    + isTranslated(locale: Locale): boolean
+}
+
+class TranslationManager {
+    - defaultLocale: Locale
+    - supportedLocales: Locale[]
+    --
+    + getTranslation(entityType: String, entityId: String, field: String, locale: Locale): String
+    + setTranslation(entityType: String, entityId: String, field: String, locale: Locale, value: String): void
+    + getSupportedLocales(): Locale[]
+    + isLocaleSupported(locale: Locale): boolean
+}
+
+class ConfigurationManager {
+    - settings: Map<String, Object>
+    --
+    + getSetting(key: String): Object
+    + setSetting(key: String, value: Object): void
+    + loadConfiguration(): void
+    + saveConfiguration(): void
+    + resetToDefaults(): void
+}
+
+' ========== RELATIONS ==========
+
+Review::userId --> User : written_by
+Review::eventId --> Event : for_event
+Translation::locale ||-- Locale
+TranslationManager --> Translation : manages
+TranslationManager::defaultLocale ||-- Locale
+ConfigurationManager --> Theme : manages
+
+@enduml

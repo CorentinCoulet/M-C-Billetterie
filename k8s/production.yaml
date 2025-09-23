@@ -1,0 +1,1538 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: billetterie
+  labels:
+    name: billetterie
+    environment: production
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: billetterie-config
+  namespace: billetterie
+data:
+  NODE_ENV: production
+  PORT: '3000'
+  LOG_LEVEL: warn
+  PROMETHEUS_PORT: '9090'
+  HEALTH_CHECK_PORT: '9000'
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: postgres-config
+  namespace: billetterie
+data:
+  postgresql.conf: '# PostgreSQL Production configuration
+
+    # Connection settings
+
+    listen_addresses = ''*''
+
+    port = 5432
+
+    max_connections = 200
+
+    superuser_reserved_connections = 3
+
+
+    # Memory settings (optimized for production)
+
+    shared_buffers = 512MB
+
+    effective_cache_size = 1GB
+
+    maintenance_work_mem = 128MB
+
+    work_mem = 4MB
+
+    wal_buffers = 32MB
+
+    effective_io_concurrency = 300
+
+
+    # WAL settings for replication
+
+    wal_level = replica
+
+    archive_mode = on
+
+    archive_command = ''test ! -f /var/lib/postgresql/archive/%f && cp %p /var/lib/postgresql/archive/%f''
+
+    max_wal_senders = 10
+
+    max_replication_slots = 10
+
+    hot_standby = on
+
+    hot_standby_feedback = on
+
+
+    # Checkpoint settings
+
+    checkpoint_completion_target = 0.9
+
+    checkpoint_timeout = 10min
+
+    max_wal_size = 2GB
+
+    min_wal_size = 512MB
+
+
+    # Query performance
+
+    default_statistics_target = 100
+
+    random_page_cost = 1.1
+
+    seq_page_cost = 1.0
+
+
+    # SSL settings
+
+    ssl = on
+
+    ssl_cert_file = ''/var/lib/postgresql/server.crt''
+
+    ssl_key_file = ''/var/lib/postgresql/server.key''
+
+    ssl_ciphers = ''HIGH:MEDIUM:+3DES:!aNULL''
+
+    ssl_prefer_server_ciphers = on
+
+
+    # Logging for production
+
+    log_destination = ''stderr''
+
+    logging_collector = on
+
+    log_directory = ''pg_log''
+
+    log_filename = ''postgresql-%Y-%m-%d_%H%M%S.log''
+
+    log_statement = ''mod''
+
+    log_min_duration_statement = 1000
+
+    log_line_prefix = ''%t [%p]: [%l-1] user=%u,db=%d,app=%a,client=%h ''
+
+    log_checkpoints = on
+
+    log_connections = on
+
+    log_disconnections = on
+
+    log_lock_waits = on
+
+    log_temp_files = 0
+
+    
+
+    # Security
+
+    shared_preload_libraries = ''pg_stat_statements''
+
+    track_io_timing = on
+
+    track_functions = all
+
+    '
+  pg_hba.conf: '# PostgreSQL Client Authentication Configuration
+
+    # TYPE  DATABASE        USER            ADDRESS                 METHOD
+
+
+    # "local" is for Unix domain socket connections only
+
+    local   all             postgres                                peer
+
+    local   all             all                                     scram-sha-256
+
+
+    # IPv4 local connections:
+
+    host    all             all             127.0.0.1/32            scram-sha-256
+
+    
+
+    # IPv4 connections for replication
+
+    host    replication     replicator      0.0.0.0/0               scram-sha-256
+
+    
+
+    # IPv4 connections from cluster
+
+    host    all             all             10.0.0.0/8              scram-sha-256
+
+    host    all             all             172.16.0.0/12           scram-sha-256
+
+    host    all             all             192.168.0.0/16          scram-sha-256
+
+    
+
+    # IPv6 local connections:
+
+    host    all             all             ::1/128                 scram-sha-256
+
+    '
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: pgbouncer-config
+  namespace: billetterie
+data:
+  pgbouncer.ini: |
+    [databases]
+    billetterie = host=postgres-master port=5432 dbname=billetterie user=billetterie
+    
+    [pgbouncer]
+    listen_port = 6432
+    listen_addr = 0.0.0.0
+    auth_type = scram-sha-256
+    auth_file = /etc/pgbouncer/userlist.txt
+    
+    # Connection pooling settings
+    pool_mode = transaction
+    default_pool_size = 25
+    max_client_conn = 1000
+    reserve_pool_size = 5
+    reserve_pool_timeout = 5
+    
+    # Timeouts
+    server_idle_timeout = 600
+    server_connect_timeout = 15
+    query_timeout = 0
+    query_wait_timeout = 120
+    client_idle_timeout = 0
+    client_login_timeout = 60
+    
+    # Logging
+    log_connections = 1
+    log_disconnections = 1
+    log_pooler_errors = 1
+    
+    # Stats
+    stats_period = 60
+    
+    # Security
+    ignore_startup_parameters = extra_float_digits
+    
+  userlist.txt: |
+    "billetterie" "SCRAM-SHA-256$4096:salt$hash"
+  
+  setup.sql: |
+    -- Create replication user
+    CREATE USER replicator WITH REPLICATION ENCRYPTED PASSWORD 'strong_replication_password';
+    
+    -- Grant necessary permissions
+    GRANT CONNECT ON DATABASE billetterie TO replicator;
+    
+    -- Create backup user
+    CREATE USER backup_user WITH ENCRYPTED PASSWORD 'strong_backup_password';
+    GRANT CONNECT ON DATABASE billetterie TO backup_user;
+    GRANT SELECT ON ALL TABLES IN SCHEMA public TO backup_user;
+    GRANT SELECT ON ALL SEQUENCES IN SCHEMA public TO backup_user;
+    ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT ON TABLES TO backup_user;
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: nginx-config
+  namespace: billetterie
+data:
+  nginx.conf: "events {\n    worker_connections 1024;\n}\n\nhttp {\n    include /etc/nginx/mime.types;\n\
+    \    default_type application/octet-stream;\n    \n    # Security headers\n  \
+    \  add_header X-Frame-Options DENY;\n    add_header X-Content-Type-Options nosniff;\n\
+    \    add_header X-XSS-Protection \"1; mode=block\";\n    add_header Referrer-Policy\
+    \ \"strict-origin-when-cross-origin\";\n    add_header Content-Security-Policy\
+    \ \"default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline';\"\
+    ;\n    \n    # Rate limiting\n    limit_req_zone $binary_remote_addr zone=api:10m\
+    \ rate=10r/s;\n    limit_req_zone $binary_remote_addr zone=login:10m rate=1r/s;\n\
+    \    \n    # Upstream\n    upstream billetterie_backend {\n        server billetterie-service:3000;\n\
+    \    }\n    \n    server {\n        listen 80;\n        server_name _;\n     \
+    \   \n        location /nginx-health {\n            access_log off;\n        \
+    \    return 200 \"healthy\\n\";\n            add_header Content-Type text/plain;\n\
+    \        }\n        \n        location / {\n            limit_req zone=api burst=20\
+    \ nodelay;\n            proxy_pass http://billetterie_backend;\n            proxy_set_header\
+    \ Host $host;\n            proxy_set_header X-Real-IP $remote_addr;\n        \
+    \    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;\n          \
+    \  proxy_set_header X-Forwarded-Proto $scheme;\n        }\n        \n        location\
+    \ /auth/login {\n            limit_req zone=login burst=5 nodelay;\n         \
+    \   proxy_pass http://billetterie_backend;\n            proxy_set_header Host\
+    \ $host;\n            proxy_set_header X-Real-IP $remote_addr;\n            proxy_set_header\
+    \ X-Forwarded-For $proxy_add_x_forwarded_for;\n            proxy_set_header X-Forwarded-Proto\
+    \ $scheme;\n        }\n    }\n    \n    server {\n        listen 443 ssl;\n  \
+    \      server_name _;\n        \n        ssl_certificate /etc/nginx/ssl/tls.crt;\n\
+    \        ssl_certificate_key /etc/nginx/ssl/tls.key;\n        ssl_protocols TLSv1.2\
+    \ TLSv1.3;\n        ssl_ciphers ECDHE-RSA-AES128-GCM-SHA256:ECDHE-RSA-AES256-GCM-SHA384;\n\
+    \        ssl_prefer_server_ciphers off;\n        \n        location / {\n    \
+    \        limit_req zone=api burst=20 nodelay;\n            proxy_pass http://billetterie_backend;\n\
+    \            proxy_set_header Host $host;\n            proxy_set_header X-Real-IP\
+    \ $remote_addr;\n            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;\n\
+    \            proxy_set_header X-Forwarded-Proto $scheme;\n        }\n    }\n}\n"
+
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: billetterie-secrets
+  namespace: billetterie
+  annotations:
+    secrets-manager: "azure-keyvault"  # or "aws-secrets" or "hashicorp-vault"
+    auto-rotate: "true"
+    rotation-schedule: "30d"
+type: Opaque
+data:
+  # These will be automatically populated by the secrets manager
+  # Remove hardcoded base64 values and use external secrets operator
+  DATABASE_URL: ""  # Will be fetched from external secrets manager
+  DATABASE_PASSWORD: ""
+  POSTGRES_REPLICATION_PASSWORD: ""
+  BACKUP_USER_PASSWORD: ""
+  JWT_SECRET: ""
+  JWT_REFRESH_SECRET: ""
+  REDIS_PASSWORD: ""
+  STRIPE_SECRET_KEY: ""
+  STRIPE_WEBHOOK_SECRET: ""
+  EMAIL_PASSWORD: ""
+  ENCRYPTION_KEY: ""
+  BACKUP_ENCRYPTION_KEY: ""
+  AWS_ACCESS_KEY_ID: ""
+  AWS_SECRET_ACCESS_KEY: ""
+
+---
+# External Secrets Operator configuration (if using)
+apiVersion: external-secrets.io/v1beta1
+kind: SecretStore
+metadata:
+  name: vault-backend
+  namespace: billetterie
+spec:
+  provider:
+    # Configure based on your chosen provider
+    vault:
+      server: "https://vault.company.com"
+      path: "secret"
+      version: "v2"
+      auth:
+        kubernetes:
+          mountPath: "kubernetes"
+          role: "billetterie-role"
+
+---
+apiVersion: external-secrets.io/v1beta1
+kind: ExternalSecret
+metadata:
+  name: billetterie-external-secrets
+  namespace: billetterie
+spec:
+  refreshInterval: 300s  # Refresh every 5 minutes
+  secretStoreRef:
+    name: vault-backend
+    kind: SecretStore
+  target:
+    name: billetterie-secrets
+    creationPolicy: Owner
+  data:
+  - secretKey: DATABASE_URL
+    remoteRef:
+      key: billetterie/database
+      property: url
+  - secretKey: JWT_SECRET
+    remoteRef:
+      key: billetterie/auth
+      property: jwt_secret
+  - secretKey: STRIPE_SECRET_KEY
+    remoteRef:
+      key: billetterie/payment
+      property: stripe_secret
+  # Add more secrets as needed
+
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: ssl-certificates
+  namespace: billetterie
+  annotations:
+    cert-manager.io/issuer: "letsencrypt-prod"
+    cert-manager.io/auto-renew: "true"
+type: kubernetes.io/tls
+data:
+  # Automatically managed by cert-manager
+  tls.crt: ""  # Will be populated by cert-manager
+  tls.key: ""  # Will be populated by cert-manager
+
+---
+# Cert-Manager ClusterIssuer for Let's Encrypt
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: letsencrypt-prod
+spec:
+  acme:
+    # Replace with your email
+    email: admin@company.com
+    server: https://acme-v02.api.letsencrypt.org/directory
+    privateKeySecretRef:
+      name: letsencrypt-prod-private-key
+    solvers:
+    - http01:
+        ingress:
+          class: nginx
+      selector:
+        dnsNames:
+        - tickets.company.com
+        - api.tickets.company.com
+
+---
+# Certificate resource for automatic SSL
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: billetterie-tls-cert
+  namespace: billetterie
+spec:
+  secretName: ssl-certificates
+  issuerRef:
+    name: letsencrypt-prod
+    kind: ClusterIssuer
+  dnsNames:
+  - tickets.company.com
+  - api.tickets.company.com
+  - admin.tickets.company.com
+  renewBefore: 720h  # 30 days before expiration
+  usages:
+  - digital signature
+  - key encipherment
+
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: postgres-master
+  namespace: billetterie
+  labels:
+    app: postgres
+    role: master
+spec:
+  serviceName: postgres-master
+  replicas: 1
+  selector:
+    matchLabels:
+      app: postgres
+      role: master
+  template:
+    metadata:
+      labels:
+        app: postgres
+        role: master
+    spec:
+      containers:
+      - name: postgres
+        image: postgres:16-alpine
+        env:
+        - name: POSTGRES_DB
+          value: billetterie
+        - name: POSTGRES_USER
+          value: billetterie
+        - name: POSTGRES_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: billetterie-secrets
+              key: DATABASE_PASSWORD
+        - name: POSTGRES_INITDB_ARGS
+          value: --auth-host=scram-sha-256 --auth-local=scram-sha-256
+        - name: POSTGRES_REPLICATION_USER
+          value: replicator
+        - name: POSTGRES_REPLICATION_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: billetterie-secrets
+              key: POSTGRES_REPLICATION_PASSWORD
+        ports:
+        - containerPort: 5432
+          name: postgres
+        volumeMounts:
+        - name: postgres-storage
+          mountPath: /var/lib/postgresql/data
+        - name: postgres-config
+          mountPath: /etc/postgresql/postgresql.conf
+          subPath: postgresql.conf
+        - name: postgres-config
+          mountPath: /var/lib/postgresql/pg_hba.conf
+          subPath: pg_hba.conf
+        - name: postgres-config
+          mountPath: /docker-entrypoint-initdb.d/setup.sql
+          subPath: setup.sql
+        - name: ssl-certs
+          mountPath: /var/lib/postgresql/server.crt
+          subPath: server.crt
+        - name: ssl-certs
+          mountPath: /var/lib/postgresql/server.key
+          subPath: server.key
+        - name: archive-storage
+          mountPath: /var/lib/postgresql/archive
+        command:
+        - postgres
+        - -c
+        - config_file=/etc/postgresql/postgresql.conf
+        - -c
+        - hba_file=/var/lib/postgresql/pg_hba.conf
+        livenessProbe:
+          exec:
+            command:
+            - pg_isready
+            - -U
+            - billetterie
+            - -h
+            - localhost
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        readinessProbe:
+          exec:
+            command:
+            - pg_isready
+            - -U
+            - billetterie
+            - -h
+            - localhost
+          initialDelaySeconds: 5
+          periodSeconds: 5
+        resources:
+          requests:
+            memory: 512Mi
+            cpu: 200m
+          limits:
+            memory: 1Gi
+            cpu: 800m
+        securityContext:
+          runAsUser: 999
+          runAsGroup: 999
+          fsGroup: 999
+      volumes:
+      - name: postgres-config
+        configMap:
+          name: postgres-config
+      - name: ssl-certs
+        secret:
+          secretName: ssl-certificates
+      - name: archive-storage
+        persistentVolumeClaim:
+          claimName: postgres-archive-pvc
+  volumeClaimTemplates:
+  - metadata:
+      name: postgres-storage
+    spec:
+      accessModes:
+      - ReadWriteOnce
+      storageClassName: fast-ssd
+      resources:
+        requests:
+          storage: 50Gi
+
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: postgres-slave
+  namespace: billetterie
+  labels:
+    app: postgres
+    role: slave
+spec:
+  serviceName: postgres-slave
+  replicas: 1
+  selector:
+    matchLabels:
+      app: postgres
+      role: slave
+  template:
+    metadata:
+      labels:
+        app: postgres
+        role: slave
+    spec:
+      initContainers:
+      - name: init-replica
+        image: postgres:16-alpine
+        env:
+        - name: PGUSER
+          value: replicator
+        - name: PGPASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: billetterie-secrets
+              key: POSTGRES_REPLICATION_PASSWORD
+        command:
+        - /bin/bash
+        - -c
+        - |
+          if [ ! -s "$PGDATA/PG_VERSION" ]; then
+            echo "Setting up replica from master..."
+            pg_basebackup -h postgres-master -D ${PGDATA} -U replicator -v -P -W
+            echo "standby_mode = 'on'" >> ${PGDATA}/recovery.conf
+            echo "primary_conninfo = 'host=postgres-master port=5432 user=replicator'" >> ${PGDATA}/recovery.conf
+          fi
+        volumeMounts:
+        - name: postgres-storage
+          mountPath: /var/lib/postgresql/data
+      containers:
+      - name: postgres
+        image: postgres:16-alpine
+        env:
+        - name: POSTGRES_USER
+          value: billetterie
+        - name: POSTGRES_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: billetterie-secrets
+              key: DATABASE_PASSWORD
+        - name: PGUSER
+          value: billetterie
+        ports:
+        - containerPort: 5432
+          name: postgres
+        volumeMounts:
+        - name: postgres-storage
+          mountPath: /var/lib/postgresql/data
+        - name: postgres-config
+          mountPath: /etc/postgresql/postgresql.conf
+          subPath: postgresql.conf
+        - name: ssl-certs
+          mountPath: /var/lib/postgresql/server.crt
+          subPath: server.crt
+        - name: ssl-certs
+          mountPath: /var/lib/postgresql/server.key
+          subPath: server.key
+        command:
+        - postgres
+        - -c
+        - config_file=/etc/postgresql/postgresql.conf
+        livenessProbe:
+          exec:
+            command:
+            - pg_isready
+            - -U
+            - billetterie
+            - -h
+            - localhost
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          exec:
+            command:
+            - pg_isready
+            - -U
+            - billetterie
+            - -h
+            - localhost
+          initialDelaySeconds: 5
+          periodSeconds: 5
+        resources:
+          requests:
+            memory: 384Mi
+            cpu: 150m
+          limits:
+            memory: 768Mi
+            cpu: 600m
+        securityContext:
+          runAsUser: 999
+          runAsGroup: 999
+          fsGroup: 999
+      volumes:
+      - name: postgres-config
+        configMap:
+          name: postgres-config
+      - name: ssl-certs
+        secret:
+          secretName: ssl-certificates
+  volumeClaimTemplates:
+  - metadata:
+      name: postgres-storage
+    spec:
+      accessModes:
+      - ReadWriteOnce
+      storageClassName: fast-ssd
+      resources:
+        requests:
+          storage: 50Gi
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: pgbouncer
+  namespace: billetterie
+  labels:
+    app: pgbouncer
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: pgbouncer
+  template:
+    metadata:
+      labels:
+        app: pgbouncer
+    spec:
+      containers:
+      - name: pgbouncer
+        image: pgbouncer/pgbouncer:latest
+        env:
+        - name: DATABASES_HOST
+          value: postgres-master
+        - name: DATABASES_PORT
+          value: "5432"
+        - name: DATABASES_USER
+          value: billetterie
+        - name: DATABASES_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: billetterie-secrets
+              key: DATABASE_PASSWORD
+        - name: DATABASES_DBNAME
+          value: billetterie
+        - name: POOL_MODE
+          value: transaction
+        - name: DEFAULT_POOL_SIZE
+          value: "25"
+        - name: MAX_CLIENT_CONN
+          value: "1000"
+        ports:
+        - containerPort: 6432
+          name: pgbouncer
+        volumeMounts:
+        - name: pgbouncer-config
+          mountPath: /etc/pgbouncer/pgbouncer.ini
+          subPath: pgbouncer.ini
+        - name: pgbouncer-config
+          mountPath: /etc/pgbouncer/userlist.txt
+          subPath: userlist.txt
+        livenessProbe:
+          tcpSocket:
+            port: 6432
+          initialDelaySeconds: 15
+          periodSeconds: 20
+        readinessProbe:
+          tcpSocket:
+            port: 6432
+          initialDelaySeconds: 5
+          periodSeconds: 5
+        resources:
+          requests:
+            memory: 64Mi
+            cpu: 50m
+          limits:
+            memory: 128Mi
+            cpu: 200m
+        securityContext:
+          runAsNonRoot: true
+          runAsUser: 999
+          allowPrivilegeEscalation: false
+      volumes:
+      - name: pgbouncer-config
+        configMap:
+          name: pgbouncer-config
+
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: postgres-archive-pvc
+  namespace: billetterie
+spec:
+  accessModes:
+  - ReadWriteOnce
+  storageClassName: fast-ssd
+  resources:
+    requests:
+      storage: 20Gi
+
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: postgres-backup-pvc
+  namespace: billetterie
+spec:
+  accessModes:
+  - ReadWriteOnce
+  storageClassName: standard
+  resources:
+    requests:
+      storage: 100Gi
+
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: redis-pvc
+  namespace: billetterie
+spec:
+  accessModes:
+  - ReadWriteOnce
+  storageClassName: fast-ssd
+  resources:
+    requests:
+      storage: 5Gi
+
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: logs-pvc
+  namespace: billetterie
+spec:
+  accessModes:
+  - ReadWriteOnce
+  storageClassName: standard
+  resources:
+    requests:
+      storage: 10Gi
+
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: uploads-pvc
+  namespace: billetterie
+spec:
+  accessModes:
+  - ReadWriteOnce
+  storageClassName: standard
+  resources:
+    requests:
+      storage: 50Gi
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: redis
+  namespace: billetterie
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: redis
+  template:
+    metadata:
+      labels:
+        app: redis
+    spec:
+      containers:
+      - name: redis
+        image: redis:7-alpine
+        command:
+        - redis-server
+        - --requirepass
+        - $(REDIS_PASSWORD)
+        - --appendonly
+        - 'yes'
+        - --maxmemory
+        - 256mb
+        - --maxmemory-policy
+        - allkeys-lru
+        env:
+        - name: REDIS_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: billetterie-secrets
+              key: REDIS_PASSWORD
+        ports:
+        - containerPort: 6379
+        volumeMounts:
+        - name: redis-storage
+          mountPath: /data
+        livenessProbe:
+          exec:
+            command:
+            - redis-cli
+            - -a
+            - $(REDIS_PASSWORD)
+            - ping
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          exec:
+            command:
+            - redis-cli
+            - -a
+            - $(REDIS_PASSWORD)
+            - ping
+          initialDelaySeconds: 5
+          periodSeconds: 5
+        resources:
+          requests:
+            memory: 128Mi
+            cpu: 50m
+          limits:
+            memory: 256Mi
+            cpu: 200m
+      volumes:
+      - name: redis-storage
+        persistentVolumeClaim:
+          claimName: redis-pvc
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: billetterie-app
+  namespace: billetterie
+  labels:
+    app: billetterie
+    version: 1.0.0
+spec:
+  replicas: 3
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  selector:
+    matchLabels:
+      app: billetterie
+  template:
+    metadata:
+      labels:
+        app: billetterie
+        version: 1.0.0
+      annotations:
+        prometheus.io/scrape: 'true'
+        prometheus.io/port: '9090'
+        prometheus.io/path: /metrics
+    spec:
+      containers:
+      - name: billetterie
+        image: your-registry/billetterie:1.0.0
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 3000
+          name: http
+        - containerPort: 9090
+          name: metrics
+        - containerPort: 9000
+          name: health
+        envFrom:
+        - configMapRef:
+            name: billetterie-config
+        - secretRef:
+            name: billetterie-secrets
+        env:
+        - name: DATABASE_URL
+          valueFrom:
+            secretKeyRef:
+              name: billetterie-secrets
+              key: DATABASE_URL
+        - name: REDIS_URL
+          value: redis://:$(REDIS_PASSWORD)@redis:6379
+        - name: SENTRY_DSN
+          valueFrom:
+            secretKeyRef:
+              name: billetterie-secrets
+              key: SENTRY_DSN
+              optional: true
+        - name: NEXT_PUBLIC_SENTRY_DSN
+          valueFrom:
+            secretKeyRef:
+              name: billetterie-secrets
+              key: NEXT_PUBLIC_SENTRY_DSN
+              optional: true
+        - name: SENTRY_ORG
+          valueFrom:
+            secretKeyRef:
+              name: billetterie-secrets
+              key: SENTRY_ORG
+              optional: true
+        - name: SENTRY_PROJECT
+          valueFrom:
+            secretKeyRef:
+              name: billetterie-secrets
+              key: SENTRY_PROJECT
+              optional: true
+        - name: SENTRY_AUTH_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: billetterie-secrets
+              key: SENTRY_AUTH_TOKEN
+              optional: true
+        - name: POD_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+        - name: POD_NAMESPACE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
+        volumeMounts:
+        - name: ssl-certs
+          mountPath: /app/ssl
+          readOnly: true
+        - name: app-logs
+          mountPath: /app/logs
+        - name: uploads
+          mountPath: /app/uploads
+        livenessProbe:
+          httpGet:
+            path: /health/live
+            port: 9000
+          initialDelaySeconds: 60
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /health/ready
+            port: 9000
+          initialDelaySeconds: 10
+          periodSeconds: 5
+          timeoutSeconds: 3
+          failureThreshold: 3
+        resources:
+          requests:
+            memory: 1Gi
+            cpu: 500m
+          limits:
+            memory: 2Gi
+            cpu: 1000m
+        securityContext:
+          runAsNonRoot: true
+          runAsUser: 1001
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: false
+          capabilities:
+            drop:
+            - ALL
+      volumes:
+      - name: ssl-certs
+        secret:
+          secretName: ssl-certificates
+      - name: app-logs
+        persistentVolumeClaim:
+          claimName: logs-pvc
+      - name: uploads
+        persistentVolumeClaim:
+          claimName: uploads-pvc
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 100
+            podAffinityTerm:
+              labelSelector:
+                matchExpressions:
+                - key: app
+                  operator: In
+                  values:
+                  - billetterie
+              topologyKey: kubernetes.io/hostname
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-proxy
+  namespace: billetterie
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: nginx-proxy
+  template:
+    metadata:
+      labels:
+        app: nginx-proxy
+    spec:
+      containers:
+      - name: nginx
+        image: nginx:alpine
+        ports:
+        - containerPort: 80
+        - containerPort: 443
+        volumeMounts:
+        - name: nginx-config
+          mountPath: /etc/nginx/nginx.conf
+          subPath: nginx.conf
+        - name: ssl-certs
+          mountPath: /etc/nginx/ssl
+          readOnly: true
+        livenessProbe:
+          httpGet:
+            path: /nginx-health
+            port: 80
+          initialDelaySeconds: 10
+          periodSeconds: 10
+        resources:
+          requests:
+            memory: 64Mi
+            cpu: 50m
+          limits:
+            memory: 128Mi
+            cpu: 200m
+        securityContext:
+          runAsNonRoot: true
+          runAsUser: 101
+      volumes:
+      - name: nginx-config
+        configMap:
+          name: nginx-config
+      - name: ssl-certs
+        secret:
+          secretName: ssl-certificates
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres-master
+  namespace: billetterie
+  labels:
+    app: postgres
+    role: master
+spec:
+  selector:
+    app: postgres
+    role: master
+  ports:
+  - port: 5432
+    targetPort: 5432
+    name: postgres
+  type: ClusterIP
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres-slave
+  namespace: billetterie
+  labels:
+    app: postgres
+    role: slave
+spec:
+  selector:
+    app: postgres
+    role: slave
+  ports:
+  - port: 5432
+    targetPort: 5432
+    name: postgres
+  type: ClusterIP
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: pgbouncer
+  namespace: billetterie
+  labels:
+    app: pgbouncer
+spec:
+  selector:
+    app: pgbouncer
+  ports:
+  - port: 6432
+    targetPort: 6432
+    name: pgbouncer
+  type: ClusterIP
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres
+  namespace: billetterie
+  annotations:
+    description: "Main PostgreSQL service endpoint (routes to PgBouncer for connection pooling)"
+spec:
+  selector:
+    app: pgbouncer
+  ports:
+  - port: 5432
+    targetPort: 6432
+    name: postgres
+  type: ClusterIP
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: redis
+  namespace: billetterie
+spec:
+  selector:
+    app: redis
+  ports:
+  - port: 6379
+    targetPort: 6379
+  type: ClusterIP
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: billetterie-service
+  namespace: billetterie
+  labels:
+    app: billetterie
+spec:
+  selector:
+    app: billetterie
+  ports:
+  - name: http
+    port: 3000
+    targetPort: 3000
+  - name: metrics
+    port: 9090
+    targetPort: 9090
+  - name: health
+    port: 9000
+    targetPort: 9000
+  type: ClusterIP
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: nginx-service
+  namespace: billetterie
+spec:
+  selector:
+    app: nginx-proxy
+  ports:
+  - name: http
+    port: 80
+    targetPort: 80
+  - name: https
+    port: 443
+    targetPort: 443
+  type: LoadBalancer
+
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: billetterie-ingress
+  namespace: billetterie
+  annotations:
+    nginx.ingress.kubernetes.io/ssl-redirect: 'true'
+    nginx.ingress.kubernetes.io/force-ssl-redirect: 'true'
+    nginx.ingress.kubernetes.io/rate-limit: '100'
+    nginx.ingress.kubernetes.io/rate-limit-window: 1m
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    nginx.ingress.kubernetes.io/enable-modsecurity: 'true'
+    nginx.ingress.kubernetes.io/enable-owasp-core-rules: 'true'
+spec:
+  tls:
+  - hosts:
+    - tickets.company.com
+    - api.tickets.company.com
+    secretName: billetterie-tls
+  rules:
+  - host: tickets.company.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: nginx-service
+            port:
+              number: 443
+  - host: api.tickets.company.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: billetterie-service
+            port:
+              number: 3000
+
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: billetterie-hpa
+  namespace: billetterie
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: billetterie-app
+  minReplicas: 3
+  maxReplicas: 10
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 70
+  - type: Resource
+    resource:
+      name: memory
+      target:
+        type: Utilization
+        averageUtilization: 80
+
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: billetterie-pdb
+  namespace: billetterie
+spec:
+  minAvailable: 2
+  selector:
+    matchLabels:
+      app: billetterie
+
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: billetterie-network-policy
+  namespace: billetterie
+spec:
+  podSelector:
+    matchLabels:
+      app: billetterie
+  policyTypes:
+  - Ingress
+  - Egress
+  ingress:
+  - from:
+    - podSelector:
+        matchLabels:
+          app: nginx-proxy
+    ports:
+    - protocol: TCP
+      port: 3000
+  - from: []
+    ports:
+    - protocol: TCP
+      port: 9000
+  egress:
+  - to:
+    - podSelector:
+        matchLabels:
+          app: pgbouncer
+    ports:
+    - protocol: TCP
+      port: 6432
+  - to:
+    - podSelector:
+        matchLabels:
+          app: postgres
+    ports:
+    - protocol: TCP
+      port: 5432
+  - to:
+    - podSelector:
+        matchLabels:
+          app: redis
+    ports:
+    - protocol: TCP
+      port: 6379
+  - to: []
+    ports:
+    - protocol: TCP
+      port: 443
+    - protocol: TCP
+      port: 80
+
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: postgres-backup
+  namespace: billetterie
+spec:
+  schedule: "0 2 * * *"  # Daily at 2 AM
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      template:
+        metadata:
+          labels:
+            app: postgres-backup
+        spec:
+          restartPolicy: OnFailure
+          containers:
+          - name: postgres-backup
+            image: postgres:16-alpine
+            env:
+            - name: PGHOST
+              value: postgres-master
+            - name: PGPORT
+              value: "5432"
+            - name: PGUSER
+              value: backup_user
+            - name: PGPASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: billetterie-secrets
+                  key: BACKUP_USER_PASSWORD
+            - name: BACKUP_ENCRYPTION_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: billetterie-secrets
+                  key: BACKUP_ENCRYPTION_KEY
+            - name: AWS_ACCESS_KEY_ID
+              valueFrom:
+                secretKeyRef:
+                  name: billetterie-secrets
+                  key: AWS_ACCESS_KEY_ID
+                  optional: true
+            - name: AWS_SECRET_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: billetterie-secrets
+                  key: AWS_SECRET_ACCESS_KEY
+                  optional: true
+            - name: S3_BUCKET
+              value: "billetterie-backups"
+            command:
+            - /bin/bash
+            - -c
+            - |
+              set -e
+              
+              # Create backup filename with timestamp
+              BACKUP_DATE=$(date +%Y%m%d_%H%M%S)
+              BACKUP_FILE="billetterie_backup_${BACKUP_DATE}.sql"
+              ENCRYPTED_FILE="billetterie_backup_${BACKUP_DATE}.sql.enc"
+              
+              echo "Starting backup at $(date)"
+              
+              # Create database backup
+              pg_dump -h $PGHOST -p $PGPORT -U $PGUSER -d billetterie \
+                --verbose --clean --if-exists --create > /backup/${BACKUP_FILE}
+              
+              if [ $? -eq 0 ]; then
+                echo "Database backup successful"
+                
+                # Encrypt the backup
+                openssl enc -aes-256-cbc -salt -in /backup/${BACKUP_FILE} \
+                  -out /backup/${ENCRYPTED_FILE} -k ${BACKUP_ENCRYPTION_KEY}
+                
+                if [ $? -eq 0 ]; then
+                  echo "Backup encryption successful"
+                  
+                  # Remove unencrypted backup
+                  rm /backup/${BACKUP_FILE}
+                  
+                  # Upload to S3 if configured
+                  if [ -n "$AWS_ACCESS_KEY_ID" ] && [ -n "$AWS_SECRET_ACCESS_KEY" ]; then
+                    apk add --no-cache aws-cli
+                    aws s3 cp /backup/${ENCRYPTED_FILE} s3://${S3_BUCKET}/database/
+                    if [ $? -eq 0 ]; then
+                      echo "Backup uploaded to S3 successfully"
+                    else
+                      echo "Failed to upload backup to S3"
+                    fi
+                  fi
+                  
+                  # Keep only last 7 backups locally
+                  find /backup -name "billetterie_backup_*.sql.enc" -type f -mtime +7 -delete
+                  
+                  echo "Backup completed successfully at $(date)"
+                else
+                  echo "Backup encryption failed"
+                  rm -f /backup/${BACKUP_FILE}
+                  exit 1
+                fi
+              else
+                echo "Database backup failed"
+                exit 1
+              fi
+            volumeMounts:
+            - name: backup-storage
+              mountPath: /backup
+            resources:
+              requests:
+                memory: 256Mi
+                cpu: 100m
+              limits:
+                memory: 512Mi
+                cpu: 500m
+          volumes:
+          - name: backup-storage
+            persistentVolumeClaim:
+              claimName: postgres-backup-pvc
+
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: postgres-backup-cleanup
+  namespace: billetterie
+spec:
+  schedule: "0 4 * * 0"  # Weekly on Sunday at 4 AM
+  concurrencyPolicy: Forbid
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          restartPolicy: OnFailure
+          containers:
+          - name: backup-cleanup
+            image: amazon/aws-cli:latest
+            env:
+            - name: AWS_ACCESS_KEY_ID
+              valueFrom:
+                secretKeyRef:
+                  name: billetterie-secrets
+                  key: AWS_ACCESS_KEY_ID
+                  optional: true
+            - name: AWS_SECRET_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: billetterie-secrets
+                  key: AWS_SECRET_ACCESS_KEY
+                  optional: true
+            - name: S3_BUCKET
+              value: "billetterie-backups"
+            command:
+            - /bin/bash
+            - -c
+            - |
+              if [ -n "$AWS_ACCESS_KEY_ID" ] && [ -n "$AWS_SECRET_ACCESS_KEY" ]; then
+                echo "Cleaning up old backups in S3..."
+                # Delete backups older than 30 days
+                aws s3 ls s3://${S3_BUCKET}/database/ --recursive | \
+                  awk '{print $1, $2, $4}' | \
+                  while read date time file; do
+                    datetime="$date $time"
+                    cutoff=$(date -d '30 days ago' '+%Y-%m-%d %H:%M:%S')
+                    if [[ "$datetime" < "$cutoff" ]]; then
+                      echo "Deleting old backup: $file"
+                      aws s3 rm s3://${S3_BUCKET}/$file
+                    fi
+                  done
+                echo "S3 backup cleanup completed"
+              else
+                echo "AWS credentials not configured, skipping S3 cleanup"
+              fi
+            resources:
+              requests:
+                memory: 64Mi
+                cpu: 50m
+              limits:
+                memory: 128Mi
+                cpu: 200m
+

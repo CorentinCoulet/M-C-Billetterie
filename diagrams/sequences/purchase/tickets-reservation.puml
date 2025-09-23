@@ -1,0 +1,33 @@
+@startuml "Sélection et réservation de billets"
+
+title Sélection et réservation de billets
+
+actor "Utilisateur" as User
+participant "Frontend\n(Next.js)" as Frontend
+participant "API Gateway\n(Rate Limiter)" as API
+participant "Auth Middleware" as Auth
+participant "Ticket Service" as TicketSvc
+participant "Database\n(PostgreSQL)" as DB
+
+User -> Frontend: Sélectionner événement + billets
+Frontend -> API: POST /api/tickets/reserve
+note right: Body: {eventId, ticketType, quantity}
+API -> Auth: Vérifier token JWT
+Auth --> API: user authenticated
+
+API -> TicketSvc: reserveTickets(eventId, ticketType, quantity)
+TicketSvc -> DB: SELECT available_tickets WHERE event_id=?
+DB --> TicketSvc: available count
+alt Billets disponibles
+    TicketSvc -> DB: UPDATE tickets SET reserved=true
+    DB --> TicketSvc: reservation success
+    TicketSvc --> API: reservation data
+    API --> Frontend: {reservationId, expiresAt}
+    Frontend --> User: Billets réservés (15 min)
+else Billets indisponibles
+    TicketSvc --> API: error "No tickets available"
+    API --> Frontend: 409 Conflict
+    Frontend --> User: "Billets non disponibles"
+end
+
+@enduml

@@ -1,0 +1,91 @@
+@startuml core-business
+
+!theme aws-orange
+skinparam linetype ortho
+skinparam backgroundColor #FFFFFF
+
+title Core Business
+
+' ========== ÉNUMÉRATIONS ==========
+
+enum Role {
+    USER
+    ORGANIZER
+    ADMIN
+}
+
+enum OrderStatus {
+    DRAFT
+    PENDING_PAYMENT
+    PAID
+    CANCELLED
+}
+
+enum TicketStatus {
+    PENDING
+    PAID
+    CANCELLED
+    USED
+}
+
+' ========== CLASSES CŒUR ==========
+
+class User {
+    - id: String
+    - email: String
+    - name: String
+    - password: String
+    - role: Role
+    - isVerified: boolean
+    - createdAt: DateTime
+    --
+    + authenticate(password: String): boolean
+    + verifyEmail(): void
+    + changePassword(newPassword: String): void
+    + hasRole(role: Role): boolean
+    + canCreateEvent(): boolean
+}
+
+class Order {
+    - id: String
+    - userId: String
+    - totalPrice: number
+    - status: OrderStatus
+    - currency: String
+    - createdAt: DateTime
+    --
+    + calculateTotal(): number
+    + addTicket(ticket: Ticket): void
+    + removeTicket(ticketId: String): void
+    + process(): void
+    + cancel(): void
+    + isPaid(): boolean
+}
+
+class Ticket {
+    - id: String
+    - userId: String
+    - eventId: String
+    - orderId: String
+    - code: String
+    - status: TicketStatus
+    - isScanned: boolean
+    - purchasedAt: DateTime
+    --
+    + generateCode(): String
+    + scan(): void
+    + transfer(newUserId: String): void
+    + isValid(): boolean
+    + canBeScanned(): boolean
+}
+
+' ========== RELATIONS ==========
+
+User ||--o{ Order : creates
+Order ||--o{ Ticket : contains
+User ||--o{ Ticket : owns
+User::role ||-- Role
+Order::status ||-- OrderStatus
+Ticket::status ||-- TicketStatus
+
+@enduml

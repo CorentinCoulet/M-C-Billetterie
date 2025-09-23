@@ -1,0 +1,99 @@
+@startuml "Connexion - Diagramme de séquence"
+
+title Processus de connexion utilisateur
+
+actor "Utilisateur" as User
+participant "Frontend\n(Next.js)" as Frontend
+participant "API Gateway\n(Rate Limiter)" as API
+participant "Auth Controller" as AuthCtrl
+participant "Auth Service" as AuthSvc
+participant "User Service" as UserSvc
+participant "Redis Cache" as Redis
+participant "Database\n(PostgreSQL)" as DB
+
+== Connexion ==
+User -> Frontend: Se connecter
+activate Frontend
+Frontend -> API: POST /api/auth/login
+note right: Body: {email, password}
+activate API
+
+API -> AuthCtrl: login(credentials)
+activate AuthCtrl
+
+AuthCtrl -> UserSvc: getUserByEmail(email)
+activate UserSvc
+UserSvc -> DB: SELECT user WHERE email=?
+activate DB
+DB --> UserSvc: user data
+deactivate DB
+deactivate UserSvc
+
+alt Utilisateur trouvé et vérifié
+    AuthCtrl -> AuthSvc: comparePassword(password, user.password)
+    activate AuthSvc
+    AuthSvc -> AuthSvc: bcrypt.compare(password, hash)
+    AuthSvc --> AuthCtrl: password valid
+    deactivate AuthSvc
+    
+    AuthCtrl -> AuthSvc: generateJWT(user)
+    activate AuthSvc
+    AuthSvc -> AuthSvc: jwt.sign({userId, role}, secret, {expiresIn: '7d'})
+    AuthSvc --> AuthCtrl: JWT token
+    deactivate AuthSvc
+    
+    AuthCtrl -> AuthSvc: generateRefreshToken(userId)
+    activate AuthSvc
+    AuthSvc -> Redis: SET refresh:{token} = userId (expire 30d)
+    activate Redis
+    Redis --> AuthSvc: refresh token stored
+    deactivate Redis
+    deactivate AuthSvc
+    
+    AuthCtrl -> UserSvc: updateLastLogin(userId)
+    activate UserSvc
+    UserSvc -> DB: UPDATE users SET lastLogin=NOW() WHERE id=?
+    activate DB
+    DB --> UserSvc: updated
+    deactivate DB
+    deactivate UserSvc
+    
+    AuthCtrl -> UserSvc: createUserSession(userId, token)
+    activate UserSvc
+    UserSvc -> DB: INSERT INTO user_sessions (userId, token, expiresAt)
+    activate DB
+    DB --> UserSvc: session created
+    deactivate DB
+    deactivate UserSvc
+    
+    AuthCtrl --> API: {token, refreshToken, user}
+    deactivate AuthCtrl
+    API --> Frontend: authentication success
+    deactivate API
+    Frontend -> Frontend: Stocker token (httpOnly cookie)
+    Frontend --> User: "Connexion réussie"
+    deactivate Frontend
+    
+else Utilisateur non trouvé ou mot de passe incorrect
+    AuthCtrl --> API: 401 Unauthorized
+    deactivate AuthCtrl
+    API --> Frontend: authentication failed
+    deactivate API
+    Frontend --> User: "Identifiants incorrects"
+    deactivate Frontend
+    
+else Email non vérifié
+    AuthCtrl --> API: 403 Forbidden "Email not verified"
+    deactivate AuthCtrl
+    API --> Frontend: email verification required
+    deactivate API
+    Frontend --> User: "Vérifiez votre email"
+    deactivate Frontend
+end
+
+note over User, DB
+    Après connexion réussie, l'utilisateur 
+    peut accéder aux ressources protégées
+end note
+
+@enduml

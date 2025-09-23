@@ -11,7 +11,7 @@ if (!stripeSecretKey) {
  * Stripe client instance
  */
 export const stripe = new Stripe(stripeSecretKey || 'dummy_key_for_development', {
-  apiVersion: '2023-10-16', // Use the latest API version
+  apiVersion: '2025-06-30.basil', // Use the latest API version
   appInfo: {
     name: process.env.APP_NAME || 'Billetterie',
     version: '1.0.0',

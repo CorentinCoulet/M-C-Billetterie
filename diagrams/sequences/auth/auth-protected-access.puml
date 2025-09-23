@@ -1,0 +1,77 @@
+@startuml "Accès aux ressources protégées - Diagramme de séquence"
+
+title Accès aux ressources protégées avec validation JWT
+
+actor "Utilisateur" as User
+participant "Frontend\n(Next.js)" as Frontend
+participant "API Gateway\n(Rate Limiter)" as API
+participant "Auth Controller" as AuthCtrl
+participant "Auth Service" as AuthSvc
+participant "User Service" as UserSvc
+participant "Dashboard Controller" as DashboardCtrl
+participant "Database\n(PostgreSQL)" as DB
+
+== Accès aux ressources protégées ==
+User -> Frontend: Accéder au dashboard
+activate Frontend
+Frontend -> API: GET /api/dashboard
+note right: Header: Authorization: Bearer {token}
+activate API
+
+API -> AuthCtrl: verifyToken(token)
+activate AuthCtrl
+
+AuthCtrl -> AuthSvc: validateJWT(token)
+activate AuthSvc
+AuthSvc -> AuthSvc: jwt.verify(token, secret)
+AuthSvc --> AuthCtrl: decoded payload
+deactivate AuthSvc
+
+AuthCtrl -> UserSvc: getUserById(userId)
+activate UserSvc
+UserSvc -> DB: SELECT user WHERE id=?
+activate DB
+DB --> UserSvc: user data
+deactivate DB
+deactivate UserSvc
+
+AuthCtrl -> UserSvc: checkSessionActive(userId, token)
+activate UserSvc
+UserSvc -> DB: SELECT session WHERE userId=? AND token=? AND expiresAt > NOW()
+activate DB
+DB --> UserSvc: session active
+deactivate DB
+deactivate UserSvc
+
+alt Token valide et session active
+    AuthCtrl --> API: user authenticated
+    deactivate AuthCtrl
+    API -> DashboardCtrl: getDashboardData(userId)
+    activate DashboardCtrl
+    DashboardCtrl -> DB: SELECT dashboard data for user
+    activate DB
+    DB --> DashboardCtrl: dashboard data
+    deactivate DB
+    DashboardCtrl --> API: dashboard data
+    deactivate DashboardCtrl
+    API --> Frontend: dashboard data
+    deactivate API
+    Frontend --> User: Afficher dashboard
+    deactivate Frontend
+    
+else Token invalide ou session expirée
+    AuthCtrl --> API: 401 Unauthorized
+    deactivate AuthCtrl
+    API --> Frontend: authentication failed
+    deactivate API
+    Frontend -> Frontend: Rediriger vers login
+    Frontend --> User: "Session expirée, veuillez vous reconnecter"
+    deactivate Frontend
+end
+
+note over User, DB
+    Chaque requête vers une ressource protégée 
+    passe par cette validation de token
+end note
+
+@enduml

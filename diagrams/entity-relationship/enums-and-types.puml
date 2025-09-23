@@ -1,0 +1,44 @@
+@startuml enums-and-types
+
+' ========== ÉNUMÉRATIONS ==========
+
+enum Role {
+    USER
+    ORGANIZER
+    ADMIN
+}
+
+enum OrderStatus {
+    draft
+    pending_payment
+    paid
+    cancelled
+}
+
+enum TicketStatus {
+    pending
+    paid
+    cancelled
+    used
+}
+
+' ========== TYPES DE DONNÉES ==========
+
+note as DataTypes
+**Types de données utilisés :**
+• String : Chaîne de caractères
+• Int : Nombre entier
+• Float : Nombre décimal
+• Boolean : Vrai/Faux
+• DateTime : Date et heure
+• Json : Données JSON
+• BigInt : Grand nombre entier
+
+**Contraintes :**
+• PK : Clé primaire
+• FK : Clé étrangère
+• UK : Contrainte d'unicité
+• * : Champ obligatoire
+end note
+
+@enduml

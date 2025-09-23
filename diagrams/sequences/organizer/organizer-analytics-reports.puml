@@ -1,0 +1,31 @@
+@startuml "Rapports et analytics - Organisateur"
+
+title Génération de rapports analytiques
+
+actor "Organisateur" as Organizer
+participant "Frontend\n(Next.js)" as Frontend
+participant "API Gateway\n(Rate Limiter)" as API
+participant "Auth Middleware" as Auth
+participant "Analytics Service" as AnalyticsSvc
+participant "Database\n(PostgreSQL)" as DB
+
+== Rapports et analytics ==
+Organizer -> Frontend: Générer rapport
+Frontend -> API: GET /api/events/{eventId}/analytics
+note right: Query: ?period=month&metrics=sales,demographics
+API -> Auth: Vérifier propriété
+Auth --> API: access granted
+
+API -> AnalyticsSvc: generateEventReport(eventId, options)
+AnalyticsSvc -> DB: Complex analytics queries
+note right: Sales by period, demographics, geographic distribution, etc.
+DB --> AnalyticsSvc: raw data
+
+AnalyticsSvc -> AnalyticsSvc: Process and aggregate data
+AnalyticsSvc -> AnalyticsSvc: Generate charts and insights
+
+AnalyticsSvc --> API: analytics report
+API --> Frontend: report data
+Frontend --> Organizer: Rapport détaillé avec graphiques
+
+@enduml

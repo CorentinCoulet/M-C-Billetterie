@@ -1,0 +1,32 @@
+@startuml "Surveillance et retry des webhooks - Diagramme de séquence"
+
+title Gestion des échecs et retry des webhooks
+
+participant "Webhook Handler" as WebhookHandler
+participant "Queue Service\n(Bull/Redis)" as Queue
+participant "Email Service" as EmailSvc
+participant "Database\n(PostgreSQL)" as DB
+
+== Surveillance et retry des webhooks ==
+note over WebhookHandler: En cas d'échec de traitement
+alt Webhook processing fails
+    WebhookHandler -> DB: INSERT INTO webhook_failures (eventId, error, retryCount=0)
+    WebhookHandler -> Queue: addJob('retry-webhook', {eventId}, {delay: '1m'})
+end
+
+== Retry des webhooks ==
+Queue -> WebhookHandler: Retry webhook processing
+WebhookHandler -> WebhookHandler: Reprocess webhook event
+alt Retry successful
+    WebhookHandler -> DB: DELETE FROM webhook_failures WHERE eventId=?
+else Retry failed again
+    WebhookHandler -> DB: UPDATE webhook_failures SET retryCount=retryCount+1
+    alt retryCount < 5
+        WebhookHandler -> Queue: addJob('retry-webhook', {eventId}, {delay: '5m'})
+    else
+        WebhookHandler -> Queue: addJob('alert-webhook-failure', {eventId})
+        Queue -> EmailSvc: alertWebhookFailure(eventId)
+    end
+end
+
+@enduml

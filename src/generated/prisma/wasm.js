@@ -20,12 +20,12 @@ exports.Prisma = Prisma
 exports.$Enums = {}
 
 /**
- * Prisma Client JS version: 6.10.1
- * Query Engine version: 9b628578b3b7cae625e8c927178f15a170e74a9c
+ * Prisma Client JS version: 6.15.0
+ * Query Engine version: 85179d7826409ee107a6ba334b5e305ae3fba9fb
  */
 Prisma.prismaVersion = {
-  client: "6.10.1",
-  engine: "9b628578b3b7cae625e8c927178f15a170e74a9c"
+  client: "6.15.0",
+  engine: "85179d7826409ee107a6ba334b5e305ae3fba9fb"
 }
 
 Prisma.PrismaClientKnownRequestError = () => {
@@ -114,6 +114,9 @@ Prisma.NullTypes = {
  */
 
 exports.Prisma.TransactionIsolationLevel = makeStrictEnum({
+  ReadUncommitted: 'ReadUncommitted',
+  ReadCommitted: 'ReadCommitted',
+  RepeatableRead: 'RepeatableRead',
   Serializable: 'Serializable'
 });
 
@@ -123,7 +126,9 @@ exports.Prisma.UserScalarFieldEnum = {
   name: 'name',
   password: 'password',
   isVerified: 'isVerified',
+  emailVerifiedAt: 'emailVerifiedAt',
   lastLogin: 'lastLogin',
+  passwordChangedAt: 'passwordChangedAt',
   role: 'role',
   metadata: 'metadata',
   createdAt: 'createdAt',
@@ -178,6 +183,11 @@ exports.Prisma.TicketScalarFieldEnum = {
   code: 'code',
   status: 'status',
   seatNumber: 'seatNumber',
+  currentQRCode: 'currentQRCode',
+  qrCodeGeneratedAt: 'qrCodeGeneratedAt',
+  qrRotationInterval: 'qrRotationInterval',
+  isScanned: 'isScanned',
+  scannedAt: 'scannedAt',
   usedAt: 'usedAt',
   purchasedAt: 'purchasedAt',
   metadata: 'metadata'
@@ -233,17 +243,6 @@ exports.Prisma.ThemeScalarFieldEnum = {
   updatedAt: 'updatedAt'
 };
 
-exports.Prisma.QRCodeScalarFieldEnum = {
-  id: 'id',
-  ticketId: 'ticketId',
-  path: 'path',
-  format: 'format',
-  createdAt: 'createdAt',
-  expiresAt: 'expiresAt',
-  scannedAt: 'scannedAt',
-  data: 'data'
-};
-
 exports.Prisma.ActivityLogScalarFieldEnum = {
   id: 'id',
   userId: 'userId',
@@ -270,16 +269,6 @@ exports.Prisma.NotificationScalarFieldEnum = {
   sentAt: 'sentAt'
 };
 
-exports.Prisma.SessionScalarFieldEnum = {
-  id: 'id',
-  userId: 'userId',
-  token: 'token',
-  ipAddress: 'ipAddress',
-  userAgent: 'userAgent',
-  createdAt: 'createdAt',
-  expiresAt: 'expiresAt'
-};
-
 exports.Prisma.BlockedUserScalarFieldEnum = {
   id: 'id',
   userId: 'userId',
@@ -296,6 +285,95 @@ exports.Prisma.TranslationScalarFieldEnum = {
   value: 'value'
 };
 
+exports.Prisma.SecurityLogScalarFieldEnum = {
+  id: 'id',
+  type: 'type',
+  ip: 'ip',
+  userAgent: 'userAgent',
+  url: 'url',
+  userId: 'userId',
+  data: 'data',
+  timestamp: 'timestamp'
+};
+
+exports.Prisma.PasswordHistoryScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  passwordHash: 'passwordHash',
+  createdAt: 'createdAt'
+};
+
+exports.Prisma.LoginAttemptScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  email: 'email',
+  ipAddress: 'ipAddress',
+  userAgent: 'userAgent',
+  success: 'success',
+  timestamp: 'timestamp',
+  reason: 'reason',
+  sessionId: 'sessionId',
+  riskScore: 'riskScore'
+};
+
+exports.Prisma.SystemBackupScalarFieldEnum = {
+  id: 'id',
+  type: 'type',
+  status: 'status',
+  filePath: 'filePath',
+  encryptionKey: 'encryptionKey',
+  fileSize: 'fileSize',
+  checksumSha256: 'checksumSha256',
+  startedAt: 'startedAt',
+  completedAt: 'completedAt',
+  error: 'error',
+  retentionDays: 'retentionDays'
+};
+
+exports.Prisma.AuditLogScalarFieldEnum = {
+  id: 'id',
+  action: 'action',
+  resourceType: 'resourceType',
+  resourceId: 'resourceId',
+  userId: 'userId',
+  userEmail: 'userEmail',
+  ipAddress: 'ipAddress',
+  userAgent: 'userAgent',
+  details: 'details',
+  timestamp: 'timestamp',
+  sessionId: 'sessionId',
+  result: 'result',
+  riskLevel: 'riskLevel',
+  eventHash: 'eventHash',
+  isSensitive: 'isSensitive'
+};
+
+exports.Prisma.UserSessionScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  token: 'token',
+  ipAddress: 'ipAddress',
+  userAgent: 'userAgent',
+  deviceInfo: 'deviceInfo',
+  createdAt: 'createdAt',
+  lastActivityAt: 'lastActivityAt',
+  expiresAt: 'expiresAt',
+  isActive: 'isActive',
+  destroyedAt: 'destroyedAt',
+  destroyReason: 'destroyReason'
+};
+
+exports.Prisma.BlockedIPScalarFieldEnum = {
+  id: 'id',
+  ipAddress: 'ipAddress',
+  reason: 'reason',
+  blockedAt: 'blockedAt',
+  expiresAt: 'expiresAt',
+  blockCount: 'blockCount',
+  unblockedBy: 'unblockedBy',
+  unblockedAt: 'unblockedAt'
+};
+
 exports.Prisma.SortOrder = {
   asc: 'asc',
   desc: 'desc'
@@ -306,21 +384,27 @@ exports.Prisma.NullableJsonNullValueInput = {
   JsonNull: Prisma.JsonNull
 };
 
+exports.Prisma.QueryMode = {
+  default: 'default',
+  insensitive: 'insensitive'
+};
+
 exports.Prisma.JsonNullValueFilter = {
   DbNull: Prisma.DbNull,
   JsonNull: Prisma.JsonNull,
   AnyNull: Prisma.AnyNull
 };
 
-exports.Prisma.QueryMode = {
-  default: 'default',
-  insensitive: 'insensitive'
-};
-
 exports.Prisma.NullsOrder = {
   first: 'first',
   last: 'last'
 };
+exports.Role = exports.$Enums.Role = {
+  USER: 'USER',
+  ORGANIZER: 'ORGANIZER',
+  ADMIN: 'ADMIN'
+};
+
 exports.OrderStatus = exports.$Enums.OrderStatus = {
   draft: 'draft',
   pending_payment: 'pending_payment',
@@ -347,13 +431,18 @@ exports.Prisma.ModelName = {
   Review: 'Review',
   TeamMember: 'TeamMember',
   Theme: 'Theme',
-  QRCode: 'QRCode',
   ActivityLog: 'ActivityLog',
   EventLog: 'EventLog',
   Notification: 'Notification',
-  Session: 'Session',
   BlockedUser: 'BlockedUser',
-  Translation: 'Translation'
+  Translation: 'Translation',
+  SecurityLog: 'SecurityLog',
+  PasswordHistory: 'PasswordHistory',
+  LoginAttempt: 'LoginAttempt',
+  SystemBackup: 'SystemBackup',
+  AuditLog: 'AuditLog',
+  UserSession: 'UserSession',
+  BlockedIP: 'BlockedIP'
 };
 
 /**

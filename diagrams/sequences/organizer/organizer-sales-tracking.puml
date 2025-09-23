@@ -1,0 +1,32 @@
+@startuml "Suivi des ventes - Organisateur"
+
+title Consultation du dashboard de ventes
+
+actor "Organisateur" as Organizer
+participant "Frontend\n(Next.js)" as Frontend
+participant "API Gateway\n(Rate Limiter)" as API
+participant "Auth Middleware" as Auth
+participant "Analytics Service" as AnalyticsSvc
+participant "Database\n(PostgreSQL)" as DB
+
+== Suivi des ventes ==
+Organizer -> Frontend: Consulter dashboard
+Frontend -> API: GET /api/organizer/dashboard
+API -> Auth: Vérifier rôle ORGANIZER
+Auth --> API: organizer verified
+
+API -> AnalyticsSvc: getOrganizerDashboard(organizerId)
+AnalyticsSvc -> DB: SELECT events WHERE organizerId=?
+DB --> AnalyticsSvc: organizer events
+
+AnalyticsSvc -> DB: SELECT orders WITH tickets WHERE event_id IN (?)
+DB --> AnalyticsSvc: sales data
+
+AnalyticsSvc -> AnalyticsSvc: Calculate metrics
+note right: Total revenue, tickets sold, conversion rate, etc.
+
+AnalyticsSvc --> API: dashboard data
+API --> Frontend: analytics data
+Frontend --> Organizer: Dashboard avec KPIs
+
+@enduml

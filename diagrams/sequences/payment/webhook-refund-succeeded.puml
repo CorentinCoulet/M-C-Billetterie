@@ -1,0 +1,42 @@
+@startuml "Webhook Refund Succeeded - Diagramme de séquence"
+
+title Traitement du webhook de remboursement réussi
+
+participant "Stripe API" as Stripe
+participant "API Gateway\n(Rate Limiter)" as API
+participant "Webhook Handler" as WebhookHandler
+participant "Payment Service" as PaymentSvc
+participant "Order Service" as OrderSvc
+participant "Ticket Service" as TicketSvc
+participant "Email Service" as EmailSvc
+participant "Queue Service\n(Bull/Redis)" as Queue
+participant "Database\n(PostgreSQL)" as DB
+
+== Webhook Stripe - Refund Succeeded ==
+Stripe -> API: POST /api/webhook/stripe
+note right: Event: charge.refund.updated
+API -> WebhookHandler: processStripeWebhook(event)
+WebhookHandler -> PaymentSvc: handleRefundSucceeded(refund)
+
+PaymentSvc -> DB: SELECT refund WHERE stripeRefundId=?
+DB --> PaymentSvc: refund data
+
+PaymentSvc -> DB: BEGIN TRANSACTION
+PaymentSvc -> DB: UPDATE refunds SET status='completed', processedAt=NOW()
+
+alt Remboursement total
+    PaymentSvc -> OrderSvc: cancelOrder(orderId)
+    OrderSvc -> DB: UPDATE orders SET status='refunded'
+    OrderSvc -> TicketSvc: cancelOrderTickets(orderId)
+    TicketSvc -> DB: UPDATE tickets SET status='cancelled' WHERE orderId=?
+else Remboursement partiel
+    PaymentSvc -> DB: UPDATE orders SET status='partially_refunded'
+end
+
+PaymentSvc -> DB: COMMIT TRANSACTION
+
+PaymentSvc -> Queue: addJob('notify-refund-completion', {refundId})
+Queue -> EmailSvc: sendRefundConfirmation(refundId)
+EmailSvc -> EmailSvc: Send refund confirmation email
+
+@enduml

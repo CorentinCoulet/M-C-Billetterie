@@ -1,0 +1,52 @@
+@startuml "Validation manuelle et gestion d'incidents"
+
+title Gestion des cas spéciaux et validation manuelle
+
+actor "Contrôleur\n(Staff événement)" as Controller
+participant "App Mobile\n(Scan QR)" as MobileApp
+participant "API Gateway\n(Rate Limiter)" as API
+participant "Ticket Controller" as TicketCtrl
+participant "Ticket Service" as TicketSvc
+participant "Database\n(PostgreSQL)" as DB
+
+== Gestion des incidents ==
+
+alt Problème avec QR illisible
+    Controller -> MobileApp: QR illisible
+    MobileApp -> MobileApp: Activer mode manuel
+    MobileApp --> Controller: "Saisie manuelle du code"
+    Controller -> MobileApp: Saisir code billet manuellement
+    MobileApp -> API: POST /api/tickets/validate-manual
+    note right: Body: {ticketCode, eventId, reason: 'qr_unreadable'}
+    API -> TicketCtrl: validateManualTicket(ticketCode, eventId)
+    note over TicketCtrl: Suite identique à la validation normale
+    TicketCtrl --> API: validation result
+    API --> MobileApp: manual validation response
+    MobileApp --> Controller: Résultat de la validation manuelle
+
+else Participant sans billet numérique
+    Controller -> MobileApp: Recherche par nom/email
+    MobileApp -> API: GET /api/events/{eventId}/participants
+    note right: Query: ?search=john.doe@email.com
+    API -> TicketSvc: searchEventParticipants(eventId, query)
+    TicketSvc -> DB: SELECT users, tickets WHERE event_id=? AND email LIKE ?
+    DB --> TicketSvc: matching participants
+    TicketSvc --> API: participants list
+    API --> MobileApp: search results
+    MobileApp --> Controller: Liste des participants trouvés
+    
+    Controller -> MobileApp: Sélectionner participant
+    MobileApp -> API: POST /api/tickets/validate-by-participant
+    note right: Body: {participantId, eventId}
+    API -> TicketCtrl: validateParticipantTicket(participantId, eventId)
+    TicketCtrl -> TicketSvc: findAndValidateParticipantTicket(participantId, eventId)
+    TicketSvc -> DB: SELECT ticket WHERE userId=? AND eventId=? AND status='paid'
+    DB --> TicketSvc: participant ticket
+    note over TicketSvc: Validation du billet du participant
+    TicketSvc --> TicketCtrl: validation result
+    TicketCtrl --> API: participant validation response
+    API --> MobileApp: validation success/error
+    MobileApp --> Controller: Résultat de la validation par participant
+end
+
+@enduml

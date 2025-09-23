@@ -1,0 +1,46 @@
+@startuml "Création d'événement - Organisateur"
+
+title Création d'événement par l'organisateur
+
+actor "Organisateur" as Organizer
+participant "Frontend\n(Next.js)" as Frontend
+participant "API Gateway\n(Rate Limiter)" as API
+participant "Auth Middleware" as Auth
+participant "Event Controller" as EventCtrl
+participant "Event Service" as EventSvc
+participant "Upload Service" as UploadSvc
+participant "Database\n(PostgreSQL)" as DB
+participant "File Storage\n(AWS S3)" as Storage
+
+== Création d'événement ==
+Organizer -> Frontend: Créer nouvel événement
+Frontend -> API: POST /api/events
+note right: Body: {title, description, date, venue, categories, images}
+API -> Auth: Vérifier token + rôle ORGANIZER
+Auth --> API: organizer authenticated
+
+API -> EventCtrl: create(eventData)
+EventCtrl -> EventSvc: createEvent(data, organizerId)
+
+alt Upload d'images
+    EventSvc -> UploadSvc: uploadEventImages(images)
+    UploadSvc -> Storage: PUT /events/{eventId}/images
+    Storage --> UploadSvc: uploaded URLs
+    UploadSvc --> EventSvc: image URLs
+end
+
+EventSvc -> DB: BEGIN TRANSACTION
+EventSvc -> DB: INSERT INTO events (title, description, organizerId, status='draft')
+DB --> EventSvc: eventId
+
+EventSvc -> DB: INSERT INTO event_images (eventId, imageUrl, isPrimary)
+EventSvc -> DB: INSERT INTO event_categories (eventId, categoryId)
+EventSvc -> DB: COMMIT TRANSACTION
+DB --> EventSvc: event created
+
+EventSvc --> EventCtrl: event data
+EventCtrl --> API: event response
+API --> Frontend: {eventId, status: 'draft'}
+Frontend --> Organizer: "Événement créé en brouillon"
+
+@enduml

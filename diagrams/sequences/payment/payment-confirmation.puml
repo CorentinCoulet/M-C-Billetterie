@@ -1,0 +1,50 @@
+@startuml "Confirmation du paiement côté client - Diagramme de séquence"
+
+title Confirmation du paiement côté client avec Stripe Elements
+
+actor "Utilisateur" as User
+participant "Frontend\n(Next.js)" as Frontend
+participant "API Gateway\n(Rate Limiter)" as API
+participant "Auth Middleware" as Auth
+participant "Payment Controller" as PaymentCtrl
+participant "Payment Service" as PaymentSvc
+participant "Database\n(PostgreSQL)" as DB
+participant "Stripe API" as Stripe
+
+== Confirmation du paiement côté client ==
+User -> Frontend: Soumettre informations carte
+Frontend -> Stripe: stripe.confirmPayment(client_secret, payment_method)
+Stripe -> Stripe: Process payment
+Stripe --> Frontend: {status, payment_intent}
+
+alt Paiement réussi
+    Frontend -> API: POST /api/payments/confirm
+    note right: Body: {payment_intent_id}
+    API -> Auth: Vérifier utilisateur
+    Auth --> API: user verified
+    
+    API -> PaymentCtrl: confirmPayment(payment_intent_id, userId)
+    PaymentCtrl -> PaymentSvc: getPaymentByStripeId(payment_intent_id)
+    PaymentSvc -> DB: SELECT payment WHERE stripePaymentId=? AND order.userId=?
+    DB --> PaymentSvc: payment data
+    
+    PaymentCtrl -> Stripe: GET /payment_intents/{id}
+    Stripe --> PaymentCtrl: payment_intent details
+    
+    alt Status = succeeded (côté Stripe)
+        PaymentCtrl -> PaymentSvc: updatePaymentStatus(paymentId, 'paid')
+        PaymentSvc -> DB: UPDATE payments SET status='paid', paidAt=NOW()
+        PaymentCtrl --> API: payment confirmed
+        API --> Frontend: payment success
+        Frontend --> User: "Paiement confirmé !"
+    else Status != succeeded
+        PaymentCtrl --> API: 400 Bad Request
+        API --> Frontend: payment failed
+        Frontend --> User: "Échec du paiement"
+    end
+    
+else Paiement échoué
+    Frontend --> User: "Paiement refusé - Vérifiez vos informations"
+end
+
+@enduml

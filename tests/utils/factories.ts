@@ -6,7 +6,6 @@
  * that can be overridden as needed.
  */
 
-import { TicketType } from '@prisma/client';
 import { addTime } from '@/utils/date';
 
 /**
@@ -81,7 +80,7 @@ export function createTestVenue(overrides = {}) {
 /**
  * Create a test event
  */
-export function createTestEvent(overrides = {}) {
+export function createTestEvent(overrides: any = {}) {
   const organizerId = overrides.organizerId || `org-${Math.random().toString(36).substring(2, 9)}`;
   const categoryId = overrides.categoryId || `cat-${Math.random().toString(36).substring(2, 9)}`;
   const venueId = overrides.venueId || `venue-${Math.random().toString(36).substring(2, 9)}`;
@@ -108,7 +107,7 @@ export function createTestEvent(overrides = {}) {
 /**
  * Create a test ticket type
  */
-export function createTestTicket(overrides = {}) {
+export function createTestTicket(overrides: any = {}) {
   const eventId = overrides.eventId || `event-${Math.random().toString(36).substring(2, 9)}`;
   
   return {
@@ -117,7 +116,7 @@ export function createTestTicket(overrides = {}) {
     description: 'Standard entry ticket',
     price: 25.0,
     quantity: 100,
-    type: TicketType.STANDARD,
+    type: 'STANDARD',
     eventId,
     reserved: 0,
     createdAt: new Date(),
@@ -129,7 +128,7 @@ export function createTestTicket(overrides = {}) {
 /**
  * Create a test order
  */
-export function createTestOrder(overrides = {}) {
+export function createTestOrder(overrides: any = {}) {
   const userId = overrides.userId || `user-${Math.random().toString(36).substring(2, 9)}`;
   
   return {
@@ -147,7 +146,7 @@ export function createTestOrder(overrides = {}) {
 /**
  * Create a test review
  */
-export function createTestReview(overrides = {}) {
+export function createTestReview(overrides: any = {}) {
   const userId = overrides.userId || `user-${Math.random().toString(36).substring(2, 9)}`;
   const eventId = overrides.eventId || `event-${Math.random().toString(36).substring(2, 9)}`;
   

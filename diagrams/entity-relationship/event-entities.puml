@@ -1,0 +1,48 @@
+@startuml event-entities
+
+!theme aws-orange
+skinparam linetype ortho
+skinparam backgroundColor #FFFFFF
+
+title Entités Événement
+
+' ========== ENTITÉS ÉVÉNEMENT ==========
+
+entity Event {
+    * **id** : String <<PK>>
+    --
+    * **title** : String
+    description : String
+    * **date** : DateTime
+    * **location** : String
+    maxCapacity : Int
+    isPublished : Boolean = false
+    organizerId : String <<FK>>
+    categoryId : String <<FK>>
+    venueId : String <<FK>>
+    createdAt : DateTime
+}
+
+entity Category {
+    * **id** : String <<PK>>
+    --
+    * **name** : String <<UK>>
+}
+
+entity Venue {
+    * **id** : String <<PK>>
+    --
+    * **name** : String
+    * **address** : String
+    * **capacity** : Int
+}
+
+' ========== RELATIONS ==========
+
+Event }o--|| Category : "catégorie"
+Event }o--|| Venue : "lieu"
+
+' Note: La relation Event.organizerId -> User.id (où User.role = ORGANIZER)
+' est définie dans global-overview
+
+@enduml

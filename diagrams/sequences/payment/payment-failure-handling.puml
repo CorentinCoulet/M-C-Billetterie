@@ -1,0 +1,41 @@
+@startuml "Gestion des échecs de paiement - Diagramme de séquence"
+
+title Traitement des webhooks d'échec de paiement
+
+participant "Stripe API" as Stripe
+participant "API Gateway\n(Rate Limiter)" as API
+participant "Webhook Handler" as WebhookHandler
+participant "Payment Service" as PaymentSvc
+participant "Order Service" as OrderSvc
+participant "Ticket Service" as TicketSvc
+participant "Email Service" as EmailSvc
+participant "Queue Service\n(Bull/Redis)" as Queue
+participant "Database\n(PostgreSQL)" as DB
+
+== Gestion des échecs de paiement ==
+Stripe -> API: POST /api/webhook/stripe
+note right: Event: payment_intent.payment_failed
+API -> WebhookHandler: processStripeWebhook(event)
+WebhookHandler -> PaymentSvc: handlePaymentFailed(payment_intent)
+
+PaymentSvc -> DB: SELECT payment WHERE stripePaymentId=?
+DB --> PaymentSvc: payment data
+
+PaymentSvc -> DB: BEGIN TRANSACTION
+PaymentSvc -> DB: UPDATE payments SET status='failed', failedAt=NOW()
+PaymentSvc -> OrderSvc: markOrderAsFailed(orderId)
+OrderSvc -> DB: UPDATE orders SET status='payment_failed'
+PaymentSvc -> DB: COMMIT TRANSACTION
+
+PaymentSvc -> Queue: addJob('notify-payment-failure', {orderId})
+PaymentSvc -> Queue: addJob('release-reserved-tickets', {orderId})
+
+== Libération des billets réservés ==
+Queue -> TicketSvc: releaseReservedTickets(orderId)
+TicketSvc -> DB: UPDATE tickets SET status='available' WHERE orderId=? AND status='reserved'
+
+== Notification d'échec ==
+Queue -> EmailSvc: sendPaymentFailureNotification(orderId)
+EmailSvc -> EmailSvc: Send payment failure email with retry link
+
+@enduml

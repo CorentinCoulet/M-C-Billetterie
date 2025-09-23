@@ -1,523 +1,519 @@
-import type { Event, Payment, User } from '@/generated/prisma';
-import prisma from '@/lib/prisma';
+import type { User } from '../generated/prisma';
+import { prisma } from '../lib/prisma';
+import { analyticsService } from './analyticsService';
+import { eventManagementService } from './eventManagementService';
+import { systemLogsService } from './systemLogsService';
 
 /**
- * Service for administrative operations
+ * Refactored Admin Service
+ * Now focused on core admin operations, delegating complex analytics to specialized services
  */
 export class AdminService {
+  // ================================
+  // DELEGATED METHODS (using new services)
+  // ================================
+  
   /**
-   * Get dashboard statistics
+   * Get dashboard statistics (delegated to AnalyticsService)
    */
-  async getDashboardStatistics(): Promise<{
-    users: {
-      total: number;
-      new: number; // Last 30 days
-    };
-    events: {
-      total: number;
-      upcoming: number;
-      published: number;
-    };
-    orders: {
-      total: number;
-      completed: number;
-      pending: number;
-      cancelled: number;
-    };
-    revenue: {
-      total: number;
-      thisMonth: number;
-      lastMonth: number;
-    };
-  }> {
-    const thirtyDaysAgo = new Date();
-    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-
-    const thisMonthStart = new Date();
-    thisMonthStart.setDate(1);
-    thisMonthStart.setHours(0, 0, 0, 0);
-
-    const lastMonthStart = new Date(thisMonthStart);
-    lastMonthStart.setMonth(lastMonthStart.getMonth() - 1);
-
-    const lastMonthEnd = new Date(thisMonthStart);
-    lastMonthEnd.setSeconds(lastMonthEnd.getSeconds() - 1);
-
-    const [
-      totalUsers,
-      newUsers,
-      totalEvents,
-      upcomingEvents,
-      publishedEvents,
-      orderStats,
-      totalRevenue,
-      thisMonthRevenue,
-      lastMonthRevenue
-    ] = await Promise.all([
-      prisma.user.count(),
-      prisma.user.count({
-        where: {
-          createdAt: {
-            gte: thirtyDaysAgo
-          }
-        }
-      }),
-      prisma.event.count(),
-      prisma.event.count({
-        where: {
-          date: {
-            gte: new Date()
-          }
-        }
-      }),
-      prisma.event.count({
-        where: {
-          published: true
-        }
-      }),
-      orderService.getOrderStatistics(),
-      prisma.payment.aggregate({
-        where: {
-          status: 'SUCCEEDED'
-        },
-        _sum: {
-          amount: true
-        }
-      }),
-      prisma.payment.aggregate({
-        where: {
-          status: 'SUCCEEDED',
-          createdAt: {
-            gte: thisMonthStart
-          }
-        },
-        _sum: {
-          amount: true
-        }
-      }),
-      prisma.payment.aggregate({
-        where: {
-          status: 'SUCCEEDED',
-          createdAt: {
-            gte: lastMonthStart,
-            lt: thisMonthStart
-          }
-        },
-        _sum: {
-          amount: true
-        }
-      })
-    ]);
-
-    return {
-      users: {
-        total: totalUsers,
-        new: newUsers
-      },
-      events: {
-        total: totalEvents,
-        upcoming: upcomingEvents,
-        published: publishedEvents
-      },
-      orders: {
-        total: orderStats.totalOrders,
-        completed: orderStats.completedOrders,
-        pending: orderStats.pendingOrders,
-        cancelled: orderStats.cancelledOrders
-      },
-      revenue: {
-        total: totalRevenue._sum.amount || 0,
-        thisMonth: thisMonthRevenue._sum.amount || 0,
-        lastMonth: lastMonthRevenue._sum.amount || 0
-      }
-    };
+  async getDashboardStatistics() {
+    return analyticsService.getDashboardStatistics();
   }
 
   /**
-   * Get user management statistics
+   * Get sales statistics (delegated to AnalyticsService)
    */
-  async getUserManagementStats(): Promise<{
-    totalUsers: number;
-    activeUsers: number;
-    blockedUsers: number;
-    usersByRole: {
-      role: string;
-      count: number;
-    }[];
-    newUsersOverTime: {
-      date: string;
-      count: number;
-    }[];
-  }> {
-    const [
-      totalUsers,
-      blockedUsers,
-      usersByRole,
-      newUsersData
-    ] = await Promise.all([
-      prisma.user.count(),
-      prisma.blockedUser.count(),
-      prisma.user.groupBy({
-        by: ['role'],
-        _count: {
-          id: true
-        }
-      }),
-      prisma.user.findMany({
-        select: {
-          createdAt: true
-        },
-        orderBy: {
-          createdAt: 'asc'
-        }
-      })
-    ]);
-
-    // Process new users over time (last 12 months)
-    const newUsersOverTime = this.processNewUsersOverTime(newUsersData);
-
-    return {
-      totalUsers,
-      activeUsers: totalUsers - blockedUsers,
-      blockedUsers,
-      usersByRole: usersByRole.map(item => ({
-        role: item.role,
-        count: item._count.id
-      })),
-      newUsersOverTime
-    };
+  async getSalesStatistics() {
+    return analyticsService.getSalesStatistics();
   }
 
   /**
-   * Get event management statistics
+   * Get user management statistics (delegated to AnalyticsService)
    */
-  async getEventManagementStats(): Promise<{
-    totalEvents: number;
-    publishedEvents: number;
-    upcomingEvents: number;
-    pastEvents: number;
-    eventsByCategory: {
-      category: string;
-      count: number;
-    }[];
-    eventsOverTime: {
-      date: string;
-      count: number;
-    }[];
-  }> {
-    const now = new Date();
-
-    const [
-      totalEvents,
-      publishedEvents,
-      upcomingEvents,
-      pastEvents,
-      eventsByCategory,
-      eventsData
-    ] = await Promise.all([
-      prisma.event.count(),
-      prisma.event.count({
-        where: {
-          published: true
-        }
-      }),
-      prisma.event.count({
-        where: {
-          date: {
-            gte: now
-          }
-        }
-      }),
-      prisma.event.count({
-        where: {
-          date: {
-            lt: now
-          }
-        }
-      }),
-      prisma.event.groupBy({
-        by: ['category'],
-        _count: {
-          id: true
-        }
-      }),
-      prisma.event.findMany({
-        select: {
-          createdAt: true
-        },
-        orderBy: {
-          createdAt: 'asc'
-        }
-      })
-    ]);
-
-    // Process events over time (last 12 months)
-    const eventsOverTime = this.processEventsOverTime(eventsData);
-
-    return {
-      totalEvents,
-      publishedEvents,
-      upcomingEvents,
-      pastEvents,
-      eventsByCategory: eventsByCategory.map(item => ({
-        category: item.category || 'Non catégorisé',
-        count: item._count.id
-      })),
-      eventsOverTime
-    };
+  async getUserManagementStats() {
+    return analyticsService.getUserAnalytics();
   }
 
   /**
-   * Get sales statistics
+   * Get event management statistics (delegated to EventManagementService)
    */
-  async getSalesStatistics(): Promise<{
-    totalOrders: number;
-    totalRevenue: number;
-    averageOrderValue: number;
-    salesByStatus: {
-      status: string;
-      count: number;
-      revenue: number;
-    }[];
-    salesOverTime: {
-      date: string;
-      orders: number;
-      revenue: number;
-    }[];
-  }> {
-    const [
-      totalOrders,
-      ordersByStatus,
-      ordersWithPayments
-    ] = await Promise.all([
-      prisma.order.count(),
-      prisma.order.groupBy({
-        by: ['status'],
-        _count: {
-          id: true
-        },
-        _sum: {
-          totalAmount: true
-        }
-      }),
-      prisma.order.findMany({
-        where: {
-          status: 'COMPLETED'
-        },
-        select: {
-          createdAt: true,
-          totalAmount: true
-        },
-        orderBy: {
-          createdAt: 'asc'
-        }
-      })
-    ]);
-
-    const totalRevenue = ordersByStatus
-      .filter(item => item.status === 'COMPLETED')
-      .reduce((sum, item) => sum + (item._sum.totalAmount || 0), 0);
-
-    const averageOrderValue = totalOrders > 0 ? totalRevenue / totalOrders : 0;
-
-    // Process sales over time (last 12 months)
-    const salesOverTime = this.processSalesOverTime(ordersWithPayments);
-
-    return {
-      totalOrders,
-      totalRevenue,
-      averageOrderValue,
-      salesByStatus: ordersByStatus.map(item => ({
-        status: item.status,
-        count: item._count.id,
-        revenue: item._sum.totalAmount || 0
-      })),
-      salesOverTime
-    };
+  async getEventManagementStats() {
+    return eventManagementService.getEventManagementStats();
   }
+
+  /**
+   * Get system logs (delegated to SystemLogsService)
+   */
+  async getSystemLogs(params?: any) {
+    return systemLogsService.getSystemLogs(params);
+  }
+
+  /**
+   * Log system activity (delegated to SystemLogsService)
+   */
+  async logSystemActivity(data: any) {
+    return systemLogsService.logSystemActivity(data);
+  }
+
+  // ================================
+  // CORE ADMIN OPERATIONS (kept in AdminService)
+  // ================================
 
   /**
    * Block a user
    */
-  async blockUser(userId: string, reason: string): Promise<User> {
-    await userService.blockUser(userId, reason);
-    return prisma.user.findUnique({
-      where: { id: userId }
-    }) as Promise<User>;
+  async blockUser(userId: string, reason: string, adminId: string): Promise<void> {
+    try {
+      // Check if user is already blocked
+      const existingBlock = await prisma.blockedUser.findUnique({
+        where: { userId }
+      });
+
+      if (existingBlock) {
+        throw new Error('User is already blocked');
+      }
+
+      // Block the user
+      await prisma.blockedUser.create({
+        data: {
+          userId,
+          reason: `${reason} (blocked by admin: ${adminId})`,
+          blockedAt: new Date()
+        }
+      });
+
+      // Log admin action
+      await systemLogsService.logAdminAction({
+        adminId,
+        action: 'BLOCK_USER',
+        targetUserId: userId,
+        details: { reason }
+      });
+    } catch (error) {
+      // Log error
+      await systemLogsService.logSystemActivity({
+        action: 'ADMIN_ERROR',
+        userId: adminId,
+        level: 'high',
+        result: 'error',
+        details: { error: error instanceof Error ? error.message : 'Unknown error', action: 'blockUser', targetUserId: userId }
+      });
+      throw error;
+    }
   }
 
   /**
    * Unblock a user
    */
-  async unblockUser(userId: string): Promise<User> {
-    await userService.unblockUser(userId);
-    return prisma.user.findUnique({
-      where: { id: userId }
-    }) as Promise<User>;
-  }
+  async unblockUser(userId: string, adminId: string): Promise<void> {
+    try {
+      const blockedUser = await prisma.blockedUser.findUnique({
+        where: { userId }
+      });
 
-  /**
-   * Change user role
-   */
-  async changeUserRole(userId: string, role: 'USER' | 'ADMIN' | 'ORGANISATEUR'): Promise<User> {
-    return userService.changeUserRole(userId, role);
-  }
-
-  /**
-   * Publish or unpublish an event
-   */
-  async toggleEventPublished(eventId: string, published: boolean): Promise<Event> {
-    return eventService.toggleEventPublished(eventId, published);
-  }
-
-  /**
-   * Process refund for an order
-   */
-  async processRefund(paymentId: string, amount?: number, reason?: string): Promise<Payment> {
-    return paymentService.createRefund(paymentId, amount, reason);
-  }
-
-  /**
-   * Get system logs
-   */
-  async getSystemLogs(limit: number = 100): Promise<any[]> {
-    return prisma.systemLog.findMany({
-      take: limit,
-      orderBy: {
-        createdAt: 'desc'
+      if (!blockedUser) {
+        throw new Error('User is not blocked');
       }
-    });
-  }
 
-  /**
-   * Log system activity
-   */
-  async logSystemActivity(data: {
-    action: string;
-    userId?: string;
-    details?: any;
-    ip?: string;
-    userAgent?: string;
-  }): Promise<void> {
-    await prisma.systemLog.create({
-      data: {
-        action: data.action,
-        userId: data.userId,
-        details: data.details ? JSON.stringify(data.details) : null,
-        ip: data.ip,
-        userAgent: data.userAgent
-      }
-    });
-  }
+      // Unblock the user
+      await prisma.blockedUser.delete({
+        where: { userId }
+      });
 
-  /**
-   * Helper method to process new users over time
-   */
-  private processNewUsersOverTime(userData: { createdAt: Date }[]): { date: string; count: number }[] {
-    const last12Months = this.getLast12MonthsLabels();
-    const usersByMonth: Record<string, number> = {};
-
-    // Initialize all months with 0
-    last12Months.forEach(month => {
-      usersByMonth[month] = 0;
-    });
-
-    // Count users by month
-    userData.forEach(user => {
-      const date = user.createdAt;
-      const monthYear = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
-      
-      if (usersByMonth[monthYear] !== undefined) {
-        usersByMonth[monthYear]++;
-      }
-    });
-
-    // Convert to array format
-    return last12Months.map(month => ({
-      date: month,
-      count: usersByMonth[month]
-    }));
-  }
-
-  /**
-   * Helper method to process events over time
-   */
-  private processEventsOverTime(eventData: { createdAt: Date }[]): { date: string; count: number }[] {
-    const last12Months = this.getLast12MonthsLabels();
-    const eventsByMonth: Record<string, number> = {};
-
-    // Initialize all months with 0
-    last12Months.forEach(month => {
-      eventsByMonth[month] = 0;
-    });
-
-    // Count events by month
-    eventData.forEach(event => {
-      const date = event.createdAt;
-      const monthYear = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
-      
-      if (eventsByMonth[monthYear] !== undefined) {
-        eventsByMonth[monthYear]++;
-      }
-    });
-
-    // Convert to array format
-    return last12Months.map(month => ({
-      date: month,
-      count: eventsByMonth[month]
-    }));
-  }
-
-  /**
-   * Helper method to process sales over time
-   */
-  private processSalesOverTime(salesData: { createdAt: Date; totalAmount: number }[]): {
-    date: string;
-    orders: number;
-    revenue: number;
-  }[] {
-    const last12Months = this.getLast12MonthsLabels();
-    const salesByMonth: Record<string, { orders: number; revenue: number }> = {};
-
-    // Initialize all months with 0
-    last12Months.forEach(month => {
-      salesByMonth[month] = { orders: 0, revenue: 0 };
-    });
-
-    // Count orders and sum revenue by month
-    salesData.forEach(sale => {
-      const date = sale.createdAt;
-      const monthYear = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
-      
-      if (salesByMonth[monthYear] !== undefined) {
-        salesByMonth[monthYear].orders++;
-        salesByMonth[monthYear].revenue += sale.totalAmount;
-      }
-    });
-
-    // Convert to array format
-    return last12Months.map(month => ({
-      date: month,
-      orders: salesByMonth[month].orders,
-      revenue: salesByMonth[month].revenue
-    }));
-  }
-
-  /**
-   * Helper method to get labels for the last 12 months
-   */
-  private getLast12MonthsLabels(): string[] {
-    const labels = [];
-    const now = new Date();
-    
-    for (let i = 11; i >= 0; i--) {
-      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
-      labels.push(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`);
+      // Log admin action
+      await systemLogsService.logAdminAction({
+        adminId,
+        action: 'UNBLOCK_USER',
+        targetUserId: userId,
+        details: { previousReason: blockedUser.reason }
+      });
+    } catch (error) {
+      // Log error
+      await systemLogsService.logSystemActivity({
+        action: 'ADMIN_ERROR',
+        userId: adminId,
+        level: 'high',
+        result: 'error',
+        details: { error: error instanceof Error ? error.message : 'Unknown error', action: 'unblockUser', targetUserId: userId }
+      });
+      throw error;
     }
-    
-    return labels;
+  }
+
+  /**
+   * Get blocked users
+   */
+  async getBlockedUsers(): Promise<Array<{
+    userId: string;
+    user: {
+      name: string | null;
+      email: string;
+    };
+    reason: string;
+    blockedAt: Date;
+  }>> {
+    const blockedUsers = await prisma.blockedUser.findMany({
+      include: {
+        user: {
+          select: {
+            name: true,
+            email: true
+          }
+        }
+      },
+      orderBy: { blockedAt: 'desc' }
+    });
+
+    return blockedUsers.map(blocked => ({
+      userId: blocked.userId,
+      user: blocked.user,
+      reason: blocked.reason,
+      blockedAt: blocked.blockedAt
+    }));
+  }
+
+  /**
+   * Update user role
+   */
+  async updateUserRole(userId: string, newRole: string, adminId: string): Promise<User> {
+    try {
+      const user = await prisma.user.findUnique({
+        where: { id: userId }
+      });
+
+      if (!user) {
+        throw new Error('User not found');
+      }
+
+      const oldRole = user.role;
+      
+      const updatedUser = await prisma.user.update({
+        where: { id: userId },
+        data: { role: newRole }
+      });
+
+      // Log admin action
+      await systemLogsService.logAdminAction({
+        adminId,
+        action: 'UPDATE_USER_ROLE',
+        targetUserId: userId,
+        details: { 
+          oldRole, 
+          newRole,
+          userEmail: user.email
+        }
+      });
+
+      return updatedUser;
+    } catch (error) {
+      // Log error
+      await systemLogsService.logSystemActivity({
+        action: 'ADMIN_ERROR',
+        userId: adminId,
+        level: 'high',
+        result: 'error',
+        details: { error: error instanceof Error ? error.message : 'Unknown error', action: 'updateUserRole', targetUserId: userId }
+      });
+      throw error;
+    }
+  }
+
+  /**
+   * Delete user account (admin action)
+   */
+  async deleteUser(userId: string, adminId: string, reason?: string): Promise<void> {
+    try {
+      const user = await prisma.user.findUnique({
+        where: { id: userId },
+        select: { email: true, name: true }
+      });
+
+      if (!user) {
+        throw new Error('User not found');
+      }
+
+      // Check if user has active orders or tickets
+      const [activeOrders, activeTickets] = await Promise.all([
+        prisma.order.count({
+          where: { 
+            userId,
+            status: { in: ['pending_payment', 'paid'] }
+          }
+        }),
+        prisma.ticket.count({
+          where: {
+            userId,
+            status: { in: ['paid', 'pending'] }
+          }
+        })
+      ]);
+
+      if (activeOrders > 0 || activeTickets > 0) {
+        throw new Error('Cannot delete user with active orders or tickets');
+      }
+
+      // Delete user (cascade will handle related records)
+      await prisma.user.delete({
+        where: { id: userId }
+      });
+
+      // Log admin action
+      await systemLogsService.logAdminAction({
+        adminId,
+        action: 'DELETE_USER',
+        targetUserId: userId,
+        details: {
+          reason: reason || 'Admin deletion',
+          userEmail: user.email,
+          userName: user.name
+        }
+      });
+    } catch (error) {
+      // Log error
+      await systemLogsService.logSystemActivity({
+        action: 'ADMIN_ERROR',
+        userId: adminId,
+        level: 'critical',
+        result: 'error',
+        details: { error: error instanceof Error ? error.message : 'Unknown error', action: 'deleteUser', targetUserId: userId }
+      });
+      throw error;
+    }
+  }
+
+  /**
+   * Get user details for admin view
+   */
+  async getUserDetails(userId: string): Promise<{
+    user: User;
+    orders: Array<{
+      id: string;
+      totalPrice: number;
+      status: string;
+      createdAt: Date;
+    }>;
+    tickets: Array<{
+      id: string;
+      eventTitle: string;
+      status: string;
+      purchasedAt: Date;
+    }>;
+    loginHistory: Array<{
+      timestamp: Date;
+      ipAddress: string;
+      success: boolean;
+    }>;
+    isBlocked: boolean;
+    blockReason?: string;
+  }> {
+    const [user, orders, tickets, loginAttempts, blockedUser] = await Promise.all([
+      prisma.user.findUnique({
+        where: { id: userId }
+      }),
+      prisma.order.findMany({
+        where: { userId },
+        select: {
+          id: true,
+          totalPrice: true,
+          status: true,
+          createdAt: true
+        },
+        orderBy: { createdAt: 'desc' },
+        take: 10
+      }),
+      prisma.ticket.findMany({
+        where: { userId },
+        select: {
+          id: true,
+          status: true,
+          purchasedAt: true,
+          event: {
+            select: { title: true }
+          }
+        },
+        orderBy: { purchasedAt: 'desc' },
+        take: 10
+      }),
+      prisma.loginAttempt.findMany({
+        where: { userId },
+        select: {
+          timestamp: true,
+          ipAddress: true,
+          success: true
+        },
+        orderBy: { timestamp: 'desc' },
+        take: 20
+      }),
+      prisma.blockedUser.findUnique({
+        where: { userId }
+      })
+    ]);
+
+    if (!user) {
+      throw new Error('User not found');
+    }
+
+    return {
+      user,
+      orders,
+      tickets: tickets.map(ticket => ({
+        id: ticket.id,
+        eventTitle: ticket.event.title,
+        status: ticket.status,
+        purchasedAt: ticket.purchasedAt
+      })),
+      loginHistory: loginAttempts,
+      isBlocked: !!blockedUser,
+      blockReason: blockedUser?.reason
+    };
+  }
+
+  /**
+   * Get admin activity summary
+   */
+  async getAdminActivitySummary(adminId: string): Promise<{
+    totalActions: number;
+    todayActions: number;
+    recentActions: Array<{
+      action: string;
+      timestamp: Date;
+      targetUserId?: string;
+      details?: any;
+    }>;
+  }> {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const [totalActions, todayActions, recentActions] = await Promise.all([
+      prisma.auditLog.count({
+        where: {
+          userId: adminId,
+          action: { startsWith: 'ADMIN_' }
+        }
+      }),
+      prisma.auditLog.count({
+        where: {
+          userId: adminId,
+          action: { startsWith: 'ADMIN_' },
+          timestamp: { gte: today }
+        }
+      }),
+      prisma.auditLog.findMany({
+        where: {
+          userId: adminId,
+          action: { startsWith: 'ADMIN_' }
+        },
+        select: {
+          action: true,
+          timestamp: true,
+          resourceId: true,
+          details: true
+        },
+        orderBy: { timestamp: 'desc' },
+        take: 10
+      })
+    ]);
+
+    return {
+      totalActions,
+      todayActions,
+      recentActions: recentActions.map(action => ({
+        action: action.action,
+        timestamp: action.timestamp,
+        targetUserId: action.resourceId || undefined,
+        details: action.details ? JSON.parse(action.details) : null
+      }))
+    };
+  }
+
+  /**
+   * System maintenance operations
+   */
+  async performSystemMaintenance(adminId: string, operations: {
+    cleanupLogs?: boolean;
+    cleanupSessions?: boolean;
+    optimizeDatabase?: boolean;
+  }): Promise<{
+    results: {
+      operation: string;
+      success: boolean;
+      details: any;
+    }[];
+  }> {
+    const results = [];
+
+    try {
+      if (operations.cleanupLogs) {
+        const logCleanupResult = await systemLogsService.cleanupOldLogs(90);
+        results.push({
+          operation: 'cleanup_logs',
+          success: true,
+          details: logCleanupResult
+        });
+      }
+
+      if (operations.cleanupSessions) {
+        const expiredSessions = await prisma.userSession.deleteMany({
+          where: {
+            OR: [
+              { expiresAt: { lt: new Date() } },
+              { isActive: false },
+              { destroyedAt: { not: null } }
+            ]
+          }
+        });
+        results.push({
+          operation: 'cleanup_sessions',
+          success: true,
+          details: { deletedSessions: expiredSessions.count }
+        });
+      }
+
+      if (operations.optimizeDatabase) {
+        // This would typically involve database-specific optimization commands
+        // For now, we'll just analyze some statistics
+        const dbStats = await Promise.all([
+          prisma.user.count(),
+          prisma.event.count(),
+          prisma.order.count(),
+          prisma.ticket.count(),
+          prisma.auditLog.count()
+        ]);
+        
+        results.push({
+          operation: 'optimize_database',
+          success: true,
+          details: {
+            users: dbStats[0],
+            events: dbStats[1],
+            orders: dbStats[2],
+            tickets: dbStats[3],
+            auditLogs: dbStats[4]
+          }
+        });
+      }
+
+      // Log maintenance activity
+      await systemLogsService.logAdminAction({
+        adminId,
+        action: 'SYSTEM_MAINTENANCE',
+        details: { operations, results }
+      });
+
+      return { results };
+    } catch (error) {
+      await systemLogsService.logSystemActivity({
+        action: 'ADMIN_ERROR',
+        userId: adminId,
+        level: 'high',
+        result: 'error',
+        details: { error: error instanceof Error ? error.message : 'Unknown error', action: 'performSystemMaintenance' }
+      });
+      throw error;
+    }
   }
 }
 
-const adminService = new AdminService();
+// Export singleton instance
+export const adminService = new AdminService();
 export default adminService;

@@ -1,0 +1,39 @@
+@startuml "Nettoyage post-événement"
+
+title Processus automatique de nettoyage et archivage post-événement
+
+participant "Scheduler\n(Cron Job)" as Scheduler
+participant "Cleanup Service" as CleanupSvc
+participant "Redis Cache" as Redis
+participant "Database\n(PostgreSQL)" as DB
+participant "Archive Storage" as Archive
+
+== Nettoyage post-événement ==
+note over Scheduler: Tâche automatique après 24h
+
+Scheduler -> CleanupSvc: startPostEventCleanup(eventId)
+
+== Nettoyage du cache ==
+CleanupSvc -> Redis: Clean event cache
+Redis -> Redis: DEL event:{eventId}:*
+Redis -> Redis: DEL ticket:*:validation_cache (for this event)
+Redis -> Redis: DEL used_ticket:{ticketId} (for this event)
+Redis --> CleanupSvc: cache cleaned
+
+== Archivage des données ==
+CleanupSvc -> DB: Archive old validation data
+DB -> Archive: MOVE old ticket_validations TO archive_table
+DB -> DB: UPDATE tickets SET archived=true WHERE eventId=?
+DB -> DB: UPDATE events SET data_archived=true WHERE id=?
+DB --> CleanupSvc: data archived
+
+== Nettoyage des fichiers temporaires ==
+CleanupSvc -> CleanupSvc: Clean temporary QR codes
+CleanupSvc -> CleanupSvc: Clean session data
+CleanupSvc -> CleanupSvc: Clean old logs
+
+CleanupSvc --> Scheduler: cleanup completed
+
+note over Archive: Les données archivées incluent :\n• Historique des validations\n• Logs de sécurité\n• Métriques détaillées\n• Rapports générés\nConservation : 7 ans minimum
+
+@enduml

@@ -1,6 +1,6 @@
-import QRCode from 'qrcode';
-import crypto from 'crypto';
 import prisma from '@/lib/prisma';
+import crypto from 'crypto';
+import QRCode from 'qrcode';
 
 // QR Code configuration
 const QR_CODE_SIZE = parseInt(process.env.QR_CODE_SIZE || '200', 10);
@@ -13,23 +13,19 @@ export class QRCodeService {
   /**
    * Generate a QR code for a ticket
    */
-  async generateTicketQRCode(ticketId: string, orderId: string, userId: string): Promise<{
+  async generateTicketQRCode(ticketId: string, orderId?: string, userId?: string): Promise<{
     qrCodeDataUrl: string;
     qrCodeToken: string;
   }> {
     // Create a unique token for this ticket
     const qrCodeToken = this.generateQRCodeToken(ticketId, orderId, userId);
 
-    // Store the token in the database
-    await prisma.ticketQRCode.upsert({
-      where: { ticketId_orderId: { ticketId, orderId } },
-      update: { token: qrCodeToken, scanned: false },
-      create: {
-        ticketId,
-        orderId,
-        userId,
-        token: qrCodeToken,
-        scanned: false
+    // Update the ticket with QR code information
+    await prisma.ticket.update({
+      where: { id: ticketId },
+      data: {
+        currentQRCode: qrCodeToken,
+        qrCodeGeneratedAt: new Date()
       }
     });
 
@@ -67,48 +63,61 @@ export class QRCodeService {
     alreadyScanned?: boolean;
     ticketDetails?: any;
   }> {
-    // Find the QR code in the database
-    const qrCode = await prisma.ticketQRCode.findFirst({
-      where: { token },
+    // Find the ticket with this QR code token
+    const ticket = await prisma.ticket.findFirst({
+      where: { currentQRCode: token },
       include: {
-        ticket: {
+        event: true,
+        order: {
           include: {
-            event: true
+            user: {
+              select: {
+                id: true,
+                name: true,
+                email: true
+              }
+            }
           }
         },
-        order: true
+        user: {
+          select: {
+            id: true,
+            name: true,
+            email: true
+          }
+        }
       }
     });
 
-    if (!qrCode) {
+    if (!ticket) {
       return { valid: false };
     }
 
     // Check if the ticket has already been scanned
-    if (qrCode.scanned) {
+    if (ticket.isScanned) {
       return {
         valid: true,
-        ticketId: qrCode.ticketId,
-        orderId: qrCode.orderId,
-        userId: qrCode.userId,
+        ticketId: ticket.id,
+        orderId: ticket.orderId || undefined,
+        userId: ticket.userId || undefined,
         alreadyScanned: true,
         ticketDetails: {
-          ticket: qrCode.ticket,
-          order: qrCode.order,
-          scannedAt: qrCode.scannedAt
+          ticket,
+          order: ticket.order,
+          scannedAt: ticket.scannedAt
         }
       };
     }
 
     return {
       valid: true,
-      ticketId: qrCode.ticketId,
-      orderId: qrCode.orderId,
-      userId: qrCode.userId,
+      ticketId: ticket.id,
+      orderId: ticket.orderId || undefined,
+      userId: ticket.userId || undefined,
       alreadyScanned: false,
       ticketDetails: {
-        ticket: qrCode.ticket,
-        order: qrCode.order
+        ticket,
+        order: ticket.order
       }
     };
   }
@@ -118,10 +127,20 @@ export class QRCodeService {
    */
   async markTicketAsScanned(token: string): Promise<boolean> {
     try {
-      await prisma.ticketQRCode.update({
-        where: { token },
+      // First find the ticket with this QR code token
+      const ticket = await prisma.ticket.findFirst({
+        where: { currentQRCode: token }
+      });
+
+      if (!ticket) {
+        return false;
+      }
+
+      // Update the ticket
+      await prisma.ticket.update({
+        where: { id: ticket.id },
         data: {
-          scanned: true,
+          isScanned: true,
           scannedAt: new Date()
         }
       });
@@ -170,15 +189,13 @@ export class QRCodeService {
    * Get all scanned tickets for an event
    */
   async getScannedTicketsForEvent(eventId: string): Promise<any[]> {
-    return prisma.ticketQRCode.findMany({
+    return prisma.ticket.findMany({
       where: {
-        scanned: true,
-        ticket: {
-          eventId
-        }
+        eventId,
+        isScanned: true
       },
       include: {
-        ticket: true,
+        event: true,
         order: {
           include: {
             user: {
@@ -189,6 +206,13 @@ export class QRCodeService {
               }
             }
           }
+        },
+        user: {
+          select: {
+            id: true,
+            name: true,
+            email: true
+          }
         }
       },
       orderBy: {
@@ -198,7 +222,7 @@ export class QRCodeService {
   }
 
   /**
-   * Get scan statistics for an event
+   * Generate scan statistics for an event
    */
   async getEventScanStatistics(eventId: string): Promise<{
     totalTickets: number;
@@ -209,12 +233,10 @@ export class QRCodeService {
       prisma.ticket.count({
         where: { eventId }
       }),
-      prisma.ticketQRCode.count({
+      prisma.ticket.count({
         where: {
-          scanned: true,
-          ticket: {
-            eventId
-          }
+          eventId,
+          isScanned: true
         }
       })
     ]);
@@ -231,10 +253,141 @@ export class QRCodeService {
   }
 
   /**
+   * Rotate QR code for a ticket if needed based on rotation interval
+   */
+  async rotateQRCodeIfNeeded(ticketId: string): Promise<{
+    rotated: boolean;
+    qrCodeDataUrl?: string;
+    qrCodeToken?: string;
+  }> {
+    const ticket = await prisma.ticket.findUnique({
+      where: { id: ticketId },
+      include: {
+        order: true,
+        user: true
+      }
+    });
+
+    if (!ticket) {
+      throw new Error('Ticket not found');
+    }
+
+    // Check if rotation is needed
+    const now = new Date();
+    const rotationIntervalMs = ticket.qrRotationInterval * 60 * 60 * 1000; // Convert hours to milliseconds
+    const lastGenerated = ticket.qrCodeGeneratedAt;
+
+    if (!lastGenerated || (now.getTime() - lastGenerated.getTime()) >= rotationIntervalMs) {
+      // Generate new QR code
+      const result = await this.generateTicketQRCode(
+        ticketId,
+        ticket.orderId || undefined,
+        ticket.userId || undefined
+      );
+      
+      return {
+        rotated: true,
+        qrCodeDataUrl: result.qrCodeDataUrl,
+        qrCodeToken: result.qrCodeToken
+      };
+    }
+
+    return { rotated: false };
+  }
+
+  /**
+   * Get current QR code for a ticket (with automatic rotation if needed)
+   */
+  async getCurrentQRCode(ticketId: string): Promise<{
+    qrCodeDataUrl: string;
+    qrCodeToken: string;
+    isNew: boolean;
+  }> {
+    const ticket = await prisma.ticket.findUnique({
+      where: { id: ticketId },
+      include: {
+        order: true,
+        user: true
+      }
+    });
+
+    if (!ticket) {
+      throw new Error('Ticket not found');
+    }
+
+    // Check if we need to rotate or if there's no current QR code
+    const rotationResult = await this.rotateQRCodeIfNeeded(ticketId);
+    
+    if (rotationResult.rotated) {
+      return {
+        qrCodeDataUrl: rotationResult.qrCodeDataUrl!,
+        qrCodeToken: rotationResult.qrCodeToken!,
+        isNew: true
+      };
+    }
+
+    // Use existing QR code
+    if (ticket.currentQRCode) {
+      const qrCodeData = {
+        ticketId,
+        orderId: ticket.orderId,
+        token: ticket.currentQRCode
+      };
+
+      const qrCodeDataUrl = await QRCode.toDataURL(JSON.stringify(qrCodeData), {
+        errorCorrectionLevel: 'H',
+        margin: QR_CODE_MARGIN,
+        width: QR_CODE_SIZE,
+        color: {
+          dark: '#000000',
+          light: '#ffffff'
+        }
+      });
+
+      return {
+        qrCodeDataUrl,
+        qrCodeToken: ticket.currentQRCode,
+        isNew: false
+      };
+    }
+
+    // Generate new QR code if none exists
+    const result = await this.generateTicketQRCode(
+      ticketId,
+      ticket.orderId || undefined,
+      ticket.userId || undefined
+    );
+
+    return {
+      qrCodeDataUrl: result.qrCodeDataUrl,
+      qrCodeToken: result.qrCodeToken,
+      isNew: true
+    };
+  }
+
+  /**
+   * Set QR code rotation interval for a ticket
+   */
+  async setQRCodeRotationInterval(ticketId: string, intervalHours: number): Promise<boolean> {
+    try {
+      await prisma.ticket.update({
+        where: { id: ticketId },
+        data: {
+          qrRotationInterval: intervalHours
+        }
+      });
+      return true;
+    } catch (error) {
+      console.error('Error setting QR code rotation interval:', error);
+      return false;
+    }
+  }
+
+  /**
    * Generate a secure token for QR code
    */
-  private generateQRCodeToken(ticketId: string, orderId: string, userId: string): string {
-    const data = `${ticketId}-${orderId}-${userId}-${Date.now()}`;
+  private generateQRCodeToken(ticketId: string, orderId?: string, userId?: string): string {
+    const data = `${ticketId}-${orderId || ''}-${userId || ''}-${Date.now()}`;
     return crypto.createHash('sha256').update(data).digest('hex');
   }
 }

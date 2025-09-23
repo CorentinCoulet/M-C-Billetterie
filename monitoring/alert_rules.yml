@@ -1,0 +1,291 @@
+groups:
+  - name: billetterie_security_alerts
+    rules:
+      # Critical Security Alerts
+      - alert: HighFailedLogins
+        expr: increase(login_attempts_total{success="false"}[15m]) > 50
+        for: 0m
+        labels:
+          severity: critical
+          category: security
+        annotations:
+          summary: "High number of failed login attempts"
+          description: "{{ $value }} failed login attempts in the last 15 minutes"
+          runbook: "https://wiki.company.com/security/failed-logins"
+
+      - alert: AdminAccountCompromise
+        expr: increase(login_attempts_total{success="false",role="admin"}[5m]) > 3
+        for: 0m
+        labels:
+          severity: critical
+          category: security
+        annotations:
+          summary: "Potential admin account compromise"
+          description: "{{ $value }} failed admin login attempts in 5 minutes"
+          runbook: "https://wiki.company.com/security/admin-compromise"
+
+      - alert: SuspiciousPaymentActivity
+        expr: increase(payment_attempts_total{status="failed"}[10m]) > 10 AND increase(payment_unique_ips_total[10m]) > 5
+        for: 0m
+        labels:
+          severity: critical
+          category: security
+        annotations:
+          summary: "Suspicious payment activity detected"
+          description: "{{ $value }} failed payments from multiple IPs"
+          runbook: "https://wiki.company.com/security/payment-fraud"
+
+      - alert: BruteForceAttack
+        expr: increase(security_events_total{type="brute_force"}[5m]) > 10
+        for: 0m
+        labels:
+          severity: critical
+          category: security
+        annotations:
+          summary: "Brute force attack detected"
+          description: "{{ $value }} brute force attempts in 5 minutes"
+
+      - alert: SQLInjectionAttempt
+        expr: increase(security_events_total{type="sql_injection"}[5m]) > 5
+        for: 0m
+        labels:
+          severity: critical
+          category: security
+        annotations:
+          summary: "SQL injection attempts detected"
+          description: "{{ $value }} SQL injection attempts in 5 minutes"
+
+      - alert: UnauthorizedAdminAccess
+        expr: increase(admin_actions_total{result="unauthorized"}[5m]) > 3
+        for: 0m
+        labels:
+          severity: critical
+          category: security
+        annotations:
+          summary: "Unauthorized admin access attempts"
+          description: "{{ $value }} unauthorized admin access attempts"
+
+  - name: billetterie_operational_alerts
+    rules:
+      # Database Alerts
+      - alert: DatabaseDown
+        expr: up{job="postgres"} == 0
+        for: 30s
+        labels:
+          severity: critical
+          category: operational
+        annotations:
+          summary: "Database is down"
+          description: "PostgreSQL database has been down for more than 30 seconds"
+
+      - alert: DatabaseHighConnections
+        expr: pg_stat_database_numbackends / pg_settings_max_connections > 0.8
+        for: 2m
+        labels:
+          severity: warning
+          category: operational
+        annotations:
+          summary: "Database connection pool near limit"
+          description: "Database connections at {{ $value | humanizePercentage }}"
+
+      - alert: DatabaseSlowQueries
+        expr: pg_stat_activity_max_tx_duration > 30
+        for: 1m
+        labels:
+          severity: warning
+          category: operational
+        annotations:
+          summary: "Slow database queries detected"
+          description: "Longest running query: {{ $value }}s"
+
+      # Application Alerts
+      - alert: HighErrorRate
+        expr: rate(http_requests_total{status=~"5.."}[5m]) / rate(http_requests_total[5m]) > 0.05
+        for: 2m
+        labels:
+          severity: critical
+          category: operational
+        annotations:
+          summary: "High error rate detected"
+          description: "Error rate is {{ $value | humanizePercentage }}"
+
+      - alert: HighResponseTime
+        expr: histogram_quantile(0.95, rate(http_request_duration_seconds_bucket[5m])) > 2
+        for: 5m
+        labels:
+          severity: warning
+          category: operational
+        annotations:
+          summary: "High response time"
+          description: "95th percentile response time is {{ $value }}s"
+
+      - alert: ApplicationDown
+        expr: up{job="billetterie-api"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          category: operational
+        annotations:
+          summary: "Application is down"
+          description: "Billetterie API has been down for more than 1 minute"
+
+      - alert: HighMemoryUsage
+        expr: (node_memory_MemTotal_bytes - node_memory_MemAvailable_bytes) / node_memory_MemTotal_bytes > 0.85
+        for: 5m
+        labels:
+          severity: warning
+          category: operational
+        annotations:
+          summary: "High memory usage"
+          description: "Memory usage is {{ $value | humanizePercentage }}"
+
+      - alert: LowDiskSpace
+        expr: (node_filesystem_size_bytes - node_filesystem_free_bytes) / node_filesystem_size_bytes > 0.8
+        for: 5m
+        labels:
+          severity: warning
+          category: operational
+        annotations:
+          summary: "Low disk space"
+          description: "Disk usage is {{ $value | humanizePercentage }}"
+
+      - alert: RedisDown
+        expr: up{job="redis"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          category: operational
+        annotations:
+          summary: "Redis is down"
+          description: "Redis cache has been down for more than 1 minute"
+
+  - name: billetterie_business_alerts
+    rules:
+      # Payment Alerts
+      - alert: HighPaymentFailures
+        expr: rate(payment_attempts_total{status="failed"}[10m]) / rate(payment_attempts_total[10m]) > 0.2
+        for: 5m
+        labels:
+          severity: warning
+          category: business
+        annotations:
+          summary: "High payment failure rate"
+          description: "Payment failure rate is {{ $value | humanizePercentage }}"
+
+      - alert: NoPaymentsProcessed
+        expr: increase(payment_attempts_total{status="success"}[30m]) == 0
+        for: 30m
+        labels:
+          severity: warning
+          category: business
+        annotations:
+          summary: "No payments processed"
+          description: "No successful payments in the last 30 minutes"
+
+      - alert: RevenueDrop
+        expr: sum(rate(payment_amount_total[1h])) < 0.7 * sum(rate(payment_amount_total[1h] offset 24h))
+        for: 1h
+        labels:
+          severity: warning
+          category: business
+        annotations:
+          summary: "Significant revenue drop"
+          description: "Hourly revenue is 30% below yesterday's average"
+
+      # Ticket Sales Alerts
+      - alert: LowTicketSales
+        expr: increase(ticket_sales_total[1h]) < 10
+        for: 1h
+        labels:
+          severity: warning
+          category: business
+        annotations:
+          summary: "Low ticket sales"
+          description: "Only {{ $value }} tickets sold in the last hour"
+
+      - alert: HighTicketCancellations
+        expr: rate(ticket_cancellations_total[1h]) / rate(ticket_sales_total[1h]) > 0.1
+        for: 30m
+        labels:
+          severity: warning
+          category: business
+        annotations:
+          summary: "High ticket cancellation rate"
+          description: "Cancellation rate is {{ $value | humanizePercentage }}"
+
+  - name: billetterie_performance_alerts
+    rules:
+      # Performance Monitoring
+      - alert: HighCPUUsage
+        expr: 100 - (avg by(instance) (irate(node_cpu_seconds_total{mode="idle"}[5m])) * 100) > 80
+        for: 5m
+        labels:
+          severity: warning
+          category: performance
+        annotations:
+          summary: "High CPU usage"
+          description: "CPU usage is {{ $value }}% on {{ $labels.instance }}"
+
+      - alert: HighNetworkTraffic
+        expr: rate(node_network_receive_bytes_total[5m]) > 100 * 1024 * 1024  # 100MB/s
+        for: 5m
+        labels:
+          severity: warning
+          category: performance
+        annotations:
+          summary: "High network traffic"
+          description: "Network receive rate is {{ $value | humanize }}B/s"
+
+      - alert: TooManyOpenFiles
+        expr: node_filefd_allocated / node_filefd_maximum > 0.8
+        for: 5m
+        labels:
+          severity: warning
+          category: performance
+        annotations:
+          summary: "Too many open files"
+          description: "Open file descriptors at {{ $value | humanizePercentage }}"
+
+  - name: billetterie_backup_alerts
+    rules:
+      - alert: BackupFailed
+        expr: time() - backup_last_success_timestamp > 25 * 3600  # 25 hours
+        for: 0m
+        labels:
+          severity: critical
+          category: operational
+        annotations:
+          summary: "Database backup failed"
+          description: "Database backup has not succeeded for over 24 hours"
+
+      - alert: BackupSizeAnomaly
+        expr: abs(backup_size_bytes - avg_over_time(backup_size_bytes[7d])) / avg_over_time(backup_size_bytes[7d]) > 0.5
+        for: 0m
+        labels:
+          severity: warning
+          category: operational
+        annotations:
+          summary: "Backup size anomaly"
+          description: "Backup size differs significantly from 7-day average"
+
+  - name: billetterie_mfa_alerts
+    rules:
+      - alert: MFABypassAttempt
+        expr: increase(mfa_bypass_attempts_total[5m]) > 3
+        for: 0m
+        labels:
+          severity: critical
+          category: security
+        annotations:
+          summary: "MFA bypass attempts detected"
+          description: "{{ $value }} MFA bypass attempts in 5 minutes"
+
+      - alert: AdminWithoutMFA
+        expr: admin_users_without_mfa_total > 0
+        for: 0m
+        labels:
+          severity: critical
+          category: security
+        annotations:
+          summary: "Admin users without MFA"
+          description: "{{ $value }} admin users do not have MFA enabled"

@@ -1,0 +1,44 @@
+@startuml configuration-entities
+
+!theme aws-orange
+skinparam linetype ortho
+skinparam backgroundColor #FFFFFF
+
+title Entités de Configuration
+
+' ========== ENTITÉS DE CONFIGURATION ==========
+
+entity Theme {
+    * **id** : String <<PK>>
+    --
+    * **name** : String
+    description : String
+    * **imagePath** : String
+    color : String
+    createdAt : DateTime
+}
+
+entity Review {
+    * **id** : String <<PK>>
+    --
+    userId : String <<FK>>
+    eventId : String <<FK>>
+    * **rating** : Int
+    comment : String
+    createdAt : DateTime
+}
+
+entity Translation {
+    * **id** : String <<PK>>
+    --
+    * **entityType** : String
+    * **entityId** : String
+    * **locale** : String
+    * **field** : String
+    * **value** : String
+}
+
+' Note: Category et Venue sont dans event-entities
+' Note: Les relations vers User et Event sont dans global-overview
+
+@enduml

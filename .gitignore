@@ -4,6 +4,11 @@ npm-debug.log
 yarn-error.log
 .pnpm-debug.log
 
+# Package managers - Force yarn usage
+package-lock.json
+pnpm-lock.yaml
+.npmrc
+
 # Build
 .next/
 out/
@@ -36,6 +41,3 @@ Thumbs.db
 # Editor
 .vscode/
 .idea/
-
-# diagrams
-diagrams

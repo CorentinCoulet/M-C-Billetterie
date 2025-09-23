@@ -1,0 +1,29 @@
+@startuml admin-security-alerts
+!include admin-common.puml
+title Gestion des alertes sécurité
+
+== Gestion des alertes ==
+SecuritySvc -> SecuritySvc: Détection anomalie (ex: trop de tentatives)
+SecuritySvc -> Redis: INCR failed_login:{ip}
+Redis --> SecuritySvc: attempt count
+
+alt Seuil dépassé
+    SecuritySvc -> SecuritySvc: Trigger security alert
+    SecuritySvc -> Redis: SET security:alert:{id} = {data}
+    SecuritySvc -> DB: INSERT INTO security_alerts (type, data, severity)
+
+    SecuritySvc -> NotifSvc: notifyAdmins(alert)
+    NotifSvc -> EmailSvc: sendSecurityAlert(admins, alert)
+
+    SecuritySvc -> Monitoring: Send metrics
+    note right
+    Prometheus counter increment
+    end note
+
+    alt IP blocking nécessaire
+        SecuritySvc -> Redis: SET blocked:ip:{ip} = true (expire 1h)
+        SecuritySvc -> AuditSvc: logIPBlocked(ip, reason)
+    end
+end
+
+@enduml

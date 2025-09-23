@@ -1,0 +1,32 @@
+@startuml admin-gdpr-deletion
+!include admin-common.puml
+title Suppression de données utilisateur (RGPD)
+
+== Suppression données utilisateur ==
+Admin -> Frontend: Traiter demande suppression RGPD
+Frontend -> API: POST /api/admin/users/{userId}/gdpr-delete
+note right
+Body: {confirmDeletion: true, reason}
+end note
+API -> Auth: Vérifier permissions admin
+Auth --> API: access granted
+
+API -> AdminCtrl: processGDPRDeletion(userId, reason)
+AdminCtrl -> UserSvc: anonymizeUserData(userId)
+
+UserSvc -> DB: BEGIN TRANSACTION
+UserSvc -> DB: UPDATE users SET email=deleted_user_{id}@deleted.com, name=[DELETED]
+UserSvc -> DB: DELETE FROM user_sessions WHERE userId=?
+UserSvc -> DB: UPDATE orders SET customer_email=[DELETED] WHERE userId=?
+UserSvc -> DB: INSERT INTO deleted_users (original_id, deletion_reason, deleted_by)
+UserSvc -> DB: COMMIT TRANSACTION
+
+UserSvc -> AuditSvc: logGDPRDeletion(userId, adminId, reason)
+AuditSvc -> DB: INSERT INTO audit_logs (action: gdpr_user_deleted)
+
+UserSvc --> AdminCtrl: user data anonymized
+AdminCtrl --> API: deletion complete
+API --> Frontend: user deleted
+Frontend --> Admin: Données utilisateur supprimées (RGPD)
+
+@enduml

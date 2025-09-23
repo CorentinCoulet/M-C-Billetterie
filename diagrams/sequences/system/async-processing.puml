@@ -1,0 +1,40 @@
+@startuml "Traitement asynchrone"
+
+title Traitement asynchrone des commandes
+
+participant "Business Services" as Services
+participant "Message Queue\n(Bull/Redis)" as Queue
+participant "Database\n(PostgreSQL)" as DB
+participant "Payment Gateway\n(Stripe)" as Stripe
+participant "File Storage\n(AWS S3)" as Storage
+participant "Email Service\n(SMTP)" as Email
+
+Services -> Queue: addJob('process_order', {orderId})
+Queue -> Queue: Store job in Redis
+Queue -> Queue: Worker picks up job
+
+Queue -> Services: processOrder(orderId)
+Services -> DB: BEGIN TRANSACTION
+Services -> DB: Update order status
+Services -> Stripe: Process payment
+Stripe --> Services: Payment confirmation
+Services -> DB: Update payment status
+Services -> DB: COMMIT TRANSACTION
+
+Services -> Queue: addJob('send_email', {orderId})
+Services -> Queue: addJob('generate_tickets', {orderId})
+
+par
+    Queue -> Email: Send confirmation email
+    Email -> Email: Render template
+    Email -> Storage: Get ticket attachments
+    Storage --> Email: PDF files
+    Email -> Email: Send SMTP
+else
+    Queue -> Services: Generate ticket QR codes
+    Services -> Storage: Upload ticket PDFs
+    Storage --> Services: File URLs
+    Services -> DB: Update ticket records
+end
+
+@enduml

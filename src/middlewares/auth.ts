@@ -1,7 +1,7 @@
 import prisma from '@/lib/prisma';
 import { NextApiRequest, NextApiResponse } from 'next';
 import { NextHandler } from 'next-connect';
-import authService from '../modules/auth/auth.service';
+import authService from '../services/authService';
 
 export interface AuthenticatedRequest extends NextApiRequest {
   user?: {
@@ -36,7 +36,7 @@ export async function isAuthenticated(
     }
 
     // Vérifie la session en base (expiration, existence)
-    const session = await prisma.session.findUnique({ where: { id: user.sessionId } });
+    const session = await prisma.userSession.findUnique({ where: { id: user.sessionId } });
     if (!session || session.expiresAt < new Date()) {
       return res.status(401).json({ message: 'Session expirée' });
     }

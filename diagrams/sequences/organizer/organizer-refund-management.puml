@@ -1,0 +1,45 @@
+@startuml "Gestion des remboursements - Organisateur"
+
+title Traitement des remboursements
+
+actor "Organisateur" as Organizer
+participant "Frontend\n(Next.js)" as Frontend
+participant "API Gateway\n(Rate Limiter)" as API
+participant "Auth Middleware" as Auth
+participant "Order Controller" as OrderCtrl
+participant "Payment Service" as PaymentSvc
+participant "Notification Service" as NotifSvc
+participant "Database\n(PostgreSQL)" as DB
+participant "Stripe" as Stripe
+
+== Gestion des remboursements ==
+Organizer -> Frontend: Traiter remboursement
+Frontend -> API: POST /api/orders/{orderId}/refund
+note right: Body: {reason, amount}
+API -> Auth: Vérifier propriété via événement
+Auth -> DB: SELECT order WITH event WHERE order.id=? AND event.organizerId=?
+DB --> Auth: access granted
+
+API -> OrderCtrl: processRefund(orderId, refundData)
+OrderCtrl -> PaymentSvc: createRefund(orderId, amount, reason)
+PaymentSvc -> DB: SELECT payment WHERE orderId=?
+DB --> PaymentSvc: payment data
+
+PaymentSvc -> Stripe: Create refund
+note right: {payment_intent, amount, reason}
+Stripe --> PaymentSvc: refund created
+
+PaymentSvc -> DB: UPDATE payment SET refundedAmount=?, refundedAt=NOW()
+PaymentSvc -> DB: UPDATE order SET status='refunded'
+PaymentSvc -> DB: UPDATE tickets SET status='cancelled' WHERE orderId=?
+DB --> PaymentSvc: refund processed
+
+PaymentSvc -> NotifSvc: notifyRefund(userId, orderId, amount)
+NotifSvc -> NotifSvc: sendRefundNotification(user, refund)
+
+PaymentSvc --> OrderCtrl: refund success
+OrderCtrl --> API: refund processed
+API --> Frontend: refund successful
+Frontend --> Organizer: "Remboursement traité"
+
+@enduml

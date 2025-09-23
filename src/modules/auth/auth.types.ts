@@ -1,50 +1,27 @@
-import { User } from '@prisma/client';
-
-export interface RegisterUserDto {
+// Types spécifiques au module auth
+export interface LoginRequest {
   email: string;
   password: string;
-  name?: string;
 }
 
-export interface LoginUserDto {
+export interface RegisterRequest {
+  name: string;
   email: string;
   password: string;
+  role?: string;
 }
 
 export interface AuthResponse {
-  user: Omit<User, 'password'>;
+  user: {
+    id: string;
+    email: string;
+    role?: string;
+    sessionId?: string;
+  };
   token: string;
 }
 
-export interface TokenPayload {
-  userId: string;
-  email: string;
-}
-
-export interface RefreshTokenDto {
-  refreshToken: string;
-}
-
-export interface ChangePasswordDto {
-  oldPassword: string;
-  newPassword: string;
-}
-
-export interface ResetPasswordRequestDto {
-  email: string;
-}
-
-export interface ResetPasswordDto {
-  token: string;
-  newPassword: string;
-}
-
-export interface SessionData {
-  id: string;
-  userId: string;
-  token: string;
-  ipAddress?: string;
-  userAgent?: string;
-  createdAt: Date;
-  expiresAt: Date;
+export interface AuthError {
+  code: string;
+  message: string;
 }

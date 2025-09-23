@@ -1,0 +1,44 @@
+@startuml admin-event-suspend
+!include admin-common.puml
+title Suspension d'un événement
+
+== Suspendre un événement ==
+Admin -> Frontend: Suspendre événement inapproprié
+Frontend -> API: POST /api/admin/events/{eventId}/suspend
+note right
+Body: {reason, notifyUsers: true}
+end note
+API -> Auth: Vérifier permissions admin
+Auth --> API: access granted
+
+API -> AdminCtrl: suspendEvent(eventId, suspensionData)
+AdminCtrl -> EventSvc: getEventById(eventId)
+EventSvc -> DB: SELECT event WITH organizer WHERE id=?
+DB --> EventSvc: event data
+
+AdminCtrl -> EventSvc: suspendEvent(event, reason)
+EventSvc -> DB: UPDATE events SET status=suspended, suspendedAt=NOW(), suspendedBy=?
+EventSvc -> DB: UPDATE tickets SET status=cancelled WHERE eventId=?
+
+EventSvc -> OrderSvc: processEventSuspensionRefunds(eventId)
+loop Pour chaque commande payée
+    OrderSvc -> PaymentSvc: automaticRefund(orderId, event_suspended)
+    PaymentSvc -> Stripe: Create refund
+    PaymentSvc -> DB: UPDATE orders SET status=refunded
+end
+
+EventSvc -> NotifSvc: notifyEventSuspension(eventId, reason)
+NotifSvc -> DB: SELECT users FROM orders WHERE eventId=?
+loop Pour chaque participant
+    NotifSvc -> EmailSvc: sendEventSuspensionNotification(user, event, reason)
+end
+
+EventSvc -> AuditSvc: logEventSuspended(eventId, adminId, reason)
+AuditSvc -> DB: INSERT INTO audit_logs (action: event_suspended)
+
+EventSvc --> AdminCtrl: event suspended
+AdminCtrl --> API: suspension complete
+API --> Frontend: event suspended
+Frontend --> Admin: Événement suspendu - Remboursements initiés
+
+@enduml

@@ -1,0 +1,69 @@
+@startuml event-creation
+!theme aws-orange
+title Création d'Événement
+
+start
+:Organisateur se connecte;
+:Accède au formulaire de création d'événement;
+
+partition "Informations Générales" {
+  :Saisit titre de l'événement;
+  :Saisit description;
+  :Sélectionne catégorie;
+  :Définit date et heure;
+  :Saisit lieu/adresse;
+  :Upload image de couverture;
+}
+
+partition "Configuration Billetterie" {
+  :Définit types de billets;
+  note right
+    - Nom du type
+    - Prix
+    - Quantité disponible
+    - Description
+  end note
+  
+  :Configure dates de vente;
+  :Définit politique de remboursement;
+  :Active/désactive les promotions;
+}
+
+:Valide le formulaire;
+
+if (Données valides ?) then (non)
+  :Affiche erreurs de validation;
+  stop
+else (oui)
+  :Vérifie disponibilité du lieu;
+  
+  if (Lieu disponible ?) then (non)
+    :Affiche conflit de planning;
+    stop
+  else (oui)
+    :Calcule prix total avec commissions;
+    :Affiche récapitulatif;
+    
+    if (Organisateur confirme ?) then (non)
+      stop
+    else (oui)
+      fork
+        :Crée l'événement en base;
+        :Génère QR codes pour les billets;
+        :Configure système de validation;
+      fork again
+        :Envoie notification équipe;
+        :Programme rappels automatiques;
+      fork again
+        :Indexe pour la recherche;
+        :Met à jour cache;
+      end fork
+      
+      :Publie l'événement;
+      :Affiche confirmation avec lien;
+    endif
+  endif
+endif
+
+stop
+@enduml

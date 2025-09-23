@@ -1,7 +1,10 @@
+import fs from 'fs/promises';
+import Handlebars from 'handlebars';
 import nodemailer from 'nodemailer';
+import path from 'path';
 import { UserWithRelations } from '../types/user';
 
-// This will be imported from the mailer.ts utility file once created
+// Email transporter configuration
 const transporter = nodemailer.createTransport({
   host: process.env.EMAIL_HOST,
   port: parseInt(process.env.EMAIL_PORT || '587'),
@@ -12,37 +15,147 @@ const transporter = nodemailer.createTransport({
   },
 });
 
-const FROM_EMAIL = process.env.EMAIL_FROM || 'noreply@billetterie.com';
-const APP_NAME = process.env.APP_NAME || 'Billetterie';
+const FROM_EMAIL = process.env.EMAIL_FROM || 'noreply@ticketing.com';
+const APP_NAME = process.env.APP_NAME || 'M&C Ticketing';
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
 
 /**
- * Service for email notifications
+ * Email service with Handlebars templates for notifications
  */
 export class EmailService {
+  private templatesPath = path.join(process.cwd(), 'src/templates/emails');
+  private compiledTemplates = new Map<string, Handlebars.TemplateDelegate>();
+
+  constructor() {
+    // Register common Handlebars helpers
+    this.registerHelpers();
+  }
+
+  /**
+   * Register Handlebars helpers for templates
+   */
+  private registerHelpers(): void {
+    // Format date helper
+    Handlebars.registerHelper('formatDate', (date: Date) => {
+      return new Intl.DateTimeFormat('en-US', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      }).format(new Date(date));
+    });
+
+    // Format currency helper
+    Handlebars.registerHelper('formatCurrency', (amount: number) => {
+      return new Intl.NumberFormat('en-US', {
+        style: 'currency',
+        currency: 'USD'
+      }).format(amount);
+    });
+
+    // Calculate total helper
+    Handlebars.registerHelper('calculateTotal', (price: number, quantity: number) => {
+      return new Intl.NumberFormat('en-US', {
+        style: 'currency',
+        currency: 'USD'
+      }).format(price * quantity);
+    });
+
+    // Time until event helper
+    Handlebars.registerHelper('timeUntilEvent', (eventDate: Date) => {
+      const now = new Date();
+      const event = new Date(eventDate);
+      const diffMs = event.getTime() - now.getTime();
+      const diffHours = Math.ceil(diffMs / (1000 * 60 * 60));
+      return diffHours;
+    });
+  }
+
+  /**
+   * Load and compile a Handlebars template
+   */
+  private async loadTemplate(templateName: string): Promise<Handlebars.TemplateDelegate> {
+    // Check if template is already compiled
+    if (this.compiledTemplates.has(templateName)) {
+      return this.compiledTemplates.get(templateName)!;
+    }
+
+    try {
+      // Load layout template first
+      const layoutPath = path.join(this.templatesPath, 'layout.hbs');
+      const layoutSource = await fs.readFile(layoutPath, 'utf-8');
+      
+      // Load specific template
+      const templatePath = path.join(this.templatesPath, `${templateName}.hbs`);
+      const templateSource = await fs.readFile(templatePath, 'utf-8');
+
+      // Replace {{> content}} in layout with the actual template content
+      const fullTemplate = layoutSource.replace('{{> content}}', templateSource);
+      
+      // Compile the template
+      const compiled = Handlebars.compile(fullTemplate);
+      
+      // Cache the compiled template
+      this.compiledTemplates.set(templateName, compiled);
+      
+      return compiled;
+    } catch (error) {
+      console.error(`Error loading template ${templateName}:`, error);
+      throw new Error(`Failed to load email template: ${templateName}`);
+    }
+  }
+
+  /**
+   * Render template with data
+   */
+  private async renderTemplate(templateName: string, data: any): Promise<string> {
+    const template = await this.loadTemplate(templateName);
+    
+    // Add common template variables
+    const templateData = {
+      ...data,
+      appName: APP_NAME,
+      baseUrl: APP_URL,
+      supportEmail: process.env.SUPPORT_EMAIL || FROM_EMAIL,
+      currentYear: new Date().getFullYear(),
+      logoUrl: `${APP_URL}/images/logo.png`,
+    };
+
+    return template(templateData);
+  }
+
   /**
    * Send a welcome email to a new user
    */
-  async sendWelcomeEmail(user: UserWithRelations): Promise<void> {
+  async sendWelcomeEmail(user: UserWithRelations, promoCode?: string): Promise<void> {
+    const html = await this.renderTemplate('welcome', {
+      userName: user.name || user.email.split('@')[0],
+      userEmail: user.email,
+      userId: user.id,
+      creationDate: new Date().toLocaleDateString('en-US'),
+      promoCode: promoCode || 'WELCOME20',
+      discountPercent: 20,
+      promoExpiration: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toLocaleDateString('en-US'),
+      eventsUrl: `${APP_URL}/events`,
+      profileUrl: `${APP_URL}/profile`,
+      notificationsUrl: `${APP_URL}/settings/notifications`,
+      dashboardUrl: `${APP_URL}/dashboard`,
+      appStoreUrl: '#', // To be replaced with real URLs
+      playStoreUrl: '#',
+      chatUrl: `${APP_URL}/support`,
+      helpUrl: `${APP_URL}/help`,
+      facebookUrl: '#',
+      twitterUrl: '#',
+      instagramUrl: '#',
+      linkedinUrl: '#',
+    });
+
     const mailOptions = {
       from: `"${APP_NAME}" <${FROM_EMAIL}>`,
       to: user.email,
-      subject: `Bienvenue sur ${APP_NAME}`,
-      html: `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-          <h1 style="color: #333;">Bienvenue sur ${APP_NAME} !</h1>
-          <p>Bonjour ${user.name || user.email},</p>
-          <p>Nous sommes ravis de vous accueillir sur notre plateforme de billetterie en ligne.</p>
-          <p>Vous pouvez dès maintenant explorer les événements disponibles et acheter des billets en toute simplicité.</p>
-          <p>
-            <a href="${APP_URL}/events" style="background-color: #4CAF50; color: white; padding: 10px 15px; text-decoration: none; border-radius: 4px; display: inline-block; margin-top: 10px;">
-              Découvrir les événements
-            </a>
-          </p>
-          <p>À bientôt sur ${APP_NAME} !</p>
-          <p>L'équipe ${APP_NAME}</p>
-        </div>
-      `
+      subject: `🎉 Welcome to ${APP_NAME}!`,
+      html
     };
 
     await transporter.sendMail(mailOptions);
@@ -53,26 +166,23 @@ export class EmailService {
    */
   async sendVerificationEmail(user: UserWithRelations, token: string): Promise<void> {
     const verificationLink = `${APP_URL}/verify-email?token=${token}`;
+    const expirationDate = new Date(Date.now() + 24 * 60 * 60 * 1000);
+
+    const html = await this.renderTemplate('registration-confirmation', {
+      userName: user.name || user.email.split('@')[0],
+      userEmail: user.email,
+      verificationUrl: verificationLink,
+      validityHours: 24,
+      expirationDate: expirationDate.toLocaleDateString('en-US'),
+      expirationTime: expirationDate.toLocaleTimeString('en-US'),
+      loginUrl: `${APP_URL}/login`,
+    });
 
     const mailOptions = {
       from: `"${APP_NAME}" <${FROM_EMAIL}>`,
       to: user.email,
-      subject: `Vérifiez votre adresse email - ${APP_NAME}`,
-      html: `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-          <h1 style="color: #333;">Vérifiez votre adresse email</h1>
-          <p>Bonjour ${user.name || user.email},</p>
-          <p>Merci de vous être inscrit sur ${APP_NAME}. Veuillez cliquer sur le lien ci-dessous pour vérifier votre adresse email :</p>
-          <p>
-            <a href="${verificationLink}" style="background-color: #4CAF50; color: white; padding: 10px 15px; text-decoration: none; border-radius: 4px; display: inline-block; margin-top: 10px;">
-              Vérifier mon email
-            </a>
-          </p>
-          <p>Si vous n'avez pas créé de compte sur ${APP_NAME}, vous pouvez ignorer cet email.</p>
-          <p>Ce lien expirera dans 24 heures.</p>
-          <p>L'équipe ${APP_NAME}</p>
-        </div>
-      `
+      subject: `✅ Confirm your registration - ${APP_NAME}`,
+      html
     };
 
     await transporter.sendMail(mailOptions);
@@ -81,28 +191,37 @@ export class EmailService {
   /**
    * Send a password reset email
    */
-  async sendPasswordResetEmail(user: UserWithRelations, token: string): Promise<void> {
+  async sendPasswordResetEmail(
+    user: UserWithRelations, 
+    token: string, 
+    requestInfo?: { 
+      ip?: string; 
+      userAgent?: string; 
+      location?: string; 
+    }
+  ): Promise<void> {
     const resetLink = `${APP_URL}/reset-password?token=${token}`;
+    const expirationDate = new Date(Date.now() + 60 * 60 * 1000);
+
+    const html = await this.renderTemplate('password-reset', {
+      userName: user.name || user.email.split('@')[0],
+      userEmail: user.email,
+      resetUrl: resetLink,
+      validityHours: 1,
+      expirationDate: expirationDate.toLocaleDateString('en-US'),
+      expirationTime: expirationDate.toLocaleTimeString('en-US'),
+      requestDate: new Date().toLocaleDateString('en-US'),
+      requestTime: new Date().toLocaleTimeString('en-US'),
+      userIpAddress: requestInfo?.ip || 'Not available',
+      userAgent: requestInfo?.userAgent || 'Not available',
+      userLocation: requestInfo?.location || 'Not available',
+    });
 
     const mailOptions = {
       from: `"${APP_NAME}" <${FROM_EMAIL}>`,
       to: user.email,
-      subject: `Réinitialisation de mot de passe - ${APP_NAME}`,
-      html: `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-          <h1 style="color: #333;">Réinitialisation de mot de passe</h1>
-          <p>Bonjour ${user.name || user.email},</p>
-          <p>Vous avez demandé la réinitialisation de votre mot de passe. Veuillez cliquer sur le lien ci-dessous pour créer un nouveau mot de passe :</p>
-          <p>
-            <a href="${resetLink}" style="background-color: #4CAF50; color: white; padding: 10px 15px; text-decoration: none; border-radius: 4px; display: inline-block; margin-top: 10px;">
-              Réinitialiser mon mot de passe
-            </a>
-          </p>
-          <p>Si vous n'avez pas demandé cette réinitialisation, vous pouvez ignorer cet email.</p>
-          <p>Ce lien expirera dans 1 heure.</p>
-          <p>L'équipe ${APP_NAME}</p>
-        </div>
-      `
+      subject: `🔐 Password Reset - ${APP_NAME}`,
+      html
     };
 
     await transporter.sendMail(mailOptions);
@@ -117,120 +236,74 @@ export class EmailService {
     orderId: string,
     orderDetails: {
       totalAmount: number;
+      orderDate: Date;
       tickets: Array<{
         name: string;
         quantity: number;
         price: number;
         eventName: string;
         eventDate: Date;
+        eventLocation: string;
       }>;
     }
   ): Promise<void> {
-    const orderLink = `${APP_URL}/orders/${orderId}`;
-
-    const ticketsList = orderDetails.tickets.map(ticket => `
-      <tr>
-        <td style="padding: 10px; border-bottom: 1px solid #ddd;">${ticket.name}</td>
-        <td style="padding: 10px; border-bottom: 1px solid #ddd;">${ticket.eventName}</td>
-        <td style="padding: 10px; border-bottom: 1px solid #ddd;">${new Date(ticket.eventDate).toLocaleDateString()}</td>
-        <td style="padding: 10px; border-bottom: 1px solid #ddd;">${ticket.quantity}</td>
-        <td style="padding: 10px; border-bottom: 1px solid #ddd;">${ticket.price.toFixed(2)} €</td>
-        <td style="padding: 10px; border-bottom: 1px solid #ddd;">${(ticket.price * ticket.quantity).toFixed(2)} €</td>
-      </tr>
-    `).join('');
+    const html = await this.renderTemplate('order-confirmation', {
+      customerName: name || email.split('@')[0],
+      customerEmail: email,
+      orderId,
+      orderDate: orderDetails.orderDate,
+      totalAmount: orderDetails.totalAmount,
+      tickets: orderDetails.tickets,
+      orderUrl: `${APP_URL}/orders/${orderId}`,
+      ticketsUrl: `${APP_URL}/tickets`,
+      invoiceUrl: `${APP_URL}/orders/${orderId}/invoice`,
+      paymentMethod: 'Credit Card', // To be retrieved from payment data
+    });
 
     const mailOptions = {
       from: `"${APP_NAME}" <${FROM_EMAIL}>`,
       to: email,
-      subject: `Confirmation de commande #${orderId} - ${APP_NAME}`,
-      html: `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-          <h1 style="color: #333;">Confirmation de commande</h1>
-          <p>Bonjour ${name || email},</p>
-          <p>Nous vous remercions pour votre commande. Voici le récapitulatif de votre achat :</p>
-
-          <table style="width: 100%; border-collapse: collapse; margin-top: 20px;">
-            <thead>
-              <tr style="background-color: #f2f2f2;">
-                <th style="padding: 10px; text-align: left;">Billet</th>
-                <th style="padding: 10px; text-align: left;">Événement</th>
-                <th style="padding: 10px; text-align: left;">Date</th>
-                <th style="padding: 10px; text-align: left;">Quantité</th>
-                <th style="padding: 10px; text-align: left;">Prix unitaire</th>
-                <th style="padding: 10px; text-align: left;">Total</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${ticketsList}
-            </tbody>
-            <tfoot>
-              <tr style="font-weight: bold;">
-                <td colspan="5" style="padding: 10px; text-align: right;">Total :</td>
-                <td style="padding: 10px;">${orderDetails.totalAmount.toFixed(2)} €</td>
-              </tr>
-            </tfoot>
-          </table>
-
-          <p style="margin-top: 20px;">
-            <a href="${orderLink}" style="background-color: #4CAF50; color: white; padding: 10px 15px; text-decoration: none; border-radius: 4px; display: inline-block;">
-              Voir ma commande
-            </a>
-          </p>
-
-          <p>Vous recevrez vos billets par email dans un message séparé.</p>
-          <p>Merci de votre confiance !</p>
-          <p>L'équipe ${APP_NAME}</p>
-        </div>
-      `
+      subject: `✅ Order Confirmation #${orderId} - ${APP_NAME}`,
+      html
     };
 
     await transporter.sendMail(mailOptions);
   }
 
   /**
-   * Send ticket email with QR code
+   * Send ticket email with QR codes
    */
   async sendTicketEmail(
     email: string,
     name: string | null,
+    orderId: string,
     tickets: Array<{
       id: string;
       name: string;
       eventName: string;
       eventDate: Date;
       eventLocation: string;
-      qrCodeUrl: string;
+      qrCode: string;
+      qrCodeUrl?: string;
+      instructions?: string;
     }>
   ): Promise<void> {
-    const ticketsList = tickets.map(ticket => `
-      <div style="margin-bottom: 30px; border: 1px solid #ddd; border-radius: 8px; padding: 20px;">
-        <h2 style="color: #333; margin-top: 0;">${ticket.eventName}</h2>
-        <p><strong>Billet :</strong> ${ticket.name}</p>
-        <p><strong>Date :</strong> ${new Date(ticket.eventDate).toLocaleDateString()} à ${new Date(ticket.eventDate).toLocaleTimeString()}</p>
-        <p><strong>Lieu :</strong> ${ticket.eventLocation}</p>
-        <div style="text-align: center; margin-top: 20px;">
-          <img src="${ticket.qrCodeUrl}" alt="QR Code" style="max-width: 200px; height: auto;" />
-          <p style="margin-top: 10px; font-size: 12px; color: #666;">Présentez ce QR code à l'entrée de l'événement</p>
-        </div>
-      </div>
-    `).join('');
+    const html = await this.renderTemplate('tickets', {
+      customerName: name || email.split('@')[0],
+      customerEmail: email,
+      orderId,
+      totalTickets: tickets.length,
+      tickets,
+      orderUrl: `${APP_URL}/orders/${orderId}`,
+      ticketsUrl: `${APP_URL}/tickets`,
+      qrCodeRefreshTime: '12 hours', // Corresponds to the rotation system
+    });
 
     const mailOptions = {
       from: `"${APP_NAME}" <${FROM_EMAIL}>`,
       to: email,
-      subject: `Vos billets - ${APP_NAME}`,
-      html: `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-          <h1 style="color: #333;">Vos billets</h1>
-          <p>Bonjour ${name || email},</p>
-          <p>Veuillez trouver ci-dessous vos billets pour les événements à venir :</p>
-
-          ${ticketsList}
-
-          <p>Nous vous souhaitons un excellent événement !</p>
-          <p>L'équipe ${APP_NAME}</p>
-        </div>
-      `
+      subject: `🎫 Your Electronic Tickets - ${APP_NAME}`,
+      html
     };
 
     await transporter.sendMail(mailOptions);
@@ -247,41 +320,32 @@ export class EmailService {
       name: string;
       date: Date;
       location: string;
-      description: string;
-    }
+      description?: string;
+    },
+    userTickets: Array<{
+      code: string;
+      type: string;
+    }>
   ): Promise<void> {
-    const eventLink = `${APP_URL}/events/${event.id}`;
+    const now = new Date();
     const eventDate = new Date(event.date);
-    const formattedDate = `${eventDate.toLocaleDateString()} à ${eventDate.toLocaleTimeString()}`;
+    const hoursUntilEvent = Math.ceil((eventDate.getTime() - now.getTime()) / (1000 * 60 * 60));
+
+    const html = await this.renderTemplate('event-reminder', {
+      userName: name || email.split('@')[0],
+      eventTitle: event.name,
+      eventDate: eventDate,
+      eventLocation: event.location,
+      hoursUntilEvent,
+      ticketCodes: userTickets.map(t => t.code),
+      ticketsUrl: `${APP_URL}/tickets`,
+    });
 
     const mailOptions = {
       from: `"${APP_NAME}" <${FROM_EMAIL}>`,
       to: email,
-      subject: `Rappel : ${event.name} - ${formattedDate}`,
-      html: `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-          <h1 style="color: #333;">Rappel d'événement</h1>
-          <p>Bonjour ${name || email},</p>
-          <p>Nous vous rappelons que l'événement <strong>${event.name}</strong> aura lieu demain :</p>
-
-          <div style="background-color: #f9f9f9; padding: 15px; border-radius: 8px; margin: 20px 0;">
-            <p><strong>Date :</strong> ${formattedDate}</p>
-            <p><strong>Lieu :</strong> ${event.location}</p>
-            <p><strong>Description :</strong> ${event.description}</p>
-          </div>
-
-          <p>N'oubliez pas d'apporter vos billets (format électronique ou imprimé).</p>
-
-          <p>
-            <a href="${eventLink}" style="background-color: #4CAF50; color: white; padding: 10px 15px; text-decoration: none; border-radius: 4px; display: inline-block; margin-top: 10px;">
-              Voir les détails de l'événement
-            </a>
-          </p>
-
-          <p>À très bientôt !</p>
-          <p>L'équipe ${APP_NAME}</p>
-        </div>
-      `
+      subject: `⏰ Reminder: ${event.name} in ${hoursUntilEvent}h!`,
+      html
     };
 
     await transporter.sendMail(mailOptions);
@@ -300,14 +364,14 @@ export class EmailService {
       from: `"${APP_NAME}" <${FROM_EMAIL}>`,
       to: process.env.CONTACT_EMAIL || FROM_EMAIL,
       replyTo: email,
-      subject: `Formulaire de contact : ${subject}`,
+      subject: `Contact Form: ${subject}`,
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-          <h1 style="color: #333;">Nouveau message de contact</h1>
-          <p><strong>Nom :</strong> ${name}</p>
-          <p><strong>Email :</strong> ${email}</p>
-          <p><strong>Sujet :</strong> ${subject}</p>
-          <p><strong>Message :</strong></p>
+          <h1 style="color: #333;">New Contact Message</h1>
+          <p><strong>Name:</strong> ${name}</p>
+          <p><strong>Email:</strong> ${email}</p>
+          <p><strong>Subject:</strong> ${subject}</p>
+          <p><strong>Message:</strong></p>
           <div style="background-color: #f9f9f9; padding: 15px; border-radius: 8px; margin: 20px 0;">
             ${message.replace(/\n/g, '<br>')}
           </div>

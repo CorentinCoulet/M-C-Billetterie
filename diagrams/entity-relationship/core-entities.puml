@@ -1,0 +1,49 @@
+@startuml core-entities
+
+!theme aws-orange
+skinparam linetype ortho
+skinparam backgroundColor #FFFFFF
+
+title Entités Métier Principales
+
+' ========== ENTITÉS UTILISATEUR ET COMMANDE ==========
+
+entity User {
+    * **id** : String <<PK>>
+    --
+    * **email** : String <<UK>>
+    name : String
+    * **password** : String
+    role : Role = USER/ORGANIZER/ADMIN
+    isVerified : Boolean = false
+    createdAt : DateTime
+}
+
+entity Order {
+    * **id** : String <<PK>>
+    --
+    userId : String <<FK>>
+    * **totalPrice** : Float
+    * **status** : OrderStatus
+    currency : String = "EUR"
+    createdAt : DateTime
+}
+
+entity Ticket {
+    * **id** : String <<PK>>
+    --
+    userId : String <<FK>>
+    eventId : String <<FK>>
+    orderId : String <<FK>>
+    * **code** : String <<UK>>
+    status : TicketStatus = paid
+    isScanned : Boolean = false
+}
+
+' ========== RELATIONS CŒUR ==========
+
+User ||--o{ Order : "passe"
+Order ||--o{ Ticket : "contient"
+User ||--o{ Ticket : "possède"
+
+@enduml

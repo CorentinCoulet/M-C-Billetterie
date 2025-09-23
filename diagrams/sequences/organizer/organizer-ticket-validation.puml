@@ -1,0 +1,45 @@
+@startuml "Validation des billets - Organisateur"
+
+title Validation des billets à l'entrée
+
+actor "Organisateur" as Organizer
+participant "Frontend\n(Next.js)" as Frontend
+participant "API Gateway\n(Rate Limiter)" as API
+participant "Auth Middleware" as Auth
+participant "Ticket Service" as TicketSvc
+participant "Database\n(PostgreSQL)" as DB
+
+== Validation des billets ==
+Organizer -> Frontend: Scanner QR code (app mobile)
+Frontend -> API: POST /api/tickets/validate
+note right: Body: {qrCode, eventId}
+API -> Auth: Vérifier rôle ORGANIZER + propriété événement
+Auth --> API: validation authorized
+
+API -> TicketSvc: validateTicket(qrCode, eventId)
+TicketSvc -> DB: SELECT ticket WITH qr_code WHERE code=? AND eventId=?
+DB --> TicketSvc: ticket data
+
+alt Billet valide et non utilisé
+    TicketSvc -> DB: UPDATE tickets SET status='used', usedAt=NOW()
+    DB --> TicketSvc: ticket marked as used
+    
+    TicketSvc -> DB: INSERT INTO ticket_validations (ticketId, validatedBy, validatedAt)
+    DB --> TicketSvc: validation logged
+    
+    TicketSvc --> API: validation success
+    API --> Frontend: {status: 'valid', ticketInfo}
+    Frontend --> Organizer: "✅ Billet valide - Accès autorisé"
+    
+else Billet déjà utilisé
+    TicketSvc --> API: {status: 'already_used', usedAt}
+    API --> Frontend: ticket already used
+    Frontend --> Organizer: "❌ Billet déjà utilisé"
+    
+else Billet invalide
+    TicketSvc --> API: {status: 'invalid'}
+    API --> Frontend: invalid ticket
+    Frontend --> Organizer: "❌ Billet invalide"
+end
+
+@enduml

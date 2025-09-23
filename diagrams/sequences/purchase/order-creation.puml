@@ -1,0 +1,38 @@
+@startuml "Création de commande"
+
+title Création de commande
+
+actor "Utilisateur" as User
+participant "Frontend\n(Next.js)" as Frontend
+participant "API Gateway\n(Rate Limiter)" as API
+participant "Auth Middleware" as Auth
+participant "Order Controller" as OrderCtrl
+participant "Order Service" as OrderSvc
+participant "Database\n(PostgreSQL)" as DB
+
+User -> Frontend: Valider panier
+Frontend -> API: POST /api/orders
+note right: Body: {tickets: [{ticketId, quantity}], customerInfo}
+API -> Auth: Vérifier token
+Auth --> API: user verified
+
+API -> OrderCtrl: create(orderData)
+OrderCtrl -> OrderSvc: createOrder(data)
+OrderSvc -> DB: BEGIN TRANSACTION
+OrderSvc -> DB: INSERT INTO orders (userId, status='draft')
+DB --> OrderSvc: orderId
+
+loop Pour chaque type de billet
+    OrderSvc -> DB: INSERT INTO tickets (orderId, eventId, price, status='pending')
+    DB --> OrderSvc: ticketId
+end
+
+OrderSvc -> DB: UPDATE order SET totalPrice=?, status='pending_payment'
+OrderSvc -> DB: COMMIT TRANSACTION
+DB --> OrderSvc: order created
+OrderSvc --> OrderCtrl: order data
+OrderCtrl --> API: order response
+API --> Frontend: {orderId, totalAmount, tickets}
+Frontend --> User: Commande créée
+
+@enduml

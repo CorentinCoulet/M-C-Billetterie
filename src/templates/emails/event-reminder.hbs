@@ -1,0 +1,65 @@
+<h1>⏰ Rappel : {{eventTitle}} approche !</h1>
+
+<p>Bonjour <strong>{{userName}}</strong>,</p>
+
+<p>C'est bientôt le grand jour ! L'événement <strong>{{eventTitle}}</strong> aura lieu dans <span class="highlight">{{hoursUntilEvent}} heures</span>.</p>
+
+<div class="event-info">
+    <h2>🎪 Détails de l'événement</h2>
+    <p><strong>📅 Date et heure :</strong> {{eventDate}}</p>
+    <p><strong>📍 Lieu :</strong> {{eventLocation}}</p>
+    <p><strong>🎫 Vos billets :</strong> {{ticketCodes.length}} billet(s)</p>
+</div>
+
+<h2>🎟️ Vos billets</h2>
+<div style="background-color: #f8fafc; padding: 20px; border-radius: 8px;">
+    {{#each ticketCodes}}
+    <p><strong>Billet {{@index}} :</strong> <code>{{this}}</code></p>
+    {{/each}}
+</div>
+
+<div style="text-align: center; margin: 30px 0;">
+    <a href="{{ticketsUrl}}" class="button">📱 Voir mes billets</a>
+</div>
+
+<div style="background-color: #fef3c7; padding: 20px; border-radius: 8px; margin: 20px 0;">
+    <h3>✅ Check-list avant de partir</h3>
+    <ul style="list-style-type: none; padding: 0;">
+        <li>☐ Téléphone chargé avec les QR codes</li>
+        <li>☐ Pièce d'identité</li>
+        <li>☐ Vérifier l'adresse et l'itinéraire</li>
+        <li>☐ Prévoir d'arriver 30 minutes à l'avance</li>
+        <li>☐ Vérifier les consignes sanitaires si applicable</li>
+    </ul>
+</div>
+
+<h2>🚗 Informations pratiques</h2>
+
+<div class="event-info">
+    <p><strong>🅿️ Stationnement :</strong> Vérifiez les parkings disponibles à proximité</p>
+    <p><strong>🚇 Transports :</strong> Consultez les horaires des transports en commun</p>
+    <p><strong>🍽️ Restauration :</strong> Des points de vente peuvent être disponibles sur place</p>
+    <p><strong>👕 Dress code :</strong> Vérifiez s'il y a des consignes vestimentaires</p>
+</div>
+
+<div style="background-color: #fee2e2; padding: 20px; border-radius: 8px; margin: 20px 0;">
+    <h3>🚨 En cas de problème</h3>
+    <p>Si vous avez des difficultés avec vos billets ou des questions de dernière minute :</p>
+    <ul>
+        <li><strong>Avant l'événement :</strong> <a href="mailto:{{supportEmail}}">{{supportEmail}}</a></li>
+        <li><strong>Le jour J :</strong> Rendez-vous à l'accueil de l'événement</li>
+        <li><strong>Urgence :</strong> Support 24h/24 pendant l'événement</li>
+    </ul>
+</div>
+
+<h2>📱 QR Codes toujours valides</h2>
+<p>Vos QR codes ont été mis à jour récemment pour votre sécurité. Assurez-vous d'avoir la dernière version de vos billets en consultant votre espace personnel.</p>
+
+<div style="text-align: center; margin: 30px 0;">
+    <a href="{{ticketsUrl}}" class="button">🎫 Actualiser mes billets</a>
+</div>
+
+<p>Nous vous souhaitons un excellent événement ! 🎊</p>
+
+<p>À très bientôt,<br>
+L'équipe Billetterie</p>

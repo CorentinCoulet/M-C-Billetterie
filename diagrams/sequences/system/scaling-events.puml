@@ -1,0 +1,20 @@
+@startuml "Événements de scaling"
+
+title Événements de scaling
+
+participant "Monitoring\n(Prometheus)" as Monitoring
+participant "Load Balancer\n(HAProxy)" as LB
+participant "Frontend\n(Next.js)" as Frontend
+participant "Cache Layer\n(Redis)" as Cache
+participant "Database\n(PostgreSQL)" as DB
+
+Monitoring -> Monitoring: High CPU detected
+Monitoring -> LB: Add new instance
+LB -> LB: Update routing table
+
+Frontend -> Frontend: New instance starting
+Frontend -> Cache: Warm up cache
+Frontend -> DB: Initialize connection pool
+Frontend -> LB: Instance ready
+
+@enduml

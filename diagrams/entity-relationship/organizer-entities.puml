@@ -1,0 +1,37 @@
+@startuml organizer-entities
+
+!theme aws-orange
+skinparam linetype ortho
+skinparam backgroundColor #FFFFFF
+
+title Entités Organisation
+
+' ========== ENTITÉS ORGANISATION ==========
+
+entity Organization {
+    * **id** : String <<PK>>
+    --
+    * **name** : String
+    description : String
+    ownerId : String <<FK>>
+    createdAt : DateTime
+}
+
+entity TeamMember {
+    * **id** : String <<PK>>
+    --
+    organizationId : String <<FK>>
+    userId : String <<FK>>
+    * **role** : String
+    joinedAt : DateTime
+}
+
+' ========== RELATIONS ==========
+
+Organization ||--o{ TeamMember : "équipe"
+
+' Note: Les relations vers User sont dans global-overview
+' - Organization.ownerId -> User.id (propriétaire)
+' - TeamMember.userId -> User.id (membre)
+
+@enduml

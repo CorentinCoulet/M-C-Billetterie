@@ -1,0 +1,40 @@
+@startuml "Traitement asynchrone des tickets - Diagramme de séquence"
+
+title Génération des billets et envoi d'emails de confirmation
+
+participant "Queue Service\n(Bull/Redis)" as Queue
+participant "Ticket Service" as TicketSvc
+participant "Email Service" as EmailSvc
+participant "Storage" as Storage
+participant "Database\n(PostgreSQL)" as DB
+
+== Traitement asynchrone des tickets ==
+Queue -> Queue: Process job 'generate-tickets'
+Queue -> TicketSvc: generateTicketQRCodes(orderId)
+TicketSvc -> DB: SELECT tickets WHERE orderId=?
+DB --> TicketSvc: tickets list
+
+loop Pour chaque billet
+    TicketSvc -> TicketSvc: generateUniqueQRCode(ticketId)
+    TicketSvc -> DB: INSERT INTO qr_codes (ticketId, code, data, generatedAt)
+    DB --> TicketSvc: QR code saved
+end
+
+TicketSvc -> TicketSvc: generateTicketPDFs(tickets)
+TicketSvc -> Storage: Upload PDF files
+Storage --> TicketSvc: PDF URLs
+TicketSvc -> DB: UPDATE tickets SET pdfUrl=? WHERE id IN (?)
+
+== Envoi de l'email de confirmation ==
+Queue -> Queue: Process job 'send-confirmation-email'
+Queue -> EmailSvc: sendOrderConfirmation(orderId)
+EmailSvc -> DB: SELECT order WITH user, tickets WHERE id=?
+DB --> EmailSvc: complete order data
+
+EmailSvc -> EmailSvc: Prepare email template
+EmailSvc -> Storage: Download ticket PDFs
+Storage --> EmailSvc: PDF attachments
+EmailSvc -> EmailSvc: Send SMTP email with attachments
+EmailSvc -> DB: INSERT INTO email_logs (type: 'order_confirmation', orderId)
+
+@enduml

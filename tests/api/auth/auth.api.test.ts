@@ -1,17 +1,16 @@
 import { NextApiRequest, NextApiResponse } from 'next';
-import { createMocks } from 'node-mocks-http';
-import { testPrisma, setupTests, teardownTests } from '../../../utils/setup';
+import { authController } from '../../../src/utils/test-controllers';
 import {
-  createMockRequest,
-  createAuthenticatedRequest,
-  expectSuccess,
-  expectError,
-  expectValidationError,
-  expectUnauthorized,
-  hashTestPassword,
-  generateRandomEmail
-} from '../../../utils/helpers';
-import * as authController from '@/modules/auth/auth.controller';
+    createAuthenticatedRequest,
+    createMockRequest,
+    expectError,
+    expectSuccess,
+    expectUnauthorized,
+    expectValidationError,
+    generateRandomEmail,
+    hashTestPassword
+} from '../../utils/helpers';
+import { setupTests, teardownTests, testPrisma } from '../../utils/setup';
 
 describe('Auth API', () => {
   beforeAll(async () => {

@@ -1,0 +1,47 @@
+@startuml "Clôture d'événement et génération de rapports"
+
+title Processus de clôture d'événement et génération automatique de rapports
+
+actor "Contrôleur\n(Staff événement)" as Controller
+participant "App Mobile\n(Scan QR)" as MobileApp
+participant "API Gateway\n(Rate Limiter)" as API
+participant "Auth Middleware" as Auth
+participant "Event Service" as EventSvc
+participant "Analytics Service" as AnalyticsSvc
+participant "Notification Service" as NotifSvc
+participant "Email Service" as EmailSvc
+participant "Storage" as Storage
+participant "Database\n(PostgreSQL)" as DB
+
+== Rapports de fin d'événement ==
+Controller -> MobileApp: Clôturer événement
+MobileApp -> API: POST /api/events/{eventId}/close
+API -> Auth: Vérifier permissions organisateur
+Auth --> API: access granted
+
+== Clôture de l'événement ==
+API -> EventSvc: closeEvent(eventId)
+EventSvc -> AnalyticsSvc: generateEventReport(eventId)
+
+== Génération du rapport ==
+AnalyticsSvc -> DB: Complex analytics query
+note right: - Total validations\n- No-shows\n- Peak hours\n- Staff performance
+DB --> AnalyticsSvc: complete event data
+
+AnalyticsSvc -> AnalyticsSvc: Generate comprehensive report
+AnalyticsSvc -> Storage: Save report PDF
+Storage --> AnalyticsSvc: report URL
+
+== Envoi du rapport ==
+AnalyticsSvc -> NotifSvc: sendEventReport(organizerId, reportUrl)
+NotifSvc -> EmailSvc: Send event summary email
+
+== Finalisation ==
+EventSvc -> DB: UPDATE events SET status='completed', completedAt=NOW()
+EventSvc --> API: event closed
+API --> MobileApp: event closure confirmed
+MobileApp --> Controller: "Événement clôturé\nRapport envoyé par email"
+
+note over Controller: Le rapport comprend :\n• Statistiques de présence\n• Analyse des pics d'affluence\n• Performance du staff\n• Incidents de sécurité\n• Recommandations
+
+@enduml

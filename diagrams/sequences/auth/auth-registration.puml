@@ -1,0 +1,75 @@
+@startuml "Inscription - Diagramme de séquence"
+
+title Processus d'inscription utilisateur
+
+actor "Utilisateur" as User
+participant "Frontend\n(Next.js)" as Frontend
+participant "API Gateway\n(Rate Limiter)" as API
+participant "Auth Controller" as AuthCtrl
+participant "Auth Service" as AuthSvc
+participant "User Service" as UserSvc
+participant "Email Service" as EmailSvc
+participant "Redis Cache" as Redis
+participant "Database\n(PostgreSQL)" as DB
+
+== Inscription ==
+User -> Frontend: S'inscrire
+activate Frontend
+Frontend -> API: POST /api/auth/register
+note right: Body: {email, password, name}
+activate API
+
+API -> AuthCtrl: register(userData)
+activate AuthCtrl
+
+AuthCtrl -> UserSvc: checkUserExists(email)
+activate UserSvc
+UserSvc -> DB: SELECT user WHERE email=?
+activate DB
+DB --> UserSvc: null (utilisateur n'existe pas)
+deactivate DB
+deactivate UserSvc
+
+AuthCtrl -> AuthSvc: hashPassword(password)
+activate AuthSvc
+AuthSvc -> AuthSvc: bcrypt.hash(password, 12)
+AuthSvc --> AuthCtrl: hashedPassword
+deactivate AuthSvc
+
+AuthCtrl -> UserSvc: createUser(userData)
+activate UserSvc
+UserSvc -> DB: INSERT INTO users (email, password, name, isVerified=false)
+activate DB
+DB --> UserSvc: user created
+deactivate DB
+deactivate UserSvc
+
+AuthCtrl -> AuthSvc: generateEmailVerificationToken(userId)
+activate AuthSvc
+AuthSvc -> Redis: SET verify:{token} = userId (expire 24h)
+activate Redis
+Redis --> AuthSvc: token stored
+deactivate Redis
+AuthSvc --> AuthCtrl: verification token
+deactivate AuthSvc
+
+AuthCtrl -> EmailSvc: sendVerificationEmail(user, token)
+activate EmailSvc
+EmailSvc -> EmailSvc: Préparer email template
+EmailSvc -> EmailSvc: Envoyer email SMTP
+EmailSvc --> AuthCtrl: email sent
+deactivate EmailSvc
+
+AuthCtrl --> API: {message: "User created, check email"}
+deactivate AuthCtrl
+API --> Frontend: registration success
+deactivate API
+Frontend --> User: "Vérifiez votre email"
+deactivate Frontend
+
+note over User, DB
+    L'utilisateur doit maintenant vérifier 
+    son email avant de pouvoir se connecter
+end note
+
+@enduml

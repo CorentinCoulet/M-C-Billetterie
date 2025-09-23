@@ -1,18 +1,31 @@
 import { NextApiResponse } from 'next';
-import { testPrisma, setupTests, teardownTests } from '../../../utils/setup';
+import { ticketController } from '../../../src/utils/test-controllers';
 import {
-  createMockRequest,
   createAuthenticatedRequest,
-  expectSuccess,
+  createMockRequest,
   expectError,
-  expectValidationError,
-  expectUnauthorized,
   expectForbidden,
   expectNotFound,
+  expectSuccess,
+  expectUnauthorized,
+  expectValidationError,
+  generateRandomEmail,
   hashTestPassword,
-  generateRandomEmail
-} from '../../../utils/helpers';
-import * as ticketController from '@/modules/ticket/ticket.controller';
+  Role,
+  User
+} from '../../utils/helpers';
+import { setupTests, teardownTests, testPrisma } from '../../utils/setup';
+function toTestUser(prismaUser: any): Partial<User> {
+  return {
+    id: prismaUser.id,
+    email: prismaUser.email,
+    name: prismaUser.name,
+    role: prismaUser.role as Role,
+    isVerified: prismaUser.isVerified,
+    createdAt: prismaUser.createdAt,
+    updatedAt: prismaUser.updatedAt
+  };
+}
 
 describe('Tickets API', () => {
   beforeAll(async () => {
@@ -24,65 +37,120 @@ describe('Tickets API', () => {
   });
 
   beforeEach(async () => {
-    // Clean up tickets, events, and users before each test
-    await testPrisma.ticket.deleteMany();
-    await testPrisma.event.deleteMany();
-    await testPrisma.user.deleteMany();
+    // Reset the global storage before each test
+    const { resetMockPrismaStorage } = require('../../mocks/prisma.mock');
+    resetMockPrismaStorage();
+  });
+
+  afterEach(() => {
+    // Restore all mocks after each test
+    jest.restoreAllMocks();
   });
 
   // Helper function to create a test user
-  async function createTestUser(role = 'USER') {
-    return testPrisma.user.create({
+  async function createTestUser(role: Role = 'USER') {
+    const user = await testPrisma.user.create({
       data: {
         email: generateRandomEmail(),
         password: await hashTestPassword('Password123!'),
         name: 'Test User',
         role,
-        isEmailVerified: true
+        isVerified: true
       }
     });
+    return user;
+  }
+
+  // Helper function to create a test organizer
+  async function createTestOrganizer(userId?: string) {
+    const organizerData = {
+      name: 'Test Organizer',
+      ...(userId && { userId: userId })
+    };
+    
+    const organizer = await testPrisma.organizer.create({
+      data: organizerData
+    });
+    return organizer;
   }
 
   // Helper function to create a test event
-  async function createTestEvent(organizerId) {
-    return testPrisma.event.create({
+  async function createTestEvent(organizerId: string) {
+    const event = await testPrisma.event.create({
       data: {
         title: 'Test Event',
         description: 'This is a test event',
-        startDate: new Date(Date.now() + 86400000), // Tomorrow
-        endDate: new Date(Date.now() + 172800000), // Day after tomorrow
+        date: new Date(Date.now() + 86400000), // Tomorrow
         location: 'Test Location',
-        organizerId,
+        organizerId: organizerId,  // Garder l'ID comme string
         isPublished: true,
-        capacity: 100,
-        price: 10.00,
-        currency: 'EUR',
-        category: 'CONCERT'
+        maxCapacity: 100,
+        metadata: {}
       }
     });
+    return event;
   }
 
   // Helper function to create a test ticket
-  async function createTestTicket(userId, eventId, status = 'ISSUED') {
-    return testPrisma.ticket.create({
+  async function createTestTicket(userId: string, eventId: string, status: 'pending' | 'paid' | 'cancelled' | 'used' = 'paid') {
+    const ticket = await testPrisma.ticket.create({
       data: {
-        userId,
-        eventId,
+        userId: userId,  // Garder l'ID comme string
+        eventId: eventId,  // Garder l'ID comme string
         status,
-        code: `TICKET-${Math.random().toString(36).substring(2, 10).toUpperCase()}`,
-        price: 10.00
+        code: `TICKET-${Math.random().toString(36).substring(2, 10).toUpperCase()}`
       }
     });
+    return ticket;
   }
 
   describe('GET /api/tickets', () => {
     it('should return tickets for the authenticated user', async () => {
+      console.log('=== DEBUT DU TEST: should return tickets for the authenticated user ===');
+      
       const user = await createTestUser();
-      const event = await createTestEvent(user.id);
+      console.log('User created:', user);
+      
+      const organizer = await createTestOrganizer();
+      console.log('Organizer created:', organizer);
+      
+      const event = await createTestEvent(organizer.id);
+      console.log('Event created:', event);
+      
       const ticket1 = await createTestTicket(user.id, event.id);
+      console.log('Ticket 1 created:', ticket1);
+      
       const ticket2 = await createTestTicket(user.id, event.id);
+      console.log('Ticket 2 created:', ticket2);
 
-      const { req, res } = createAuthenticatedRequest(user);
+      // DEBUG: Vérifier ce qui est dans testPrisma vs globalStorage
+      console.log('DEBUG: Checking mock state...');
+      console.log('DEBUG: testPrisma instance:', !!testPrisma);
+      console.log('DEBUG: testPrisma.ticket:', !!testPrisma.ticket);
+      
+      try {
+        const allTicketsViaPrisma = await testPrisma.ticket.findMany({});
+        console.log('DEBUG: All tickets via testPrisma.findMany():', allTicketsViaPrisma?.length || 0, allTicketsViaPrisma);
+      } catch(e) {
+        console.log('DEBUG: Error with testPrisma.findMany():', e);
+      }
+
+      // Vérifier le storage avant l'appel du contrôleur
+      const { globalStorage } = require('../../mocks/prisma.mock');
+      console.log('Storage before controller call:', {
+        users: globalStorage.user?.length || 0,
+        organizers: globalStorage.organizer?.length || 0,
+        events: globalStorage.event?.length || 0,
+        tickets: globalStorage.ticket?.length || 0
+      });
+      console.log('DEBUG: Raw storage content:', {
+        users: globalStorage.user,
+        organizers: globalStorage.organizer,
+        events: globalStorage.event,
+        tickets: globalStorage.ticket
+      });
+
+      const { req, res } = createAuthenticatedRequest(toTestUser(user));
 
       await ticketController.list(req as any, res as NextApiResponse);
 
@@ -92,16 +160,19 @@ describe('Tickets API', () => {
       expect(tickets.length).toBeGreaterThanOrEqual(2);
       expect(tickets.some((t: any) => t.id === ticket1.id)).toBe(true);
       expect(tickets.some((t: any) => t.id === ticket2.id)).toBe(true);
+      
+      console.log('=== FIN DU TEST: should return tickets for the authenticated user ===');
     });
 
     it('should return all tickets for admin', async () => {
       const user = await createTestUser();
       const admin = await createTestUser('ADMIN');
-      const event = await createTestEvent(user.id);
+      const organizer = await createTestOrganizer();
+      const event = await createTestEvent(organizer.id);
       const ticket1 = await createTestTicket(user.id, event.id);
       const ticket2 = await createTestTicket(user.id, event.id);
 
-      const { req, res } = createAuthenticatedRequest(admin);
+      const { req, res } = createAuthenticatedRequest(toTestUser(admin));
 
       await ticketController.list(req as any, res as NextApiResponse);
 
@@ -127,14 +198,14 @@ describe('Tickets API', () => {
   describe('POST /api/tickets', () => {
     it('should create a new ticket when authenticated', async () => {
       const user = await createTestUser();
-      const event = await createTestEvent(user.id);
+      const organizer = await createTestOrganizer();
+      const event = await createTestEvent(organizer.id);
 
       const ticketData = {
-        eventId: event.id.toString(),
-        price: 15.00
+        eventId: event.id.toString()
       };
 
-      const { req, res } = createAuthenticatedRequest(user, {
+      const { req, res } = createAuthenticatedRequest(toTestUser(user), {
         method: 'POST',
         body: ticketData
       });
@@ -145,7 +216,6 @@ describe('Tickets API', () => {
       expect(res._getJSONData()).toHaveProperty('id');
       expect(res._getJSONData()).toHaveProperty('eventId', event.id);
       expect(res._getJSONData()).toHaveProperty('userId', user.id);
-      expect(res._getJSONData()).toHaveProperty('price', ticketData.price);
     });
 
     it('should return validation error for invalid input', async () => {
@@ -153,10 +223,9 @@ describe('Tickets API', () => {
 
       const invalidTicketData = {
         // Missing eventId
-        price: 15.00
       };
 
-      const { req, res } = createAuthenticatedRequest(user, {
+      const { req, res } = createAuthenticatedRequest(toTestUser(user), {
         method: 'POST',
         body: invalidTicketData
       });
@@ -168,14 +237,15 @@ describe('Tickets API', () => {
 
     it('should return validation error for negative price', async () => {
       const user = await createTestUser();
-      const event = await createTestEvent(user.id);
+      const organizer = await createTestOrganizer();
+      const event = await createTestEvent(organizer.id);
 
       const invalidTicketData = {
         eventId: event.id.toString(),
         price: -5.00 // Negative price
       };
 
-      const { req, res } = createAuthenticatedRequest(user, {
+      const { req, res } = createAuthenticatedRequest(toTestUser(user), {
         method: 'POST',
         body: invalidTicketData
       });
@@ -186,12 +256,11 @@ describe('Tickets API', () => {
     });
 
     it('should return unauthorized for unauthenticated requests', async () => {
-      const user = await createTestUser();
-      const event = await createTestEvent(user.id);
+      const organizer = await createTestOrganizer();
+      const event = await createTestEvent(organizer.id);
 
       const ticketData = {
-        eventId: event.id.toString(),
-        price: 15.00
+        eventId: event.id.toString()
       };
 
       const { req, res } = createMockRequest({
@@ -208,10 +277,11 @@ describe('Tickets API', () => {
   describe('GET /api/tickets/:id', () => {
     it('should return ticket by ID for the ticket owner', async () => {
       const user = await createTestUser();
-      const event = await createTestEvent(user.id);
+      const organizer = await createTestOrganizer();
+      const event = await createTestEvent(organizer.id);
       const ticket = await createTestTicket(user.id, event.id);
 
-      const { req, res } = createAuthenticatedRequest(user, {
+      const { req, res } = createAuthenticatedRequest(toTestUser(user), {
         method: 'GET',
         query: { id: ticket.id.toString() }
       });
@@ -225,12 +295,13 @@ describe('Tickets API', () => {
     });
 
     it('should return ticket by ID for the event organizer', async () => {
-      const organizer = await createTestUser();
+      const organizer_user = await createTestUser();
       const attendee = await createTestUser();
+      const organizer = await createTestOrganizer(organizer_user.id);
       const event = await createTestEvent(organizer.id);
       const ticket = await createTestTicket(attendee.id, event.id);
 
-      const { req, res } = createAuthenticatedRequest(organizer, {
+      const { req, res } = createAuthenticatedRequest(toTestUser(organizer_user), {
         method: 'GET',
         query: { id: ticket.id.toString() }
       });
@@ -246,10 +317,11 @@ describe('Tickets API', () => {
     it('should return ticket by ID for admin', async () => {
       const user = await createTestUser();
       const admin = await createTestUser('ADMIN');
-      const event = await createTestEvent(user.id);
+      const organizer = await createTestOrganizer();
+      const event = await createTestEvent(organizer.id);
       const ticket = await createTestTicket(user.id, event.id);
 
-      const { req, res } = createAuthenticatedRequest(admin, {
+      const { req, res } = createAuthenticatedRequest(toTestUser(admin), {
         method: 'GET',
         query: { id: ticket.id.toString() }
       });
@@ -261,13 +333,14 @@ describe('Tickets API', () => {
     });
 
     it('should return forbidden for other users', async () => {
-      const organizer = await createTestUser();
+      const organizer_user = await createTestUser();
       const attendee = await createTestUser();
       const otherUser = await createTestUser();
+      const organizer = await createTestOrganizer(organizer_user.id);
       const event = await createTestEvent(organizer.id);
       const ticket = await createTestTicket(attendee.id, event.id);
 
-      const { req, res } = createAuthenticatedRequest(otherUser, {
+      const { req, res } = createAuthenticatedRequest(toTestUser(otherUser), {
         method: 'GET',
         query: { id: ticket.id.toString() }
       });
@@ -280,9 +353,9 @@ describe('Tickets API', () => {
     it('should return not found for non-existent ticket', async () => {
       const user = await createTestUser();
 
-      const { req, res } = createAuthenticatedRequest(user, {
+      const { req, res } = createAuthenticatedRequest(toTestUser(user), {
         method: 'GET',
-        query: { id: '99999' } // Non-existent ID
+        query: { id: '99999999-9999-4999-9999-999999999999' } // Non-existent UUID
       });
 
       await ticketController.getById(req as any, res as NextApiResponse);
@@ -293,7 +366,7 @@ describe('Tickets API', () => {
     it('should return bad request for invalid ID', async () => {
       const user = await createTestUser();
 
-      const { req, res } = createAuthenticatedRequest(user, {
+      const { req, res } = createAuthenticatedRequest(toTestUser(user), {
         method: 'GET',
         query: { id: 'invalid-id' }
       });
@@ -308,14 +381,15 @@ describe('Tickets API', () => {
   describe('POST /api/tickets/reserve', () => {
     it('should reserve tickets for an event', async () => {
       const user = await createTestUser();
-      const event = await createTestEvent(user.id);
+      const organizer = await createTestOrganizer();
+      const event = await createTestEvent(organizer.id);
 
       const reserveData = {
         eventId: event.id,
         quantity: 2
       };
 
-      const { req, res } = createAuthenticatedRequest(user, {
+      const { req, res } = createAuthenticatedRequest(toTestUser(user), {
         method: 'POST',
         body: reserveData
       });
@@ -340,7 +414,7 @@ describe('Tickets API', () => {
         quantity: 2
       };
 
-      const { req, res } = createAuthenticatedRequest(user, {
+      const { req, res } = createAuthenticatedRequest(toTestUser(user), {
         method: 'POST',
         body: invalidReserveData
       });
@@ -352,14 +426,15 @@ describe('Tickets API', () => {
 
     it('should return validation error for invalid quantity', async () => {
       const user = await createTestUser();
-      const event = await createTestEvent(user.id);
+      const organizer = await createTestOrganizer();
+      const event = await createTestEvent(organizer.id);
 
       const invalidReserveData = {
         eventId: event.id,
         quantity: 0 // Invalid quantity
       };
 
-      const { req, res } = createAuthenticatedRequest(user, {
+      const { req, res } = createAuthenticatedRequest(toTestUser(user), {
         method: 'POST',
         body: invalidReserveData
       });
@@ -370,8 +445,8 @@ describe('Tickets API', () => {
     });
 
     it('should return unauthorized for unauthenticated requests', async () => {
-      const user = await createTestUser();
-      const event = await createTestEvent(user.id);
+      const organizer = await createTestOrganizer();
+      const event = await createTestEvent(organizer.id);
 
       const reserveData = {
         eventId: event.id,
@@ -391,8 +466,9 @@ describe('Tickets API', () => {
 
   describe('POST /api/tickets/validate', () => {
     it('should validate a ticket for the event organizer', async () => {
-      const organizer = await createTestUser();
+      const organizer_user = await createTestUser();
       const attendee = await createTestUser();
+      const organizer = await createTestOrganizer(organizer_user.id);
       const event = await createTestEvent(organizer.id);
       const ticket = await createTestTicket(attendee.id, event.id);
 
@@ -400,7 +476,7 @@ describe('Tickets API', () => {
         ticketId: ticket.id
       };
 
-      const { req, res } = createAuthenticatedRequest(organizer, {
+      const { req, res } = createAuthenticatedRequest(toTestUser(organizer_user), {
         method: 'POST',
         body: validateData
       });
@@ -409,13 +485,14 @@ describe('Tickets API', () => {
 
       expectSuccess(res, 200);
       expect(res._getJSONData()).toHaveProperty('id', ticket.id);
-      expect(res._getJSONData()).toHaveProperty('status', 'VALIDATED');
+      expect(res._getJSONData()).toHaveProperty('status', 'used');
     });
 
     it('should validate a ticket for admin', async () => {
-      const organizer = await createTestUser();
+      const organizer_user = await createTestUser();
       const attendee = await createTestUser();
       const admin = await createTestUser('ADMIN');
+      const organizer = await createTestOrganizer(organizer_user.id);
       const event = await createTestEvent(organizer.id);
       const ticket = await createTestTicket(attendee.id, event.id);
 
@@ -423,7 +500,7 @@ describe('Tickets API', () => {
         ticketId: ticket.id
       };
 
-      const { req, res } = createAuthenticatedRequest(admin, {
+      const { req, res } = createAuthenticatedRequest(toTestUser(admin), {
         method: 'POST',
         body: validateData
       });
@@ -432,13 +509,14 @@ describe('Tickets API', () => {
 
       expectSuccess(res, 200);
       expect(res._getJSONData()).toHaveProperty('id', ticket.id);
-      expect(res._getJSONData()).toHaveProperty('status', 'VALIDATED');
+      expect(res._getJSONData()).toHaveProperty('status', 'used');
     });
 
     it('should return forbidden for non-organizer users', async () => {
-      const organizer = await createTestUser();
+      const organizer_user = await createTestUser();
       const attendee = await createTestUser();
       const otherUser = await createTestUser();
+      const organizer = await createTestOrganizer(organizer_user.id);
       const event = await createTestEvent(organizer.id);
       const ticket = await createTestTicket(attendee.id, event.id);
 
@@ -446,7 +524,7 @@ describe('Tickets API', () => {
         ticketId: ticket.id
       };
 
-      const { req, res } = createAuthenticatedRequest(otherUser, {
+      const { req, res } = createAuthenticatedRequest(toTestUser(otherUser), {
         method: 'POST',
         body: validateData
       });
@@ -457,14 +535,15 @@ describe('Tickets API', () => {
     });
 
     it('should return not found for non-existent ticket', async () => {
-      const organizer = await createTestUser();
+      const organizer_user = await createTestUser();
+      const organizer = await createTestOrganizer(organizer_user.id);
       const event = await createTestEvent(organizer.id);
 
       const validateData = {
-        ticketId: 99999 // Non-existent ID
+        ticketId: '99999999-9999-4999-9999-999999999999' // Non-existent UUID
       };
 
-      const { req, res } = createAuthenticatedRequest(organizer, {
+      const { req, res } = createAuthenticatedRequest(toTestUser(organizer_user), {
         method: 'POST',
         body: validateData
       });
@@ -475,14 +554,15 @@ describe('Tickets API', () => {
     });
 
     it('should return bad request for missing ticket ID', async () => {
-      const organizer = await createTestUser();
+      const organizer_user = await createTestUser();
+      const organizer = await createTestOrganizer(organizer_user.id);
       const event = await createTestEvent(organizer.id);
 
       const validateData = {
         // Missing ticketId
       };
 
-      const { req, res } = createAuthenticatedRequest(organizer, {
+      const { req, res } = createAuthenticatedRequest(toTestUser(organizer_user), {
         method: 'POST',
         body: validateData
       });
@@ -497,14 +577,15 @@ describe('Tickets API', () => {
   describe('POST /api/tickets/cancel', () => {
     it('should cancel a ticket for the ticket owner', async () => {
       const user = await createTestUser();
-      const event = await createTestEvent(user.id);
+      const organizer = await createTestOrganizer();
+      const event = await createTestEvent(organizer.id);
       const ticket = await createTestTicket(user.id, event.id);
 
       const cancelData = {
         ticketId: ticket.id
       };
 
-      const { req, res } = createAuthenticatedRequest(user, {
+      const { req, res } = createAuthenticatedRequest(toTestUser(user), {
         method: 'POST',
         body: cancelData
       });
@@ -513,12 +594,13 @@ describe('Tickets API', () => {
 
       expectSuccess(res, 200);
       expect(res._getJSONData()).toHaveProperty('id', ticket.id);
-      expect(res._getJSONData()).toHaveProperty('status', 'CANCELLED');
+      expect(res._getJSONData()).toHaveProperty('status', 'cancelled');
     });
 
     it('should cancel a ticket for the event organizer', async () => {
-      const organizer = await createTestUser();
+      const organizer_user = await createTestUser();
       const attendee = await createTestUser();
+      const organizer = await createTestOrganizer(organizer_user.id);
       const event = await createTestEvent(organizer.id);
       const ticket = await createTestTicket(attendee.id, event.id);
 
@@ -526,7 +608,7 @@ describe('Tickets API', () => {
         ticketId: ticket.id
       };
 
-      const { req, res } = createAuthenticatedRequest(organizer, {
+      const { req, res } = createAuthenticatedRequest(toTestUser(organizer_user), {
         method: 'POST',
         body: cancelData
       });
@@ -535,13 +617,14 @@ describe('Tickets API', () => {
 
       expectSuccess(res, 200);
       expect(res._getJSONData()).toHaveProperty('id', ticket.id);
-      expect(res._getJSONData()).toHaveProperty('status', 'CANCELLED');
+      expect(res._getJSONData()).toHaveProperty('status', 'cancelled');
     });
 
     it('should cancel a ticket for admin', async () => {
-      const organizer = await createTestUser();
+      const organizer_user = await createTestUser();
       const attendee = await createTestUser();
       const admin = await createTestUser('ADMIN');
+      const organizer = await createTestOrganizer(organizer_user.id);
       const event = await createTestEvent(organizer.id);
       const ticket = await createTestTicket(attendee.id, event.id);
 
@@ -549,7 +632,7 @@ describe('Tickets API', () => {
         ticketId: ticket.id
       };
 
-      const { req, res } = createAuthenticatedRequest(admin, {
+      const { req, res } = createAuthenticatedRequest(toTestUser(admin), {
         method: 'POST',
         body: cancelData
       });
@@ -558,13 +641,14 @@ describe('Tickets API', () => {
 
       expectSuccess(res, 200);
       expect(res._getJSONData()).toHaveProperty('id', ticket.id);
-      expect(res._getJSONData()).toHaveProperty('status', 'CANCELLED');
+      expect(res._getJSONData()).toHaveProperty('status', 'cancelled');
     });
 
     it('should return forbidden for other users', async () => {
-      const organizer = await createTestUser();
+      const organizer_user = await createTestUser();
       const attendee = await createTestUser();
       const otherUser = await createTestUser();
+      const organizer = await createTestOrganizer(organizer_user.id);
       const event = await createTestEvent(organizer.id);
       const ticket = await createTestTicket(attendee.id, event.id);
 
@@ -572,7 +656,7 @@ describe('Tickets API', () => {
         ticketId: ticket.id
       };
 
-      const { req, res } = createAuthenticatedRequest(otherUser, {
+      const { req, res } = createAuthenticatedRequest(toTestUser(otherUser), {
         method: 'POST',
         body: cancelData
       });
@@ -586,10 +670,10 @@ describe('Tickets API', () => {
       const user = await createTestUser();
 
       const cancelData = {
-        ticketId: 99999 // Non-existent ID
+        ticketId: '99999999-9999-4999-9999-999999999999' // Non-existent UUID
       };
 
-      const { req, res } = createAuthenticatedRequest(user, {
+      const { req, res } = createAuthenticatedRequest(toTestUser(user), {
         method: 'POST',
         body: cancelData
       });
@@ -606,7 +690,7 @@ describe('Tickets API', () => {
         // Missing ticketId
       };
 
-      const { req, res } = createAuthenticatedRequest(user, {
+      const { req, res } = createAuthenticatedRequest(toTestUser(user), {
         method: 'POST',
         body: cancelData
       });
@@ -621,16 +705,17 @@ describe('Tickets API', () => {
   describe('GET /api/tickets/:id/download', () => {
     it('should download a ticket for the ticket owner', async () => {
       const user = await createTestUser();
-      const event = await createTestEvent(user.id);
+      const organizer = await createTestOrganizer();
+      const event = await createTestEvent(organizer.id);
       const ticket = await createTestTicket(user.id, event.id);
 
-      const { req, res } = createAuthenticatedRequest(user, {
+      const { req, res } = createAuthenticatedRequest(toTestUser(user), {
         method: 'GET',
         query: { id: ticket.id.toString() }
       });
 
-      // Mock the PDF generation function
-      jest.spyOn(ticketController, 'download').mockImplementation(async (req, res) => {
+      // Mock the PDF generation function - will be restored by afterEach
+      const downloadSpy = jest.spyOn(ticketController, 'download').mockImplementation(async (req, res) => {
         res.setHeader('Content-Type', 'application/pdf');
         res.setHeader('Content-Disposition', `attachment; filename="ticket-${ticket.id}.pdf"`);
         res.status(200).send(Buffer.from('mock pdf content'));
@@ -641,16 +726,20 @@ describe('Tickets API', () => {
       expect(res.statusCode).toBe(200);
       expect(res.getHeader('Content-Type')).toBe('application/pdf');
       expect(res.getHeader('Content-Disposition')).toMatch(new RegExp(`ticket-${ticket.id}.pdf`));
+      
+      // Verify the mock was called
+      expect(downloadSpy).toHaveBeenCalledTimes(1);
     });
 
     it('should return forbidden for non-ticket owners', async () => {
-      const organizer = await createTestUser();
+      const organizer_user = await createTestUser();
       const attendee = await createTestUser();
       const otherUser = await createTestUser();
+      const organizer = await createTestOrganizer(organizer_user.id);
       const event = await createTestEvent(organizer.id);
       const ticket = await createTestTicket(attendee.id, event.id);
 
-      const { req, res } = createAuthenticatedRequest(otherUser, {
+      const { req, res } = createAuthenticatedRequest(toTestUser(otherUser), {
         method: 'GET',
         query: { id: ticket.id.toString() }
       });
@@ -663,9 +752,9 @@ describe('Tickets API', () => {
     it('should return not found for non-existent ticket', async () => {
       const user = await createTestUser();
 
-      const { req, res } = createAuthenticatedRequest(user, {
+      const { req, res } = createAuthenticatedRequest(toTestUser(user), {
         method: 'GET',
-        query: { id: '99999' } // Non-existent ID
+        query: { id: '99999999-9999-4999-9999-999999999999' } // Non-existent UUID
       });
 
       await ticketController.download(req as any, res as NextApiResponse);
@@ -676,7 +765,7 @@ describe('Tickets API', () => {
     it('should return bad request for invalid ID', async () => {
       const user = await createTestUser();
 
-      const { req, res } = createAuthenticatedRequest(user, {
+      const { req, res } = createAuthenticatedRequest(toTestUser(user), {
         method: 'GET',
         query: { id: 'invalid-id' }
       });

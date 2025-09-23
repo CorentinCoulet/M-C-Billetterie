@@ -1,0 +1,21 @@
+@startuml "Monitoring de sécurité"
+
+title Monitoring de sécurité
+
+participant "API Gateway\n(Next.js API)" as API
+participant "Cache Layer\n(Redis)" as Cache
+participant "Rate Limiter\n(Redis)" as RateLimit
+participant "Monitoring\n(Prometheus)" as Monitoring
+participant "Logging\n(Winston)" as Logging
+
+API -> API: Detect suspicious activity
+API -> Logging: Log security event
+API -> Cache: INCR security_incidents:{ip}
+API -> Monitoring: Alert security team
+
+alt Threshold exceeded
+    API -> Cache: SET blocked_ip:{ip} = true (TTL: 1h)
+    API -> RateLimit: Block future requests
+end
+
+@enduml

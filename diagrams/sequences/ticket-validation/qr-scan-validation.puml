@@ -1,0 +1,42 @@
+@startuml "Scan et décodage du QR code"
+
+title Processus de scan et décodage du QR code
+
+actor "Contrôleur\n(Staff événement)" as Controller
+participant "App Mobile\n(Scan QR)" as MobileApp
+participant "API Gateway\n(Rate Limiter)" as API
+participant "Auth Middleware" as Auth
+participant "Ticket Controller" as TicketCtrl
+participant "QR Service" as QRSvc
+participant "Ticket Service" as TicketSvc
+participant "Redis Cache" as Redis
+participant "Database\n(PostgreSQL)" as DB
+
+== Scan du QR code ==
+Controller -> MobileApp: Scanner QR code
+MobileApp -> MobileApp: Lire QR code
+MobileApp -> API: POST /api/tickets/validate
+note right: Body: {qrCode, eventId, scannedBy: staffId}
+
+API -> Auth: Vérifier token staff
+Auth --> API: staff verified
+
+API -> TicketCtrl: validateTicket(qrCode, eventId, staffId)
+TicketCtrl -> QRSvc: decodeQRCode(qrCode)
+QRSvc -> QRSvc: Parse QR data and verify signature
+QRSvc --> TicketCtrl: {ticketId, eventId, userId, timestamp}
+
+== Récupération des données du billet ==
+TicketCtrl -> TicketSvc: validateTicketAccess(ticketId, eventId)
+TicketSvc -> Redis: GET ticket:{ticketId}:validation_cache
+Redis --> TicketSvc: cached validation (if exists)
+
+alt Cache miss ou données expirées
+    TicketSvc -> DB: SELECT ticket WITH user, order, event WHERE id=?
+    DB --> TicketSvc: complete ticket data
+    TicketSvc -> Redis: SET ticket:{ticketId}:validation_cache = data (expire 1h)
+end
+
+TicketSvc --> TicketCtrl: ticket data ready for validation
+
+@enduml

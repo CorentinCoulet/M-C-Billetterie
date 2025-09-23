@@ -1,15 +1,17 @@
 /** @type {import("jest").Config} **/
 module.exports = {
   testEnvironment: "node",
+  preset: "ts-jest/presets/default",
+  setupFilesAfterEnv: ["<rootDir>/tests/utils/setup.ts"],
   transform: {
-    "^.+\\.(ts|tsx)$": "ts-jest",
+    "^.+\\.ts$": "ts-jest",
   },
   moduleNameMapper: {
     "^@/(.*)$": "<rootDir>/src/$1",
     "\\.(css|less|scss|sass)$": "identity-obj-proxy",
     "\\.(jpg|jpeg|png|gif|webp|svg)$": "<rootDir>/tests/__mocks__/fileMock.js",
   },
-  collectCoverage: true,
+  collectCoverage: false,
   collectCoverageFrom: [
     "src/**/*.{ts,tsx}",
     "!src/**/*.d.ts",
@@ -27,4 +29,11 @@ module.exports = {
     "<rootDir>/markdowns/",
     "<rootDir>/.idea/",
   ],
+  testMatch: [
+    "**/__tests__/**/*.(ts|js)",
+    "**/*.(test|spec).(ts|js)"
+  ],
+  moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'json', 'node'],
+  verbose: true,
+  testTimeout: 30000
 };

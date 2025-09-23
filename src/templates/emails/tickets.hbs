@@ -1,0 +1,79 @@
+<h1>🎫 Vos billets sont prêts !</h1>
+
+<p>Bonjour <strong>{{userName}}</strong>,</p>
+
+<p>Vos billets pour <strong>{{eventTitle}}</strong> sont maintenant disponibles ! Vous trouverez ci-dessous {{ticketCount}} billet(s) avec leurs QR codes.</p>
+
+<div class="event-info">
+    <h2>🎪 Informations de l'événement</h2>
+    <p><strong>📅 Date :</strong> {{eventDate}}</p>
+    <p><strong>📍 Lieu :</strong> {{eventLocation}}</p>
+    <p><strong>🎫 Nombre de billets :</strong> {{ticketCount}}</p>
+</div>
+
+<h2>🎟️ Vos billets</h2>
+
+{{#each tickets}}
+<div class="ticket-card">
+    <h3>Billet #{{@index}} - {{code}}</h3>
+    
+    {{#if seatNumber}}
+    <p><strong>💺 Place :</strong> {{seatNumber}}</p>
+    {{else}}
+    <p><strong>📍 Accès :</strong> Placement libre</p>
+    {{/if}}
+    
+    <div class="qr-code">
+        <p><strong>QR Code d'entrée</strong></p>
+        <img src="{{qrCodeDataUrl}}" alt="QR Code pour le billet {{code}}" style="max-width: 200px; height: auto; border: 1px solid #e5e7eb; border-radius: 8px;" />
+        <p style="margin: 10px 0; font-size: 12px; color: #6b7280;">
+            <strong>Code billet :</strong> {{code}}
+        </p>
+        <p style="font-size: 13px; color: #ef4444; font-weight: 600;">
+            ⚠️ Présentez ce QR code à l'entrée
+        </p>
+    </div>
+</div>
+{{/each}}
+
+<div style="background-color: #fef3c7; padding: 20px; border-radius: 8px; margin: 30px 0;">
+    <h3>📱 Comment utiliser vos billets</h3>
+    <ol>
+        <li><strong>Téléchargez les QR codes</strong> ou gardez cet email accessible</li>
+        <li><strong>Présentez votre téléphone</strong> avec le QR code à l'entrée</li>
+        <li><strong>Laissez scanner</strong> par l'équipe de sécurité</li>
+        <li><strong>Profitez de l'événement !</strong> 🎉</li>
+    </ol>
+</div>
+
+<div style="background-color: #fee2e2; padding: 20px; border-radius: 8px; margin: 20px 0;">
+    <h3>🚨 Important - Sécurité</h3>
+    <ul>
+        <li>Chaque QR code ne peut être utilisé qu'<strong>une seule fois</strong></li>
+        <li>Ne partagez pas vos QR codes sur les réseaux sociaux</li>
+        <li>En cas de perte, contactez-nous immédiatement</li>
+        <li>Les captures d'écran sont acceptées</li>
+    </ul>
+</div>
+
+<h2>💡 Conseils pour le jour J</h2>
+<ul>
+    <li><strong>Arrivez 30 minutes avant</strong> le début de l'événement</li>
+    <li><strong>Batterie chargée</strong> - Assurez-vous que votre téléphone a de la batterie</li>
+    <li><strong>Connexion internet</strong> - Pas nécessaire pour présenter le QR code</li>
+    <li><strong>Pièce d'identité</strong> - Peut être demandée en cas de contrôle</li>
+</ul>
+
+<div style="text-align: center; margin: 30px 0;">
+    <a href="{{appUrl}}/tickets" class="button">📱 Gérer mes billets</a>
+</div>
+
+<div class="event-info">
+    <p><strong>Besoin d'aide ?</strong></p>
+    <p>📧 Email : <a href="mailto:{{supportEmail}}">{{supportEmail}}</a></p>
+    <p>⏰ Support disponible 24h/24 pendant les événements</p>
+</div>
+
+<p>Nous vous souhaitons un excellent événement ! 🎊</p>
+
+<p>L'équipe Billetterie</p>

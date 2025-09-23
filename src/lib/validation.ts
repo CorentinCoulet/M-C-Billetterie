@@ -141,7 +141,7 @@ export function validate<T>(schema: z.ZodSchema<T>, data: unknown): { success: t
  */
 export function formatZodErrors(errors: z.ZodError): Array<{ path: string[]; message: string }> {
   return errors.errors.map(error => ({
-    path: error.path,
+    path: error.path.map(String),
     message: error.message,
   }));
 }

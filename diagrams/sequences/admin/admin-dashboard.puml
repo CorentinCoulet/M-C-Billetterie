@@ -1,0 +1,34 @@
+@startuml admin-dashboard
+!include admin-common.puml
+title Dashboard administrateur
+
+== Dashboard administrateur ==
+Admin -> Frontend: Consulter dashboard global
+Frontend -> API: GET /api/admin/dashboard
+API -> Auth: Vérifier rôle ADMIN
+Auth --> API: admin verified
+
+API -> AdminCtrl: getDashboard()
+AdminCtrl -> AnalyticsSvc: getGlobalMetrics()
+
+par Métriques utilisateurs
+    AnalyticsSvc -> DB: SELECT COUNT(*) FROM users WHERE role=USER
+    AnalyticsSvc -> DB: SELECT COUNT(*) FROM users WHERE created_at >= 'date_param'
+    DB --> AnalyticsSvc: user metrics
+else Métriques événements
+    AnalyticsSvc -> DB: SELECT COUNT(*) FROM events WHERE status=published
+    AnalyticsSvc -> DB: SELECT SUM(revenue) FROM orders WHERE status=paid
+    DB --> AnalyticsSvc: event metrics
+else Métriques sécurité
+    AnalyticsSvc -> DB: SELECT COUNT(*) FROM audit_logs WHERE action LIKE 'security_%'
+    AnalyticsSvc -> Redis: GET security:alerts:count
+    Redis --> AnalyticsSvc: security alerts
+end
+
+AnalyticsSvc -> AnalyticsSvc: Aggregate platform KPIs
+AnalyticsSvc --> AdminCtrl: dashboard data
+AdminCtrl --> API: global metrics
+API --> Frontend: dashboard data
+Frontend --> Admin: Dashboard avec métriques globales
+
+@enduml

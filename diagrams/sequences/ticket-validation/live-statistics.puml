@@ -1,0 +1,38 @@
+@startuml "Statistiques en temps réel"
+
+title Consultation des statistiques d'événement en temps réel
+
+actor "Contrôleur\n(Staff événement)" as Controller
+participant "App Mobile\n(Scan QR)" as MobileApp
+participant "API Gateway\n(Rate Limiter)" as API
+participant "Auth Middleware" as Auth
+participant "Analytics Service" as AnalyticsSvc
+participant "Database\n(PostgreSQL)" as DB
+participant "Redis Cache" as Redis
+
+== Consultation des statistiques temps réel ==
+Controller -> MobileApp: Voir stats événement
+MobileApp -> API: GET /api/events/{eventId}/live-stats
+API -> Auth: Vérifier permissions staff
+Auth --> API: access granted
+
+== Récupération des métriques ==
+API -> AnalyticsSvc: getLiveEventStats(eventId)
+AnalyticsSvc -> Redis: MGET event:{eventId}:*
+Redis --> AnalyticsSvc: live metrics
+
+AnalyticsSvc -> DB: SELECT COUNT(*) FROM tickets WHERE eventId=? AND status='paid'
+DB --> AnalyticsSvc: total tickets sold
+
+== Calcul des statistiques ==
+AnalyticsSvc -> AnalyticsSvc: Calculate metrics
+note right: - Taux de présence\n- Affluence par heure\n- Types de billets\n- Temps d'attente
+
+== Affichage du dashboard ==
+AnalyticsSvc --> API: live stats
+API --> MobileApp: real-time metrics
+MobileApp --> Controller: Dashboard avec stats live
+
+note over Controller: Affichage en temps réel :\n• Billets validés / Total vendu\n• Taux de présence\n• Pic d'affluence\n• Files d'attente\n• Performance du staff
+
+@enduml

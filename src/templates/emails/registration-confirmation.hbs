@@ -1,0 +1,42 @@
+<h1>🎉 Bienvenue sur la Billetterie !</h1>
+
+<p>Bonjour <strong>{{name}}</strong>,</p>
+
+<p>Nous sommes ravis de vous accueillir sur notre plateforme de billetterie en ligne ! Votre compte a été créé avec succès.</p>
+
+{{#if verificationUrl}}
+<div class="event-info">
+    <p><strong>⚠️ Étape importante :</strong> Veuillez vérifier votre adresse email en cliquant sur le bouton ci-dessous :</p>
+    <div style="text-align: center;">
+        <a href="{{verificationUrl}}" class="button">✉️ Vérifier mon email</a>
+    </div>
+    <p><small>Ce lien expirera dans 24 heures. Si vous ne voyez pas le bouton, copiez ce lien dans votre navigateur : {{verificationUrl}}</small></p>
+</div>
+{{/if}}
+
+<h2>🎫 Que pouvez-vous faire maintenant ?</h2>
+<ul>
+    <li><strong>Découvrir les événements</strong> - Parcourez notre sélection d'événements exclusifs</li>
+    <li><strong>Acheter des billets</strong> - Réservez vos places en quelques clics</li>
+    <li><strong>Gérer vos commandes</strong> - Suivez vos achats depuis votre espace personnel</li>
+    <li><strong>Recevoir vos billets</strong> - Récupérez vos QR codes directement par email</li>
+</ul>
+
+<div style="text-align: center; margin: 30px 0;">
+    <a href="{{appUrl}}/events" class="button">🎪 Découvrir les événements</a>
+</div>
+
+<div class="event-info">
+    <h3>💡 Conseils pour bien débuter</h3>
+    <ul>
+        <li>Complétez votre profil pour une expérience personnalisée</li>
+        <li>Activez les notifications pour ne rater aucun événement</li>
+        <li>Suivez vos artistes et organisateurs préférés</li>
+    </ul>
+</div>
+
+<p>Si vous avez des questions ou besoin d'aide, notre équipe support est à votre disposition à l'adresse <a href="mailto:{{supportEmail}}">{{supportEmail}}</a>.</p>
+
+<p>Merci de votre confiance et bienvenue dans la communauté !</p>
+
+<p>🎵 L'équipe Billetterie</p>

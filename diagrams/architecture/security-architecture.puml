@@ -1,0 +1,102 @@
+@startuml Security Architecture - Billetterie
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+
+title Architecture de sécurité - Billetterie
+
+Person(user, "Utilisateur", "Client/Organisateur/Admin")
+Person(attacker, "Attaquant", "Utilisateur malveillant", $tags="threat")
+
+System_Boundary(security_perimeter, "Périmètre de sécurité") {
+    
+    Container_Boundary(edge_security, "Sécurité en bordure") {
+        Container(waf, "Web Application Firewall", "ModSecurity", "Protection contre les attaques courantes")
+        Container(ddos_protection, "Protection DDoS", "Rate Limiting", "Limitation du trafic")
+        Container(ssl_termination, "Terminaison SSL", "Nginx/HAProxy", "Chiffrement TLS 1.3")
+    }
+    
+    Container_Boundary(app_security, "Sécurité applicative") {
+        Container(auth_middleware, "Middleware Auth", "Next.js Middleware", "Vérification des tokens")
+        Container(auth_service, "Service Auth", "Better Auth", "Authentification et autorisation")
+        Container(session_mgmt, "Gestion Sessions", "Redis + JWT", "Sessions sécurisées")
+        Container(input_validation, "Validation Entrées", "Zod + Joi", "Validation et sanitisation")
+        Container(rate_limiter, "Rate Limiting", "Express Rate Limit", "Limitation par utilisateur")
+    }
+    
+    Container_Boundary(data_security, "Sécurité des données") {
+        Container(encryption_service, "Service Chiffrement", "bcryptjs", "Hachage mots de passe")
+        Container(data_sanitization, "Sanitisation", "DOMPurify", "Nettoyage des données")
+        Container(sql_protection, "Protection SQL", "Prisma ORM", "Prévention injection SQL")
+        Container(audit_service, "Service Audit", "Logging", "Traçabilité des actions")
+    }
+    
+    Container_Boundary(secure_storage, "Stockage sécurisé") {
+        ContainerDb(encrypted_db, "DB Chiffrée", "PostgreSQL + TDE", "Données chiffrées au repos")
+        ContainerDb(secure_redis, "Redis Sécurisé", "Redis + Auth", "Cache avec authentification")
+        ContainerDb(secure_files, "Fichiers Sécurisés", "Volumes + Permissions", "Stockage avec permissions restreintes")
+    }
+    
+    Container_Boundary(monitoring_security, "Monitoring de sécurité") {
+        Container(security_monitoring, "Monitoring Sécurité", "Sentry + Custom", "Détection d'anomalies")
+        Container(intrusion_detection, "Détection Intrusion", "Log Analysis", "Analyse des logs")
+        Container(vulnerability_scan, "Scan Vulnérabilités", "Automated Tools", "Scan automatique")
+    }
+}
+
+System_Boundary(payment_security, "Sécurité des paiements") {
+    System_Ext(stripe_secure, "Stripe (PCI DSS)", "Traitement sécurisé des paiements")
+    Container(payment_proxy, "Proxy Paiement", "Stripe SDK", "Interface sécurisée avec Stripe")
+}
+
+System_Boundary(external_security, "Services de sécurité externes") {
+    System_Ext(threat_intel, "Threat Intelligence", "Feeds de menaces")
+    System_Ext(security_updates, "Mises à jour sécurité", "Patches automatiques")
+}
+
+' Flux de sécurité normal
+Rel(user, ssl_termination, "HTTPS Request", "TLS 1.3")
+Rel(ssl_termination, waf, "Filtered Request")
+Rel(waf, ddos_protection, "Clean Request")
+Rel(ddos_protection, auth_middleware, "Rate Limited Request")
+Rel(auth_middleware, auth_service, "Auth Check")
+Rel(auth_service, session_mgmt, "Session Validation")
+Rel(session_mgmt, secure_redis, "Session Data")
+
+' Validation et protection
+Rel(auth_middleware, input_validation, "Input Sanitization")
+Rel(input_validation, data_sanitization, "Data Cleaning")
+Rel(data_sanitization, sql_protection, "Safe Queries")
+Rel(sql_protection, encrypted_db, "Encrypted Storage")
+
+' Authentification
+Rel(auth_service, encryption_service, "Password Hashing")
+Rel(auth_service, rate_limiter, "Login Attempts")
+
+' Audit et monitoring
+Rel(auth_service, audit_service, "Auth Events")
+Rel(sql_protection, audit_service, "DB Operations")
+Rel(audit_service, security_monitoring, "Security Logs")
+Rel(security_monitoring, intrusion_detection, "Anomaly Detection")
+
+' Paiements sécurisés
+Rel(auth_service, payment_proxy, "Authenticated Payment")
+Rel(payment_proxy, stripe_secure, "PCI Compliant")
+
+' Menaces bloquées
+Rel(attacker, waf, "Malicious Request", $tags="blocked")
+Rel(attacker, ddos_protection, "DDoS Attack", $tags="blocked")
+Rel(waf, security_monitoring, "Attack Detected", $tags="alert")
+
+' Services externes
+Rel(security_monitoring, threat_intel, "Threat Feed")
+Rel(vulnerability_scan, security_updates, "Patch Management")
+
+' Stockage sécurisé
+Rel(encrypted_db, secure_files, "Backup Encryption")
+Rel(audit_service, secure_files, "Audit Logs")
+
+AddElementTag("threat", $bgColor="red", $fontColor="white")
+AddElementTag("blocked", $textColor="red", $lineStyle=DashedLine())
+AddElementTag("alert", $textColor="orange")
+
+SHOW_LEGEND()
+@enduml

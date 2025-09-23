@@ -1,0 +1,122 @@
+@startuml system-services
+
+!theme aws-orange
+skinparam linetype ortho
+skinparam backgroundColor #FFFFFF
+
+title System Services
+
+' ========== ÉNUMÉRATIONS ==========
+
+enum NotificationType {
+    EMAIL
+    SMS
+    PUSH
+    IN_APP
+}
+
+enum NotificationStatus {
+    PENDING
+    SENT
+    DELIVERED
+    FAILED
+}
+
+enum BackupStatus {
+    PENDING
+    IN_PROGRESS
+    COMPLETED
+    FAILED
+}
+
+' ========== CLASSES SYSTÈME ==========
+
+class ActivityLog {
+    - id: String
+    - userId: String
+    - action: String
+    - targetType: String
+    - targetId: String
+    - timestamp: DateTime
+    - metadata: Object
+    --
+    + logActivity(user: User, action: String, target: Object): void
+    + getUserActivities(userId: String): ActivityLog[]
+    + getRecentActivities(limit: int): ActivityLog[]
+}
+
+class Notification {
+    - id: String
+    - userId: String
+    - type: NotificationType
+    - status: NotificationStatus
+    - message: String
+    - sentAt: DateTime
+    - readAt: DateTime
+    --
+    + send(): boolean
+    + markAsRead(): void
+    + isRead(): boolean
+    + retry(): boolean
+}
+
+class NotificationService {
+    - emailProvider: EmailProvider
+    - smsProvider: SMSProvider
+    - pushProvider: PushProvider
+    --
+    + sendNotification(notification: Notification): boolean
+    + sendBulkNotifications(notifications: Notification[]): boolean
+    + scheduleNotification(notification: Notification, sendAt: DateTime): void
+}
+
+abstract class NotificationProvider {
+    + send(message: String, recipient: String): boolean
+    + validateRecipient(recipient: String): boolean
+}
+
+class EmailProvider extends NotificationProvider {
+    - smtpConfig: SMTPConfig
+    --
+    + send(message: String, recipient: String): boolean
+    + sendWithTemplate(template: String, data: Object, recipient: String): boolean
+}
+
+class SystemBackup {
+    - id: String
+    - type: String
+    - status: BackupStatus
+    - filePath: String
+    - fileSize: number
+    - startedAt: DateTime
+    - completedAt: DateTime
+    --
+    + start(): boolean
+    + isCompleted(): boolean
+    + getProgress(): number
+    + restore(): boolean
+    + delete(): boolean
+}
+
+class BackupManager {
+    - backupSchedule: String
+    - retentionDays: int
+    --
+    + createBackup(type: String): SystemBackup
+    + scheduleBackup(schedule: String): void
+    + cleanupOldBackups(): void
+    + restoreFromBackup(backupId: String): boolean
+}
+
+' ========== RELATIONS ==========
+
+ActivityLog::userId --> User : belongs_to
+Notification::userId --> User : for_user
+Notification::type ||-- NotificationType
+Notification::status ||-- NotificationStatus
+SystemBackup::status ||-- BackupStatus
+NotificationService --> NotificationProvider : uses
+NotificationService --> Notification : manages
+BackupManager --> SystemBackup : manages
+
+@enduml

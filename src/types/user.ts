@@ -1,4 +1,4 @@
-import { Role } from '@prisma/client';
+import { UserRole } from './enums/user.enum';
 
 export type BlockedUserBasic = {
   id: string;
@@ -12,30 +12,28 @@ export type UserWithRelations = {
   name: string | null;
   email: string;
   password: string | null;
-  role: Role;
-  phone: string | null;
-  address: string | null;
+  role: string;
+  isVerified: boolean;
+  lastLogin: Date | null;
   createdAt: Date;
   updatedAt: Date;
-  blockedUser: BlockedUserBasic | null;
+  blocked: BlockedUserBasic | null;
 }
 
 export type UserCreateInput = {
   name?: string | null;
   email: string;
   password?: string | null;
-  role?: Role;
-  phone?: string | null;
-  address?: string | null;
+  role?: UserRole;
+  isVerified?: boolean;
 }
 
 export type UserUpdateInput = {
   name?: string | null;
   email?: string;
   password?: string | null;
-  role?: Role;
-  phone?: string | null;
-  address?: string | null;
+  role?: UserRole;
+  isVerified?: boolean;
 }
 
 export type UserWhereInput = {
@@ -45,7 +43,7 @@ export type UserWhereInput = {
     contains?: string;
     mode?: 'insensitive';
   };
-  role?: Role;
+  role?: UserRole;
   AND?: UserWhereInput[];
   OR?: UserWhereInput[];
 }
@@ -61,6 +59,4 @@ export type UserOrderByInput = {
 export type UserProfileUpdateInput = {
   name?: string;
   email?: string;
-  phone?: string;
-  address?: string;
 }

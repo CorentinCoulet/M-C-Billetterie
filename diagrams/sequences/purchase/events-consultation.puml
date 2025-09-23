@@ -1,0 +1,17 @@
+@startuml "Consultation des événements"
+
+title Consultation des événements
+
+actor "Utilisateur" as User
+participant "Frontend\n(Next.js)" as Frontend
+participant "API Gateway\n(Rate Limiter)" as API
+participant "Database\n(PostgreSQL)" as DB
+
+User -> Frontend: Consulter événements
+Frontend -> API: GET /api/events
+API -> DB: SELECT events WHERE status='published'
+DB --> API: events list
+API --> Frontend: events data
+Frontend --> User: Afficher événements
+
+@enduml

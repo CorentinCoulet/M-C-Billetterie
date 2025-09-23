@@ -1,83 +1,62 @@
 import prisma from '@/lib/prisma';
-import { TicketType } from '@prisma/client';
+import crypto from 'crypto';
+import QRCode from 'qrcode';
+import { Prisma, TicketStatus } from '../generated/prisma';
 import { BaseService } from './baseService';
 
-// Types spécifiques pour les relations
-type EventBasic = {
-  id: string;
-  title: string;
-  date: Date;
-  location: string;
-}
+// Use Prisma generated types
+type TicketWithRelations = Prisma.TicketGetPayload<{
+  include: {
+    event: true;
+    user: true;
+    order: true;
+    qrCode: true;
+  }
+}>;
 
-type OrderTicketBasic = {
-  id: string;
-  orderId: string;
-  ticketId: string;
-  quantity: number;
-  unitPrice: number;
-}
-
-type TicketWithRelations = {
-  id: string;
-  name: string;
-  description: string | null;
-  price: number;
-  quantity: number;
-  type: TicketType | null;
-  eventId: string;
-  reserved: number;
-  createdAt: Date;
-  updatedAt: Date;
-  event: EventBasic;
-  orders: OrderTicketBasic[];
-}
-
-// Types d'entrée pour les opérations
+// Input types for operations (based on actual Prisma Ticket model)
 type TicketCreateInput = {
-  name: string;
-  description?: string | null;
-  price: number;
-  quantity: number;
-  type?: TicketType | null;
   eventId: string;
-  reserved?: number;
+  userId?: string;
+  orderId?: string;
+  code: string;
+  status?: TicketStatus;
+  seatNumber?: string;
+  currentQRCode?: string;
+  qrCodeGeneratedAt?: Date;
+  qrRotationInterval?: number;
+  metadata?: any;
 }
 
 type TicketUpdateInput = {
-  name?: string;
-  description?: string | null;
-  price?: number;
-  quantity?: number;
-  type?: TicketType | null;
-  reserved?: number;
+  status?: TicketStatus;
+  seatNumber?: string;
+  currentQRCode?: string;
+  qrCodeGeneratedAt?: Date;
+  qrRotationInterval?: number;
+  isScanned?: boolean;
+  scannedAt?: Date;
+  usedAt?: Date;
+  metadata?: any;
 }
 
 type TicketWhereInput = {
   id?: string;
-  name?: {
-    contains?: string;
-    mode?: 'insensitive';
-  };
+  code?: string;
   eventId?: string;
-  type?: TicketType;
+  userId?: string;
+  status?: TicketStatus;
   AND?: TicketWhereInput[];
   OR?: TicketWhereInput[];
 }
 
 type TicketOrderByInput = {
   id?: 'asc' | 'desc';
-  name?: 'asc' | 'desc';
-  price?: 'asc' | 'desc';
-  quantity?: 'asc' | 'desc';
+  code?: 'asc' | 'desc';
+  status?: 'asc' | 'desc';
+  purchasedAt?: 'asc' | 'desc';
   createdAt?: 'asc' | 'desc';
   updatedAt?: 'asc' | 'desc';
-}
-
-type TicketAvailability = {
-  available: boolean;
-  remaining: number;
-  total: number;
 }
 
 type UserTicket = {
@@ -89,7 +68,9 @@ type UserTicket = {
 // Standard relations to include in ticket queries
 const ticketIncludes = {
   event: true,
-  orders: true
+  user: true,
+  order: true,
+  qrCode: true
 };
 
 /**
@@ -144,17 +125,16 @@ export class TicketService extends BaseService<TicketWithRelations> {
    * Create multiple tickets for an event
    */
   async createTicketsForEvent(eventId: string, tickets: Array<{
-    name: string;
-    description?: string;
-    price: number;
-    quantity: number;
-    type?: TicketType | null;
+    code: string;
+    seatNumber?: string;
+    userId?: string;
   }>): Promise<TicketWithRelations[]> {
     const createdTickets: TicketWithRelations[] = [];
 
     for (const ticket of tickets) {
       const createdTicket = await this.create({
         ...ticket,
+        eventId,
         event: {
           connect: { id: eventId }
         }
@@ -180,97 +160,210 @@ export class TicketService extends BaseService<TicketWithRelations> {
   }
 
   /**
-   * Check ticket availability
+   * Get tickets purchased by a user
    */
-  async checkAvailability(id: string): Promise<TicketAvailability> {
-    const ticket = await this.getById(id);
+  async getUserTickets(userId: string): Promise<UserTicket[]> {
+    const tickets = await prisma.ticket.findMany({
+      where: {
+        userId,
+        status: 'paid'
+      },
+      include: {
+        event: true,
+        user: true,
+        order: true,
+        qrCode: true
+      }
+    });
+
+    const userTickets: UserTicket[] = tickets.map(ticket => ({
+      ticket: ticket as TicketWithRelations,
+      orderId: ticket.orderId || '',
+      purchaseDate: ticket.purchasedAt
+    }));
+
+    return userTickets;
+  }
+
+  /**
+   * Generate QR code for a ticket
+   */
+  async generateTicketQRCode(ticketId: string): Promise<{
+    qrCodeDataUrl: string;
+    qrCodeToken: string;
+  }> {
+    // Get ticket with event details
+    const ticket = await prisma.ticket.findUnique({
+      where: { id: ticketId },
+      include: {
+        event: true,
+        user: true,
+        order: true
+      }
+    });
 
     if (!ticket) {
       throw new Error('Ticket not found');
     }
 
-    const soldCount = ticket.orders.length;
-    const remaining = ticket.quantity - soldCount;
+    // Create a unique token for this ticket
+    const qrCodeToken = this.generateQRCodeToken(ticketId, ticket.orderId || '', ticket.userId || '');
+
+    // Prepare QR code data
+    const qrCodeData = {
+      ticketId: ticket.id,
+      eventId: ticket.eventId,
+      userId: ticket.userId,
+      orderId: ticket.orderId,
+      eventTitle: ticket.event?.title || 'Event',
+      eventDate: ticket.event?.date?.toISOString() || '',
+      issuedAt: new Date().toISOString(),
+      token: qrCodeToken,
+      checksum: this.generateChecksum(ticket.id, ticket.eventId, ticket.userId || '')
+    };
+
+    // Generate QR code
+    const qrCodeDataUrl = await QRCode.toDataURL(JSON.stringify(qrCodeData), {
+      errorCorrectionLevel: 'H',
+      margin: 4,
+      width: 200,
+      color: {
+        dark: '#000000',
+        light: '#ffffff'
+      }
+    });
+
+    // Store/update QR code in database
+    await prisma.ticket.update({
+      where: { id: ticketId },
+      data: {
+        currentQRCode: qrCodeDataUrl,
+        qrCodeGeneratedAt: new Date()
+      }
+    });
 
     return {
-      available: remaining > 0,
-      remaining,
-      total: ticket.quantity
+      qrCodeDataUrl,
+      qrCodeToken
     };
   }
 
   /**
-   * Reserve tickets (decrease available quantity)
+   * Validate a ticket QR code
    */
-  async reserveTickets(id: string, quantity: number): Promise<TicketWithRelations> {
-    const availability = await this.checkAvailability(id);
-
-    if (!availability.available || availability.remaining < quantity) {
-      throw new Error('Not enough tickets available');
-    }
-
-    // In a real implementation, you might want to use a transaction
-    // to ensure atomicity when reserving tickets
-    return this.update(id, {
-      reserved: {
-        increment: quantity
+  async validateTicketQRCode(qrContent: string, markAsUsed: boolean = false): Promise<{
+    valid: boolean;
+    ticket?: any;
+    error?: string;
+    isAlreadyScanned?: boolean;
+    canBeScanned?: boolean;
+  }> {
+    try {
+      const qrData = JSON.parse(qrContent);
+      
+      // Validate QR code structure
+      if (!qrData.ticketId || !qrData.eventId || !qrData.token) {
+        return { 
+          valid: false, 
+          error: 'Invalid QR code format' 
+        };
       }
-    });
-  }
 
-  /**
-   * Release reserved tickets
-   */
-  async releaseReservedTickets(id: string, quantity: number): Promise<TicketWithRelations> {
-    const ticket = await this.getById(id);
-
-    if (!ticket) {
-      throw new Error('Ticket not found');
-    }
-
-    const newReservedValue = Math.max(0, ticket.reserved - quantity);
-
-    return this.update(id, {
-      reserved: newReservedValue
-    });
-  }
-
-  /**
-   * Get tickets purchased by a user
-   */
-  async getUserTickets(userId: string): Promise<UserTicket[]> {
-    const orders = await prisma.order.findMany({
-      where: {
-        userId,
-        status: 'COMPLETED'
-      },
-      include: {
-        tickets: {
-          include: {
-            ticket: {
-              include: {
-                event: true,
-                orders: true
-              }
-            }
-          }
+      // Get ticket from database
+      const ticket = await prisma.ticket.findUnique({
+        where: { id: qrData.ticketId },
+        include: {
+          event: true,
+          user: true,
+          order: true
         }
+      });
+
+      if (!ticket) {
+        return { 
+          valid: false, 
+          error: 'Ticket not found' 
+        };
       }
-    });
 
-    const userTickets: UserTicket[] = [];
+      // Check if ticket matches QR data
+      if (ticket.eventId !== qrData.eventId) {
+        return { 
+          valid: false, 
+          error: 'Ticket does not match event' 
+        };
+      }
 
-    for (const order of orders) {
-      for (const orderTicket of order.tickets) {
-        userTickets.push({
-          ticket: orderTicket.ticket as unknown as TicketWithRelations,
-          orderId: order.id,
-          purchaseDate: order.createdAt
+      // Verify checksum
+      const expectedChecksum = this.generateChecksum(ticket.id, ticket.eventId, ticket.userId || '');
+      if (qrData.checksum !== expectedChecksum) {
+        return { 
+          valid: false, 
+          error: 'Invalid ticket signature' 
+        };
+      }
+
+      // Check if already scanned
+      if (ticket.isScanned) {
+        return {
+          valid: true,
+          ticket,
+          isAlreadyScanned: true,
+          canBeScanned: false,
+          error: 'Ticket already used'
+        };
+      }
+
+      // Check if event date has passed (if needed)
+      if (ticket.event && ticket.event.date < new Date()) {
+        // Still valid but event has passed - up to business logic
+        console.warn(`Validating ticket for past event: ${ticket.event.title}`);
+      }
+
+      // Mark as used if requested
+      if (markAsUsed && !ticket.isScanned) {
+        await prisma.ticket.update({
+          where: { id: ticket.id },
+          data: {
+            isScanned: true,
+            scannedAt: new Date()
+          }
         });
+        
+        ticket.isScanned = true;
+        ticket.scannedAt = new Date();
       }
-    }
 
-    return userTickets;
+      return {
+        valid: true,
+        ticket,
+        isAlreadyScanned: false,
+        canBeScanned: true
+      };
+
+    } catch (error) {
+      console.error('Error validating QR code:', error);
+      return { 
+        valid: false, 
+        error: 'Failed to parse QR code' 
+      };
+    }
+  }
+
+  /**
+   * Generate a secure token for QR code
+   */
+  private generateQRCodeToken(ticketId: string, orderId: string, userId: string): string {
+    const data = `${ticketId}-${orderId}-${userId}-${Date.now()}`;
+    return crypto.createHash('sha256').update(data).digest('hex');
+  }
+
+  /**
+   * Generate checksum for ticket validation
+   */
+  private generateChecksum(ticketId: string, eventId: string, userId: string): string {
+    const data = `${ticketId}-${eventId}-${userId}`;
+    return crypto.createHash('md5').update(data).digest('hex');
   }
 }
 

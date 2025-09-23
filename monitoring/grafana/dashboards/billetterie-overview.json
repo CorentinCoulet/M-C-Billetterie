@@ -1,0 +1,232 @@
+{
+  "dashboard": {
+    "id": null,
+    "uid": "billetterie-overview",
+    "title": "Billetterie - Vue d'ensemble",
+    "tags": ["billetterie", "overview"],
+    "timezone": "browser",
+    "panels": [
+      {
+        "id": 1,
+        "title": "Statut des services",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "billetterie_app_health_status",
+            "refId": "A"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "color": {
+              "mode": "thresholds"
+            },
+            "mappings": [
+              {
+                "options": {
+                  "0": {
+                    "color": "red",
+                    "text": "DOWN"
+                  },
+                  "1": {
+                    "color": "green",
+                    "text": "UP"
+                  }
+                },
+                "type": "value"
+              }
+            ],
+            "thresholds": {
+              "steps": [
+                {
+                  "color": "red",
+                  "value": null
+                },
+                {
+                  "color": "green",
+                  "value": 1
+                }
+              ]
+            }
+          }
+        },
+        "gridPos": {
+          "h": 4,
+          "w": 6,
+          "x": 0,
+          "y": 0
+        }
+      },
+      {
+        "id": 2,
+        "title": "Requêtes HTTP/min",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "rate(billetterie_http_requests_total[5m]) * 60",
+            "refId": "A"
+          }
+        ],
+        "yAxes": [
+          {
+            "label": "Requêtes/min"
+          }
+        ],
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 6,
+          "y": 0
+        }
+      },
+      {
+        "id": 3,
+        "title": "Temps de réponse",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.95, rate(billetterie_http_request_duration_seconds_bucket[5m]))",
+            "legendFormat": "95e percentile",
+            "refId": "A"
+          },
+          {
+            "expr": "histogram_quantile(0.50, rate(billetterie_http_request_duration_seconds_bucket[5m]))",
+            "legendFormat": "50e percentile",
+            "refId": "B"
+          }
+        ],
+        "yAxes": [
+          {
+            "label": "Secondes",
+            "min": 0
+          }
+        ],
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 18,
+          "y": 0
+        }
+      },
+      {
+        "id": 4,
+        "title": "Erreurs HTTP",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "rate(billetterie_http_requests_total{status_code=~\"4..|5..\"}[5m])",
+            "refId": "A"
+          }
+        ],
+        "yAxes": [
+          {
+            "label": "Erreurs/s",
+            "min": 0
+          }
+        ],
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 0,
+          "y": 8
+        }
+      },
+      {
+        "id": 5,
+        "title": "Utilisateurs actifs",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "billetterie_active_user_sessions",
+            "refId": "A"
+          }
+        ],
+        "gridPos": {
+          "h": 4,
+          "w": 6,
+          "x": 12,
+          "y": 8
+        }
+      },
+      {
+        "id": 6,
+        "title": "Revenus (€)",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "billetterie_revenue_total / 100",
+            "refId": "A"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "currencyEUR"
+          }
+        },
+        "gridPos": {
+          "h": 4,
+          "w": 6,
+          "x": 18,
+          "y": 8
+        }
+      },
+      {
+        "id": 7,
+        "title": "Performance Base de données",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.95, rate(billetterie_database_query_duration_seconds_bucket[5m]))",
+            "legendFormat": "95e percentile",
+            "refId": "A"
+          }
+        ],
+        "yAxes": [
+          {
+            "label": "Secondes",
+            "min": 0
+          }
+        ],
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 0,
+          "y": 16
+        }
+      },
+      {
+        "id": 8,
+        "title": "Cache Redis",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "rate(billetterie_cache_hits_total[5m])",
+            "legendFormat": "Hits",
+            "refId": "A"
+          },
+          {
+            "expr": "rate(billetterie_cache_misses_total[5m])",
+            "legendFormat": "Misses",
+            "refId": "B"
+          }
+        ],
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 12,
+          "y": 16
+        }
+      }
+    ],
+    "time": {
+      "from": "now-1h",
+      "to": "now"
+    },
+    "timepicker": {},
+    "timezone": "",
+    "title": "Billetterie - Vue d'ensemble",
+    "uid": "billetterie-overview",
+    "version": 1,
+    "weekStart": ""
+  }
+}

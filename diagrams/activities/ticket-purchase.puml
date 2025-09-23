@@ -1,0 +1,83 @@
+@startuml ticket-purchase
+!theme aws-orange
+title Diagramme d'Activité - Achat de Billets
+
+start
+:Utilisateur parcourt les événements;
+:Sélectionne un événement;
+:Consulte détails et billets disponibles;
+
+if (Billets disponibles ?) then (non)
+  :Affiche "Événement complet";
+  :Propose liste d'attente;
+  stop
+else (oui)
+  :Sélectionne type et quantité de billets;
+  :Ajoute au panier;
+  
+  if (Continuer shopping ?) then (oui)
+    :Retourne à la liste événements;
+  else (non)
+    :Accède au panier;
+    
+    if (Panier vide ?) then (oui)
+      stop
+    else (non)
+      :Vérifie disponibilité des billets;
+      
+      if (Billets toujours disponibles ?) then (non)
+        :Met à jour panier;
+        :Affiche notification changements;
+      else (oui)
+        :Réserve temporairement les billets;
+        note right
+          Réservation de 15 minutes
+        end note
+        
+        :Saisit informations personnelles;
+        :Choisit mode de paiement;
+        
+        fork
+          :Valide formulaire;
+        fork again
+          :Calcule total avec taxes;
+        end fork
+        
+        if (Données valides ?) then (non)
+          :Affiche erreurs;
+          stop
+        else (oui)
+          partition "Processus Paiement" {
+            :Initie paiement Stripe;
+            :Redirige vers passerelle;
+            :Utilisateur saisit infos carte;
+            
+            if (Paiement réussi ?) then (non)
+              :Libère réservation;
+              :Affiche erreur paiement;
+              stop
+            else (oui)
+              fork
+                :Confirme réservation;
+                :Génère billets avec QR codes;
+                :Envoie email confirmation;
+              fork again
+                :Met à jour stock;
+                :Enregistre transaction;
+              fork again
+                :Log audit achat;
+                :Met à jour métriques;
+              end fork
+              
+              :Affiche page confirmation;
+              :Propose téléchargement PDF;
+            endif
+          }
+        endif
+      endif
+    endif
+  endif
+endif
+
+stop
+@enduml

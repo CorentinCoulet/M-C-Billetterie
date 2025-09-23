@@ -1,0 +1,22 @@
+@startuml "Vérifications de cohérence des données"
+
+title Vérifications de cohérence des données
+
+participant "Business Services" as Services
+participant "Database\n(PostgreSQL)" as DB
+participant "Payment Gateway\n(Stripe)" as Stripe
+participant "Message Queue\n(Bull/Redis)" as Queue
+participant "Monitoring\n(Prometheus)" as Monitoring
+
+note over Services: Scheduled task
+Services -> DB: Check data integrity
+Services -> Stripe: Reconcile payments
+Stripe --> Services: Payment data
+Services -> Services: Compare with local data
+
+alt Discrepancies found
+    Services -> Queue: addJob('fix_data_inconsistency', {issues})
+    Services -> Monitoring: Alert administrators
+end
+
+@enduml

@@ -1,0 +1,85 @@
+@startuml "Diagramme de cas d'utilisation - Utilisateur"
+
+title Diagramme de cas d'utilisation - Rôle Utilisateur
+
+left to right direction
+
+actor "Utilisateur" as User
+actor "Visiteur" as Visitor
+
+rectangle "Système de Billetterie" {
+  ' Authentification et session
+  usecase "Se déconnecter" as UC1
+  usecase "Réinitialiser mot de passe" as UC2
+  usecase "Vérifier email" as UC3
+  
+  ' Gestion du profil
+  usecase "Consulter profil" as UC4
+  usecase "Modifier profil" as UC5
+  usecase "Modifier mot de passe" as UC6
+  usecase "Gérer préférences" as UC7
+  
+  ' Achat et commandes
+  usecase "Acheter des billets" as UC8
+  usecase "Consulter panier" as UC9
+  usecase "Passer commande" as UC10
+  usecase "Effectuer paiement" as UC11
+  usecase "Consulter historique commandes" as UC12
+  usecase "Annuler commande" as UC13
+  
+  ' Gestion des billets
+  usecase "Consulter mes billets" as UC14
+  usecase "Télécharger billet" as UC15
+  usecase "Imprimer billet" as UC16
+  usecase "Partager billet" as UC17
+  
+  ' Interaction et communication
+  usecase "Laisser un avis" as UC18
+  usecase "Consulter notifications" as UC19
+  usecase "Signaler un problème" as UC20
+}
+
+' Relations pour les utilisateurs connectés
+User --> UC1
+User --> UC2
+User --> UC3
+User --> UC4
+User --> UC5
+User --> UC6
+User --> UC7
+User --> UC8
+User --> UC9
+User --> UC10
+User --> UC11
+User --> UC12
+User --> UC13
+User --> UC14
+User --> UC15
+User --> UC16
+User --> UC17
+User --> UC18
+User --> UC19
+User --> UC20
+
+' Héritage simplifié
+User --|> Visitor : hérite des droits visiteur
+
+' Relations d'inclusion et d'extension
+UC8 ..> UC9 : include
+UC10 ..> UC11 : include
+UC2 ..> UC3 : extend
+
+note right of UC11
+  Paiement sécurisé via Stripe
+end note
+
+note right of UC15
+  QR Code généré pour validation
+end note
+
+note right of UC8
+  Sélection billets et 
+  ajout au panier
+end note
+
+@enduml

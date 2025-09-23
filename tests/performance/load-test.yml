@@ -1,0 +1,122 @@
+config:
+  target: 'http://localhost:3000'
+  phases:
+    # Phase 1: Montée en charge graduelle
+    - duration: 60
+      arrivalRate: 5
+      name: "Warm up"
+    
+    # Phase 2: Charge normale
+    - duration: 120
+      arrivalRate: 10
+      name: "Normal load"
+    
+    # Phase 3: Pic de charge
+    - duration: 60
+      arrivalRate: 25
+      name: "Peak load"
+    
+    # Phase 4: Charge soutenue
+    - duration: 180
+      arrivalRate: 15
+      name: "Sustained load"
+
+  # Configuration des métriques
+  plugins:
+    metrics-by-endpoint:
+      useOnlyRequestNames: true
+    
+  # Configuration des timeouts
+  http:
+    timeout: 30
+    
+  # Variables d'environnement
+  variables:
+    testUserId: "test-user-{{ $randomNumber }}"
+    testEmail: "test{{ $randomNumber }}@example.com"
+
+scenarios:
+  # Test des endpoints principaux
+  - name: "API Health Check"
+    weight: 10
+    flow:
+      - get:
+          url: "/api/health"
+          name: "Health Check"
+          expect:
+            - statusCode: 200
+
+  # Test des événements
+  - name: "Browse Events"
+    weight: 30
+    flow:
+      - get:
+          url: "/api/events"
+          name: "List Events"
+          expect:
+            - statusCode: 200
+      - get:
+          url: "/api/events?category=concert"
+          name: "Filter Events"
+          expect:
+            - statusCode: 200
+
+  # Test d'authentification
+  - name: "Authentication Flow"
+    weight: 20
+    flow:
+      # Tentative de login (peut échouer, c'est normal)
+      - post:
+          url: "/api/auth/login"
+          name: "Login Attempt"
+          json:
+            email: "{{ testEmail }}"
+            password: "TestPassword123!"
+          capture:
+            - json: "$.token"
+              as: "authToken"
+
+  # Test de consultation de billets
+  - name: "Tickets Operations"
+    weight: 15
+    flow:
+      - get:
+          url: "/api/tickets"
+          name: "List Tickets"
+      - get:
+          url: "/api/tickets/categories"
+          name: "Ticket Categories"
+
+  # Test des métriques (pour vérifier le monitoring)
+  - name: "Monitoring Endpoints"
+    weight: 10
+    flow:
+      - get:
+          url: "/api/metrics"
+          name: "Prometheus Metrics"
+          expect:
+            - statusCode: 200
+
+  # Test de pages statiques
+  - name: "Static Pages"
+    weight: 15
+    flow:
+      - get:
+          url: "/"
+          name: "Home Page"
+      - get:
+          url: "/events"
+          name: "Events Page"
+      - get:
+          url: "/login"
+          name: "Login Page"
+
+# Configuration des seuils de performance
+expect:
+  # Temps de réponse acceptable
+  - http.response_time.p95: 500  # 95% des requêtes < 500ms
+  - http.response_time.p99: 1000 # 99% des requêtes < 1s
+  
+  # Taux d'erreur acceptable
+  - http.request_rate: "> 50"    # Plus de 50 req/s
+  - http.response_time.median: "< 200" # Médiane < 200ms

@@ -1,0 +1,75 @@
+@startuml payment-system
+
+!theme aws-orange
+skinparam linetype ortho
+skinparam backgroundColor #FFFFFF
+
+title Payment System
+
+' ========== ÉNUMÉRATIONS ==========
+
+enum PaymentMethod {
+    CREDIT_CARD
+    PAYPAL
+    BANK_TRANSFER
+    STRIPE
+}
+
+enum PaymentStatus {
+    PENDING
+    PROCESSING
+    COMPLETED
+    FAILED
+    REFUNDED
+}
+
+' ========== CLASSES PAIEMENT ==========
+
+class Payment {
+    - id: String
+    - orderId: String
+    - paymentMethod: PaymentMethod
+    - paymentStatus: PaymentStatus
+    - paymentDate: DateTime
+    - transactionId: String
+    - currency: String
+    - amount: number
+    --
+    + process(): boolean
+    + refund(): boolean
+    + isCompleted(): boolean
+    + isFailed(): boolean
+    + retry(): boolean
+    + getTransactionDetails(): Object
+}
+
+abstract class PaymentProcessor {
+    + processPayment(amount: number, method: PaymentMethod): PaymentResult
+    + refundPayment(transactionId: String): boolean
+    + validatePayment(paymentData: Object): boolean
+}
+
+class StripeProcessor extends PaymentProcessor {
+    - apiKey: String
+    --
+    + processPayment(amount: number, method: PaymentMethod): PaymentResult
+    + refundPayment(transactionId: String): boolean
+    + validatePayment(paymentData: Object): boolean
+}
+
+class PayPalProcessor extends PaymentProcessor {
+    - clientId: String
+    - clientSecret: String
+    --
+    + processPayment(amount: number, method: PaymentMethod): PaymentResult
+    + refundPayment(transactionId: String): boolean
+    + validatePayment(paymentData: Object): boolean
+}
+
+' ========== RELATIONS ==========
+
+Payment::paymentMethod ||-- PaymentMethod
+Payment::paymentStatus ||-- PaymentStatus
+Payment --> PaymentProcessor : uses
+
+@enduml

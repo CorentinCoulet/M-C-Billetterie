@@ -1,0 +1,21 @@
+@startuml "Gestion des connexions base de données"
+
+title Gestion des connexions base de données
+
+participant "API Gateway\n(Next.js API)" as API
+participant "Business Services" as Services
+participant "Database\n(PostgreSQL)" as DB
+
+API -> DB: Request connection
+DB -> DB: Get from connection pool
+DB --> API: Database connection
+
+API -> Services: Execute business logic
+Services -> DB: Execute queries
+DB --> Services: Query results
+Services --> API: Processed data
+
+API -> DB: Release connection
+DB -> DB: Return to pool
+
+@enduml

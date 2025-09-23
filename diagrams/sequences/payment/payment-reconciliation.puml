@@ -1,0 +1,27 @@
+@startuml "Réconciliation des paiements - Diagramme de séquence"
+
+title Réconciliation quotidienne des paiements avec Stripe
+
+participant "Payment Service" as PaymentSvc
+participant "Email Service" as EmailSvc
+participant "Database\n(PostgreSQL)" as DB
+participant "Stripe API" as Stripe
+
+== Réconciliation des paiements ==
+note over PaymentSvc: Tâche cron quotidienne
+PaymentSvc -> PaymentSvc: Reconcile payments with Stripe
+PaymentSvc -> Stripe: GET /payment_intents?created[gte]=yesterday
+Stripe --> PaymentSvc: payment_intents list
+
+loop Pour chaque payment_intent
+    PaymentSvc -> DB: SELECT payment WHERE stripePaymentId=?
+    alt Payment not found in DB
+        PaymentSvc -> DB: INSERT INTO reconciliation_issues (type: 'missing_payment')
+    else Status mismatch
+        PaymentSvc -> DB: INSERT INTO reconciliation_issues (type: 'status_mismatch')
+    end
+end
+
+PaymentSvc -> EmailSvc: sendReconciliationReport(issues)
+
+@enduml

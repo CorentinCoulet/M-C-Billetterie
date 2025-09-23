@@ -1,0 +1,55 @@
+@startuml security-entities
+
+!theme aws-orange
+skinparam linetype ortho
+skinparam backgroundColor #FFFFFF
+
+title Entités de Sécurité
+
+' ========== ENTITÉS DE SÉCURITÉ ==========
+
+entity UserSession {
+    * **id** : String <<PK>>
+    --
+    userId : String <<FK>>
+    * **token** : String <<UK>>
+    * **ipAddress** : String
+    userAgent : String
+    createdAt : DateTime
+    * **expiresAt** : DateTime
+    isActive : Boolean = true
+}
+
+entity AuditLog {
+    * **id** : String <<PK>>
+    --
+    * **action** : String
+    * **resourceType** : String
+    resourceId : String
+    userId : String <<FK>>
+    * **ipAddress** : String
+    * **timestamp** : DateTime
+    * **result** : String
+}
+
+entity LoginAttempt {
+    * **id** : String <<PK>>
+    --
+    userId : String <<FK>>
+    * **email** : String
+    * **ipAddress** : String
+    * **success** : Boolean
+    * **timestamp** : DateTime
+    reason : String
+}
+
+entity BlockedIP {
+    * **id** : String <<PK>>
+    --
+    * **ipAddress** : String <<UK>>
+    * **reason** : String
+    blockedAt : DateTime
+    * **expiresAt** : DateTime
+}
+
+@enduml

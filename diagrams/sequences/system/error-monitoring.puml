@@ -1,0 +1,28 @@
+@startuml "Gestion des erreurs et monitoring"
+
+title Gestion des erreurs et monitoring système
+
+participant "Business Services" as Services
+participant "Message Queue\n(Bull/Redis)" as Queue
+participant "Database\n(PostgreSQL)" as DB
+participant "Cache Layer\n(Redis)" as Cache
+participant "Monitoring\n(Prometheus)" as Monitoring
+participant "Logging\n(Winston)" as Logging
+participant "Email Service\n(SMTP)" as Email
+
+Services -> Services: Error occurs
+Services -> Logging: Log error details
+Services -> Monitoring: Increment error counter
+Services -> Queue: addJob('retry_failed_operation', {data}, {delay: 30s})
+
+Monitoring -> Monitoring: Check system health
+Monitoring -> DB: Check connection pool
+Monitoring -> Cache: Check Redis availability
+Monitoring -> Queue: Check job queue health
+
+alt System unhealthy
+    Monitoring -> Monitoring: Trigger alerts
+    Monitoring -> Email: Send alert to admins
+end
+
+@enduml

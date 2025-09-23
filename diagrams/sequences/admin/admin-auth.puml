@@ -1,0 +1,23 @@
+@startuml admin-auth
+!include admin-common.puml
+title Authentification administrateur
+
+== Authentification admin ==
+Admin -> Frontend: Connexion admin
+Frontend -> API: POST /api/auth/login
+note right
+Body: {email, password, role: ADMIN}
+end note
+API -> Auth: validateAdminLogin(credentials)
+Auth -> DB: SELECT user WHERE email=? AND role=ADMIN
+DB --> Auth: admin user data
+Auth -> SecuritySvc: validateAdminAccess(user)
+SecuritySvc -> SecuritySvc: Check IP whitelist, MFA, etc.
+SecuritySvc --> Auth: access validated
+Auth -> AuditSvc: logAdminLogin(userId, ip, userAgent)
+AuditSvc -> DB: INSERT INTO audit_logs (action: admin_login)
+Auth --> API: admin authenticated
+API --> Frontend: admin session + permissions
+Frontend --> Admin: Accès au panneau d'administration
+
+@enduml

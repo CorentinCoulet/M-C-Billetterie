@@ -1,0 +1,24 @@
+@startuml
+!define ADMIN_PARTICIPANTS
+' Participants communs pour tous les diagrammes d'administration
+
+actor "Administrateur" as Admin
+participant "Frontend\n(Admin Panel)" as Frontend
+participant "API Gateway\n(Rate Limiter)" as API
+participant "Auth Middleware" as Auth
+participant "Admin Controller" as AdminCtrl
+participant "User Service" as UserSvc
+participant "Event Service" as EventSvc
+participant "Analytics Service" as AnalyticsSvc
+participant "Audit Service" as AuditSvc
+participant "Security Service" as SecuritySvc
+participant "Email Service" as EmailSvc
+participant "Order Service" as OrderSvc
+participant "Payment Service" as PaymentSvc
+participant "Notification Service" as NotifSvc
+participant "Stripe API" as Stripe
+participant "Database\n(PostgreSQL)" as DB
+participant "Redis Cache" as Redis
+participant "Monitoring\n(Prometheus)" as Monitoring
+
+@enduml

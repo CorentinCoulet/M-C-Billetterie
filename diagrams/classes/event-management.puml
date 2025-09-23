@@ -1,0 +1,57 @@
+@startuml event-management
+
+!theme aws-orange
+skinparam linetype ortho
+skinparam backgroundColor #FFFFFF
+
+title Event Management
+
+' ========== CLASSES ÉVÉNEMENT ==========
+
+class Event {
+    - id: String
+    - title: String
+    - description: String
+    - date: DateTime
+    - location: String
+    - maxCapacity: int
+    - isPublished: boolean
+    - organizerId: String
+    - categoryId: String
+    - venueId: String
+    - createdAt: DateTime
+    --
+    + publish(): void
+    + unpublish(): void
+    + updateCapacity(capacity: int): void
+    + isAvailable(): boolean
+    + getRemainingTickets(): int
+    + canBeModified(): boolean
+    + cancel(): void
+}
+
+class Category {
+    - id: String
+    - name: String
+    --
+    + getEvents(): Event[]
+    + isActive(): boolean
+}
+
+class Venue {
+    - id: String
+    - name: String
+    - address: String
+    - capacity: int
+    --
+    + getEvents(): Event[]
+    + isAvailable(date: DateTime): boolean
+    + getCapacity(): int
+}
+
+' ========== RELATIONS ==========
+
+Event }o--|| Category : belongsTo
+Event }o--|| Venue : hostedAt
+
+@enduml

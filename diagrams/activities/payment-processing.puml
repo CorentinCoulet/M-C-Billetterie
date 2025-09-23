@@ -1,0 +1,112 @@
+@startuml payment-processing
+!theme aws-orange
+title Diagramme d'Activité - Traitement des Paiements
+
+start
+:Client valide son panier;
+:Système calcule montant total;
+
+partition "Préparation Paiement" {
+  :Vérifie disponibilité billets;
+  :Applique codes promo valides;
+  :Calcule taxes et frais;
+  :Crée session paiement Stripe;
+}
+
+:Redirige vers Stripe Checkout;
+
+partition "Saisie Paiement" {
+  :Client saisit informations carte;
+  :Stripe valide format;
+  
+  if (Format carte valide ?) then (non)
+    :Affiche erreur format;
+    stop
+  else (oui)
+    :Vérifie fonds disponibles;
+    
+    if (Fonds suffisants ?) then (non)
+      :Affiche "Fonds insuffisants";
+      :Propose autre méthode;
+      stop
+    else (oui)
+      :Autorise transaction;
+    endif
+  endif
+}
+
+partition "Traitement Banque" {
+  if (Paiement autorisé ?) then (non)
+    :Retourne code erreur;
+    :Affiche message d'erreur;
+    :Log échec paiement;
+    stop
+  else (oui)
+    :Capture paiement;
+    
+    fork
+      :Webhook Stripe déclenché;
+      :Vérifie signature webhook;
+      :Met à jour statut commande;
+    fork again
+      :Enregistre transaction;
+      :Génère facture;
+    end fork
+  endif
+}
+
+partition "Post-Paiement" {
+  if (Transaction réussie ?) then (non)
+    :Initie remboursement automatique;
+    :Libère réservation billets;
+    :Notifie client échec;
+    stop
+  else (oui)
+    fork
+      :Confirme réservation billets;
+      :Génère codes QR uniques;
+      :Sauvegarde billets en base;
+    fork again
+      :Met à jour stock disponible;
+      :Invalide codes promo utilisés;
+    fork again
+      :Envoie email confirmation;
+      :Génère PDF billets;
+      :Envoie SMS confirmation;
+    fork again
+      :Calcule commission plateforme;
+      :Programme virement organisateur;
+      :Met à jour comptabilité;
+    end fork
+    
+    :Redirige vers page succès;
+    :Affiche billets téléchargeables;
+    
+    note right
+      Les billets sont également
+      disponibles dans le compte client
+    end note
+  endif
+}
+
+partition "Gestion Remboursements" {
+  if (Demande remboursement ?) then (non)
+    :Transaction terminée;
+  else (oui)
+    :Vérifie politique remboursement;
+    
+    if (Remboursement autorisé ?) then (non)
+      :Refuse remboursement;
+      :Notifie client refus;
+    else (oui)
+      :Calcule montant remboursable;
+      :Initie remboursement Stripe;
+      :Invalide billets;
+      :Libère places;
+      :Confirme remboursement;
+    endif
+  endif
+}
+
+stop
+@enduml

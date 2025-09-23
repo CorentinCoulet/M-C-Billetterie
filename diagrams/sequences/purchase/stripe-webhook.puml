@@ -1,0 +1,25 @@
+@startuml "Webhook Stripe"
+
+title Traitement webhook Stripe
+
+participant "Stripe API" as Stripe
+participant "API Gateway\n(Rate Limiter)" as API
+participant "Payment Service" as PaymentSvc
+participant "Order Service" as OrderSvc
+participant "Ticket Service" as TicketSvc
+participant "Database\n(PostgreSQL)" as DB
+
+Stripe -> API: POST /api/webhook/stripe
+note right: Event: payment_intent.succeeded
+API -> PaymentSvc: handleStripeWebhook(event)
+PaymentSvc -> DB: SELECT payment WHERE stripePaymentId=?
+DB --> PaymentSvc: payment data
+PaymentSvc -> DB: UPDATE payment SET status='paid', paidAt=NOW()
+PaymentSvc -> OrderSvc: updateOrderStatus(orderId, 'paid')
+OrderSvc -> DB: UPDATE order SET status='paid'
+OrderSvc -> TicketSvc: activateTickets(orderId)
+TicketSvc -> DB: UPDATE tickets SET status='paid' WHERE orderId=?
+PaymentSvc --> API: webhook processed
+API --> Stripe: 200 OK
+
+@enduml

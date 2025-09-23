@@ -1,0 +1,37 @@
+@startuml "Processus de paiement"
+
+title Processus de paiement
+
+actor "Utilisateur" as User
+participant "Frontend\n(Next.js)" as Frontend
+participant "API Gateway\n(Rate Limiter)" as API
+participant "Auth Middleware" as Auth
+participant "Payment Service" as PaymentSvc
+participant "Database\n(PostgreSQL)" as DB
+participant "Stripe API" as Stripe
+
+User -> Frontend: Procéder au paiement
+Frontend -> API: POST /api/payments/intent
+note right: Body: {orderId}
+API -> Auth: Vérifier token
+Auth --> API: user verified
+
+API -> PaymentSvc: createPaymentIntent(orderId)
+PaymentSvc -> DB: SELECT order WHERE id=? AND userId=?
+DB --> PaymentSvc: order data
+PaymentSvc -> Stripe: Create Payment Intent
+note right: {amount, currency, metadata: {orderId}}
+Stripe --> PaymentSvc: {client_secret, payment_intent_id}
+PaymentSvc -> DB: INSERT INTO payments (orderId, stripePaymentId, status='pending')
+DB --> PaymentSvc: payment created
+PaymentSvc --> API: {client_secret, paymentId}
+API --> Frontend: payment intent data
+Frontend --> User: Formulaire de paiement Stripe
+
+User -> Frontend: Saisir informations carte
+Frontend -> Stripe: Confirmer paiement
+Stripe --> Frontend: Paiement confirmé
+Frontend -> API: POST /api/payments/confirm
+note right: Body: {paymentIntentId}
+
+@enduml

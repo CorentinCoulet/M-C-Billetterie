@@ -1,0 +1,23 @@
+@startuml admin-users-list
+!include admin-common.puml
+title Gestion des utilisateurs - Liste
+
+== Gestion des utilisateurs ==
+Admin -> Frontend: Modérer utilisateurs
+Frontend -> API: GET /api/admin/users
+note right
+Query: ?status=flagged&role=USER&page=1
+end note
+API -> Auth: Vérifier permissions admin
+Auth --> API: access granted
+
+API -> AdminCtrl: getUsers(filters)
+AdminCtrl -> UserSvc: getUsers(filters, pagination)
+UserSvc -> DB: SELECT users WITH last_login, order_count WHERE filters
+DB --> UserSvc: users list
+UserSvc --> AdminCtrl: paginated users
+AdminCtrl --> API: users data
+API --> Frontend: users list
+Frontend --> Admin: Liste utilisateurs avec actions
+
+@enduml

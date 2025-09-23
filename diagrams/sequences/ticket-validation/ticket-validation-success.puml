@@ -1,0 +1,42 @@
+@startuml "Validation réussie d'un billet"
+
+title Processus de validation réussie et mise à jour des données
+
+actor "Contrôleur\n(Staff événement)" as Controller
+participant "App Mobile\n(Scan QR)" as MobileApp
+participant "API Gateway\n(Rate Limiter)" as API
+participant "Ticket Controller" as TicketCtrl
+participant "Ticket Service" as TicketSvc
+participant "Analytics Service" as AnalyticsSvc
+participant "Notification Service" as NotifSvc
+participant "Database\n(PostgreSQL)" as DB
+participant "Redis Cache" as Redis
+
+== Validation réussie du billet ==
+TicketSvc -> TicketSvc: Vérifier toutes les conditions
+note right: - Billet existe\n- Événement correct\n- Status = 'paid'\n- Non utilisé\n- Dans les dates
+
+TicketSvc -> DB: BEGIN TRANSACTION
+TicketSvc -> DB: UPDATE tickets SET status='used', usedAt=NOW(), validatedBy=?
+TicketSvc -> DB: INSERT INTO ticket_validations (ticketId, eventId, validatedBy, validatedAt, device_info)
+TicketSvc -> DB: COMMIT TRANSACTION
+
+TicketSvc -> Redis: SET used_ticket:{ticketId} = true (expire 24h)
+note right: Cache pour éviter double validation
+
+== Mise à jour des statistiques ==
+TicketSvc -> AnalyticsSvc: recordTicketValidation(eventId, ticketId)
+AnalyticsSvc -> Redis: INCR event:{eventId}:validated_tickets
+AnalyticsSvc -> Redis: INCR event:{eventId}:hourly_validations:{hour}
+
+== Réponse de validation ==
+TicketSvc --> TicketCtrl: validation success
+TicketCtrl --> API: {status: 'valid', participant: {name, ticketType}}
+API --> MobileApp: validation success
+MobileApp --> Controller: ✅ "ACCÈS AUTORISÉ\nNom: John Doe\nType: VIP"
+
+== Notification optionnelle ==
+TicketCtrl -> NotifSvc: notifyTicketUsed(userId, eventId)
+NotifSvc -> NotifSvc: Send push notification (optional)
+
+@enduml

@@ -32,7 +32,7 @@ export function createRateLimiter(options: RateLimitOptions = {}) {
   const max = options.max || RATE_LIMIT_MAX;
 
   return async function rateLimiter(request: NextRequest) {
-    const ip = request.ip || 'anonymous';
+    const ip = (request as any).ip || request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || 'anonymous';
     const now = Date.now();
     
     // Get or create rate limit entry

@@ -1,0 +1,91 @@
+@startuml Deployment Architecture - Production
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Deployment.puml
+
+title Architecture de déploiement - Production
+
+Deployment_Node(internet, "Internet", "Réseau public"){
+    Deployment_Node(cdn, "CDN", "CloudFlare/AWS CloudFront"){
+        Container(static_assets, "Assets Statiques", "Images, CSS, JS")
+    }
+}
+
+Deployment_Node(load_balancer, "Load Balancer", "HAProxy/Nginx"){
+    Container(lb, "Reverse Proxy", "HAProxy", "Distribution de charge et SSL")
+    Container(waf, "WAF", "ModSecurity", "Protection contre les attaques")
+}
+
+Deployment_Node(docker_host, "Serveur Docker", "Linux Server"){
+    
+    Deployment_Node(app_container, "App Container", "Docker"){
+        Container(nextjs_app, "Next.js App", "Node.js 20", "Application principale")
+    }
+    
+    Deployment_Node(db_container, "DB Container", "Docker"){
+        ContainerDb(postgres, "PostgreSQL", "PostgreSQL 16", "Base de données principale")
+    }
+    
+    Deployment_Node(cache_container, "Cache Container", "Docker"){
+        ContainerDb(redis, "Redis", "Redis 7", "Cache et sessions")
+    }
+    
+    Deployment_Node(volumes, "Docker Volumes", "Persistent Storage"){
+        ContainerDb(uploads_vol, "Uploads", "Volume", "Fichiers uploadés")
+        ContainerDb(backups_vol, "Backups", "Volume", "Sauvegardes DB")
+        ContainerDb(logs_vol, "Logs", "Volume", "Logs applicatifs")
+    }
+}
+
+Deployment_Node(monitoring_stack, "Stack Monitoring", "Docker Compose"){
+    Deployment_Node(prometheus_container, "Prometheus Container", "Docker"){
+        Container(prometheus, "Prometheus", "Prometheus", "Collecte métriques")
+    }
+    
+    Deployment_Node(grafana_container, "Grafana Container", "Docker"){
+        Container(grafana, "Grafana", "Grafana", "Dashboards")
+    }
+    
+    Deployment_Node(alertmanager_container, "AlertManager Container", "Docker"){
+        Container(alertmanager, "AlertManager", "AlertManager", "Gestion alertes")
+    }
+}
+
+Deployment_Node(external_services, "Services Externes", "Cloud"){
+    System_Ext(stripe, "Stripe", "Paiements")
+    System_Ext(email_service, "Service Email", "SMTP")
+    System_Ext(sentry, "Sentry", "Monitoring erreurs")
+}
+
+Deployment_Node(backup_storage, "Stockage Sauvegarde", "External Storage"){
+    ContainerDb(backup_remote, "Sauvegarde Distante", "S3/NFS", "Sauvegardes automatiques")
+}
+
+' Relations réseau
+Rel(internet, cdn, "HTTPS")
+Rel(cdn, lb, "HTTPS")
+Rel(lb, waf, "Filtre trafic")
+Rel(waf, nextjs_app, "HTTPS", "Port 3000")
+
+' Relations internes
+Rel(nextjs_app, postgres, "SQL", "Port 5432")
+Rel(nextjs_app, redis, "Redis Protocol", "Port 6379")
+Rel(nextjs_app, uploads_vol, "Fichiers")
+Rel(nextjs_app, logs_vol, "Logs")
+
+' Relations monitoring
+Rel(prometheus, nextjs_app, "Scrape métriques", "HTTP")
+Rel(prometheus, postgres, "Métriques DB")
+Rel(prometheus, redis, "Métriques Cache")
+Rel(grafana, prometheus, "Lecture métriques")
+Rel(alertmanager, prometheus, "Alertes")
+
+' Relations externes
+Rel(nextjs_app, stripe, "API Paiements", "HTTPS")
+Rel(nextjs_app, email_service, "SMTP")
+Rel(nextjs_app, sentry, "Erreurs", "HTTPS")
+
+' Sauvegardes
+Rel(postgres, backups_vol, "Dump DB")
+Rel(backups_vol, backup_remote, "Sync", "rsync/S3")
+
+SHOW_LEGEND()
+@enduml

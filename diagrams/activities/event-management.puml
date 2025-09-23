@@ -1,0 +1,88 @@
+@startuml event-management
+!theme aws-orange
+title Gestion d'Événement
+
+start
+:Organisateur accède au dashboard;
+:Sélectionne événement à gérer;
+
+if (Que souhaitez-vous faire ?) then (Modifier)
+  :Accède formulaire modification;
+  :Modifie informations;
+  
+  if (Modifications impactent billets vendus ?) then (oui)
+    :Affiche avertissement;
+    
+    if (Organisateur confirme ?) then (non)
+      stop
+    else (oui)
+      :Notifie participants par email;
+      :Met à jour billets existants;
+    endif
+  endif
+  
+  :Sauvegarde modifications;
+
+elseif (Statistiques)
+  partition "Analytics" {
+    :Génère rapport ventes;
+    :Affiche métriques participation;
+    :Calcule revenus;
+    :Montre tendances;
+    :Export données CSV/PDF;
+  }
+
+elseif (Participants)
+  :Liste participants inscrits;
+  
+  if (Action participant ?) then (Annuler billet)
+    :Sélectionne participant;
+    :Confirme annulation;
+    :Rembourse si applicable;
+    :Libère place;
+    :Notifie participant;
+    
+  elseif (Envoyer message)
+    :Compose message groupe;
+    :Sélectionne destinataires;
+    :Envoie email/SMS;
+    
+  elseif (Exporter liste)
+    :Génère export participants;
+    :Télécharge fichier;
+  endif
+
+elseif (Contrôle accès)
+  partition "Validation" {
+    :Accède interface validation;
+    :Scan QR codes temps réel;
+    :Monitor entrées/sorties;
+    :Gère files d'attente;
+    :Statistiques temps réel;
+  }
+
+elseif (Annuler événement)
+  :Affiche conditions annulation;
+  
+  if (Organisateur confirme ?) then (non)
+    stop
+  else (oui)
+    :Lance processus annulation;
+    
+    fork
+      :Notifie tous participants;
+      :Initie remboursements automatiques;
+    fork again
+      :Met à jour statut événement;
+      :Archive données;
+    fork again
+      :Libère réservations lieu;
+      :Annule services associés;
+    end fork
+    
+    :Affiche confirmation annulation;
+  endif
+endif
+
+stop
+@enduml

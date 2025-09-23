@@ -1,0 +1,35 @@
+@startuml "Configuration des billets - Organisateur"
+
+title Configuration des types de billets
+
+actor "Organisateur" as Organizer
+participant "Frontend\n(Next.js)" as Frontend
+participant "API Gateway\n(Rate Limiter)" as API
+participant "Auth Middleware" as Auth
+participant "Ticket Service" as TicketSvc
+participant "Database\n(PostgreSQL)" as DB
+
+== Configuration des billets ==
+Organizer -> Frontend: Configurer types de billets
+Frontend -> API: POST /api/events/{eventId}/tickets
+note right: Body: {ticketTypes: [{name, price, quantity, description}]}
+API -> Auth: Vérifier propriété événement
+Auth -> DB: SELECT event WHERE id=? AND organizerId=?
+DB --> Auth: event owned by organizer
+
+API -> TicketSvc: createTicketTypes(eventId, ticketTypes)
+
+loop Pour chaque type de billet
+    TicketSvc -> DB: INSERT INTO ticket_types (eventId, name, price, quantity, available)
+    DB --> TicketSvc: ticketTypeId
+    
+    TicketSvc -> DB: INSERT INTO tickets (eventId, ticketTypeId, status='available')
+    note right: Créer {quantity} billets individuels
+    DB --> TicketSvc: tickets created
+end
+
+TicketSvc --> API: ticket types created
+API --> Frontend: ticket configuration saved
+Frontend --> Organizer: "Types de billets configurés"
+
+@enduml

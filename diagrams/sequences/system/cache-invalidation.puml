@@ -1,0 +1,17 @@
+@startuml "Stratégie d'invalidation du cache"
+
+title Stratégie d'invalidation du cache
+
+participant "Business Services" as Services
+participant "Cache Layer\n(Redis)" as Cache
+participant "Frontend\n(Next.js)" as Frontend
+
+Services -> Services: Data modified
+Services -> Cache: DEL specific_key
+Services -> Cache: PUBLISH cache_invalidation {pattern}
+
+Frontend -> Cache: SUBSCRIBE cache_invalidation
+Cache --> Frontend: Invalidation message
+Frontend -> Frontend: Clear client-side cache
+
+@enduml

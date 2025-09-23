@@ -1,0 +1,20 @@
+@startuml admin-events-moderation
+!include admin-common.puml
+title Modération d'événements - Liste
+
+== Modération d'événements ==
+Admin -> Frontend: Modérer événements signalés
+Frontend -> API: GET /api/admin/events/flagged
+API -> Auth: Vérifier permissions admin
+Auth --> API: access granted
+
+API -> AdminCtrl: getFlaggedEvents()
+AdminCtrl -> EventSvc: getEventsByStatus(flagged)
+EventSvc -> DB: SELECT events WITH reports WHERE status=flagged OR report_count > 0
+DB --> EventSvc: flagged events
+EventSvc --> AdminCtrl: events with reports
+AdminCtrl --> API: flagged events
+API --> Frontend: events list
+Frontend --> Admin: Événements à modérer
+
+@enduml

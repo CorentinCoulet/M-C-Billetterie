@@ -1,0 +1,34 @@
+@startuml admin-gdpr-reports
+!include admin-common.puml
+title Rapports de conformité RGPD
+
+== Rapports conformité RGPD ==
+Admin -> Frontend: Générer rapport RGPD
+Frontend -> API: GET /api/admin/compliance/gdpr
+API -> Auth: Vérifier permissions admin
+Auth --> API: access granted
+
+API -> AdminCtrl: generateGDPRReport()
+AdminCtrl -> UserSvc: getPersonalDataReport()
+
+par Données utilisateurs
+    UserSvc -> DB: SELECT users WITH personal_data_fields
+    DB --> UserSvc: user data summary
+else Consentements
+    UserSvc -> DB: SELECT user_consents WITH types, dates
+    DB --> UserSvc: consent data
+else Suppressions
+    UserSvc -> DB: SELECT deleted_users WITH deletion_reason, date
+    DB --> UserSvc: deletion data
+end
+
+UserSvc -> UserSvc: Generate compliance report
+UserSvc -> AuditSvc: logGDPRReportGenerated(adminId)
+AuditSvc -> DB: INSERT INTO audit_logs (action: gdpr_report_generated)
+
+UserSvc --> AdminCtrl: GDPR compliance report
+AdminCtrl --> API: compliance data
+API --> Frontend: GDPR report
+Frontend --> Admin: Rapport de conformité
+
+@enduml

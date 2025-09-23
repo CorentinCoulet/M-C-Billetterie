@@ -1,0 +1,28 @@
+@startuml admin-system-config
+!include admin-common.puml
+title Configuration du système
+
+== Configuration système ==
+Admin -> Frontend: Modifier paramètres système
+Frontend -> API: PUT /api/admin/settings
+note right
+Body: {maintenanceMode: false, rateLimits: {...}}
+end note
+API -> Auth: Vérifier permissions admin
+Auth --> API: access granted
+
+API -> AdminCtrl: updateSystemSettings(settings)
+AdminCtrl -> Redis: SET system:settings = {settings}
+AdminCtrl -> Redis: PUBLISH config:update = {settings}
+note right
+Notify all instances to reload config
+end note
+
+AdminCtrl -> AuditSvc: logSystemConfigChange(adminId, changes)
+AuditSvc -> DB: INSERT INTO audit_logs (action: system_config_updated)
+
+AdminCtrl --> API: settings updated
+API --> Frontend: configuration saved
+Frontend --> Admin: Configuration système mise à jour
+
+@enduml

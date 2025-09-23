@@ -1,0 +1,26 @@
+@startuml "Génération des billets et envoi de confirmation"
+
+title Génération des billets et envoi de confirmation
+
+participant "Order Service" as OrderSvc
+participant "Ticket Service" as TicketSvc
+participant "QR Service" as QRSvc
+participant "Email Service" as EmailSvc
+participant "Database\n(PostgreSQL)" as DB
+
+== Génération des billets ==
+TicketSvc -> QRSvc: generateQRCodes(tickets)
+loop Pour chaque billet
+    QRSvc -> QRSvc: Générer QR unique
+    QRSvc -> DB: INSERT INTO qr_codes (ticketId, code, data)
+end
+QRSvc --> TicketSvc: QR codes generated
+
+== Envoi de confirmation ==
+OrderSvc -> EmailSvc: sendOrderConfirmation(order, user)
+EmailSvc -> EmailSvc: Préparer template email
+EmailSvc -> EmailSvc: Attacher PDFs billets
+EmailSvc -> EmailSvc: Envoyer email SMTP
+EmailSvc --> OrderSvc: email sent
+
+@enduml

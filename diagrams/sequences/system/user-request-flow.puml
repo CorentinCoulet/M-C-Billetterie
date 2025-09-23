@@ -1,0 +1,66 @@
+@startuml "Flux de requête utilisateur"
+
+title Flux de requête utilisateur classique
+
+participant "Load Balancer\n(HAProxy)" as LB
+participant "Frontend\n(Next.js)" as Frontend
+participant "API Gateway\n(Next.js API)" as API
+participant "Rate Limiter\n(Redis)" as RateLimit
+participant "Auth Service\n(JWT + Sessions)" as Auth
+participant "Business Services" as Services
+participant "Cache Layer\n(Redis)" as Cache
+participant "Database\n(PostgreSQL)" as DB
+participant "Monitoring\n(Prometheus)" as Monitoring
+participant "Logging\n(Winston)" as Logging
+
+User -> LB: HTTPS Request
+LB -> LB: SSL Termination
+LB -> Frontend: Forward to available instance
+
+Frontend -> Frontend: Server-side rendering (SSR)
+Frontend -> API: Internal API call
+API -> RateLimit: Check rate limits
+RateLimit -> Cache: GET rate_limit:{user_id}
+Cache --> RateLimit: current count
+RateLimit -> RateLimit: Increment counter
+
+alt Rate limit OK
+    RateLimit --> API: Request allowed
+    API -> Auth: Authenticate request
+    Auth -> Cache: GET session:{token}
+    Cache --> Auth: session data
+    
+    alt Valid session
+        Auth --> API: User authenticated
+        API -> Services: Business logic
+        Services -> Cache: GET cached_data:{key}
+        Cache --> Services: cached result
+        
+        alt Cache miss
+            Services -> DB: Query database
+            DB --> Services: data
+            Services -> Cache: SET cached_data:{key} = data (TTL)
+        end
+        
+        Services --> API: Response data
+        API -> Monitoring: Record metrics
+        API -> Logging: Log request
+        API --> Frontend: JSON response
+        Frontend --> LB: HTML response
+        LB --> User: HTTPS Response
+        
+    else Invalid session
+        Auth --> API: 401 Unauthorized
+        API --> Frontend: Redirect to login
+        Frontend --> LB: Redirect response
+        LB --> User: Redirect to login
+    end
+    
+else Rate limit exceeded
+    RateLimit --> API: 429 Too Many Requests
+    API --> Frontend: Rate limit error
+    Frontend --> LB: Error response
+    LB --> User: Rate limit response
+end
+
+@enduml

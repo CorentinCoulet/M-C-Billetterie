@@ -1,0 +1,38 @@
+@startuml "Communication avec participants - Organisateur"
+
+title Envoi de notifications aux participants
+
+actor "Organisateur" as Organizer
+participant "Frontend\n(Next.js)" as Frontend
+participant "API Gateway\n(Rate Limiter)" as API
+participant "Auth Middleware" as Auth
+participant "Notification Service" as NotifSvc
+participant "Database\n(PostgreSQL)" as DB
+
+== Communication avec participants ==
+Organizer -> Frontend: Envoyer notification
+Frontend -> API: POST /api/events/{eventId}/notifications
+note right: Body: {message, type: 'email'|'push', targetAudience}
+API -> Auth: Vérifier propriété événement
+Auth --> API: access granted
+
+API -> NotifSvc: sendEventNotification(eventId, message, options)
+NotifSvc -> DB: SELECT users FROM orders WHERE eventId=? AND status='paid'
+DB --> NotifSvc: participants list
+
+loop Pour chaque participant
+    alt Email notification
+        NotifSvc -> NotifSvc: sendEmail(user, message)
+    else Push notification
+        NotifSvc -> NotifSvc: sendPushNotification(user, message)
+    end
+end
+
+NotifSvc -> DB: INSERT INTO notifications (eventId, message, sentAt, recipientCount)
+DB --> NotifSvc: notification logged
+
+NotifSvc --> API: notification sent
+API --> Frontend: {sentCount, failedCount}
+Frontend --> Organizer: "Notification envoyée à X participants"
+
+@enduml

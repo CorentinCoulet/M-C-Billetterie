@@ -1,0 +1,196 @@
+# Security-specific alerting rules for Billetterie
+groups:
+- name: security.rules
+  interval: 30s
+  rules:
+  
+  # Authentication attacks
+  - alert: BruteForceAttack
+    expr: increase(security_events_total{type="login_failure"}[5m]) > 10
+    for: 1m
+    labels:
+      severity: critical
+      category: security
+    annotations:
+      summary: "Brute force attack detected"
+      description: "More than 10 failed login attempts in 5 minutes from {{ $labels.ip }}"
+      runbook_url: "https://runbook.company.com/security/brute-force"
+      
+  - alert: MassiveLoginFailures
+    expr: rate(security_events_total{type="login_failure"}[5m]) > 0.5
+    for: 2m
+    labels:
+      severity: critical
+      category: security
+    annotations:
+      summary: "Massive login failures detected"
+      description: "High rate of login failures: {{ $value }} failures/second"
+      
+  # Injection attacks
+  - alert: SQLInjectionAttempt
+    expr: increase(security_events_total{type="injection_attempt"}[1m]) > 0
+    for: 0s
+    labels:
+      severity: critical
+      category: security
+    annotations:
+      summary: "SQL injection attempt detected"
+      description: "SQL injection detected from {{ $labels.ip }}"
+      
+  - alert: XSSAttempt
+    expr: increase(security_events_total{type="xss_attempt"}[1m]) > 0
+    for: 0s
+    labels:
+      severity: high
+      category: security
+    annotations:
+      summary: "XSS attempt detected"
+      description: "XSS attack detected from {{ $labels.ip }}"
+      
+  # Unusual access patterns
+  - alert: UnauthorizedAdminAccess
+    expr: increase(security_events_total{type="unauthorized_access", resource="admin"}[5m]) > 5
+    for: 1m
+    labels:
+      severity: critical
+      category: security
+    annotations:
+      summary: "Unauthorized admin access attempts"
+      description: "Multiple unauthorized admin access attempts from {{ $labels.ip }}"
+      
+  - alert: AbnormalAPIUsage
+    expr: rate(http_requests_total[5m]) > 50 and rate(http_requests_total{status=~"4.."}[5m]) > 10
+    for: 2m
+    labels:
+      severity: warning
+      category: security
+    annotations:
+      summary: "Abnormal API usage pattern"
+      description: "High error rate: {{ $value }} errors/second"
+      
+  # Payment fraud detection
+  - alert: PaymentFraudAttempt
+    expr: increase(security_events_total{type="payment_fraud"}[1m]) > 0
+    for: 0s
+    labels:
+      severity: critical
+      category: security
+    annotations:
+      summary: "Payment fraud attempt detected"
+      description: "Fraudulent payment attempt from {{ $labels.ip }}"
+      
+  - alert: SuspiciousPaymentPattern
+    expr: increase(payment_attempts_total[5m]) > 10 and increase(payment_failures_total[5m]) > 8
+    for: 1m
+    labels:
+      severity: high
+      category: security
+    annotations:
+      summary: "Suspicious payment pattern"
+      description: "High payment failure rate from {{ $labels.user_id }}"
+      
+  # Data breach attempts
+  - alert: DataBreachAttempt
+    expr: increase(security_events_total{type="data_breach_attempt"}[1m]) > 0
+    for: 0s
+    labels:
+      severity: critical
+      category: security
+    annotations:
+      summary: "Data breach attempt detected"
+      description: "Potential data breach attempt from {{ $labels.ip }}"
+      
+  - alert: SensitiveDataAccess
+    expr: increase(audit_events_total{action="data.export", is_sensitive="true"}[5m]) > 2
+    for: 1m
+    labels:
+      severity: high
+      category: security
+    annotations:
+      summary: "Multiple sensitive data exports"
+      description: "Multiple sensitive data exports by user {{ $labels.user_id }}"
+      
+  # System security
+  - alert: SecurityServiceDown
+    expr: up{job="security-scanner"} == 0
+    for: 1m
+    labels:
+      severity: critical
+      category: infrastructure
+    annotations:
+      summary: "Security scanning service is down"
+      description: "Security scanner has been down for more than 1 minute"
+      
+  - alert: MalwareDetected
+    expr: increase(security_events_total{type="malware_detected"}[1m]) > 0
+    for: 0s
+    labels:
+      severity: critical
+      category: security
+    annotations:
+      summary: "Malware detected in file upload"
+      description: "Malware detected in uploaded file from {{ $labels.ip }}"
+      
+  # WAF alerts
+  - alert: WAFHighBlockRate
+    expr: rate(waf_requests_blocked_total[5m]) > 5
+    for: 2m
+    labels:
+      severity: warning
+      category: security
+    annotations:
+      summary: "High WAF block rate"
+      description: "WAF is blocking {{ $value }} requests/second"
+      
+  - alert: WAFRuleTriggered
+    expr: increase(waf_rules_triggered_total{rule_id="1001"}[1m]) > 0
+    for: 0s
+    labels:
+      severity: high
+      category: security
+    annotations:
+      summary: "Critical WAF rule triggered"
+      description: "WAF rule {{ $labels.rule_id }} triggered: {{ $labels.rule_msg }}"
+      
+  # Account security
+  - alert: PasswordResetFlood
+    expr: increase(security_events_total{type="password_reset"}[5m]) > 20
+    for: 1m
+    labels:
+      severity: warning
+      category: security
+    annotations:
+      summary: "Password reset flood detected"
+      description: "{{ $value }} password resets in 5 minutes"
+      
+  - alert: MFABypass
+    expr: increase(security_events_total{type="mfa_bypass_attempt"}[1m]) > 0
+    for: 0s
+    labels:
+      severity: critical
+      category: security
+    annotations:
+      summary: "MFA bypass attempt detected"
+      description: "Attempt to bypass MFA from {{ $labels.ip }}"
+      
+  # Rate limiting alerts
+  - alert: RateLimitExceeded
+    expr: increase(rate_limit_exceeded_total[5m]) > 100
+    for: 2m
+    labels:
+      severity: warning
+      category: security
+    annotations:
+      summary: "Rate limit frequently exceeded"
+      description: "Rate limit exceeded {{ $value }} times in 5 minutes"
+      
+  # Geo-blocking
+  - alert: BlockedCountryAccess
+    expr: increase(security_events_total{type="geo_blocked"}[5m]) > 50
+    for: 2m
+    labels:
+      severity: warning
+      category: security
+    annotations:
+      summary: "High number of geo-blocked requests"
+      description: "{{ $value }} requests blocked from restricted countries"

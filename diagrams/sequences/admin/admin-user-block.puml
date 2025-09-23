@@ -1,0 +1,37 @@
+@startuml admin-user-block
+!include admin-common.puml
+title Blocage d'un utilisateur
+
+== Bloquer un utilisateur ==
+Admin -> Frontend: Bloquer utilisateur suspect
+Frontend -> API: POST /api/admin/users/{userId}/block
+note right
+Body: {reason, duration}
+end note
+API -> Auth: Vérifier permissions admin
+Auth --> API: access granted
+
+API -> AdminCtrl: blockUser(userId, blockData)
+AdminCtrl -> UserSvc: getUserById(userId)
+UserSvc -> DB: SELECT user WHERE id=?
+DB --> UserSvc: user data
+
+AdminCtrl -> SecuritySvc: blockUser(user, reason, duration)
+SecuritySvc -> DB: INSERT INTO blocked_users (userId, reason, blockedBy, expiresAt)
+SecuritySvc -> DB: UPDATE users SET status=blocked
+SecuritySvc -> UserSvc: invalidateAllUserSessions(userId)
+UserSvc -> DB: DELETE FROM user_sessions WHERE userId=?
+SecuritySvc -> Redis: SET blocked:{userId} = true (expire {duration})
+
+SecuritySvc -> AuditSvc: logUserBlocked(userId, adminId, reason)
+AuditSvc -> DB: INSERT INTO audit_logs (action: user_blocked)
+
+SecuritySvc -> EmailSvc: notifyUserBlocked(user, reason)
+EmailSvc -> EmailSvc: Send account suspension email
+
+SecuritySvc --> AdminCtrl: user blocked
+AdminCtrl --> API: block successful
+API --> Frontend: user blocked
+Frontend --> Admin: Utilisateur bloqué avec succès
+
+@enduml

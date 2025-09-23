@@ -1,0 +1,29 @@
+@startuml "Authentification du staff événement"
+
+title Authentification et autorisation du staff pour le contrôle d'événement
+
+actor "Contrôleur\n(Staff événement)" as Controller
+participant "App Mobile\n(Scan QR)" as MobileApp
+participant "API Gateway\n(Rate Limiter)" as API
+participant "Auth Middleware" as Auth
+participant "Event Service" as EventSvc
+participant "Database\n(PostgreSQL)" as DB
+
+== Authentification du staff ==
+Controller -> MobileApp: Ouvrir app de contrôle
+MobileApp -> API: POST /api/auth/login
+note right: Body: {email, password, eventId}
+
+API -> Auth: Vérifier credentials + rôle ORGANIZER/STAFF
+Auth -> DB: SELECT user WHERE email=? AND (role='ORGANIZER' OR role='STAFF')
+DB --> Auth: staff user data
+
+Auth -> EventSvc: verifyEventAccess(userId, eventId)
+EventSvc -> DB: SELECT event WHERE id=? AND (organizerId=? OR staff_members CONTAINS ?)
+DB --> EventSvc: event access verified
+
+Auth --> API: staff authenticated for event
+API --> MobileApp: {token, eventInfo, permissions}
+MobileApp --> Controller: Mode contrôle activé
+
+@enduml

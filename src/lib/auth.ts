@@ -1,5 +1,5 @@
 import { NextApiRequest, NextApiResponse } from 'next';
-import { User } from '@prisma/client';
+import { User } from '../generated/prisma';
 import { signToken, verifyToken } from './jwt';
 import prisma from './prisma';
 
@@ -42,7 +42,7 @@ export async function authMiddleware(
     const payload = verifyToken<TokenPayload>(token);
 
     // Check if session exists and is not expired
-    const session = await prisma.session.findFirst({
+    const session = await prisma.userSession.findFirst({
       where: {
         token,
         userId: payload.userId,
@@ -82,9 +82,9 @@ export async function authMiddleware(
     }
 
     // Update session last activity
-    await prisma.session.update({
+    await prisma.userSession.update({
       where: { id: session.id },
-      data: { lastActivity: new Date() }
+      data: { lastActivityAt: new Date() }
     });
 
     // Authentication successful
@@ -117,11 +117,11 @@ export async function createSession(
   expiresAt.setDate(expiresAt.getDate() + 7);
 
   // Create session in database
-  await prisma.session.create({
+  await prisma.userSession.create({
     data: {
       userId,
       token,
-      ipAddress,
+      ipAddress: ipAddress || '',
       userAgent,
       expiresAt,
     }
@@ -134,7 +134,7 @@ export async function createSession(
  * Invalidate a session (logout)
  */
 export async function invalidateSession(token: string): Promise<void> {
-  await prisma.session.deleteMany({
+  await prisma.userSession.deleteMany({
     where: { token }
   });
 }
@@ -143,7 +143,7 @@ export async function invalidateSession(token: string): Promise<void> {
  * Invalidate all sessions for a user
  */
 export async function invalidateAllUserSessions(userId: string): Promise<void> {
-  await prisma.session.deleteMany({
+  await prisma.userSession.deleteMany({
     where: { userId }
   });
 }
@@ -162,7 +162,7 @@ export async function getUserFromRequest(req: NextApiRequest): Promise<User | nu
   try {
     const payload = verifyToken<TokenPayload>(token);
     
-    const session = await prisma.session.findFirst({
+    const session = await prisma.userSession.findFirst({
       where: {
         token,
         userId: payload.userId,

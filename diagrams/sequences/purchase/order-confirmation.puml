@@ -1,0 +1,22 @@
+@startuml "Confirmation finale de commande"
+
+title Confirmation finale de commande
+
+actor "Utilisateur" as User
+participant "Frontend\n(Next.js)" as Frontend
+participant "API Gateway\n(Rate Limiter)" as API
+participant "Auth Middleware" as Auth
+participant "Order Service" as OrderSvc
+participant "Database\n(PostgreSQL)" as DB
+
+Frontend -> API: GET /api/orders/{orderId}
+API -> Auth: Vérifier token
+Auth --> API: user verified
+API -> OrderSvc: getOrderById(orderId)
+OrderSvc -> DB: SELECT order WITH tickets WHERE id=?
+DB --> OrderSvc: complete order data
+OrderSvc --> API: order details
+API --> Frontend: order with tickets
+Frontend --> User: Confirmation achat + billets
+
+@enduml

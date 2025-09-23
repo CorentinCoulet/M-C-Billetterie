@@ -1,16 +1,41 @@
-FROM node:slim
+FROM node:18-alpine AS base
+
+# Add user first to avoid permission issues
+RUN addgroup --system --gid 1001 nodejs && \
+    adduser --system --uid 1001 --ingroup nodejs nextjs
 
 WORKDIR /app
 
-COPY package*.json ./
-RUN npm install
+# Dependencies stage
+FROM base AS deps
+# Install dependencies only
+COPY package.json yarn.lock ./
+RUN yarn install --frozen-lockfile
 
-COPY . .
+# Development stage
+FROM base AS development
+
+# Copy dependencies from previous stage
+COPY --from=deps --chown=nextjs:nodejs /app/node_modules ./node_modules
+
+# Copy only necessary files for Prisma
+COPY --chown=nextjs:nodejs package.json yarn.lock ./
+COPY --chown=nextjs:nodejs prisma ./prisma/
 
 # Generate Prisma client
-RUN npx prisma generate
+RUN yarn prisma generate
+
+# Create directories with proper ownership
+RUN mkdir -p uploads .next/cache logs && \
+    chown nextjs:nodejs uploads .next logs
+
+# Copy source code (minimal files due to .dockerignore)
+COPY --chown=nextjs:nodejs . .
+
+# Switch to non-root user
+USER nextjs
 
 EXPOSE 3000
 
 # Use a shell to run multiple commands
-CMD ["sh", "-c", "npx prisma migrate deploy && npm run dev"]
+CMD ["sh", "-c", "yarn prisma migrate deploy && yarn dev"]

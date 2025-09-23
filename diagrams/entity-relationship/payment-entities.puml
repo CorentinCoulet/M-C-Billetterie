@@ -1,0 +1,22 @@
+@startuml payment-entities
+
+!theme aws-orange
+skinparam linetype ortho
+skinparam backgroundColor #FFFFFF
+
+title Entités Paiement
+
+' ========== ENTITÉS PAIEMENT ==========
+
+entity Payment {
+    * **id** : String <<PK>>
+    --
+    orderId : String <<FK>>
+    * **paymentMethod** : String
+    * **paymentStatus** : String
+    * **paymentDate** : DateTime
+    * **transactionId** : String
+    currency : String = "EUR"
+}
+
+@enduml

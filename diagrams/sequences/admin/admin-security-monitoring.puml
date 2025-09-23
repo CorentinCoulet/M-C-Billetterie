@@ -1,0 +1,28 @@
+@startuml admin-security-monitoring
+!include admin-common.puml
+title Monitoring sécurité - Consultation des logs
+
+== Monitoring sécurité ==
+Admin -> Frontend: Consulter logs sécurité
+Frontend -> API: GET /api/admin/security/logs
+note right
+Query: ?type=failed_login&period=24h
+end note
+API -> Auth: Vérifier permissions admin
+Auth --> API: access granted
+
+API -> AdminCtrl: getSecurityLogs(filters)
+AdminCtrl -> SecuritySvc: getSecurityEvents(filters)
+SecuritySvc -> DB: SELECT audit_logs WHERE action IN (failed_login, suspicious_activity, blocked_ip)
+DB --> SecuritySvc: security events
+
+SecuritySvc -> SecuritySvc: Analyze patterns and threats
+SecuritySvc -> Redis: GET security:alerts:*
+Redis --> SecuritySvc: active alerts
+
+SecuritySvc --> AdminCtrl: security analysis
+AdminCtrl --> API: security data
+API --> Frontend: security logs
+Frontend --> Admin: Logs sécurité avec alertes
+
+@enduml

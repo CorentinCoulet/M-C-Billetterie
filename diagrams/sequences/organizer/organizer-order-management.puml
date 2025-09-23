@@ -1,0 +1,25 @@
+@startuml "Gestion des commandes - Organisateur"
+
+title Consultation des commandes d'un événement
+
+actor "Organisateur" as Organizer
+participant "Frontend\n(Next.js)" as Frontend
+participant "API Gateway\n(Rate Limiter)" as API
+participant "Auth Middleware" as Auth
+participant "Event Service" as EventSvc
+participant "Database\n(PostgreSQL)" as DB
+
+== Gestion des commandes ==
+Organizer -> Frontend: Voir commandes événement
+Frontend -> API: GET /api/events/{eventId}/orders
+API -> Auth: Vérifier propriété événement
+Auth --> API: access granted
+
+API -> EventSvc: getEventOrders(eventId)
+EventSvc -> DB: SELECT orders WITH tickets, users WHERE eventId=?
+DB --> EventSvc: orders list
+EventSvc --> API: orders data
+API --> Frontend: orders list
+Frontend --> Organizer: Liste des commandes
+
+@enduml

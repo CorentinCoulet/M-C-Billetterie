@@ -1,0 +1,126 @@
+@startuml admin-dashboard
+!theme aws-orange
+title Diagramme d'Activité - Administration Système
+
+start
+:Administrateur se connecte;
+:Vérifie authentification 2FA;
+
+if (2FA valide ?) then (non)
+  :Refuse accès;
+  :Log tentative accès;
+  stop
+else (oui)
+  :Accède dashboard admin;
+endif
+
+:Sélectionne action;
+
+split
+  -> Gestion Utilisateurs;
+  partition "Users Management" {
+    if (Action utilisateur ?) then (Lister)
+      :Affiche liste paginée;
+      :Filtre par statut/rôle;
+      :Export données;
+    elseif (Modifier)
+      :Sélectionne utilisateur;
+      :Modifie rôles/permissions;
+      :Met à jour profil;
+      :Log modification;
+    elseif (Suspendre/Bannir)
+      :Sélectionne utilisateur;
+      :Confirme action;
+      :Applique suspension;
+      :Notifie utilisateur;
+      :Archive sessions actives;
+    elseif (Réinit. mot de passe)
+      :Génère nouveau mot de passe;
+      :Envoie par email sécurisé;
+      :Force reconnexion;
+    endif
+  }
+
+split again
+  -> Gestion Événements;
+  partition "Events Management" {
+    if (Action événement ?) then (Modérer)
+      :Liste événements en attente;
+      :Vérifie conformité;
+      if (Événement conforme ?) then (oui)
+        :Approuve événement;
+        :Notifie organisateur;
+        :Publie événement;
+      else (non)
+        :Rejette événement;
+        :Envoie raisons refus;
+      endif
+    elseif (Signalés)
+      :Examine signalements;
+      :Vérifie contenu;
+      :Prend action appropriée;
+    elseif (Statistiques)
+      :Génère métriques plateforme;
+      :Analyse revenus;
+      :Rapport performance;
+    endif
+  }
+
+split again
+  -> Gestion Financière;
+  partition "Financial Management" {
+    if (Action financière ?) then (Virements)
+      :Calcule montants dus;
+      :Génère ordres virement;
+      :Execute paiements;
+      :Met à jour comptabilité;
+    elseif (Remboursements)
+      :Traite demandes remboursement;
+      :Vérifie éligibilité;
+      :Autorise/refuse;
+      :Execute remboursements;
+    elseif (Rapports fiscaux)
+      :Génère déclarations TVA;
+      :Export comptable;
+      :Calcule commissions;
+    endif
+  }
+
+split again
+  -> Monitoring Système;
+  partition "System Monitoring" {
+    :Consulte métriques temps réel;
+    :Vérifie santé services;
+    :Analyse logs erreurs;
+    if (Problème détecté ?) then (oui)
+      :Déclenche alerte;
+      :Notifie équipe technique;
+      :Lance procédures urgence;
+    endif
+    :Met à jour tableaux bord;
+  }
+
+split again
+  -> Configuration Système;
+  partition "System Configuration" {
+    if (Type configuration ?) then (Globaux)
+      :Modifie configuration app;
+      :Met à jour taux commission;
+      :Configure limites système;
+    elseif (API)
+      :Configure clés API;
+      :Gère quotas;
+      :Monitor utilisation;
+    elseif (Sécurité)
+      :Configure règles WAF;
+      :Met à jour certificats;
+      :Gère whitelist/blacklist;
+    endif
+  }
+end split
+
+:Log action administrative;
+:Met à jour audit trail;
+
+stop
+@enduml

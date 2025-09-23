@@ -1,0 +1,104 @@
+@startuml Data Architecture - Billetterie
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+
+title Architecture des données - Billetterie
+
+System_Boundary(data_layer, "Couche de données") {
+    
+    Container_Boundary(primary_db, "Base de données principale") {
+        ContainerDb(postgres, "PostgreSQL 16", "PostgreSQL", "Base de données relationnelle principale")
+        
+        Container_Boundary(schemas, "Schémas de données") {
+            Container(user_schema, "Schéma Utilisateurs", "Tables", "User, Role, Session, Auth")
+            Container(event_schema, "Schéma Événements", "Tables", "Event, Category, Venue")
+            Container(ticket_schema, "Schéma Billetterie", "Tables", "Ticket, Order, Payment")
+            Container(audit_schema, "Schéma Audit", "Tables", "AuditLog, ActivityLog, EventLog")
+        }
+    }
+    
+    Container_Boundary(cache_layer, "Couche de cache") {
+        ContainerDb(redis, "Redis 7", "Redis", "Cache en mémoire et sessions")
+        
+        Container_Boundary(cache_types, "Types de cache") {
+            Container(session_cache, "Cache Sessions", "Redis Hash", "Sessions utilisateurs actives")
+            Container(data_cache, "Cache Données", "Redis String/Hash", "Événements populaires, statistiques")
+            Container(rate_limit, "Rate Limiting", "Redis Counter", "Limitation de débit")
+            Container(queue_cache, "Files d'attente", "Redis List", "Jobs asynchrones")
+        }
+    }
+    
+    Container_Boundary(file_storage, "Stockage de fichiers") {
+        ContainerDb(uploads, "Volume Uploads", "Docker Volume", "Images événements, avatars")
+        ContainerDb(temp_files, "Fichiers temporaires", "Système", "QR codes, exports temporaires")
+        ContainerDb(backups, "Sauvegardes", "Volume", "Dumps DB, logs archivés")
+    }
+    
+    Container_Boundary(search_indexing, "Indexation et recherche") {
+        Container(db_indexes, "Index DB", "PostgreSQL Index", "Index optimisés pour les requêtes")
+        Container(full_text, "Recherche textuelle", "PostgreSQL FTS", "Recherche événements et descriptions")
+    }
+}
+
+Container_Boundary(data_access, "Couche d'accès aux données") {
+    Container(prisma_orm, "Prisma ORM", "TypeScript", "Mapping objet-relationnel")
+    Container(redis_client, "Client Redis", "IORedis", "Interface cache Redis")
+    Container(file_handler, "Gestionnaire fichiers", "Multer/FS", "Upload et gestion fichiers")
+}
+
+Container_Boundary(business_services, "Services métier") {
+    Container(user_service, "Service Utilisateur", "Business Logic", "Gestion utilisateurs et auth")
+    Container(event_service, "Service Événement", "Business Logic", "CRUD événements")
+    Container(ticket_service, "Service Billetterie", "Business Logic", "Achat et gestion billets")
+    Container(payment_service, "Service Paiement", "Business Logic", "Traitement paiements")
+    Container(notification_service, "Service Notification", "Business Logic", "Emails et alertes")
+}
+
+Container_Boundary(external_data, "Données externes") {
+    System_Ext(stripe_data, "Données Stripe", "Paiements, transactions")
+    System_Ext(email_logs, "Logs Email", "Statuts envoi, bounces")
+    System_Ext(monitoring_data, "Données Monitoring", "Métriques, erreurs")
+}
+
+' Relations d'accès aux données
+Rel(prisma_orm, postgres, "SQL Queries")
+Rel(redis_client, redis, "Redis Commands")
+Rel(file_handler, uploads, "File I/O")
+
+' Relations schémas
+Rel(prisma_orm, user_schema, "User Operations")
+Rel(prisma_orm, event_schema, "Event Operations")
+Rel(prisma_orm, ticket_schema, "Ticket Operations")
+Rel(prisma_orm, audit_schema, "Audit Operations")
+
+' Relations cache
+Rel(redis_client, session_cache, "Session Management")
+Rel(redis_client, data_cache, "Data Caching")
+Rel(redis_client, rate_limit, "Rate Limiting")
+Rel(redis_client, queue_cache, "Queue Operations")
+
+' Relations services métier
+Rel(user_service, prisma_orm, "User Data")
+Rel(user_service, redis_client, "User Sessions")
+Rel(event_service, prisma_orm, "Event Data")
+Rel(event_service, redis_client, "Event Cache")
+Rel(event_service, file_handler, "Event Images")
+Rel(ticket_service, prisma_orm, "Ticket Data")
+Rel(ticket_service, redis_client, "Booking Cache")
+Rel(payment_service, prisma_orm, "Payment Data")
+Rel(notification_service, prisma_orm, "Notification Data")
+
+' Relations externes
+Rel(payment_service, stripe_data, "Payment Sync")
+Rel(notification_service, email_logs, "Email Status")
+Rel(user_service, monitoring_data, "User Metrics")
+
+' Relations indexation
+Rel(db_indexes, postgres, "Query Optimization")
+Rel(full_text, postgres, "Text Search")
+
+' Sauvegardes
+Rel(postgres, backups, "DB Dumps")
+Rel(uploads, backups, "File Backup")
+
+SHOW_LEGEND()
+@enduml

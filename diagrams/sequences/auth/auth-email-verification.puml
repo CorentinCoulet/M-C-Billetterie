@@ -1,0 +1,68 @@
+@startuml "Vérification d'email - Diagramme de séquence"
+
+title Processus de vérification d'email
+
+actor "Utilisateur" as User
+participant "Frontend\n(Next.js)" as Frontend
+participant "API Gateway\n(Rate Limiter)" as API
+participant "Auth Controller" as AuthCtrl
+participant "User Service" as UserSvc
+participant "Redis Cache" as Redis
+participant "Database\n(PostgreSQL)" as DB
+
+== Vérification email ==
+User -> User: Cliquer lien email
+activate User
+User -> Frontend: GET /verify-email?token=xyz
+activate Frontend
+
+Frontend -> API: POST /api/auth/verify-email
+note right: Body: {token}
+activate API
+
+API -> AuthCtrl: verifyEmail(token)
+activate AuthCtrl
+
+AuthCtrl -> Redis: GET verify:{token}
+activate Redis
+Redis --> AuthCtrl: userId
+deactivate Redis
+
+alt Token valide et non expiré
+    AuthCtrl -> UserSvc: updateUser(userId, {isVerified: true})
+    activate UserSvc
+    UserSvc -> DB: UPDATE users SET isVerified=true WHERE id=?
+    activate DB
+    DB --> UserSvc: user updated
+    deactivate DB
+    deactivate UserSvc
+    
+    AuthCtrl -> Redis: DEL verify:{token}
+    activate Redis
+    Redis --> AuthCtrl: token deleted
+    deactivate Redis
+    
+    AuthCtrl --> API: email verified
+    deactivate AuthCtrl
+    API --> Frontend: verification success
+    deactivate API
+    Frontend --> User: "Email vérifié, vous pouvez vous connecter"
+    deactivate Frontend
+    
+else Token invalide ou expiré
+    AuthCtrl --> API: 400 Bad Request "Invalid or expired token"
+    deactivate AuthCtrl
+    API --> Frontend: verification failed
+    deactivate API
+    Frontend --> User: "Lien invalide ou expiré"
+    deactivate Frontend
+end
+
+deactivate User
+
+note over User, DB
+    Une fois l'email vérifié, l'utilisateur 
+    peut se connecter à l'application
+end note
+
+@enduml

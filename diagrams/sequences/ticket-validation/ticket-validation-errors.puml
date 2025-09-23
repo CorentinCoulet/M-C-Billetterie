@@ -1,0 +1,54 @@
+@startuml "Gestion des erreurs de validation"
+
+title Gestion des différents cas d'erreur lors de la validation
+
+actor "Contrôleur\n(Staff événement)" as Controller
+participant "App Mobile\n(Scan QR)" as MobileApp
+participant "API Gateway\n(Rate Limiter)" as API
+participant "Ticket Controller" as TicketCtrl
+participant "Ticket Service" as TicketSvc
+participant "Event Service" as EventSvc
+participant "Analytics Service" as AnalyticsSvc
+participant "Database\n(PostgreSQL)" as DB
+
+== Gestion des erreurs de validation ==
+
+alt Billet déjà utilisé
+    TicketSvc -> DB: SELECT usedAt, validatedBy FROM tickets WHERE id=?
+    DB --> TicketSvc: usage details
+    
+    TicketSvc --> TicketCtrl: already_used error
+    TicketCtrl --> API: {status: 'already_used', usedAt, validatedBy}
+    API --> MobileApp: ticket already used
+    MobileApp --> Controller: ❌ "BILLET DÉJÀ UTILISÉ\nUtilisé le: 14:30\nPar: Agent001"
+
+else Billet invalide ou frauduleux
+    TicketSvc -> DB: SELECT COUNT(*) FROM tickets WHERE id=?
+    DB --> TicketSvc: ticket not found
+    
+    TicketSvc -> DB: INSERT INTO security_incidents (type: 'invalid_ticket', qr_code, event_id, detected_by)
+    TicketSvc -> AnalyticsSvc: recordSecurityIncident('invalid_ticket', eventId)
+    
+    TicketSvc --> TicketCtrl: invalid_ticket error
+    TicketCtrl --> API: {status: 'invalid', securityAlert: true}
+    API --> MobileApp: invalid ticket + security alert
+    MobileApp --> Controller: ⚠️ "BILLET INVALIDE\n⚠️ ALERTE SÉCURITÉ"
+
+else Billet pour mauvais événement
+    TicketSvc --> TicketCtrl: wrong_event error
+    TicketCtrl --> API: {status: 'wrong_event', correctEvent: eventName}
+    API --> MobileApp: wrong event
+    MobileApp --> Controller: ❌ "MAUVAIS ÉVÉNEMENT\nBillet pour: Concert XYZ"
+
+else Événement non commencé/terminé
+    TicketSvc -> EventSvc: checkEventTiming(eventId)
+    EventSvc -> DB: SELECT startDate, endDate FROM events WHERE id=?
+    DB --> EventSvc: event timing
+    
+    TicketSvc --> TicketCtrl: event_not_active error
+    TicketCtrl --> API: {status: 'event_not_active', eventStatus}
+    API --> MobileApp: event timing issue
+    MobileApp --> Controller: ⏰ "ÉVÉNEMENT NON ACTIF\nDébut: 20:00"
+end
+
+@enduml

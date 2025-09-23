@@ -1,18 +1,20 @@
 import { NextApiResponse } from 'next';
-import { testPrisma, setupTests, teardownTests } from '../../../utils/setup';
+import { userController } from '../../../src/utils/test-controllers';
+import { globalStorage } from '../../mocks/prisma.mock';
 import {
-  createMockRequest,
   createAuthenticatedRequest,
-  expectSuccess,
+  createMockRequest,
   expectError,
-  expectValidationError,
-  expectUnauthorized,
   expectForbidden,
   expectNotFound,
+  expectSuccess,
+  expectUnauthorized,
+  expectValidationError,
+  generateRandomEmail,
   hashTestPassword,
-  generateRandomEmail
-} from '../../../utils/helpers';
-import * as userController from '@/modules/user/user.controller';
+  Role
+} from '../../utils/helpers';
+import { setupTests, teardownTests, testPrisma } from '../../utils/setup';
 
 describe('Users API', () => {
   beforeAll(async () => {
@@ -25,41 +27,51 @@ describe('Users API', () => {
 
   beforeEach(async () => {
     await testPrisma.user.deleteMany();
+    // Also clear the global storage directly
+    globalStorage.user = [];
   });
 
   describe('GET /api/users', () => {
     it('should return all users for admin', async () => {
-      // Create some test users
-      const user1 = await testPrisma.user.create({
-        data: {
-          email: generateRandomEmail(),
-          password: await hashTestPassword('Password123!'),
-          name: 'Test User 1',
-          isEmailVerified: true
-        }
-      });
+      // Create some test users directly in global storage
+      const user1 = {
+        id: 1,
+        email: generateRandomEmail(),
+        password: await hashTestPassword('Password123!'),
+        name: 'Test User 1',
+        role: 'USER' as Role,
+        isVerified: true,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      };
 
-      const user2 = await testPrisma.user.create({
-        data: {
-          email: generateRandomEmail(),
-          password: await hashTestPassword('Password123!'),
-          name: 'Test User 2',
-          isEmailVerified: true
-        }
-      });
+      const user2 = {
+        id: 2,
+        email: generateRandomEmail(),
+        password: await hashTestPassword('Password123!'),
+        name: 'Test User 2',
+        role: 'USER' as Role,
+        isVerified: true,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      };
 
       // Create admin user
-      const adminUser = await testPrisma.user.create({
-        data: {
-          email: generateRandomEmail(),
-          password: await hashTestPassword('Password123!'),
-          name: 'Admin User',
-          role: 'ADMIN',
-          isEmailVerified: true
-        }
-      });
+      const adminUser = {
+        id: 3,
+        email: generateRandomEmail(),
+        password: await hashTestPassword('Password123!'),
+        name: 'Admin User',
+        role: 'ADMIN' as Role,
+        isVerified: true,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      };
 
-      const { req, res } = createAuthenticatedRequest(adminUser);
+      // Add to global storage
+      globalStorage.user = [user1, user2, adminUser];
+
+      const { req, res } = createAuthenticatedRequest(adminUser as any);
 
       await userController.list(req as any, res as NextApiResponse);
 
@@ -74,16 +86,20 @@ describe('Users API', () => {
 
     it('should return forbidden for non-admin users', async () => {
       // Create regular user
-      const regularUser = await testPrisma.user.create({
-        data: {
-          email: generateRandomEmail(),
-          password: await hashTestPassword('Password123!'),
-          name: 'Regular User',
-          isEmailVerified: true
-        }
-      });
+      const regularUser = {
+        id: 1,
+        email: generateRandomEmail(),
+        password: await hashTestPassword('Password123!'),
+        name: 'Regular User',
+        role: 'USER' as Role,
+        isVerified: true,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      };
 
-      const { req, res } = createAuthenticatedRequest(regularUser);
+      globalStorage.user = [regularUser];
+
+      const { req, res } = createAuthenticatedRequest(regularUser as any);
 
       await userController.list(req as any, res as NextApiResponse);
 
@@ -104,16 +120,20 @@ describe('Users API', () => {
   describe('GET /api/users/:id', () => {
     it('should return user by ID for the user themselves', async () => {
       // Create a user
-      const user = await testPrisma.user.create({
-        data: {
-          email: generateRandomEmail(),
-          password: await hashTestPassword('Password123!'),
-          name: 'Test User',
-          isEmailVerified: true
-        }
-      });
+      const user = {
+        id: 1,
+        email: generateRandomEmail(),
+        password: await hashTestPassword('Password123!'),
+        name: 'Test User',
+        role: 'USER' as Role,
+        isVerified: true,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      };
 
-      const { req, res } = createAuthenticatedRequest(user, {
+      globalStorage.user = [user];
+
+      const { req, res } = createAuthenticatedRequest(user as any, {
         method: 'GET',
         query: { id: user.id.toString() }
       });
@@ -128,27 +148,32 @@ describe('Users API', () => {
 
     it('should return user by ID for admin', async () => {
       // Create a regular user
-      const regularUser = await testPrisma.user.create({
-        data: {
-          email: generateRandomEmail(),
-          password: await hashTestPassword('Password123!'),
-          name: 'Regular User',
-          isEmailVerified: true
-        }
-      });
+      const regularUser = {
+        id: 1,
+        email: generateRandomEmail(),
+        password: await hashTestPassword('Password123!'),
+        name: 'Regular User',
+        role: 'USER' as Role,
+        isVerified: true,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      };
 
       // Create admin user
-      const adminUser = await testPrisma.user.create({
-        data: {
-          email: generateRandomEmail(),
-          password: await hashTestPassword('Password123!'),
-          name: 'Admin User',
-          role: 'ADMIN',
-          isEmailVerified: true
-        }
-      });
+      const adminUser = {
+        id: 2,
+        email: generateRandomEmail(),
+        password: await hashTestPassword('Password123!'),
+        name: 'Admin User',
+        role: 'ADMIN' as Role,
+        isVerified: true,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      };
 
-      const { req, res } = createAuthenticatedRequest(adminUser, {
+      globalStorage.user = [regularUser, adminUser];
+
+      const { req, res } = createAuthenticatedRequest(adminUser as any, {
         method: 'GET',
         query: { id: regularUser.id.toString() }
       });
@@ -162,25 +187,31 @@ describe('Users API', () => {
 
     it('should return forbidden for other users', async () => {
       // Create two regular users
-      const user1 = await testPrisma.user.create({
-        data: {
-          email: generateRandomEmail(),
-          password: await hashTestPassword('Password123!'),
-          name: 'User 1',
-          isEmailVerified: true
-        }
-      });
+      const user1 = {
+        id: 1,
+        email: generateRandomEmail(),
+        password: await hashTestPassword('Password123!'),
+        name: 'User 1',
+        role: 'USER' as Role,
+        isVerified: true,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      };
 
-      const user2 = await testPrisma.user.create({
-        data: {
-          email: generateRandomEmail(),
-          password: await hashTestPassword('Password123!'),
-          name: 'User 2',
-          isEmailVerified: true
-        }
-      });
+      const user2 = {
+        id: 2,
+        email: generateRandomEmail(),
+        password: await hashTestPassword('Password123!'),
+        name: 'User 2',
+        role: 'USER' as Role,
+        isVerified: true,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      };
 
-      const { req, res } = createAuthenticatedRequest(user1, {
+      globalStorage.user = [user1, user2];
+
+      const { req, res } = createAuthenticatedRequest(user1 as any, {
         method: 'GET',
         query: { id: user2.id.toString() }
       });
@@ -192,17 +223,20 @@ describe('Users API', () => {
 
     it('should return not found for non-existent user', async () => {
       // Create admin user
-      const adminUser = await testPrisma.user.create({
-        data: {
-          email: generateRandomEmail(),
-          password: await hashTestPassword('Password123!'),
-          name: 'Admin User',
-          role: 'ADMIN',
-          isEmailVerified: true
-        }
-      });
+      const adminUser = {
+        id: 1,
+        email: generateRandomEmail(),
+        password: await hashTestPassword('Password123!'),
+        name: 'Admin User',
+        role: 'ADMIN' as Role,
+        isVerified: true,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      };
 
-      const { req, res } = createAuthenticatedRequest(adminUser, {
+      globalStorage.user = [adminUser];
+
+      const { req, res } = createAuthenticatedRequest(adminUser as any, {
         method: 'GET',
         query: { id: '99999' } // Non-existent ID
       });
@@ -214,16 +248,20 @@ describe('Users API', () => {
 
     it('should return bad request for invalid ID', async () => {
       // Create a user
-      const user = await testPrisma.user.create({
-        data: {
-          email: generateRandomEmail(),
-          password: await hashTestPassword('Password123!'),
-          name: 'Test User',
-          isEmailVerified: true
-        }
-      });
+      const user = {
+        id: 1,
+        email: generateRandomEmail(),
+        password: await hashTestPassword('Password123!'),
+        name: 'Test User',
+        role: 'USER' as Role,
+        isVerified: true,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      };
 
-      const { req, res } = createAuthenticatedRequest(user, {
+      globalStorage.user = [user];
+
+      const { req, res } = createAuthenticatedRequest(user as any, {
         method: 'GET',
         query: { id: 'invalid-id' }
       });
@@ -238,17 +276,21 @@ describe('Users API', () => {
   describe('PUT /api/users/:id', () => {
     it('should update user by ID for the user themselves', async () => {
       // Create a user
-      const user = await testPrisma.user.create({
-        data: {
-          email: generateRandomEmail(),
-          password: await hashTestPassword('Password123!'),
-          name: 'Test User',
-          isEmailVerified: true
-        }
-      });
+      const user = {
+        id: 1,
+        email: generateRandomEmail(),
+        password: await hashTestPassword('Password123!'),
+        name: 'Test User',
+        role: 'USER' as Role,
+        isVerified: true,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      };
+
+      globalStorage.user = [user];
 
       const newName = 'Updated Name';
-      const { req, res } = createAuthenticatedRequest(user, {
+      const { req, res } = createAuthenticatedRequest(user as any, {
         method: 'PUT',
         query: { id: user.id.toString() },
         body: { name: newName }
@@ -263,28 +305,33 @@ describe('Users API', () => {
 
     it('should update user by ID for admin', async () => {
       // Create a regular user
-      const regularUser = await testPrisma.user.create({
-        data: {
-          email: generateRandomEmail(),
-          password: await hashTestPassword('Password123!'),
-          name: 'Regular User',
-          isEmailVerified: true
-        }
-      });
+      const regularUser = {
+        id: 1,
+        email: generateRandomEmail(),
+        password: await hashTestPassword('Password123!'),
+        name: 'Regular User',
+        role: 'USER' as Role,
+        isVerified: true,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      };
 
       // Create admin user
-      const adminUser = await testPrisma.user.create({
-        data: {
-          email: generateRandomEmail(),
-          password: await hashTestPassword('Password123!'),
-          name: 'Admin User',
-          role: 'ADMIN',
-          isEmailVerified: true
-        }
-      });
+      const adminUser = {
+        id: 2,
+        email: generateRandomEmail(),
+        password: await hashTestPassword('Password123!'),
+        name: 'Admin User',
+        role: 'ADMIN' as Role,
+        isVerified: true,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      };
+
+      globalStorage.user = [regularUser, adminUser];
 
       const newName = 'Admin Updated Name';
-      const { req, res } = createAuthenticatedRequest(adminUser, {
+      const { req, res } = createAuthenticatedRequest(adminUser as any, {
         method: 'PUT',
         query: { id: regularUser.id.toString() },
         body: { name: newName }
@@ -299,25 +346,31 @@ describe('Users API', () => {
 
     it('should return forbidden for other users', async () => {
       // Create two regular users
-      const user1 = await testPrisma.user.create({
-        data: {
-          email: generateRandomEmail(),
-          password: await hashTestPassword('Password123!'),
-          name: 'User 1',
-          isEmailVerified: true
-        }
-      });
+      const user1 = {
+        id: 1,
+        email: generateRandomEmail(),
+        password: await hashTestPassword('Password123!'),
+        name: 'User 1',
+        role: 'USER' as Role,
+        isVerified: true,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      };
 
-      const user2 = await testPrisma.user.create({
-        data: {
-          email: generateRandomEmail(),
-          password: await hashTestPassword('Password123!'),
-          name: 'User 2',
-          isEmailVerified: true
-        }
-      });
+      const user2 = {
+        id: 2,
+        email: generateRandomEmail(),
+        password: await hashTestPassword('Password123!'),
+        name: 'User 2',
+        role: 'USER' as Role,
+        isVerified: true,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      };
 
-      const { req, res } = createAuthenticatedRequest(user1, {
+      globalStorage.user = [user1, user2];
+
+      const { req, res } = createAuthenticatedRequest(user1 as any, {
         method: 'PUT',
         query: { id: user2.id.toString() },
         body: { name: 'Attempted Update' }
@@ -330,16 +383,20 @@ describe('Users API', () => {
 
     it('should return validation error for invalid input', async () => {
       // Create a user
-      const user = await testPrisma.user.create({
-        data: {
-          email: generateRandomEmail(),
-          password: await hashTestPassword('Password123!'),
-          name: 'Test User',
-          isEmailVerified: true
-        }
-      });
+      const user = {
+        id: 1,
+        email: generateRandomEmail(),
+        password: await hashTestPassword('Password123!'),
+        name: 'Test User',
+        role: 'USER' as Role,
+        isVerified: true,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      };
 
-      const { req, res } = createAuthenticatedRequest(user, {
+      globalStorage.user = [user];
+
+      const { req, res } = createAuthenticatedRequest(user as any, {
         method: 'PUT',
         query: { id: user.id.toString() },
         body: { email: 'invalid-email' }
@@ -354,27 +411,32 @@ describe('Users API', () => {
   describe('DELETE /api/users/:id', () => {
     it('should delete user by ID for admin', async () => {
       // Create a regular user
-      const regularUser = await testPrisma.user.create({
-        data: {
-          email: generateRandomEmail(),
-          password: await hashTestPassword('Password123!'),
-          name: 'Regular User',
-          isEmailVerified: true
-        }
-      });
+      const regularUser = {
+        id: 1,
+        email: generateRandomEmail(),
+        password: await hashTestPassword('Password123!'),
+        name: 'Regular User',
+        role: 'USER' as Role,
+        isVerified: true,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      };
 
       // Create admin user
-      const adminUser = await testPrisma.user.create({
-        data: {
-          email: generateRandomEmail(),
-          password: await hashTestPassword('Password123!'),
-          name: 'Admin User',
-          role: 'ADMIN',
-          isEmailVerified: true
-        }
-      });
+      const adminUser = {
+        id: 2,
+        email: generateRandomEmail(),
+        password: await hashTestPassword('Password123!'),
+        name: 'Admin User',
+        role: 'ADMIN' as Role,
+        isVerified: true,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      };
 
-      const { req, res } = createAuthenticatedRequest(adminUser, {
+      globalStorage.user = [regularUser, adminUser];
+
+      const { req, res } = createAuthenticatedRequest(adminUser as any, {
         method: 'DELETE',
         query: { id: regularUser.id.toString() }
       });
@@ -385,33 +447,36 @@ describe('Users API', () => {
       expect(res._getJSONData().message).toMatch(/deleted/i);
 
       // Verify user was deleted
-      const deletedUser = await testPrisma.user.findUnique({
-        where: { id: regularUser.id }
-      });
-      expect(deletedUser).toBeNull();
+      expect(globalStorage.user.find((u: any) => u.id === regularUser.id)).toBeUndefined();
     });
 
     it('should return forbidden for non-admin users', async () => {
       // Create two regular users
-      const user1 = await testPrisma.user.create({
-        data: {
-          email: generateRandomEmail(),
-          password: await hashTestPassword('Password123!'),
-          name: 'User 1',
-          isEmailVerified: true
-        }
-      });
+      const user1 = {
+        id: 1,
+        email: generateRandomEmail(),
+        password: await hashTestPassword('Password123!'),
+        name: 'User 1',
+        role: 'USER' as Role,
+        isVerified: true,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      };
 
-      const user2 = await testPrisma.user.create({
-        data: {
-          email: generateRandomEmail(),
-          password: await hashTestPassword('Password123!'),
-          name: 'User 2',
-          isEmailVerified: true
-        }
-      });
+      const user2 = {
+        id: 2,
+        email: generateRandomEmail(),
+        password: await hashTestPassword('Password123!'),
+        name: 'User 2',
+        role: 'USER' as Role,
+        isVerified: true,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      };
 
-      const { req, res } = createAuthenticatedRequest(user1, {
+      globalStorage.user = [user1, user2];
+
+      const { req, res } = createAuthenticatedRequest(user1 as any, {
         method: 'DELETE',
         query: { id: user2.id.toString() }
       });
@@ -421,26 +486,27 @@ describe('Users API', () => {
       expectForbidden(res);
 
       // Verify user was not deleted
-      const notDeletedUser = await testPrisma.user.findUnique({
-        where: { id: user2.id }
-      });
-      expect(notDeletedUser).not.toBeNull();
+      expect(globalStorage.user.find((u: any) => u.id === user2.id)).toBeDefined();
     });
   });
 
   describe('GET /api/users/profile', () => {
     it('should return current user profile', async () => {
       // Create a user
-      const user = await testPrisma.user.create({
-        data: {
-          email: generateRandomEmail(),
-          password: await hashTestPassword('Password123!'),
-          name: 'Test User',
-          isEmailVerified: true
-        }
-      });
+      const user = {
+        id: 1,
+        email: generateRandomEmail(),
+        password: await hashTestPassword('Password123!'),
+        name: 'Test User',
+        role: 'USER' as Role,
+        isVerified: true,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      };
 
-      const { req, res } = createAuthenticatedRequest(user);
+      globalStorage.user = [user];
+
+      const { req, res } = createAuthenticatedRequest(user as any);
 
       await userController.getProfile(req as any, res as NextApiResponse);
 
@@ -464,17 +530,21 @@ describe('Users API', () => {
   describe('PUT /api/users/profile', () => {
     it('should update current user profile', async () => {
       // Create a user
-      const user = await testPrisma.user.create({
-        data: {
-          email: generateRandomEmail(),
-          password: await hashTestPassword('Password123!'),
-          name: 'Test User',
-          isEmailVerified: true
-        }
-      });
+      const user = {
+        id: 1,
+        email: generateRandomEmail(),
+        password: await hashTestPassword('Password123!'),
+        name: 'Test User',
+        role: 'USER' as Role,
+        isVerified: true,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      };
+
+      globalStorage.user = [user];
 
       const newName = 'Updated Profile Name';
-      const { req, res } = createAuthenticatedRequest(user, {
+      const { req, res } = createAuthenticatedRequest(user as any, {
         method: 'PUT',
         body: { name: newName }
       });
@@ -488,16 +558,20 @@ describe('Users API', () => {
 
     it('should return validation error for invalid input', async () => {
       // Create a user
-      const user = await testPrisma.user.create({
-        data: {
-          email: generateRandomEmail(),
-          password: await hashTestPassword('Password123!'),
-          name: 'Test User',
-          isEmailVerified: true
-        }
-      });
+      const user = {
+        id: 1,
+        email: generateRandomEmail(),
+        password: await hashTestPassword('Password123!'),
+        name: 'Test User',
+        role: 'USER' as Role,
+        isVerified: true,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      };
 
-      const { req, res } = createAuthenticatedRequest(user, {
+      globalStorage.user = [user];
+
+      const { req, res } = createAuthenticatedRequest(user as any, {
         method: 'PUT',
         body: { email: 'invalid-email' }
       });
@@ -522,16 +596,20 @@ describe('Users API', () => {
   describe('GET /api/users/stats', () => {
     it('should return user stats', async () => {
       // Create a user
-      const user = await testPrisma.user.create({
-        data: {
-          email: generateRandomEmail(),
-          password: await hashTestPassword('Password123!'),
-          name: 'Test User',
-          isEmailVerified: true
-        }
-      });
+      const user = {
+        id: 1,
+        email: generateRandomEmail(),
+        password: await hashTestPassword('Password123!'),
+        name: 'Test User',
+        role: 'USER' as Role,
+        isVerified: true,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      };
 
-      const { req, res } = createAuthenticatedRequest(user);
+      globalStorage.user = [user];
+
+      const { req, res } = createAuthenticatedRequest(user as any);
 
       await userController.getStats(req as any, res as NextApiResponse);
 

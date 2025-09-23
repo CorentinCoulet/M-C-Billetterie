@@ -1,0 +1,67 @@
+@startuml global-class-overview
+
+!theme aws-orange
+skinparam linetype ortho
+skinparam backgroundColor #FFFFFF
+
+title Vue Globale - Architecture Classes du Système de Billetterie
+
+' ========== BLOCS MÉTIER ==========
+
+package "Core Business" <<Rectangle>> {
+}
+
+package "Event Management" <<Rectangle>> {
+}
+
+package "Organization" <<Rectangle>> {
+}
+
+package "Payment System" <<Rectangle>> {
+}
+
+package "Security & Audit" <<Rectangle>> {
+}
+
+package "System Services" <<Rectangle>> {
+}
+
+package "Configuration" <<Rectangle>> {
+}
+
+' ========== SERVICES ORCHESTRATEURS ==========
+
+class EventService
+class OrderService  
+class UserService
+
+' ========== RELATIONS PRINCIPALES ==========
+
+"Core Business" ||--|| "Event Management" : manages
+"Core Business" ||--|| "Organization" : belongs_to
+"Core Business" ||--|| "Payment System" : processes
+"Core Business" ||--|| "Security & Audit" : secures
+"Core Business" ||--|| "System Services" : logs
+"Event Management" ||--|| "Configuration" : configures
+
+EventService --> "Event Management"
+OrderService --> "Core Business"
+OrderService --> "Payment System"
+UserService --> "Core Business"
+UserService --> "Security & Audit"
+
+' ========== LÉGENDE ==========
+
+note bottom
+**Architecture par Blocs :**
+• Chaque bloc correspond à un fichier technique détaillé
+• Core Business → core-business.puml
+• Event Management → event-management.puml  
+• Organization → organization.puml
+• Payment System → payment-system.puml
+• Security & Audit → security-audit.puml
+• System Services → system-services.puml
+• Configuration → configuration.puml
+end note
+
+@enduml

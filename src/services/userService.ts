@@ -1,13 +1,13 @@
 import prisma from '@/lib/prisma';
-import { Role } from '@prisma/client';
 import bcrypt from 'bcryptjs';
-import { 
-  UserWithRelations, 
-  UserCreateInput, 
-  UserUpdateInput, 
-  UserWhereInput, 
-  UserOrderByInput, 
-  UserProfileUpdateInput 
+import { UserRole } from '../types/enums/user.enum';
+import {
+    UserCreateInput,
+    UserOrderByInput,
+    UserProfileUpdateInput,
+    UserUpdateInput,
+    UserWhereInput,
+    UserWithRelations
 } from '../types/user';
 
 const SALT_ROUNDS = 10;
@@ -20,24 +20,26 @@ export class UserService {
    * Get a user by ID
    */
   async getUserById(id: string): Promise<UserWithRelations | null> {
-    return prisma.user.findUnique({
+    const user = await prisma.user.findUnique({
       where: { id },
       include: {
-        blockedUser: true
+        blocked: true
       }
-    }) as Promise<UserWithRelations | null>;
+    });
+    return user as UserWithRelations | null;
   }
 
   /**
    * Get a user by email
    */
   async getUserByEmail(email: string): Promise<UserWithRelations | null> {
-    return prisma.user.findUnique({
+    const user = await prisma.user.findUnique({
       where: { email },
       include: {
-        blockedUser: true
+        blocked: true
       }
-    }) as Promise<UserWithRelations | null>;
+    });
+    return user as UserWithRelations | null;
   }
 
   /**
@@ -49,127 +51,190 @@ export class UserService {
     where?: UserWhereInput;
     orderBy?: UserOrderByInput;
   }): Promise<UserWithRelations[]> {
-    const { skip, take, where, orderBy } = params;
-    return prisma.user.findMany({
+    const { skip = 0, take = 10, where, orderBy } = params;
+    
+    const users = await prisma.user.findMany({
       skip,
       take,
-      where,
-      orderBy,
+      where: where as any,
+      orderBy: orderBy as any,
       include: {
-        blockedUser: true
+        blocked: true
       }
-    }) as Promise<UserWithRelations[]>;
+    });
+    return users as UserWithRelations[];
   }
 
   /**
    * Create a new user
    */
   async createUser(data: UserCreateInput): Promise<UserWithRelations> {
+    // Check if user already exists
+    const existingUser = await prisma.user.findUnique({
+      where: { email: data.email }
+    });
+
+    if (existingUser) {
+      throw new Error('User with this email already exists');
+    }
+
+    // Hash password if provided
     if (data.password) {
       data.password = await bcrypt.hash(data.password, SALT_ROUNDS);
     }
 
-    return prisma.user.create({
-      data,
+    const user = await prisma.user.create({
+      data: data as any,
       include: {
-        blockedUser: true
+        blocked: true
       }
-    }) as Promise<UserWithRelations>;
+    });
+    return user as UserWithRelations;
   }
 
   /**
    * Update a user
    */
   async updateUser(id: string, data: UserUpdateInput): Promise<UserWithRelations> {
-    if (data.password && typeof data.password === 'string') {
+    // Hash password if provided
+    if (data.password) {
       data.password = await bcrypt.hash(data.password, SALT_ROUNDS);
     }
 
-    return prisma.user.update({
+    const user = await prisma.user.update({
       where: { id },
-      data,
+      data: data as any,
       include: {
-        blockedUser: true
+        blocked: true
       }
-    }) as Promise<UserWithRelations>;
+    });
+    return user as UserWithRelations;
   }
 
   /**
    * Delete a user
    */
   async deleteUser(id: string): Promise<UserWithRelations> {
-    return prisma.user.delete({
+    const user = await prisma.user.delete({
       where: { id },
       include: {
-        blockedUser: true
+        blocked: true
       }
-    }) as Promise<UserWithRelations>;
+    });
+    return user as UserWithRelations;
   }
 
   /**
-   * Count users with optional filtering
+   * Update user password
    */
-  async countUsers(where?: UserWhereInput): Promise<number> {
-    return prisma.user.count({ where });
+  async updatePassword(id: string, newPassword: string): Promise<UserWithRelations> {
+    const hashedPassword = await bcrypt.hash(newPassword, SALT_ROUNDS);
+    
+    const user = await prisma.user.update({
+      where: { id },
+      data: { 
+        password: hashedPassword,
+        passwordChangedAt: new Date()
+      },
+      include: {
+        blocked: true
+      }
+    });
+    return user as UserWithRelations;
+  }
+
+  /**
+   * Change user role
+   */
+  async changeUserRole(id: string, role: UserRole): Promise<UserWithRelations> {
+    const user = await prisma.user.update({
+      where: { id },
+      data: { role },
+      include: {
+        blocked: true
+      }
+    });
+    return user as UserWithRelations;
+  }
+
+  /**
+   * Verify user password
+   */
+  async verifyPassword(userId: string, password: string): Promise<boolean> {
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { password: true }
+    });
+
+    if (!user || !user.password) {
+      return false;
+    }
+
+    return bcrypt.compare(password, user.password);
   }
 
   /**
    * Update user profile
    */
   async updateProfile(id: string, data: UserProfileUpdateInput): Promise<UserWithRelations> {
-    return prisma.user.update({
+    const user = await prisma.user.update({
       where: { id },
-      data,
+      data: data as any,
       include: {
-        blockedUser: true
+        blocked: true
       }
-    }) as Promise<UserWithRelations>;
+    });
+    return user as UserWithRelations;
   }
 
   /**
-   * Change user role
+   * Get user statistics
    */
-  async changeUserRole(id: string, role: Role): Promise<UserWithRelations> {
-    return prisma.user.update({
-      where: { id },
-      data: { role },
+  async getUserStats(userId: string): Promise<{
+    totalOrders: number;
+    totalTickets: number;
+    totalSpent: number;
+    eventsAttended: number;
+  }> {
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
       include: {
-        blockedUser: true
-      }
-    }) as Promise<UserWithRelations>;
-  }
-
-  /**
-   * Block a user
-   */
-  async blockUser(id: string, reason: string): Promise<void> {
-    await prisma.blockedUser.upsert({
-      where: { userId: id },
-      update: { reason },
-      create: {
-        userId: id,
-        reason
+        orders: {
+          where: {
+            status: 'paid'
+          }
+        },
+        tickets: {
+          where: {
+            status: 'used'
+          },
+          include: {
+            event: true
+          }
+        }
       }
     });
-  }
 
-  /**
-   * Unblock a user
-   */
-  async unblockUser(id: string): Promise<void> {
-    await prisma.blockedUser.delete({
-      where: { userId: id }
-    });
-  }
+    if (!user) {
+      return {
+        totalOrders: 0,
+        totalTickets: 0,
+        totalSpent: 0,
+        eventsAttended: 0
+      };
+    }
 
-  /**
-   * Check if a user is blocked
-   */
-  async isUserBlocked(id: string): Promise<boolean> {
-    const blockedUser = await prisma.blockedUser.findUnique({
-      where: { userId: id }
-    });
-    return !!blockedUser;
+    const totalOrders = user.orders.length;
+    const totalTickets = user.tickets.length;
+    const totalSpent = user.orders.reduce((sum, order) => sum + order.totalPrice, 0);
+    const eventsAttended = new Set(user.tickets.map(t => t.eventId)).size;
+
+    return {
+      totalOrders,
+      totalTickets,
+      totalSpent,
+      eventsAttended
+    };
   }
 }
 

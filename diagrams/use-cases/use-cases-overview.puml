@@ -1,0 +1,96 @@
+@startuml "Vue d'ensemble - Cas d'utilisation par rôles"
+
+title Vue d'ensemble des cas d'utilisation - Système de Billetterie
+
+left to right direction
+
+actor "Visiteur" as Visitor
+actor "Utilisateur" as User
+actor "Organisateur" as Organizer  
+actor "Administrateur" as Admin
+
+rectangle "Système de Billetterie" {
+  
+  package "Module Public" {
+    usecase "Consulter événements" as PublicEvents
+    usecase "Rechercher" as Search
+    usecase "Consulter FAQ" as FAQ
+    usecase "S'inscrire/Se connecter" as Auth
+  }
+  
+  package "Module Utilisateur" {
+    usecase "Gérer profil" as UserProfile
+    usecase "Acheter billets" as BuyTickets
+    usecase "Mes commandes" as UserOrders
+    usecase "Mes billets" as UserTickets
+    usecase "Laisser avis" as Reviews
+  }
+  
+  package "Module Organisateur" {
+    usecase "Gérer événements" as OrgEvents
+    usecase "Gérer billets" as OrgTickets
+    usecase "Statistiques ventes" as OrgStats
+    usecase "Valider billets" as ValidateTickets
+    usecase "Communication" as OrgComm
+  }
+  
+  package "Module Administration" {
+    usecase "Gestion utilisateurs" as AdminUsers
+    usecase "Modération contenu" as AdminMod
+    usecase "Configuration système" as AdminConfig
+    usecase "Monitoring" as AdminMonitor
+    usecase "Rapports globaux" as AdminReports
+  }
+}
+
+' Relations par rôle
+Visitor --> PublicEvents
+Visitor --> Search
+Visitor --> FAQ
+Visitor --> Auth
+
+User --> UserProfile
+User --> BuyTickets
+User --> UserOrders
+User --> UserTickets
+User --> Reviews
+
+Organizer --> OrgEvents
+Organizer --> OrgTickets
+Organizer --> OrgStats
+Organizer --> ValidateTickets
+Organizer --> OrgComm
+
+Admin --> AdminUsers
+Admin --> AdminMod
+Admin --> AdminConfig
+Admin --> AdminMonitor
+Admin --> AdminReports
+
+' Héritage simplifié des rôles
+User --|> Visitor : hérite des droits visiteur
+Organizer --|> User : hérite des droits utilisateur
+Admin --|> Organizer : hérite des droits organisateur
+
+note top of Admin
+  L'administrateur a accès à
+  toutes les fonctionnalités
+  de la plateforme
+end note
+
+note right of Organizer
+  L'organisateur peut créer
+  et gérer ses événements
+end note
+
+note right of User
+  L'utilisateur peut acheter
+  des billets et gérer son profil
+end note
+
+note right of Visitor
+  Le visiteur peut consulter
+  les événements publics
+end note
+
+@enduml

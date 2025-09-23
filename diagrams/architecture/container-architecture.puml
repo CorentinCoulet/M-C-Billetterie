@@ -1,0 +1,82 @@
+@startuml Container Architecture - Billetterie
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+
+title Architecture des conteneurs - Billetterie
+
+Person(user, "Utilisateur", "Client, Organisateur ou Admin")
+
+System_Boundary(billetterie, "Système Billetterie") {
+    
+    Container_Boundary(frontend, "Frontend") {
+        Container(webapp, "Application Web", "Next.js 15 + React", "Interface utilisateur avec SSR/SSG")
+        Container(ui_components, "Composants UI", "React + Radix UI + Tailwind", "Composants réutilisables")
+    }
+    
+    Container_Boundary(backend, "Backend") {
+        Container(api_routes, "API Routes", "Next.js API", "Endpoints REST et logique métier")
+        Container(middleware, "Middleware", "Next.js Middleware", "Authentification et sécurité")
+        Container(auth_service, "Service Auth", "Better Auth", "Gestion authentification")
+        Container(business_logic, "Logique Métier", "TypeScript", "Services métier")
+    }
+    
+    Container_Boundary(services, "Services") {
+        Container(payment_service, "Service Paiement", "Stripe SDK", "Traitement des paiements")
+        Container(qr_service, "Service QR", "QRCode.js", "Génération et validation QR")
+        Container(email_service, "Service Email", "Nodemailer + Handlebars", "Notifications email")
+        Container(file_service, "Service Fichiers", "Multer", "Upload et gestion fichiers")
+        Container(cache_service, "Service Cache", "IORedis", "Gestion du cache")
+    }
+    
+    Container_Boundary(data, "Couche Données") {
+        Container(orm, "ORM", "Prisma", "Mapping objet-relationnel")
+        ContainerDb(postgres, "Base PostgreSQL", "PostgreSQL 16", "Données principales")
+        ContainerDb(redis, "Cache Redis", "Redis 7", "Sessions et cache")
+        ContainerDb(uploads, "Stockage Fichiers", "Volume Docker", "Images et documents")
+    }
+    
+    Container_Boundary(monitoring, "Monitoring & Logs") {
+        Container(logging, "Logs", "Pino", "Logging structuré")
+        Container(monitoring_svc, "Monitoring", "Sentry", "Monitoring des erreurs")
+        Container(metrics, "Métriques", "Prometheus", "Métriques applicatives")
+    }
+}
+
+System_Ext(stripe_api, "Stripe API", "Paiements externes")
+System_Ext(email_smtp, "Serveur SMTP", "Envoi d'emails")
+
+' Relations utilisateur
+Rel(user, webapp, "Utilise", "HTTPS")
+
+' Relations frontend
+Rel(webapp, ui_components, "Utilise")
+Rel(webapp, api_routes, "Appelle", "HTTP/JSON")
+
+' Relations backend
+Rel(api_routes, middleware, "Passe par")
+Rel(middleware, auth_service, "Authentifie")
+Rel(api_routes, business_logic, "Utilise")
+
+' Relations services
+Rel(business_logic, payment_service, "Traite paiements")
+Rel(business_logic, qr_service, "Génère QR")
+Rel(business_logic, email_service, "Envoie emails")
+Rel(business_logic, file_service, "Gère fichiers")
+Rel(business_logic, cache_service, "Met en cache")
+
+' Relations données
+Rel(business_logic, orm, "Accède aux données")
+Rel(orm, postgres, "Requête", "SQL")
+Rel(cache_service, redis, "Cache", "Redis Protocol")
+Rel(file_service, uploads, "Stocke")
+
+' Relations monitoring
+Rel(api_routes, logging, "Log")
+Rel(api_routes, monitoring_svc, "Erreurs")
+Rel(business_logic, metrics, "Métriques")
+
+' Relations externes
+Rel(payment_service, stripe_api, "Appelle", "HTTPS")
+Rel(email_service, email_smtp, "Envoie", "SMTP")
+
+SHOW_LEGEND()
+@enduml

@@ -1,0 +1,69 @@
+@startuml global-overview
+
+!theme aws-orange
+skinparam linetype ortho
+skinparam backgroundColor #FFFFFF
+
+title Vue Globale - Système de Billetterie
+
+' ========== IMPORTS DES BLOCS ENTITÉ-RELATION ==========
+
+!include core-entities.puml
+!include event-entities.puml
+!include organizer-entities.puml
+!include payment-entities.puml
+!include configuration-entities.puml
+!include security-entities.puml
+!include system-entities.puml
+
+' ========== RELATIONS INTER-MODULES ==========
+
+' Relations User (avec rôles) ↔ Event
+User ||--o{ Event : "organise (role=ORGANIZER)"
+
+' Relations Event ↔ Ticket
+Event ||--o{ Ticket : "génère"
+
+' Relations Payment ↔ Order
+Order ||--o| Payment : "paiement"
+
+' Relations Event ↔ Configuration
+Event }o--o| Theme : "thème"
+
+' Relations User ↔ Reviews
+Review }o--|| User : "auteur"
+Review }o--|| Event : "événement"
+
+' Relations User ↔ Security
+UserSession }o--|| User : "sessions"
+AuditLog }o--o| User : "audit"
+LoginAttempt }o--o| User : "tentatives"
+
+' Relations User ↔ System
+ActivityLog }o--|| User : "activités"
+Notification }o--|| User : "notifications"
+
+' Relations User ↔ Organization
+Organization }o--|| User : "propriétaire (role=ORGANIZER)"
+TeamMember }o--|| Organization : "organisation"
+TeamMember }o--|| User : "membre"
+
+' ========== LÉGENDE ==========
+
+note bottom
+**Architecture avec User multi-rôles :**
+• User.role = USER : utilisateur standard
+• User.role = ORGANIZER : peut créer des événements et organisations
+• User.role = ADMIN : administration système
+
+**Modules :**
+• core-entities : User, Order, Ticket (base)
+• event-entities : Event, Category, Venue
+• organizer-entities : Organization, TeamMember
+• payment-entities : Payment
+• configuration-entities : Theme, Review, Translation
+• security-entities : UserSession, AuditLog, LoginAttempt, BlockedIP
+• system-entities : ActivityLog, Notification, SystemBackup
+end note
+
+@enduml

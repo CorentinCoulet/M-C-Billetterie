@@ -1,0 +1,64 @@
+@startuml user-authentication
+!theme aws-orange
+title Diagramme d'Activité - Authentification Utilisateur
+
+start
+:Utilisateur accède à la page de connexion;
+:Saisit email et mot de passe;
+
+if (Champs remplis ?) then (non)
+  :Affiche erreurs de validation;
+  stop
+else (oui)
+  :Recherche utilisateur par email;
+  
+  if (Utilisateur trouvé ?) then (non)
+    :Affiche "Identifiants invalides";
+    :Incrémente tentatives de connexion;
+    stop
+  else (oui)
+    if (Compte activé ?) then (non)
+      :Affiche "Compte non activé";
+      :Propose renvoyer email confirmation;
+      stop
+    else (oui)
+      :Vérifie le mot de passe;
+      
+      if (Mot de passe correct ?) then (non)
+        :Incrémente tentatives échouées;
+        
+        if (Trop de tentatives ?) then (oui)
+          :Bloque temporairement le compte;
+          :Envoie notification sécurité;
+          :Affiche "Compte temporairement bloqué";
+          stop
+        else (non)
+          :Affiche "Identifiants invalides";
+          stop
+        endif
+      else (oui)
+        :Remet à zéro les tentatives;
+        :Génère token JWT;
+        :Enregistre session;
+        :Met à jour dernière connexion;
+        
+        fork
+          :Crée cookie de session;
+        fork again
+          :Log événement connexion;
+        end fork
+        
+        if (Authentification 2FA activée ?) then (oui)
+          :Génère code 2FA;
+          :Envoie par SMS/Email;
+          :Redirige vers page 2FA;
+        else (non)
+          :Redirige vers dashboard;
+        endif
+      endif
+    endif
+  endif
+endif
+
+stop
+@enduml

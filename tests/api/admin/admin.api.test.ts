@@ -1,20 +1,52 @@
+// Mock complet de Prisma qui évite les problèmes de hoisting
+import { createMockPrisma } from '../../mocks/prisma.mock';
+
+// Mock global Prisma
+jest.mock('@/lib/prisma', () => ({
+  __esModule: true,
+  default: createMockPrisma(),
+}));
+
+// Mock logger
+jest.mock('@/lib/logger', () => ({
+  logger: {
+    info: jest.fn(),
+    error: jest.fn(),
+    warn: jest.fn(),
+    debug: jest.fn(),
+  },
+}));
+
 import { NextApiResponse } from 'next';
-import { testPrisma, setupTests, teardownTests } from '../../../utils/setup';
 import {
-  createMockRequest,
   createAuthenticatedRequest,
-  expectSuccess,
+  createMockRequest,
   expectError,
-  expectValidationError,
-  expectUnauthorized,
   expectForbidden,
-  expectNotFound,
+  expectSuccess,
+  expectUnauthorized,
+  generateRandomEmail,
   hashTestPassword,
-  generateRandomEmail
-} from '../../../utils/helpers';
+  Role,
+  User
+} from '../../utils/helpers';
+import { setupTests, teardownTests, testPrisma } from '../../utils/setup';
 
 // Since there's no dedicated admin controller, we'll create tests based on expected admin functionality
 // These tests might need to be adjusted once the admin controller is implemented
+
+// Helper to convert Prisma user to test user type
+function adaptUserForAuth(prismaUser: any): Partial<User> {
+  return {
+    id: prismaUser.id,
+    email: prismaUser.email,
+    name: prismaUser.name,
+    role: prismaUser.role as Role,
+    isVerified: prismaUser.isVerified,
+    createdAt: prismaUser.createdAt,
+    updatedAt: prismaUser.updatedAt
+  };
+}
 
 describe('Admin API', () => {
   beforeAll(async () => {
@@ -30,37 +62,62 @@ describe('Admin API', () => {
     await testPrisma.order.deleteMany();
     await testPrisma.ticket.deleteMany();
     await testPrisma.event.deleteMany();
+    await testPrisma.organizer.deleteMany();
+    await testPrisma.category.deleteMany();
     await testPrisma.user.deleteMany();
+    
+    // Reset the global storage and ID counters
+    const { resetMockPrismaStorage } = require('../../mocks/prisma.mock');
+    resetMockPrismaStorage();
   });
 
   // Helper function to create a test user
-  async function createTestUser(role = 'USER') {
+  async function createTestUser(role: 'USER' | 'ADMIN' | 'ORGANIZER' = 'USER') {
     return testPrisma.user.create({
       data: {
         email: generateRandomEmail(),
         password: await hashTestPassword('Password123!'),
         name: 'Test User',
         role,
-        isEmailVerified: true
+        isVerified: true
       }
     });
   }
 
   // Helper function to create a test event
-  async function createTestEvent(organizerId) {
+  async function createTestEvent(userId: string) {
+    // First create a category
+    const category = await testPrisma.category.create({
+      data: {
+        name: 'Concert'
+      }
+    });
+
+    // Check if organizer already exists for this user
+    let organizer = await testPrisma.organizer.findUnique({
+      where: { id: userId }
+    });
+
+    // Create organizer if doesn't exist
+    if (!organizer) {
+      organizer = await testPrisma.organizer.create({
+        data: {
+          id: userId,
+          name: 'Test Organizer'
+        }
+      });
+    }
+
     return testPrisma.event.create({
       data: {
         title: 'Test Event',
         description: 'This is a test event',
-        startDate: new Date(Date.now() + 86400000), // Tomorrow
-        endDate: new Date(Date.now() + 172800000), // Day after tomorrow
+        date: new Date(Date.now() + 86400000), // Tomorrow
         location: 'Test Location',
-        organizerId,
+        organizerId: organizer.id,
         isPublished: true,
-        capacity: 100,
-        price: 10.00,
-        currency: 'EUR',
-        category: 'CONCERT'
+        maxCapacity: 100,
+        categoryId: category.id
       }
     });
   }
@@ -97,7 +154,7 @@ describe('Admin API', () => {
         })
       };
 
-      const { req, res } = createAuthenticatedRequest(admin);
+      const { req, res } = createAuthenticatedRequest(adaptUserForAuth(admin));
 
       await adminController.getDashboardData(req as any, res as NextApiResponse);
 
@@ -126,7 +183,7 @@ describe('Admin API', () => {
         })
       };
 
-      const { req, res } = createAuthenticatedRequest(user);
+      const { req, res } = createAuthenticatedRequest(adaptUserForAuth(user));
 
       await adminController.getDashboardData(req as any, res as NextApiResponse);
 
@@ -176,7 +233,7 @@ describe('Admin API', () => {
         })
       };
 
-      const { req, res } = createAuthenticatedRequest(admin);
+      const { req, res } = createAuthenticatedRequest(adaptUserForAuth(admin));
 
       await adminController.getAllUsers(req as any, res as NextApiResponse);
 
@@ -207,7 +264,7 @@ describe('Admin API', () => {
         })
       };
 
-      const { req, res } = createAuthenticatedRequest(user);
+      const { req, res } = createAuthenticatedRequest(adaptUserForAuth(user));
 
       await adminController.getAllUsers(req as any, res as NextApiResponse);
 
@@ -235,8 +292,8 @@ describe('Admin API', () => {
             return res.status(403).json({ message: 'Forbidden' });
           }
 
-          const userId = parseInt(req.query.id as string, 10);
-          if (isNaN(userId)) {
+          const userId = req.query.id as string;
+          if (!userId) {
             return res.status(400).json({ message: 'Invalid user ID' });
           }
 
@@ -245,24 +302,22 @@ describe('Admin API', () => {
             return res.status(400).json({ message: 'Invalid role' });
           }
 
-          const user = await testPrisma.user.findUnique({
-            where: { id: userId }
-          });
+          // Access the global storage directly for testing
+          const { globalStorage } = require('../../mocks/prisma.mock');
+          const user = globalStorage.user.find((u: any) => u.id === userId);
 
           if (!user) {
             return res.status(404).json({ message: 'User not found' });
           }
 
-          const updatedUser = await testPrisma.user.update({
-            where: { id: userId },
-            data: { role }
-          });
-
-          res.status(200).json(updatedUser);
+          // Update user directly in global storage
+          user.role = role;
+          
+          res.status(200).json(user);
         })
       };
 
-      const { req, res } = createAuthenticatedRequest(admin, {
+      const { req, res } = createAuthenticatedRequest(adaptUserForAuth(admin), {
         method: 'PUT',
         query: { id: user.id.toString() },
         body: updateData
@@ -294,8 +349,8 @@ describe('Admin API', () => {
             return res.status(403).json({ message: 'Forbidden' });
           }
 
-          const userId = parseInt(req.query.id as string, 10);
-          if (isNaN(userId)) {
+          const userId = req.query.id as string;
+          if (!userId) {
             return res.status(400).json({ message: 'Invalid user ID' });
           }
 
@@ -308,7 +363,7 @@ describe('Admin API', () => {
         })
       };
 
-      const { req, res } = createAuthenticatedRequest(admin, {
+      const { req, res } = createAuthenticatedRequest(adaptUserForAuth(admin), {
         method: 'PUT',
         query: { id: user.id.toString() },
         body: invalidUpdateData
@@ -343,7 +398,7 @@ describe('Admin API', () => {
         })
       };
 
-      const { req, res } = createAuthenticatedRequest(user1, {
+      const { req, res } = createAuthenticatedRequest(adaptUserForAuth(user1), {
         method: 'PUT',
         query: { id: user2.id.toString() },
         body: updateData
@@ -378,7 +433,7 @@ describe('Admin API', () => {
         })
       };
 
-      const { req, res } = createAuthenticatedRequest(admin);
+      const { req, res } = createAuthenticatedRequest(adaptUserForAuth(admin));
 
       await adminController.getAllEvents(req as any, res as NextApiResponse);
 
@@ -408,7 +463,7 @@ describe('Admin API', () => {
         })
       };
 
-      const { req, res } = createAuthenticatedRequest(user);
+      const { req, res } = createAuthenticatedRequest(adaptUserForAuth(user));
 
       await adminController.getAllEvents(req as any, res as NextApiResponse);
 
@@ -421,22 +476,15 @@ describe('Admin API', () => {
       const admin = await createTestUser('ADMIN');
       const user = await createTestUser();
       
-      // Create an unpublished event
-      const event = await testPrisma.event.create({
-        data: {
-          title: 'Unpublished Event',
-          description: 'This is an unpublished event',
-          startDate: new Date(Date.now() + 86400000),
-          endDate: new Date(Date.now() + 172800000),
-          location: 'Test Location',
-          organizerId: user.id,
-          isPublished: false,
-          capacity: 100,
-          price: 10.00,
-          currency: 'EUR',
-          category: 'CONCERT'
-        }
-      });
+      // Create an event using the helper function
+      const event = await createTestEvent(user.id);
+      
+      // Manually set the event as unpublished for testing
+      const { globalStorage } = require('../../mocks/prisma.mock');
+      const createdEvent = globalStorage.event.find((e: any) => e.id === event.id);
+      if (createdEvent) {
+        createdEvent.isPublished = false;
+      }
 
       // Mock the admin controller
       const adminController = {
@@ -449,29 +497,27 @@ describe('Admin API', () => {
             return res.status(403).json({ message: 'Forbidden' });
           }
 
-          const eventId = parseInt(req.query.id as string, 10);
-          if (isNaN(eventId)) {
+          const eventId = req.query.id as string;
+          if (!eventId) {
             return res.status(400).json({ message: 'Invalid event ID' });
           }
 
-          const event = await testPrisma.event.findUnique({
-            where: { id: eventId }
-          });
+          // Access the global storage directly for testing
+          const { globalStorage } = require('../../mocks/prisma.mock');
+          const event = globalStorage.event.find((e: any) => e.id === eventId);
 
           if (!event) {
             return res.status(404).json({ message: 'Event not found' });
           }
 
-          const updatedEvent = await testPrisma.event.update({
-            where: { id: eventId },
-            data: { isPublished: true }
-          });
+          // Update event directly in global storage
+          event.isPublished = true;
 
-          res.status(200).json(updatedEvent);
+          res.status(200).json(event);
         })
       };
 
-      const { req, res } = createAuthenticatedRequest(admin, {
+      const { req, res } = createAuthenticatedRequest(adaptUserForAuth(admin), {
         method: 'PUT',
         query: { id: event.id.toString() }
       });
@@ -502,7 +548,7 @@ describe('Admin API', () => {
         })
       };
 
-      const { req, res } = createAuthenticatedRequest(user, {
+      const { req, res } = createAuthenticatedRequest(adaptUserForAuth(user), {
         method: 'PUT',
         query: { id: event.id.toString() }
       });
@@ -558,7 +604,7 @@ describe('Admin API', () => {
         })
       };
 
-      const { req, res } = createAuthenticatedRequest(admin);
+      const { req, res } = createAuthenticatedRequest(adaptUserForAuth(admin));
 
       await adminController.getPlatformStats(req as any, res as NextApiResponse);
 
@@ -589,7 +635,7 @@ describe('Admin API', () => {
         })
       };
 
-      const { req, res } = createAuthenticatedRequest(user);
+      const { req, res } = createAuthenticatedRequest(adaptUserForAuth(user));
 
       await adminController.getPlatformStats(req as any, res as NextApiResponse);
 
@@ -627,7 +673,7 @@ describe('Admin API', () => {
         })
       };
 
-      const { req, res } = createAuthenticatedRequest(admin, {
+      const { req, res } = createAuthenticatedRequest(adaptUserForAuth(admin), {
         method: 'POST',
         body: settingsData
       });
@@ -680,7 +726,7 @@ describe('Admin API', () => {
         })
       };
 
-      const { req, res } = createAuthenticatedRequest(admin, {
+      const { req, res } = createAuthenticatedRequest(adaptUserForAuth(admin), {
         method: 'POST',
         body: invalidSettingsData
       });
@@ -717,7 +763,7 @@ describe('Admin API', () => {
         })
       };
 
-      const { req, res } = createAuthenticatedRequest(user, {
+      const { req, res } = createAuthenticatedRequest(adaptUserForAuth(user), {
         method: 'POST',
         body: settingsData
       });

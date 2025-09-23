@@ -1,0 +1,77 @@
+@startuml "Renouvellement de token - Diagramme de séquence"
+
+title Processus de renouvellement de token JWT
+
+actor "Utilisateur" as User
+participant "Frontend\n(Next.js)" as Frontend
+participant "API Gateway\n(Rate Limiter)" as API
+participant "Auth Controller" as AuthCtrl
+participant "Auth Service" as AuthSvc
+participant "User Service" as UserSvc
+participant "Redis Cache" as Redis
+participant "Database\n(PostgreSQL)" as DB
+
+== Renouvellement de token ==
+Frontend -> Frontend: Token expire dans 1h
+activate Frontend
+Frontend -> API: POST /api/auth/refresh
+note right: Body: {refreshToken}
+activate API
+
+API -> AuthCtrl: refreshToken(refreshToken)
+activate AuthCtrl
+
+AuthCtrl -> Redis: GET refresh:{token}
+activate Redis
+Redis --> AuthCtrl: userId
+deactivate Redis
+
+alt Refresh token valide
+    AuthCtrl -> UserSvc: getUserById(userId)
+    activate UserSvc
+    UserSvc -> DB: SELECT user WHERE id=?
+    activate DB
+    DB --> UserSvc: user data
+    deactivate DB
+    deactivate UserSvc
+    
+    AuthCtrl -> AuthSvc: generateJWT(user)
+    activate AuthSvc
+    AuthSvc -> AuthSvc: jwt.sign({userId, role}, secret, {expiresIn: '7d'})
+    AuthSvc --> AuthCtrl: new JWT token
+    deactivate AuthSvc
+    
+    AuthCtrl -> AuthSvc: generateRefreshToken(userId)
+    activate AuthSvc
+    AuthSvc -> Redis: SET refresh:{newToken} = userId
+    activate Redis
+    AuthSvc -> Redis: DEL refresh:{oldToken}
+    Redis --> AuthSvc: tokens updated
+    deactivate Redis
+    deactivate AuthSvc
+    
+    AuthCtrl --> API: {token, refreshToken}
+    deactivate AuthCtrl
+    API --> Frontend: new tokens
+    deactivate API
+    Frontend -> Frontend: Mettre à jour tokens en mémoire
+    Frontend --> User: Continuation transparente
+    deactivate Frontend
+    
+else Refresh token invalide ou expiré
+    AuthCtrl --> API: 401 Unauthorized
+    deactivate AuthCtrl
+    API --> Frontend: refresh failed
+    deactivate API
+    Frontend -> Frontend: Supprimer tokens locaux
+    Frontend -> Frontend: Rediriger vers login
+    Frontend --> User: "Session expirée, veuillez vous reconnecter"
+    deactivate Frontend
+end
+
+note over User, DB
+    Le renouvellement automatique permet une 
+    expérience utilisateur fluide sans déconnexions
+end note
+
+@enduml

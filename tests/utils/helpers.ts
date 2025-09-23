@@ -1,13 +1,12 @@
-import {createMocks, RequestMethod} from 'node-mocks-http';
-import {NextApiRequest, NextApiResponse} from 'next';
-import jwt from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
-import {PrismaClient} from '@prisma/client';
+import jwt from 'jsonwebtoken';
+import { NextApiRequest, NextApiResponse } from 'next';
+import { createMocks, RequestMethod } from 'node-mocks-http';
 
 export type Role = 'USER' | 'ADMIN' | 'ORGANISATEUR';
 
 export interface User {
-    id: number;
+    id: string;
     email: string;
     password?: string;
     name: string | null;
@@ -54,9 +53,10 @@ export function createMockRequest(options: MockRequestOptions = {}) {
         query = {},
         cookies = {},
         headers = {},
+        user,
     } = options;
 
-    return createMocks<NextApiRequest, NextApiResponse>({
+    const { req, res } = createMocks<NextApiRequest, NextApiResponse>({
         method,
         body,
         query,
@@ -67,6 +67,13 @@ export function createMockRequest(options: MockRequestOptions = {}) {
             ...headers,
         },
     });
+
+    // Add user to request if provided
+    if (user) {
+        (req as any).user = user;
+    }
+
+    return { req, res };
 }
 
 export function createAuthenticatedRequest(
@@ -77,6 +84,7 @@ export function createAuthenticatedRequest(
 
     return createMockRequest({
         ...options,
+        user: user, // Add user directly to request
         cookies: {
             token,
             ...options.cookies,
@@ -90,7 +98,7 @@ export function createAuthenticatedRequest(
 
 export function generateTestToken(user: Partial<User>): string {
     const payload = {
-        userId: user.id || 1,
+        userId: user.id || 'test-user-id',
         email: user.email || 'test@example.com',
         role: user.role || 'USER',
     };
@@ -106,7 +114,7 @@ export async function hashTestPassword(password: string): Promise<string> {
 
 export function createTestUser(overrides: Partial<User> = {}): Partial<User> {
     return {
-        id: 1,
+        id: 'test-user-id',
         email: 'test@example.com',
         name: 'Test User',
         role: 'USER' as Role,
@@ -244,39 +252,74 @@ export function generateRandomString(length: number = 8): string {
 // ========================================
 
 export async function createTestUserInDb(
-    prisma: PrismaClient,
+    prisma: any,
     userData: Partial<User> = {}
 ): Promise<User> {
     const defaultPassword = await hashTestPassword('password123');
 
-    return await prisma.user.create({
-        data: {
-            email: generateRandomEmail(),
-            password: defaultPassword,
-            name: 'Test User',
-            role: 'USER',
-            isEmailVerified: true,
-            ...userData,
-        },
-    });
+    // Since we're using global storage, we need to access it directly
+    const { globalStorage } = await import('../mocks/prisma.mock');
+    
+    const generateUUID = () => {
+        return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+            const r = Math.random() * 16 | 0;
+            const v = c === 'x' ? r : (r & 0x3 | 0x8);
+            return v.toString(16);
+        });
+    };
+
+    const newUser = {
+        id: generateUUID(),
+        email: generateRandomEmail(),
+        password: defaultPassword,
+        name: 'Test User',
+        role: 'USER',
+        isEmailVerified: true,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        ...userData,
+    };
+
+    // Add to global storage directly
+    if (!globalStorage.user) {
+        globalStorage.user = [];
+    }
+    globalStorage.user.push(newUser);
+
+    return newUser as User;
 }
 
 export async function loginTestUser(
-    prisma: PrismaClient,
+    prisma: any,
     userData: Partial<User> = {}
 ): Promise<{ user: User; token: string }> {
     const user = await createTestUserInDb(prisma, userData);
     const token = generateTestToken(user);
 
-    // Create session in database
-    await prisma.session.create({
-        data: {
-            token,
-            userId: user.id,
-            expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000), // 24h
-            ipAddress: '127.0.0.1',
-            userAgent: 'Mozilla/5.0 Test Browser',
-        },
+    // Create session in database using global storage
+    const { globalStorage } = await import('../mocks/prisma.mock');
+    
+    const generateUUID = () => {
+        return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+            const r = Math.random() * 16 | 0;
+            const v = c === 'x' ? r : (r & 0x3 | 0x8);
+            return v.toString(16);
+        });
+    };
+
+    if (!globalStorage.session) {
+        globalStorage.session = [];
+    }
+
+    globalStorage.session.push({
+        id: generateUUID(),
+        token,
+        userId: user.id,
+        expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000), // 24h
+        ipAddress: '127.0.0.1',
+        userAgent: 'Mozilla/5.0 Test Browser',
+        createdAt: new Date(),
+        updatedAt: new Date()
     });
 
     return {user, token};
@@ -316,7 +359,7 @@ export const mockNodemailer = {
 // ========================================
 
 export interface TestContext {
-    prisma: PrismaClient;
+    prisma: any;
     user?: User;
     token?: string;
     cleanup: () => Promise<void>;

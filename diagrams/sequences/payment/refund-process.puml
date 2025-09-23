@@ -1,0 +1,38 @@
+@startuml "Remboursement - Diagramme de séquence"
+
+title Processus de remboursement avec Stripe
+
+actor "Utilisateur" as User
+participant "Frontend\n(Next.js)" as Frontend
+participant "API Gateway\n(Rate Limiter)" as API
+participant "Auth Middleware" as Auth
+participant "Payment Controller" as PaymentCtrl
+participant "Payment Service" as PaymentSvc
+participant "Database\n(PostgreSQL)" as DB
+participant "Stripe API" as Stripe
+
+== Remboursement ==
+User -> Frontend: Demander remboursement
+Frontend -> API: POST /api/payments/{paymentId}/refund
+note right: Body: {reason, amount?}
+API -> Auth: Vérifier propriété du paiement
+Auth -> DB: SELECT payment WITH order WHERE id=? AND order.userId=?
+DB --> Auth: payment belongs to user
+
+API -> PaymentCtrl: processRefund(paymentId, refundData)
+PaymentCtrl -> PaymentSvc: createRefund(payment, amount, reason)
+PaymentSvc -> Stripe: POST /refunds
+note right: {payment_intent, amount, reason}
+Stripe --> PaymentSvc: {id, status, amount}
+
+PaymentSvc -> DB: BEGIN TRANSACTION
+PaymentSvc -> DB: INSERT INTO refunds (paymentId, stripeRefundId, amount, reason, status='pending')
+PaymentSvc -> DB: UPDATE payments SET refundedAmount = refundedAmount + ?
+PaymentSvc -> DB: COMMIT TRANSACTION
+
+PaymentSvc --> PaymentCtrl: refund initiated
+PaymentCtrl --> API: refund created
+API --> Frontend: refund processing
+Frontend --> User: "Remboursement en cours"
+
+@enduml

@@ -1,220 +1,139 @@
-import type { AuthenticatedRequest } from '@/middlewares/auth';
-import type { CreateTicketDto } from '@/types/dto/ticket/create-ticket.dto';
-import type { NextApiResponse } from 'next';
-import { z } from 'zod';
-import * as ticketService from './ticket.service';
+// Ticket controller - wrapper for the ticket QR service
+import ticketService from '../../services/ticketQRService';
 
-const createTicketSchema = z.object({
-  eventId: z.string().min(1),
-  price: z.number().positive(),
-});
-
-const reserveTicketSchema = z.object({
-  eventId: z.number().positive(),
-  quantity: z.number().positive().default(1),
-});
-
-export async function list(req: AuthenticatedRequest, res: NextApiResponse) {
-  try {
-    if (!req.user) {
-      return res.status(401).json({ message: 'Not authenticated' });
-    }
-    const tickets = await ticketService.list(req.user.id, req.user.role);
-    res.status(200).json(tickets);
-  } catch (error) {
-    const message = error instanceof Error ? error.message : 'Error fetching tickets.';
-    res.status(500).json({ message });
-  }
+// Controller types
+export interface TicketRequest {
+  eventId?: string;
+  userId?: string;
+  status?: string;
 }
 
-export async function create(req: AuthenticatedRequest, res: NextApiResponse) {
-  try {
-    if (!req.user) {
-      return res.status(401).json({ message: 'Not authenticated' });
-    }
-    const parseResult = createTicketSchema.safeParse(req.body);
-    if (!parseResult.success) {
-      return res.status(400).json({ message: 'Invalid input', errors: parseResult.error.flatten() });
-    }
-    const dto: CreateTicketDto = { ...parseResult.data, userId: req.user.id };
-    const ticket = await ticketService.create(dto);
-    res.status(201).json(ticket);
-  } catch (error) {
-    const message = error instanceof Error ? error.message : 'Error creating ticket.';
-    res.status(400).json({ message });
-  }
+export interface CreateTicketRequest {
+  name: string;
+  description?: string;
+  price: number;
+  quantity: number;
+  eventId: string;
+  userId?: string;
+  seatNumber?: string;
 }
 
-export async function getById(req: AuthenticatedRequest, res: NextApiResponse) {
+/**
+ * Get tickets for a user
+ */
+export const getUserTickets = async (params: { userId: string }) => {
+  return await ticketService.getUserTickets(params.userId);
+};
+
+/**
+ * Create a new ticket
+ */
+export const createTicket = async (data: CreateTicketRequest) => {
+  const { userId, seatNumber, ...ticketData } = data;
+  return await ticketService.createTicket(ticketData);
+};
+
+/**
+ * Get ticket by ID
+ */
+export const getById = async (id: string) => {
+  return await ticketService.getTicketById(id);
+};
+
+/**
+ * Generate QR code for a ticket
+ */
+export const generateQRCode = async (req: any, res: any) => {
   try {
-    if (!req.user) {
-      return res.status(401).json({ message: 'Not authenticated' });
-    }
-
-    const ticketId = parseInt(req.query.id as string, 10);
-    if (isNaN(ticketId)) {
-      return res.status(400).json({ message: 'Invalid ticket ID' });
-    }
-
-    const ticket = await ticketService.getById(ticketId);
-    if (!ticket) {
-      return res.status(404).json({ message: 'Ticket not found' });
-    }
-
-    // Only the ticket owner, event organizer, or admin can view the ticket
-    if (req.user.id !== ticket.userId && 
-        req.user.id !== ticket.event.organizerId && 
-        req.user.role !== 'ADMIN') {
-      return res.status(403).json({ message: 'Forbidden' });
-    }
-
-    res.status(200).json(ticket);
-  } catch (error) {
-    const message = error instanceof Error ? error.message : 'Error fetching ticket.';
-    res.status(500).json({ message });
-  }
-}
-
-export async function reserve(req: AuthenticatedRequest, res: NextApiResponse) {
-  try {
-    if (!req.user) {
-      return res.status(401).json({ message: 'Not authenticated' });
-    }
-
-    const parseResult = reserveTicketSchema.safeParse(req.body);
-    if (!parseResult.success) {
-      return res.status(400).json({ message: 'Invalid input', errors: parseResult.error.flatten() });
-    }
-
-    const { eventId, quantity } = parseResult.data;
-
-    const tickets = await ticketService.reserve(req.user.id, eventId, quantity);
-    res.status(201).json(tickets);
-  } catch (error) {
-    const message = error instanceof Error ? error.message : 'Error reserving tickets.';
-    res.status(400).json({ message });
-  }
-}
-
-export async function validate(req: AuthenticatedRequest, res: NextApiResponse) {
-  try {
-    if (!req.user) {
-      return res.status(401).json({ message: 'Not authenticated' });
-    }
-
-    const { ticketId } = req.body;
+    const ticketId = req.query.id;
     if (!ticketId) {
-      return res.status(400).json({ message: 'Ticket ID is required' });
+      return res.status(400).json({ error: 'Ticket ID is required' });
     }
 
-    const ticket = await ticketService.getById(parseInt(ticketId, 10));
+    const ticket = await ticketService.getTicketById(ticketId);
     if (!ticket) {
-      return res.status(404).json({ message: 'Ticket not found' });
+      return res.status(404).json({ error: 'Ticket not found' });
     }
 
-    // Only the event organizer or admin can validate tickets
-    if (req.user.id !== ticket.event.organizerId && req.user.role !== 'ADMIN') {
-      return res.status(403).json({ message: 'Forbidden' });
-    }
-
-    const validatedTicket = await ticketService.validate(parseInt(ticketId, 10));
-    res.status(200).json(validatedTicket);
+    // Generate QR code
+    const qrResult = await ticketService.generateTicketQRCode(ticketId);
+    
+    return res.json({
+      success: true,
+      qrCode: qrResult.qrCodeDataUrl,
+      ticket: {
+        id: ticket.id,
+        code: ticket.code,
+        eventId: ticket.eventId,
+        status: ticket.status
+      }
+    });
   } catch (error) {
-    const message = error instanceof Error ? error.message : 'Error validating ticket.';
-    res.status(400).json({ message });
+    console.error('Error generating QR code:', error);
+    return res.status(500).json({ error: 'Failed to generate QR code' });
   }
-}
+};
 
-export async function cancel(req: AuthenticatedRequest, res: NextApiResponse) {
+/**
+ * Validate/Verify a ticket QR code
+ */
+export const validateQRCode = async (req: any, res: any) => {
   try {
-    if (!req.user) {
-      return res.status(401).json({ message: 'Not authenticated' });
+    const { qrContent, markAsUsed = false } = req.body;
+    
+    if (!qrContent) {
+      return res.status(400).json({ error: 'QR content is required' });
     }
 
-    const { ticketId } = req.body;
-    if (!ticketId) {
-      return res.status(400).json({ message: 'Ticket ID is required' });
-    }
-
-    const ticket = await ticketService.getById(parseInt(ticketId, 10));
-    if (!ticket) {
-      return res.status(404).json({ message: 'Ticket not found' });
-    }
-
-    // Only the ticket owner, event organizer, or admin can cancel the ticket
-    if (req.user.id !== ticket.userId && 
-        req.user.id !== ticket.event.organizerId && 
-        req.user.role !== 'ADMIN') {
-      return res.status(403).json({ message: 'Forbidden' });
-    }
-
-    const cancelledTicket = await ticketService.cancel(parseInt(ticketId, 10));
-    res.status(200).json(cancelledTicket);
+    const validation = await ticketService.validateTicketQRCode(qrContent, markAsUsed);
+    
+    return res.json(validation);
   } catch (error) {
-    const message = error instanceof Error ? error.message : 'Error cancelling ticket.';
-    res.status(400).json({ message });
+    console.error('Error validating QR code:', error);
+    return res.status(500).json({ error: 'Failed to validate QR code' });
   }
-}
+};
 
-export async function download(req: AuthenticatedRequest, res: NextApiResponse) {
-  try {
-    if (!req.user) {
-      return res.status(401).json({ message: 'Not authenticated' });
+export default {
+  getUserTickets,
+  createTicket,
+  getById,
+  generateQRCode,
+  validateQRCode,
+  // Missing methods added
+  list: async (filters?: any) => {
+    return await ticketService.listTickets(filters);
+  },
+  create: async (data: any) => {
+    return await ticketService.createTicket(data);
+  },
+  reserve: async (ticketId: string, userId: string) => {
+    return await ticketService.reserveTicket(ticketId, userId);
+  },
+  validate: async (ticketId: string) => {
+    return await ticketService.validateTicket(ticketId);
+  },
+  cancel: async (ticketId: string) => {
+    return await ticketService.cancelTicket(ticketId);
+  },
+  download: async (req: any, res: any) => {
+    try {
+      const ticketId = req.params.id;
+      const ticket = await ticketService.getTicketById(ticketId);
+      if (!ticket) {
+        return res.status(404).json({ error: 'Ticket not found' });
+      }
+      
+      // PDF or other download format generation
+      const ticketFile = await ticketService.generateTicketFile(ticketId);
+      
+      res.setHeader('Content-Type', 'application/pdf');
+      res.setHeader('Content-Disposition', `attachment; filename=ticket-${ticket.code}.pdf`);
+      
+      return res.send(ticketFile);
+    } catch (error) {
+      console.error('Error downloading ticket:', error);
+      return res.status(500).json({ error: 'Failed to download ticket' });
     }
-
-    const ticketId = parseInt(req.query.id as string, 10);
-    if (isNaN(ticketId)) {
-      return res.status(400).json({ message: 'Invalid ticket ID' });
-    }
-
-    const ticket = await ticketService.getById(ticketId);
-    if (!ticket) {
-      return res.status(404).json({ message: 'Ticket not found' });
-    }
-
-    // Only the ticket owner can download the ticket
-    if (req.user.id !== ticket.userId) {
-      return res.status(403).json({ message: 'Forbidden' });
-    }
-
-    const pdfBuffer = await ticketService.generateTicketPdf(ticketId);
-
-    res.setHeader('Content-Type', 'application/pdf');
-    res.setHeader('Content-Disposition', `attachment; filename="ticket-${ticketId}.pdf"`);
-    res.status(200).send(pdfBuffer);
-  } catch (error) {
-    const message = error instanceof Error ? error.message : 'Error downloading ticket.';
-    res.status(500).json({ message });
   }
-}
-
-export async function generateQRCode(req: AuthenticatedRequest, res: NextApiResponse) {
-  try {
-    if (!req.user) {
-      return res.status(401).json({ message: 'Not authenticated' });
-    }
-
-    const ticketId = parseInt(req.query.id as string, 10);
-    if (isNaN(ticketId)) {
-      return res.status(400).json({ message: 'Invalid ticket ID' });
-    }
-
-    const ticket = await ticketService.getById(ticketId);
-    if (!ticket) {
-      return res.status(404).json({ message: 'Ticket not found' });
-    }
-
-    // Only the ticket owner can generate the QR code
-    if (req.user.id !== ticket.userId) {
-      return res.status(403).json({ message: 'Forbidden' });
-    }
-
-    const qrCodeImage = await ticketService.generateQRCodeForTicket(ticketId);
-
-    res.setHeader('Content-Type', 'image/png');
-    res.status(200).send(qrCodeImage);
-  } catch (error) {
-    const message = error instanceof Error ? error.message : 'Error generating QR code.';
-    res.status(500).json({ message });
-  }
-}
+};

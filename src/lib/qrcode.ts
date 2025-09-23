@@ -28,9 +28,6 @@ export interface QRCodeConfig {
   };
 }
 
-/**
- * Generate a unique ticket with QR code
- */
 export async function generateTicketQRCode(
   ticketData: Omit<TicketData, 'id' | 'issuedAt'>,
   config: QRCodeConfig = {}
@@ -45,7 +42,6 @@ export async function generateTicketQRCode(
     issuedAt,
   };
 
-  // Create a secure payload for the QR code
   const qrPayload = {
     ticketId,
     eventId: ticketData.eventId,
@@ -76,9 +72,6 @@ export async function generateTicketQRCode(
   }
 }
 
-/**
- * Verify rotating QR code content and return ticket data
- */
 export function verifyRotatingQRCode(qrContent: string, ticketData?: TicketData): { 
   isValid: boolean; 
   ticketData?: object; 
@@ -149,9 +142,6 @@ export function verifyRotatingQRCode(qrContent: string, ticketData?: TicketData)
   }
 }
 
-/**
- * Generate a simple checksum for ticket data integrity
- */
 function generateChecksum(ticketData: TicketData): string {
   const dataString = `${ticketData.id}${ticketData.eventId}${ticketData.userId}${ticketData.issuedAt}`;
   
@@ -165,9 +155,6 @@ function generateChecksum(ticketData: TicketData): string {
   return Math.abs(hash).toString(36);
 }
 
-/**
- * Generate multiple tickets for an order
- */
 export async function generateOrderTickets(
   orderData: {
     orderId: string;
@@ -203,9 +190,6 @@ export async function generateOrderTickets(
   return tickets;
 }
 
-/**
- * Check if QR code needs to be regenerated (every 12 hours by default)
- */
 export function shouldRegenerateQRCode(ticketData: TicketData): boolean {
   if (ticketData.isScanned) {
     return false;
@@ -223,9 +207,6 @@ export function shouldRegenerateQRCode(ticketData: TicketData): boolean {
   return diffHours >= rotationInterval;
 }
 
-/**
- * Generate or regenerate QR code for a ticket with rotation logic
- */
 export async function generateOrUpdateQRCode(
   ticketData: TicketData,
   config: QRCodeConfig = {}
@@ -279,9 +260,6 @@ export async function generateOrUpdateQRCode(
   }
 }
 
-/**
- * Mark ticket as scanned and validate QR code
- */
 export function markTicketAsScanned(ticketData: TicketData): TicketData {
   return {
     ...ticketData,
@@ -290,9 +268,6 @@ export function markTicketAsScanned(ticketData: TicketData): TicketData {
   };
 }
 
-/**
- * Generate checksum for rotating QR codes
- */
 function generateRotatingChecksum(ticketData: TicketData, rotationToken: string, generatedAt: string): string {
   const dataString = `${ticketData.id}${ticketData.eventId}${ticketData.userId}${rotationToken}${generatedAt}`;
   

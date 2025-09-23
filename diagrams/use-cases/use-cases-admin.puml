@@ -1,0 +1,181 @@
+@startuml "Diagramme de cas d'utilisation - Administrateur"
+
+title Diagramme de cas d'utilisation - Rôle Administrateur
+
+left to right direction
+
+actor "Administrateur" as Admin
+actor "Organisateur" as Organizer
+
+rectangle "Système de Billetterie" {
+  ' Gestion des utilisateurs
+  usecase "Consulter tous les utilisateurs" as UC1
+  usecase "Créer utilisateur" as UC2
+  usecase "Modifier rôle utilisateur" as UC3
+  usecase "Bloquer/Débloquer utilisateur" as UC4
+  usecase "Supprimer utilisateur" as UC5
+  usecase "Consulter historique utilisateur" as UC6
+  usecase "Gérer sessions utilisateurs" as UC7
+  
+  ' Gestion des organisateurs
+  usecase "Valider organisateur" as UC8
+  usecase "Suspendre organisateur" as UC9
+  usecase "Gérer profils organisateurs" as UC10
+  usecase "Auditer activités organisateurs" as UC11
+  
+  ' Gestion globale des événements
+  usecase "Modérer événements" as UC12
+  usecase "Supprimer événement" as UC13
+  usecase "Forcer publication événement" as UC14
+  usecase "Gérer catégories globales" as UC15
+  usecase "Configurer thèmes" as UC16
+  
+  ' Gestion des transactions
+  usecase "Consulter toutes les commandes" as UC17
+  usecase "Gérer remboursements globaux" as UC18
+  usecase "Auditer paiements" as UC19
+  usecase "Gérer litiges" as UC20
+  usecase "Consulter revenus plateforme" as UC21
+  
+  ' Administration système
+  usecase "Consulter tableau de bord admin" as UC22
+  usecase "Configurer paramètres système" as UC23
+  usecase "Gérer notifications système" as UC24
+  usecase "Consulter logs système" as UC25
+  usecase "Gérer sauvegardes" as UC26
+  usecase "Monitoring performances" as UC27
+  
+  ' Sécurité et conformité
+  usecase "Consulter logs sécurité" as UC28
+  usecase "Gérer accès API" as UC29
+  usecase "Configurer règles sécurité" as UC30
+  usecase "Auditer conformité RGPD" as UC31
+  usecase "Gérer certificats SSL" as UC32
+  
+  ' Rapports et analytics
+  usecase "Générer rapports globaux" as UC33
+  usecase "Analyser métriques plateforme" as UC34
+  usecase "Exporter données" as UC35
+  usecase "Configurer alertes" as UC36
+  
+  ' Gestion du contenu
+  usecase "Modérer avis" as UC37
+  usecase "Gérer contenu FAQ" as UC38
+  usecase "Configurer emails templates" as UC39
+  usecase "Gérer traductions" as UC40
+  
+  ' Support client avancé
+  usecase "Accéder à tous les tickets support" as UC41
+  usecase "Résoudre problèmes techniques" as UC42
+  usecase "Gérer escalades" as UC43
+}
+
+' Relations principales - Gestion utilisateurs
+Admin --> UC1
+Admin --> UC2
+Admin --> UC3
+Admin --> UC4
+Admin --> UC5
+Admin --> UC6
+Admin --> UC7
+
+' Relations - Gestion organisateurs
+Admin --> UC8
+Admin --> UC9
+Admin --> UC10
+Admin --> UC11
+
+' Relations - Gestion événements
+Admin --> UC12
+Admin --> UC13
+Admin --> UC14
+Admin --> UC15
+Admin --> UC16
+
+' Relations - Gestion transactions
+Admin --> UC17
+Admin --> UC18
+Admin --> UC19
+Admin --> UC20
+Admin --> UC21
+
+' Relations - Administration système
+Admin --> UC22
+Admin --> UC23
+Admin --> UC24
+Admin --> UC25
+Admin --> UC26
+Admin --> UC27
+
+' Relations - Sécurité
+Admin --> UC28
+Admin --> UC29
+Admin --> UC30
+Admin --> UC31
+Admin --> UC32
+
+' Relations - Rapports
+Admin --> UC33
+Admin --> UC34
+Admin --> UC35
+Admin --> UC36
+
+' Relations - Contenu
+Admin --> UC37
+Admin --> UC38
+Admin --> UC39
+Admin --> UC40
+
+' Relations - Support
+Admin --> UC41
+Admin --> UC42
+Admin --> UC43
+
+' Héritage simplifié
+Admin --|> Organizer : hérite des droits organisateur
+
+' Relations d'inclusion
+UC22 ..> UC1 : include
+UC22 ..> UC17 : include
+UC22 ..> UC33 : include
+UC4 ..> UC6 : include
+UC5 ..> UC6 : include
+UC18 ..> UC19 : include
+UC25 ..> UC28 : include
+UC33 ..> UC34 : include
+
+' Relations d'extension
+UC31 ..> UC35 : extend
+UC36 ..> UC27 : extend
+UC43 ..> UC42 : extend
+UC11 ..> UC9 : extend
+
+note right of UC22
+  Dashboard centralisé :
+  - KPIs plateforme
+  - Alertes système
+  - Métriques temps réel
+end note
+
+note right of UC28
+  Monitoring sécurité :
+  - Tentatives intrusion
+  - Anomalies trafic
+  - Logs d'authentification
+end note
+
+note right of UC31
+  Conformité RGPD :
+  - Audit données personnelles
+  - Gestion consentements
+  - Droit à l'oubli
+end note
+
+note right of UC33
+  Rapports avancés :
+  - Analytics business
+  - Performance plateforme
+  - Tendances utilisateurs
+end note
+
+@enduml

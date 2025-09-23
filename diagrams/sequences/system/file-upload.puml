@@ -1,0 +1,25 @@
+@startuml "Workflow d'upload de fichiers"
+
+title Workflow d'upload de fichiers
+
+participant User
+participant "Frontend\n(Next.js)" as Frontend
+participant "API Gateway\n(Next.js API)" as API
+participant "Auth Service\n(JWT + Sessions)" as Auth
+participant "File Storage\n(AWS S3)" as Storage
+participant "Database\n(PostgreSQL)" as DB
+
+User -> Frontend: Upload file
+Frontend -> API: POST /api/upload
+API -> Auth: Verify permissions
+Auth --> API: Upload authorized
+
+API -> Storage: PUT /bucket/file
+Storage --> API: File URL
+API -> DB: Store file metadata
+DB --> API: Record saved
+
+API --> Frontend: Upload success
+Frontend --> User: File uploaded
+
+@enduml

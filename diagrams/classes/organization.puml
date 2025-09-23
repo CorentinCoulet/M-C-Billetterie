@@ -1,0 +1,53 @@
+@startuml organization
+
+!theme aws-orange
+skinparam linetype ortho
+skinparam backgroundColor #FFFFFF
+
+title Organization
+
+' ========== ÉNUMÉRATIONS ==========
+
+enum TeamRole {
+    OWNER
+    ADMIN
+    MEMBER
+    VIEWER
+}
+
+' ========== CLASSES ORGANISATION ==========
+
+class Organization {
+    - id: String
+    - name: String
+    - description: String
+    - ownerId: String
+    - createdAt: DateTime
+    --
+    + addMember(userId: String, role: TeamRole): void
+    + removeMember(userId: String): void
+    + updateMemberRole(userId: String, role: TeamRole): void
+    + getMembers(): TeamMember[]
+    + canUserManage(userId: String): boolean
+    + isOwner(userId: String): boolean
+}
+
+class TeamMember {
+    - id: String
+    - organizationId: String
+    - userId: String
+    - role: TeamRole
+    - joinedAt: DateTime
+    --
+    + hasPermission(permission: String): boolean
+    + canManageEvents(): boolean
+    + canManageMembers(): boolean
+    + leave(): void
+}
+
+' ========== RELATIONS ==========
+
+Organization ||--o{ TeamMember : hasMembers
+TeamMember::role ||-- TeamRole
+
+@enduml

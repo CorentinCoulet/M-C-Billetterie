@@ -1,0 +1,108 @@
+@startuml security-audit
+
+!theme aws-orange
+skinparam linetype ortho
+skinparam backgroundColor #FFFFFF
+
+title Security & Audit
+
+' ========== ÉNUMÉRATIONS ==========
+
+enum AuditAction {
+    CREATE
+    UPDATE
+    DELETE
+    LOGIN
+    LOGOUT
+    PAYMENT
+}
+
+enum AuditResult {
+    SUCCESS
+    FAILURE
+    WARNING
+}
+
+' ========== CLASSES SÉCURITÉ ==========
+
+class UserSession {
+    - id: String
+    - userId: String
+    - token: String
+    - ipAddress: String
+    - userAgent: String
+    - createdAt: DateTime
+    - expiresAt: DateTime
+    - isActive: boolean
+    --
+    + isValid(): boolean
+    + extend(): void
+    + destroy(): void
+    + updateActivity(): void
+    + isExpired(): boolean
+}
+
+class AuditLog {
+    - id: String
+    - action: AuditAction
+    - resourceType: String
+    - resourceId: String
+    - userId: String
+    - ipAddress: String
+    - timestamp: DateTime
+    - result: AuditResult
+    - details: String
+    --
+    + log(action: AuditAction, resource: Object, user: User): void
+    + getByUser(userId: String): AuditLog[]
+    + getByResource(resourceType: String, resourceId: String): AuditLog[]
+}
+
+class LoginAttempt {
+    - id: String
+    - userId: String
+    - email: String
+    - ipAddress: String
+    - success: boolean
+    - timestamp: DateTime
+    - reason: String
+    --
+    + recordAttempt(email: String, success: boolean, ip: String): void
+    + getFailedAttempts(email: String, timeWindow: int): int
+    + isBlocked(email: String): boolean
+}
+
+class SecurityManager {
+    - maxFailedAttempts: int
+    - blockDuration: int
+    --
+    + validateLogin(email: String, password: String, ip: String): boolean
+    + isIPBlocked(ip: String): boolean
+    + blockIP(ip: String, reason: String): void
+    + unblockIP(ip: String): void
+    + detectSuspiciousActivity(userId: String): boolean
+}
+
+class BlockedIP {
+    - id: String
+    - ipAddress: String
+    - reason: String
+    - blockedAt: DateTime
+    - expiresAt: DateTime
+    --
+    + isExpired(): boolean
+    + extend(duration: int): void
+    + unblock(): void
+}
+
+' ========== RELATIONS ==========
+
+UserSession::userId --> User : belongs_to
+AuditLog::userId --> User : performed_by
+LoginAttempt::userId --> User : for_user
+AuditLog::action ||-- AuditAction
+AuditLog::result ||-- AuditResult
+SecurityManager --> BlockedIP : manages
+SecurityManager --> LoginAttempt : monitors
+
+@enduml

@@ -1,0 +1,86 @@
+@startuml ticket-validation
+!theme aws-orange
+title Validation de Billets
+
+start
+:Agent de sécurité ouvre app mobile;
+:Scan QR code du billet;
+
+if (QR code lisible ?) then (non)
+  :Demande saisie manuelle code;
+  
+  if (Code saisi ?) then (non)
+    :Affiche "Impossible de valider";
+    stop
+  endif
+else (oui)
+endif
+
+:Décode les informations du billet;
+:Vérifie format et intégrité;
+
+if (Format valide ?) then (non)
+  :Affiche "QR code invalide";
+  :Log tentative frauduleuse;
+  stop
+else (oui)
+  :Recherche billet en base de données;
+  
+  if (Billet trouvé ?) then (non)
+    :Affiche "Billet inexistant";
+    :Log tentative frauduleuse;
+    :Alerte sécurité;
+    stop
+  else (oui)
+    if (Billet déjà utilisé ?) then (oui)
+      :Affiche détails utilisation précédente;
+      :Affiche "Billet déjà scanné";
+      :Log tentative réutilisation;
+      stop
+    else (non)
+      if (Événement en cours ?) then (non)
+        if (Événement futur ?) then (oui)
+          :Affiche "Événement pas encore commencé";
+        else (non)
+          :Affiche "Événement terminé";
+        endif
+        stop
+      else (oui)
+        if (Billet valide pour cet événement ?) then (non)
+          :Affiche "Billet non valide pour cet événement";
+          :Log anomalie;
+          stop
+        else (oui)
+          fork
+            :Marque billet comme utilisé;
+            :Enregistre heure validation;
+            :Enregistre agent validateur;
+          fork again
+            :Met à jour compteurs entrées;
+            :Log validation réussie;
+          fork again
+            :Vérifie capacité lieu;
+            
+            if (Capacité dépassée ?) then (oui)
+              :Alerte organisateur;
+            endif
+          end fork
+          
+          :Affiche "✓ Billet valide";
+          :Affiche infos participant;
+          :Affiche type de billet;
+          
+          if (Contrôles supplémentaires ?) then (oui)
+            :Vérification âge/identité;
+            :Contrôle sac/sécurité;
+          endif
+          
+          :Autorise l'entrée;
+        endif
+      endif
+    endif
+  endif
+endif
+
+stop
+@enduml

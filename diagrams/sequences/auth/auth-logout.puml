@@ -1,0 +1,70 @@
+@startuml "Déconnexion - Diagramme de séquence"
+
+title Processus de déconnexion utilisateur
+
+actor "Utilisateur" as User
+participant "Frontend\n(Next.js)" as Frontend
+participant "API Gateway\n(Rate Limiter)" as API
+participant "Auth Controller" as AuthCtrl
+participant "Auth Service" as AuthSvc
+participant "User Service" as UserSvc
+participant "Redis Cache" as Redis
+participant "Database\n(PostgreSQL)" as DB
+
+== Déconnexion ==
+User -> Frontend: Se déconnecter
+activate Frontend
+Frontend -> API: POST /api/auth/logout
+note right: Header: Authorization: Bearer {token}
+activate API
+
+API -> AuthCtrl: logout(token)
+activate AuthCtrl
+
+AuthCtrl -> AuthSvc: validateJWT(token)
+activate AuthSvc
+AuthSvc -> AuthSvc: jwt.verify(token, secret)
+AuthSvc --> AuthCtrl: decoded payload
+deactivate AuthSvc
+
+alt Token valide
+    AuthCtrl -> UserSvc: deleteSession(userId, token)
+    activate UserSvc
+    UserSvc -> DB: DELETE FROM user_sessions WHERE userId=? AND token=?
+    activate DB
+    DB --> UserSvc: session deleted
+    deactivate DB
+    deactivate UserSvc
+    
+    AuthCtrl -> Redis: DEL refresh:{refreshToken}
+    activate Redis
+    Redis --> AuthCtrl: refresh token removed
+    deactivate Redis
+    
+    AuthCtrl --> API: logout success
+    deactivate AuthCtrl
+    API --> Frontend: logout successful
+    deactivate API
+    Frontend -> Frontend: Supprimer tokens locaux (cookies/storage)
+    Frontend -> Frontend: Rediriger vers page d'accueil
+    Frontend --> User: "Déconnecté avec succès"
+    deactivate Frontend
+    
+else Token invalide
+    note right of AuthCtrl: Même en cas de token invalide,\nla déconnexion côté client est effectuée
+    AuthCtrl --> API: logout success
+    deactivate AuthCtrl
+    API --> Frontend: logout successful
+    deactivate API
+    Frontend -> Frontend: Supprimer tokens locaux
+    Frontend -> Frontend: Rediriger vers page d'accueil
+    Frontend --> User: "Déconnecté"
+    deactivate Frontend
+end
+
+note over User, DB
+    La déconnexion supprime la session active 
+    et invalide le refresh token pour sécurité
+end note
+
+@enduml

@@ -1,0 +1,39 @@
+@startuml "Validation en mode hors ligne"
+
+title Gestion de la validation des billets en mode offline
+
+actor "Contrôleur\n(Staff événement)" as Controller
+participant "App Mobile\n(Scan QR)" as MobileApp
+participant "API Gateway\n(Rate Limiter)" as API
+participant "Ticket Controller" as TicketCtrl
+participant "Ticket Service" as TicketSvc
+participant "Database\n(PostgreSQL)" as DB
+
+== Validation en mode offline ==
+MobileApp -> MobileApp: Pas de connexion réseau
+MobileApp -> MobileApp: Mode offline activé
+MobileApp -> MobileApp: Stocker validation localement
+note right: Sync quand connexion revient
+MobileApp --> Controller: ✅ "VALIDATION OFFLINE\n(Sync en attente)"
+
+== Synchronisation une fois connecté ==
+note over MobileApp: Quand connexion restaurée
+MobileApp -> API: POST /api/tickets/validate/sync
+note right: Body: {offlineValidations: [...]}
+API -> TicketCtrl: syncOfflineValidations(validations)
+
+loop Pour chaque validation offline
+    TicketCtrl -> TicketSvc: validateTicket(validation)
+    alt Validation toujours valide
+        TicketSvc -> DB: Confirm offline validation
+        note right: Marquer comme validé avec timestamp original
+    else Problème détecté
+        TicketSvc -> DB: Flag for manual review
+        note right: Nécessite intervention manuelle
+    end
+end
+
+API --> MobileApp: sync results
+MobileApp --> Controller: "Synchronisation terminée\nX validations confirmées\nY nécessitent une révision"
+
+@enduml

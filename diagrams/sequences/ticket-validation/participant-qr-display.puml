@@ -1,0 +1,15 @@
+@startuml "Affichage du billet par le participant"
+
+title Génération et affichage du QR code du billet
+
+actor "Participant" as Participant
+participant "App Mobile\n(Scan QR)" as MobileApp
+
+== Affichage du billet par le participant ==
+Participant -> Participant: Ouvrir email/app
+Participant -> MobileApp: Afficher QR code du billet
+note right: Le QR contient: {ticketId, eventId, userId, signature}
+
+note over MobileApp: Le QR code est généré avec :\n- ID unique du billet\n- ID de l'événement\n- ID de l'utilisateur\n- Signature cryptographique\n- Timestamp de génération
+
+@enduml

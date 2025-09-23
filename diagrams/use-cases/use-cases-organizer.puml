@@ -1,0 +1,118 @@
+@startuml "Diagramme de cas d'utilisation - Organisateur"
+
+title Diagramme de cas d'utilisation - Rôle Organisateur
+
+left to right direction
+
+actor "Organisateur" as Organizer
+actor "Utilisateur" as User
+
+rectangle "Système de Billetterie" {
+  ' Gestion des événements
+  usecase "Créer événement" as UC1
+  usecase "Modifier événement" as UC2
+  usecase "Publier événement" as UC3
+  usecase "Annuler événement" as UC4
+  usecase "Dupliquer événement" as UC5
+  usecase "Gérer catégories événements" as UC6
+  
+  ' Gestion des billets
+  usecase "Créer types de billets" as UC7
+  usecase "Modifier tarifs" as UC8
+  usecase "Gérer disponibilités" as UC9
+  usecase "Configurer billets VIP" as UC10
+  usecase "Générer codes promotionnels" as UC11
+  
+  ' Gestion des ventes
+  usecase "Consulter tableau de bord" as UC12
+  usecase "Voir statistiques ventes" as UC13
+  usecase "Consulter commandes" as UC14
+  usecase "Gérer remboursements" as UC15
+  usecase "Exporter rapports" as UC16
+  usecase "Suivre revenus" as UC17
+  
+  ' Gestion des participants
+  usecase "Voir liste participants" as UC18
+  usecase "Valider billets" as UC19
+  usecase "Scanner QR codes" as UC20
+  usecase "Gérer accès événement" as UC21
+  
+  ' Communication
+  usecase "Envoyer notifications" as UC22
+  usecase "Communiquer avec participants" as UC23
+  usecase "Gérer avis clients" as UC24
+  
+  ' Gestion du profil organisateur
+  usecase "Modifier profil organisateur" as UC25
+  usecase "Gérer équipe" as UC26
+  usecase "Configurer paramètres" as UC27
+  usecase "Consulter historique activités" as UC28
+}
+
+' Relations principales
+Organizer --> UC1
+Organizer --> UC2
+Organizer --> UC3
+Organizer --> UC4
+Organizer --> UC5
+Organizer --> UC6
+Organizer --> UC7
+Organizer --> UC8
+Organizer --> UC9
+Organizer --> UC10
+Organizer --> UC11
+Organizer --> UC12
+Organizer --> UC13
+Organizer --> UC14
+Organizer --> UC15
+Organizer --> UC16
+Organizer --> UC17
+Organizer --> UC18
+Organizer --> UC19
+Organizer --> UC20
+Organizer --> UC21
+Organizer --> UC22
+Organizer --> UC23
+Organizer --> UC24
+Organizer --> UC25
+Organizer --> UC26
+Organizer --> UC27
+Organizer --> UC28
+
+' Héritage simplifié
+Organizer --|> User : hérite des droits utilisateur
+
+' Relations d'inclusion
+UC1 ..> UC7 : include
+UC2 ..> UC8 : include
+UC3 ..> UC9 : include
+UC12 ..> UC13 : include
+UC12 ..> UC17 : include
+UC19 ..> UC20 : include
+UC22 ..> UC23 : include
+
+' Relations d'extension
+UC11 ..> UC8 : extend
+UC15 ..> UC14 : extend
+UC26 ..> UC25 : extend
+
+note right of UC19
+  Validation en temps réel
+  via QR code
+end note
+
+note right of UC13
+  Analytics avancées :
+  - Ventes par période
+  - Conversion
+  - Revenus
+end note
+
+note right of UC22
+  Notifications :
+  - Email
+  - Push
+  - SMS
+end note
+
+@enduml

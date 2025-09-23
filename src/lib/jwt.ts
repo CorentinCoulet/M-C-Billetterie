@@ -1,10 +1,11 @@
 import jwt, { SignOptions } from "jsonwebtoken";
+import { CONFIG } from "../core/config";
 
-const JWT_SECRET = process.env.JWT_SECRET!;
-const JWT_EXPIRES_IN = (process.env.JWT_EXPIRES_IN || "7d") as SignOptions["expiresIn"];
+const JWT_SECRET = CONFIG.AUTH.JWT_SECRET;
+const JWT_EXPIRES_IN = CONFIG.AUTH.JWT_EXPIRES_IN as SignOptions["expiresIn"];
 
 if (!JWT_SECRET) {
-  throw new Error("JWT_SECRET is not defined in environment variables");
+  throw new Error("JWT_SECRET is not defined in configuration");
 }
 
 export function signToken(payload: object): string {

@@ -1,0 +1,20 @@
+@startuml "Traitement des webhooks"
+
+title Traitement des webhooks Stripe
+
+participant "Payment Gateway\n(Stripe)" as Stripe
+participant "API Gateway\n(Next.js API)" as API
+participant "Message Queue\n(Bull/Redis)" as Queue
+participant "Business Services" as Services
+participant "Database\n(PostgreSQL)" as DB
+
+Stripe -> API: POST /api/webhook/stripe
+API -> API: Verify webhook signature
+API -> Queue: addJob('process_webhook', {event})
+API --> Stripe: 200 OK (immediate response)
+
+Queue -> Services: processStripeWebhook(event)
+Services -> DB: Update payment status
+Services -> Queue: addJob('post_payment_actions', {paymentId})
+
+@enduml

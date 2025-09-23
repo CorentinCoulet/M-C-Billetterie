@@ -1,0 +1,68 @@
+config:
+  target: 'http://localhost:3000'
+  phases:
+    # Test de capacité - charge soutenue très élevée
+    - duration: 300  # 5 minutes
+      arrivalRate: 200
+      name: "Capacity test - 200 req/s"
+    
+    # Augmentation progressive pour trouver la limite
+    - duration: 180  # 3 minutes  
+      arrivalRate: 300
+      name: "Higher capacity - 300 req/s"
+    
+    # Test limite
+    - duration: 120  # 2 minutes
+      arrivalRate: 500
+      name: "Maximum capacity test - 500 req/s"
+
+  # Configuration pour test de capacité
+  http:
+    timeout: 15
+    pool: 50  # Plus de connexions simultanées
+
+scenarios:
+  # Mix réaliste d'opérations
+  - name: "Read Operations"
+    weight: 70
+    flow:
+      - get:
+          url: "/api/events"
+          name: "List Events"
+      - get:
+          url: "/api/events/{{ $randomInt(1, 20) }}"
+          name: "Event Details"
+      - get:
+          url: "/api/health"
+          name: "Health Check"
+
+  - name: "Write Operations" 
+    weight: 20
+    flow:
+      - post:
+          url: "/api/auth/register"
+          name: "User Registration"
+          json:
+            email: "capacity-test-{{ $randomNumber }}@test.com"
+            password: "TestPass123!"
+            name: "Capacity Test User"
+
+  - name: "Mixed Operations"
+    weight: 10
+    flow:
+      - get:
+          url: "/api/tickets"
+          name: "List Tickets"
+      - get:
+          url: "/api/metrics"
+          name: "Metrics Check"
+
+# Seuils de capacité - Identifier les limites
+expect:
+  # On s'attend à de la dégradation à ces niveaux
+  - http.response_time.p95: 3000   # 95% < 3s
+  - http.response_time.p99: 8000   # 99% < 8s
+  
+  # Taux d'erreur acceptable même à haute charge
+  - http.codes.500: "< 1%"         # Moins de 1% d'erreurs serveur
+  - http.codes.503: "< 5%"         # Moins de 5% de service unavailable

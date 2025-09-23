@@ -1,0 +1,129 @@
+@startuml Microservices Architecture - Billetterie
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+
+title Architecture orientée services - Billetterie
+
+Person(user, "Utilisateur")
+
+System_Boundary(api_gateway, "API Gateway") {
+    Container(gateway, "Gateway", "Next.js API Routes", "Routage et agrégation des services")
+    Container(auth_middleware, "Auth Middleware", "Next.js Middleware", "Authentification centralisée")
+}
+
+System_Boundary(core_services, "Services Métier") {
+    
+    Container_Boundary(user_domain, "Domaine Utilisateur") {
+        Container(user_service, "Service Utilisateur", "TypeScript", "Gestion des comptes utilisateur")
+        Container(auth_service, "Service Auth", "Better Auth", "Authentification et autorisation")
+        Container(profile_service, "Service Profil", "TypeScript", "Gestion des profils")
+        ContainerDb(user_db, "DB Utilisateurs", "PostgreSQL Schema", "user, role, session")
+    }
+    
+    Container_Boundary(event_domain, "Domaine Événement") {
+        Container(event_service, "Service Événement", "TypeScript", "CRUD événements")
+        Container(category_service, "Service Catégorie", "TypeScript", "Gestion des catégories")
+        Container(venue_service, "Service Lieu", "TypeScript", "Gestion des lieux")
+        ContainerDb(event_db, "DB Événements", "PostgreSQL Schema", "event, category, venue")
+    }
+    
+    Container_Boundary(ticketing_domain, "Domaine Billetterie") {
+        Container(ticket_service, "Service Ticket", "TypeScript", "Gestion des billets")
+        Container(order_service, "Service Commande", "TypeScript", "Gestion des commandes")
+        Container(inventory_service, "Service Inventaire", "TypeScript", "Stock et disponibilité")
+        ContainerDb(ticket_db, "DB Billetterie", "PostgreSQL Schema", "ticket, order, inventory")
+    }
+    
+    Container_Boundary(payment_domain, "Domaine Paiement") {
+        Container(payment_service, "Service Paiement", "Stripe SDK", "Traitement des paiements")
+        Container(refund_service, "Service Remboursement", "TypeScript", "Gestion des remboursements")
+        Container(invoice_service, "Service Facturation", "TypeScript", "Génération factures")
+        ContainerDb(payment_db, "DB Paiements", "PostgreSQL Schema", "payment, refund, invoice")
+    }
+}
+
+System_Boundary(support_services, "Services Support") {
+    
+    Container(notification_service, "Service Notification", "Nodemailer", "Notifications email/SMS")
+    Container(qr_service, "Service QR", "QRCode.js", "Génération et validation QR codes")
+    Container(file_service, "Service Fichiers", "Multer", "Upload et gestion fichiers")
+    Container(analytics_service, "Service Analytics", "Custom", "Statistiques et métriques")
+    Container(audit_service, "Service Audit", "Logging", "Traçabilité et compliance")
+    
+    ContainerDb(notification_queue, "Queue Notifications", "Redis", "File d'attente async")
+    ContainerDb(file_storage, "Stockage Fichiers", "Volume", "Images et documents")
+}
+
+System_Boundary(shared_infrastructure, "Infrastructure Partagée") {
+    ContainerDb(shared_cache, "Cache Partagé", "Redis", "Cache inter-services")
+    Container(event_bus, "Bus d'Événements", "Redis Pub/Sub", "Communication asynchrone")
+    Container(config_service, "Service Configuration", "Environment", "Configuration centralisée")
+    Container(health_service, "Service Santé", "Health Checks", "Monitoring des services")
+}
+
+System_Ext(stripe_api, "Stripe API", "Paiements externes")
+System_Ext(email_provider, "Fournisseur Email", "SMTP")
+
+' Relations utilisateur
+Rel(user, gateway, "API Calls", "HTTPS")
+Rel(gateway, auth_middleware, "Authentication")
+
+' Relations gateway vers services
+Rel(gateway, user_service, "User Operations")
+Rel(gateway, event_service, "Event Operations")
+Rel(gateway, ticket_service, "Ticket Operations")
+Rel(gateway, payment_service, "Payment Operations")
+
+' Relations auth
+Rel(auth_middleware, auth_service, "Validate Token")
+Rel(auth_service, user_db, "User Data")
+
+' Relations domaine utilisateur
+Rel(user_service, user_db, "CRUD Users")
+Rel(profile_service, user_db, "Profile Data")
+Rel(user_service, shared_cache, "User Cache")
+
+' Relations domaine événement
+Rel(event_service, event_db, "CRUD Events")
+Rel(category_service, event_db, "Categories")
+Rel(venue_service, event_db, "Venues")
+Rel(event_service, file_service, "Event Images")
+
+' Relations domaine billetterie
+Rel(ticket_service, ticket_db, "CRUD Tickets")
+Rel(order_service, ticket_db, "Orders")
+Rel(inventory_service, ticket_db, "Stock")
+Rel(ticket_service, qr_service, "Generate QR")
+
+' Relations domaine paiement
+Rel(payment_service, payment_db, "Payment Data")
+Rel(refund_service, payment_db, "Refunds")
+Rel(invoice_service, payment_db, "Invoices")
+Rel(payment_service, stripe_api, "Process Payment")
+
+' Relations services support
+Rel(notification_service, notification_queue, "Queue Messages")
+Rel(notification_service, email_provider, "Send Email")
+Rel(file_service, file_storage, "Store Files")
+Rel(analytics_service, shared_cache, "Metrics Cache")
+
+' Communication inter-services via event bus
+Rel(order_service, event_bus, "Order Events")
+Rel(payment_service, event_bus, "Payment Events")
+Rel(notification_service, event_bus, "Listen Events")
+Rel(analytics_service, event_bus, "Collect Events")
+Rel(audit_service, event_bus, "Audit Events")
+
+' Services partagés
+Rel(user_service, config_service, "Configuration")
+Rel(event_service, config_service, "Configuration")
+Rel(ticket_service, config_service, "Configuration")
+Rel(payment_service, config_service, "Configuration")
+
+' Health checks
+Rel(health_service, user_service, "Health Check")
+Rel(health_service, event_service, "Health Check")
+Rel(health_service, ticket_service, "Health Check")
+Rel(health_service, payment_service, "Health Check")
+
+SHOW_LEGEND()
+@enduml

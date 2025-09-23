@@ -1,105 +1,53 @@
-import {PrismaClient} from '@prisma/client';
-import {execSync} from 'child_process';
-import {randomBytes} from 'crypto';
+import { config } from 'dotenv';
+import { join } from 'path';
+import { createMockPrisma, getSharedMockPrisma } from '../mocks/prisma.mock';
 
-const prisma = new PrismaClient();
+// Load test environment variables
+config({ path: join(process.cwd(), '.env.test') });
 
-const generateTestDatabaseUrl = () => {
-    const testDbName = `test_billetterie_${randomBytes(8).toString('hex')}`;
-    const baseUrl = process.env.DATABASE_URL || 'postgresql://user:password@localhost:5432/billetterie';
-    return baseUrl.replace(/\/[^\/]+(\?|$)/, `/${testDbName}$1`);
+// Global Jest setup
+export function setupTests() {
+  // Reset all mocks before each test
+  jest.clearAllMocks();
+  
+  // Reset mock storage
+  const { resetMockPrismaStorage } = require('../mocks/prisma.mock');
+  resetMockPrismaStorage();
+  
+  // Set default environment variables for tests
+  // Note: NODE_ENV is read-only, so we use Object.defineProperty
+  Object.defineProperty(process.env, 'NODE_ENV', {
+    value: 'test',
+    writable: true,
+    configurable: true
+  });
+  
+  process.env.JWT_SECRET = 'test-jwt-secret-key-for-testing-purposes-that-is-at-least-32-chars-long';
+  process.env.DATABASE_URL = 'postgresql://test:test@localhost:5432/billetterie_test';
+  process.env.REDIS_URL = 'redis://localhost:6379/1';
+  process.env.STRIPE_SECRET_KEY = 'sk_test_fake_key_for_testing';
+  process.env.STRIPE_WEBHOOK_SECRET = 'whsec_test_fake_webhook_secret';
+  process.env.NEXTAUTH_SECRET = 'test-nextauth-secret-for-testing-purposes';
+  process.env.NEXTAUTH_URL = 'http://localhost:3000';
+}
+
+export function teardownTests() {
+  // Clean up after tests
+  jest.clearAllMocks();
+}
+
+// Export mock factory function
+export { createMockPrisma, getSharedMockPrisma };
+
+// Create and export a default mock instance using the shared instance
+export const mockPrisma = () => {
+  const { getSharedMockPrisma } = require('../mocks/prisma.mock');
+  return getSharedMockPrisma();
 };
 
-let testDatabaseUrl: string;
+// Export testPrisma as a function to get the fresh instance
+export const getTestPrisma = () => getSharedMockPrisma();
 
-export async function setupTestDatabase() {
-    try {
-        testDatabaseUrl = generateTestDatabaseUrl();
-        process.env.DATABASE_URL = testDatabaseUrl;
+// For compatibility, also export as a getter
+export const testPrisma = getSharedMockPrisma();
 
-        console.log('🔧 Setting up test database...');
-
-        // Apply Prisma migrations
-        execSync('npx prisma migrate deploy', {
-            env: {...process.env, DATABASE_URL: testDatabaseUrl},
-            stdio: 'pipe'
-        });
-
-        console.log('✅ Test database setup complete');
-
-        await seedTestData();
-
-    } catch (error) {
-        console.error('❌ Failed to setup test database:', error);
-        throw error;
-    }
-}
-
-export async function cleanupTestDatabase() {
-    try {
-        console.log('🧹 Cleaning up test database...');
-
-        await prisma.$transaction([
-            prisma.session.deleteMany(),
-            prisma.passwordResetToken.deleteMany(),
-            prisma.ticket.deleteMany(),
-            prisma.order.deleteMany(),
-
-            prisma.event.deleteMany(),
-            prisma.user.deleteMany(),
-        ]);
-
-        console.log('✅ Test database cleanup complete');
-
-    } catch (error) {
-        console.error('❌ Failed to cleanup test database:', error);
-    }
-}
-
-export async function resetTestDatabase() {
-    await cleanupTestDatabase();
-    await seedTestData();
-}
-
-async function seedTestData() {
-    try {
-        await prisma.user.upsert({
-            where: {email: 'admin@test.com'},
-            update: {},
-            create: {
-                email: 'admin@test.com',
-                password: '$2b$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LwlAKt9LXaOXwjk5G', // hashed "password123"
-                name: 'Test Admin',
-                role: 'ADMIN',
-                isEmailVerified: true,
-            },
-        });
-
-        console.log('📊 Seeded test data');
-
-    } catch (error) {
-        console.log('⚠️ Warning: Could not seed test data:', (error as Error).message);
-    }
-}
-
-export function getTestPrismaClient() {
-    return new PrismaClient({
-        datasources: {
-            db: {
-                url: testDatabaseUrl || process.env.DATABASE_URL,
-            },
-        },
-    });
-}
-
-// Jest hooks
-export async function setupTests() {
-    await setupTestDatabase();
-}
-
-export async function teardownTests() {
-    await cleanupTestDatabase();
-    await prisma.$disconnect();
-}
-
-export {prisma as testPrisma};

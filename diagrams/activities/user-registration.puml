@@ -1,0 +1,55 @@
+@startuml user-registration
+!theme aws-orange
+title Inscription Utilisateur
+
+start
+:Utilisateur accède à la page d'inscription;
+:Saisit ses informations personnelles;
+note right
+  - Email
+  - Mot de passe
+  - Nom/Prénom
+  - Téléphone (optionnel)
+end note
+
+:Valide le formulaire;
+
+if (Données valides ?) then (non)
+  :Affiche les erreurs de validation;
+  stop
+else (oui)
+  :Vérifie si l'email existe déjà;
+  
+  if (Email déjà utilisé ?) then (oui)
+    :Affiche erreur "Email déjà utilisé";
+    stop
+  else (non)
+    :Hash le mot de passe;
+    :Crée le compte utilisateur;
+    :Génère token de vérification;
+    :Envoie email de confirmation;
+    
+    fork
+      :Utilisateur reçoit l'email;
+      :Clique sur le lien de confirmation;
+      :Vérifie le token;
+      
+      if (Token valide ?) then (oui)
+        :Active le compte;
+        :Redirige vers connexion;
+      else (non)
+        :Affiche erreur token;
+      endif
+    fork again
+      :Attendre confirmation;
+      note right
+        Timeout après 24h
+      end note
+    end fork
+    
+    :Affiche message "Vérifiez votre email";
+  endif
+endif
+
+stop
+@enduml

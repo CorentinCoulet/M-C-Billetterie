@@ -1,0 +1,42 @@
+@startuml system-entities
+
+!theme aws-orange
+skinparam linetype ortho
+skinparam backgroundColor #FFFFFF
+
+title Entités Système
+
+' ========== ENTITÉS SYSTÈME ==========
+
+entity ActivityLog {
+    * **id** : String <<PK>>
+    --
+    userId : String <<FK>>
+    * **action** : String
+    * **targetType** : String
+    * **targetId** : String
+    * **timestamp** : DateTime
+}
+
+entity Notification {
+    * **id** : String <<PK>>
+    --
+    userId : String <<FK>>
+    * **type** : String
+    * **message** : String
+    isRead : DateTime
+    * **sentAt** : DateTime
+}
+
+entity SystemBackup {
+    * **id** : String <<PK>>
+    --
+    * **type** : String
+    * **status** : String
+    filePath : String
+    fileSize : BigInt
+    startedAt : DateTime
+    completedAt : DateTime
+}
+
+@enduml

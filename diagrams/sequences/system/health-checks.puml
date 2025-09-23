@@ -1,0 +1,24 @@
+@startuml "Health checks"
+
+title Health checks système
+
+participant "Load Balancer\n(HAProxy)" as LB
+participant "Frontend\n(Next.js)" as Frontend
+participant "API Gateway\n(Next.js API)" as API
+participant "Database\n(PostgreSQL)" as DB
+participant "Cache Layer\n(Redis)" as Cache
+participant "Message Queue\n(Bull/Redis)" as Queue
+
+LB -> Frontend: GET /health
+Frontend -> API: GET /api/health
+API -> DB: SELECT 1
+DB --> API: Connection OK
+API -> Cache: PING
+Cache --> API: Redis OK
+API -> Queue: Health check
+Queue --> API: Queue OK
+API --> Frontend: {status: 'healthy'}
+Frontend --> LB: Health OK
+LB -> LB: Mark instance as healthy
+
+@enduml

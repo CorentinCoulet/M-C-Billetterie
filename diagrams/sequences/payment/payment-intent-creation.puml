@@ -1,0 +1,54 @@
+@startuml "Création du Payment Intent - Diagramme de séquence"
+
+title Création du Payment Intent avec Stripe
+
+actor "Utilisateur" as User
+participant "Frontend\n(Next.js)" as Frontend
+participant "API Gateway\n(Rate Limiter)" as API
+participant "Auth Middleware" as Auth
+participant "Payment Controller" as PaymentCtrl
+participant "Payment Service" as PaymentSvc
+participant "Order Service" as OrderSvc
+participant "Database\n(PostgreSQL)" as DB
+participant "Stripe API" as Stripe
+
+== Création du Payment Intent ==
+User -> Frontend: Procéder au paiement
+Frontend -> API: POST /api/payments/intent
+note right: Body: {orderId}
+API -> Auth: Vérifier token utilisateur
+Auth -> DB: SELECT user WHERE id=?
+DB --> Auth: user authenticated
+Auth --> API: user verified
+
+API -> PaymentCtrl: createPaymentIntent(orderId, userId)
+PaymentCtrl -> OrderSvc: getOrderById(orderId)
+OrderSvc -> DB: SELECT order WITH tickets WHERE id=? AND userId=?
+DB --> OrderSvc: order data
+
+alt Commande valide et non payée
+    PaymentCtrl -> PaymentSvc: createStripePaymentIntent(order)
+    PaymentSvc -> Stripe: POST /payment_intents
+    note right: {amount, currency, metadata: {orderId, userId}}
+    Stripe --> PaymentSvc: {id, client_secret, status}
+    
+    PaymentSvc -> DB: BEGIN TRANSACTION
+    PaymentSvc -> DB: INSERT INTO payments (orderId, stripePaymentId, amount, currency, status='pending')
+    DB --> PaymentSvc: paymentId
+    
+    PaymentSvc -> DB: UPDATE orders SET paymentId=? WHERE id=?
+    PaymentSvc -> DB: COMMIT TRANSACTION
+    DB --> PaymentSvc: payment record created
+    
+    PaymentSvc --> PaymentCtrl: {client_secret, paymentId}
+    PaymentCtrl --> API: payment intent created
+    API --> Frontend: {client_secret, paymentId}
+    Frontend --> User: Afficher formulaire Stripe Elements
+    
+else Commande invalide
+    PaymentCtrl --> API: 400 Bad Request
+    API --> Frontend: error
+    Frontend --> User: "Erreur: commande non trouvée"
+end
+
+@enduml

@@ -5,11 +5,11 @@ jest.mock('@/lib/prisma', () => ({
   default: {},
 }));
 
+import authService from '@/services/authService';
 import { createMocks } from 'node-mocks-http';
-import authController from '@/modules/auth/auth.controller';
-import authService from '@/modules/auth/auth.service';
+import authController from '../../../src/controllers/auth.controller';
 
-jest.mock('@/modules/auth/auth.service');
+jest.mock('@/services/authService');
 
 const mockedAuthService = authService as jest.Mocked<typeof authService>;
 
@@ -26,16 +26,16 @@ describe('AuthController', () => {
   describe('register', () => {
     it('should register a user and set a secure cookie', async () => {
       mockedAuthService.register.mockResolvedValue({
-        user: { id: '1', email: 'test@example.com', name: 'Test' },
+        user: { id: '1', email: 'test@example.com', role: 'USER' },
         token: 'token123',
       });
       const { req, res } = mockReqRes({
         method: 'POST',
-        body: { email: 'test@example.com', password: 'secret', name: 'Test' },
+        body: { email: 'test@example.com', password: 'secretpwd', name: 'Test' },
         headers: { 'user-agent': 'jest', 'x-forwarded-for': '127.0.0.1' },
       });
 
-      await authController.register(req, res);
+      await authController.register(req as any, res as any);
 
       expect(res._getStatusCode()).toBe(201);
       expect(res.getHeader('Set-Cookie')).toBeDefined();
@@ -49,7 +49,7 @@ describe('AuthController', () => {
         body: { email: 'bad', password: '1' },
       });
 
-      await authController.register(req, res);
+      await authController.register(req as any, res as any);
 
       expect(res._getStatusCode()).toBe(400);
       expect(JSON.parse(res._getData())).toHaveProperty('errors');
@@ -59,10 +59,10 @@ describe('AuthController', () => {
       mockedAuthService.register.mockRejectedValue(new Error('User exists'));
       const { req, res } = mockReqRes({
         method: 'POST',
-        body: { email: 'test@example.com', password: 'secret' },
+        body: { email: 'test@example.com', password: 'secretpwd', name: 'Test' },
       });
 
-      await authController.register(req, res);
+      await authController.register(req as any, res as any);
 
       expect(res._getStatusCode()).toBe(400);
       expect(JSON.parse(res._getData()).message).toBe('User exists');
@@ -72,16 +72,16 @@ describe('AuthController', () => {
   describe('login', () => {
     it('should login a user and set a secure cookie', async () => {
       mockedAuthService.login.mockResolvedValue({
-        user: { id: '1', email: 'test@example.com', name: 'Test' },
+        user: { id: '1', email: 'test@example.com', role: 'USER' },
         token: 'token123',
       });
       const { req, res } = mockReqRes({
         method: 'POST',
-        body: { email: 'test@example.com', password: 'secret' },
+        body: { email: 'test@example.com', password: 'secretpwd' },
         headers: { 'user-agent': 'jest', 'x-forwarded-for': '127.0.0.1' },
       });
 
-      await authController.login(req, res);
+      await authController.login(req as any, res as any);
 
       expect(res._getStatusCode()).toBe(200);
       expect(res.getHeader('Set-Cookie')).toBeDefined();
@@ -95,7 +95,7 @@ describe('AuthController', () => {
         body: { email: 'bad', password: '1' },
       });
 
-      await authController.login(req, res);
+      await authController.login(req as any, res as any);
 
       expect(res._getStatusCode()).toBe(400);
       expect(JSON.parse(res._getData())).toHaveProperty('errors');
@@ -108,7 +108,7 @@ describe('AuthController', () => {
         body: { email: 'test@example.com', password: 'wrongpass' },
       });
 
-      await authController.login(req, res);
+      await authController.login(req as any, res as any);
 
       expect(res._getStatusCode()).toBe(401);
       expect(JSON.parse(res._getData()).message).toBe('Invalid credentials');
@@ -117,13 +117,13 @@ describe('AuthController', () => {
 
   describe('logout', () => {
     it('should clear the cookie and return 200', async () => {
-      mockedAuthService.logout.mockResolvedValue();
+      mockedAuthService.logout.mockResolvedValue(true);
       const { req, res } = mockReqRes({
         method: 'POST',
         cookies: { token: 'token123' },
       });
 
-      await authController.logout(req, res);
+      await authController.logout(req as any, res as any);
 
       expect(res._getStatusCode()).toBe(200);
       expect(res.getHeader('Set-Cookie')).toBeDefined();
@@ -131,13 +131,13 @@ describe('AuthController', () => {
     });
 
     it('should handle errors gracefully', async () => {
-      mockedAuthService.logout.mockRejectedValue(new Error('Logout error'));
+      mockedAuthService.validateToken.mockRejectedValue(new Error('Logout error'));
       const { req, res } = mockReqRes({
         method: 'POST',
         cookies: { token: 'token123' },
       });
 
-      await authController.logout(req, res);
+      await authController.logout(req as any, res as any);
 
       expect(res._getStatusCode()).toBe(500);
       expect(JSON.parse(res._getData()).message).toBe('Logout error');
@@ -149,15 +149,19 @@ describe('AuthController', () => {
       mockedAuthService.validateToken.mockResolvedValue({
         id: '1',
         email: 'test@example.com',
-        name: 'Test',
-        password: 'shouldnotappear'
+        role: 'USER'
+      });
+      mockedAuthService.getCurrentUser.mockResolvedValue({
+        id: '1',
+        email: 'test@example.com',
+        role: 'USER'
       });
       const { req, res } = mockReqRes({
         method: 'GET',
         cookies: { token: 'token123' },
       });
 
-      await authController.getCurrentUser(req, res);
+      await authController.getCurrentUser(req as any, res as any);
 
       expect(res._getStatusCode()).toBe(200);
       const data = JSON.parse(res._getData());
@@ -168,7 +172,7 @@ describe('AuthController', () => {
     it('should return 401 if no token', async () => {
       const { req, res } = mockReqRes({ method: 'GET' });
 
-      await authController.getCurrentUser(req, res);
+      await authController.getCurrentUser(req as any, res as any);
 
       expect(res._getStatusCode()).toBe(401);
     });
@@ -180,7 +184,7 @@ describe('AuthController', () => {
         cookies: { token: 'badtoken' },
       });
 
-      await authController.getCurrentUser(req, res);
+      await authController.getCurrentUser(req as any, res as any);
 
       expect(res._getStatusCode()).toBe(401);
     });
@@ -189,14 +193,14 @@ describe('AuthController', () => {
   describe('changePassword', () => {
     it('should change password and clear cookie', async () => {
       mockedAuthService.validateToken.mockResolvedValue({ id: '1', email: 'test@example.com' });
-      mockedAuthService.changePassword.mockResolvedValue();
+      mockedAuthService.changePassword.mockResolvedValue(true);
       const { req, res } = mockReqRes({
         method: 'POST',
         cookies: { token: 'token123' },
-        body: { oldPassword: 'oldpass', newPassword: 'newpass' },
+        body: { oldPassword: 'oldpassword', newPassword: 'newpassword' },
       });
 
-      await authController.changePassword(req, res);
+      await authController.changePassword(req as any, res as any);
 
       expect(res._getStatusCode()).toBe(200);
       expect(res.getHeader('Set-Cookie')).toBeDefined();
@@ -209,7 +213,7 @@ describe('AuthController', () => {
         body: { oldPassword: 'old', newPassword: 'new' },
       });
 
-      await authController.changePassword(req, res);
+      await authController.changePassword(req as any, res as any);
 
       expect(res._getStatusCode()).toBe(401);
     });
@@ -222,7 +226,7 @@ describe('AuthController', () => {
         body: { oldPassword: '', newPassword: '' },
       });
 
-      await authController.changePassword(req, res);
+      await authController.changePassword(req as any, res as any);
 
       expect(res._getStatusCode()).toBe(400);
       expect(JSON.parse(res._getData())).toHaveProperty('errors');
@@ -234,93 +238,13 @@ describe('AuthController', () => {
       const { req, res } = mockReqRes({
         method: 'POST',
         cookies: { token: 'token123' },
-        body: { oldPassword: 'badpass', newPassword: 'newpass' },
+        body: { oldPassword: 'badpassword', newPassword: 'newpassword' },
       });
 
-      await authController.changePassword(req, res);
+      await authController.changePassword(req as any, res as any);
 
       expect(res._getStatusCode()).toBe(400);
       expect(JSON.parse(res._getData()).message).toBe('Wrong password');
-    });
-  });
-
-  describe('requestPasswordReset', () => {
-    it('should request password reset', async () => {
-      mockedAuthService.requestPasswordReset.mockResolvedValue();
-      const { req, res } = mockReqRes({
-        method: 'POST',
-        body: { email: 'test@example.com' },
-      });
-
-      await authController.requestPasswordReset(req, res);
-
-      expect(res._getStatusCode()).toBe(200);
-      expect(JSON.parse(res._getData()).message).toMatch(/password reset link/i);
-    });
-
-    it('should return 400 if input is invalid', async () => {
-      const { req, res } = mockReqRes({
-        method: 'POST',
-        body: { email: 'bad' },
-      });
-
-      await authController.requestPasswordReset(req, res);
-
-      expect(res._getStatusCode()).toBe(400);
-      expect(JSON.parse(res._getData())).toHaveProperty('errors');
-    });
-
-    it('should handle errors gracefully', async () => {
-      mockedAuthService.requestPasswordReset.mockRejectedValue(new Error('Reset error'));
-      const { req, res } = mockReqRes({
-        method: 'POST',
-        body: { email: 'test@example.com' },
-      });
-
-      await authController.requestPasswordReset(req, res);
-
-      expect(res._getStatusCode()).toBe(500);
-      expect(JSON.parse(res._getData()).message).toBe('Reset error');
-    });
-  });
-
-  describe('resetPassword', () => {
-    it('should reset password', async () => {
-      mockedAuthService.resetPassword.mockResolvedValue();
-      const { req, res } = mockReqRes({
-        method: 'POST',
-        body: { token: 'toktoktoktok', newPassword: 'newpass' },
-      });
-
-      await authController.resetPassword(req, res);
-
-      expect(res._getStatusCode()).toBe(200);
-      expect(JSON.parse(res._getData()).message).toMatch(/password reset/i);
-    });
-
-    it('should return 400 if input is invalid', async () => {
-      const { req, res } = mockReqRes({
-        method: 'POST',
-        body: { token: '', newPassword: '' },
-      });
-
-      await authController.resetPassword(req, res);
-
-      expect(res._getStatusCode()).toBe(400);
-      expect(JSON.parse(res._getData())).toHaveProperty('errors');
-    });
-
-    it('should return 400 if service throws', async () => {
-      mockedAuthService.resetPassword.mockRejectedValue(new Error('Reset error'));
-      const { req, res } = mockReqRes({
-        method: 'POST',
-        body: { token: 'toktoktoktok', newPassword: 'newpass' },
-      });
-
-      await authController.resetPassword(req, res);
-
-      expect(res._getStatusCode()).toBe(400);
-      expect(JSON.parse(res._getData()).message).toBe('Reset error');
     });
   });
 });

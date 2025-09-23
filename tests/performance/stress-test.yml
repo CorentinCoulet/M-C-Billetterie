@@ -1,0 +1,90 @@
+config:
+  target: 'http://localhost:3000'
+  phases:
+    # Simulation Black Friday - Montée très rapide
+    - duration: 30
+      arrivalRate: 10
+      name: "Pre-event"
+    
+    # Pic massif (simulation ouverture vente)
+    - duration: 60
+      arrivalRate: 100
+      name: "Event opening - MASSIVE SPIKE"
+    
+    # Maintien haute charge
+    - duration: 120
+      arrivalRate: 75
+      name: "High sustained load"
+    
+    # Descente progressive
+    - duration: 60
+      arrivalRate: 30
+      name: "Cool down"
+
+  # Configuration pour test de stress
+  http:
+    timeout: 10  # Timeout plus court pour détecter les problèmes
+    
+  variables:
+    userId: "stress-user-{{ $randomNumber }}"
+
+scenarios:
+  # Scénario principal : achat de billets
+  - name: "Ticket Purchase Stress"
+    weight: 60
+    flow:
+      # Consulter événements
+      - get:
+          url: "/api/events"
+          name: "Browse Events"
+      
+      # Sélectionner un événement
+      - get:
+          url: "/api/events/{{ $randomInt(1, 10) }}"
+          name: "View Event Details"
+      
+      # Tentative d'achat (simulation)
+      - post:
+          url: "/api/orders"
+          name: "Create Order"
+          json:
+            eventId: "{{ $randomInt(1, 10) }}"
+            quantity: 2
+          expect:
+            - statusCode: [200, 201, 400, 401] # Accepter les erreurs d'auth
+
+  # Test de la page d'accueil sous charge
+  - name: "Homepage Stress"
+    weight: 30
+    flow:
+      - get:
+          url: "/"
+          name: "Homepage Load"
+      - get:
+          url: "/events"
+          name: "Events Page Load"
+
+  # Test des services critiques
+  - name: "Critical Services"
+    weight: 10
+    flow:
+      - get:
+          url: "/api/health"
+          name: "Health Check"
+          expect:
+            - statusCode: 200
+      - get:
+          url: "/api/metrics"
+          name: "Metrics Endpoint"
+
+# Seuils de stress - Plus stricts
+expect:
+  # Temps de réponse dégradé acceptable sous forte charge
+  - http.response_time.p95: 2000   # 95% < 2s (dégradé mais acceptable)
+  - http.response_time.p99: 5000   # 99% < 5s
+  
+  # Taux d'erreur acceptable sous stress
+  - http.response_time.median: "< 1000" # Médiane < 1s
+  
+  # Rate minimum même sous stress  
+  - http.request_rate: "> 80"      # Au moins 80 req/s

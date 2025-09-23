@@ -1,0 +1,52 @@
+@startuml "Webhook Stripe Payment Succeeded - Diagramme de séquence"
+
+title Traitement du webhook Stripe - Payment Succeeded
+
+participant "Stripe API" as Stripe
+participant "API Gateway\n(Rate Limiter)" as API
+participant "Webhook Handler" as WebhookHandler
+participant "Payment Service" as PaymentSvc
+participant "Order Service" as OrderSvc
+participant "Ticket Service" as TicketSvc
+participant "Queue Service\n(Bull/Redis)" as Queue
+participant "Database\n(PostgreSQL)" as DB
+
+== Webhook Stripe - Payment Succeeded ==
+note over Stripe: Événement asynchrone après confirmation
+Stripe -> API: POST /api/webhook/stripe
+note right: Event: payment_intent.succeeded
+API -> WebhookHandler: processStripeWebhook(event, signature)
+WebhookHandler -> WebhookHandler: Verify webhook signature
+WebhookHandler -> Stripe: Verify webhook authenticity
+
+alt Webhook authentique
+    WebhookHandler -> PaymentSvc: handlePaymentSucceeded(payment_intent)
+    PaymentSvc -> DB: SELECT payment WHERE stripePaymentId=?
+    DB --> PaymentSvc: payment data
+    
+    PaymentSvc -> DB: BEGIN TRANSACTION
+    PaymentSvc -> DB: UPDATE payments SET status='completed', processedAt=NOW()
+    
+    PaymentSvc -> OrderSvc: markOrderAsPaid(orderId)
+    OrderSvc -> DB: UPDATE orders SET status='paid', paidAt=NOW()
+    
+    OrderSvc -> TicketSvc: activateOrderTickets(orderId)
+    TicketSvc -> DB: UPDATE tickets SET status='paid' WHERE orderId=?
+    
+    PaymentSvc -> DB: COMMIT TRANSACTION
+    
+    ' Queue jobs asynchrones
+    PaymentSvc -> Queue: addJob('generate-tickets', {orderId})
+    PaymentSvc -> Queue: addJob('send-confirmation-email', {orderId})
+    PaymentSvc -> Queue: addJob('update-analytics', {orderId})
+    
+    PaymentSvc --> WebhookHandler: payment processed
+    WebhookHandler --> API: 200 OK
+    API --> Stripe: webhook acknowledged
+    
+else Webhook non authentique
+    WebhookHandler --> API: 401 Unauthorized
+    API --> Stripe: webhook rejected
+end
+
+@enduml

@@ -4,7 +4,7 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
@@ -22,26 +22,37 @@ enum TicketStatus {
   used
 }
 
+enum Role {
+  USER
+  ORGANIZER
+  ADMIN
+}
+
 model User {
-  id            String         @id @default(uuid())
-  email         String         @unique
-  name          String?
-  password      String
-  isVerified    Boolean        @default(false)
-  lastLogin     DateTime?
-  role          String         @default("USER")
-  tickets       Ticket[]
-  orders        Order[]
-  sessions      Session[]
-  reviews       Review[]
-  teamRoles     TeamMember[]
-  logs          ActivityLog[]
-  notifications Notification[]
-  eventLogs     EventLog[]
-  blocked       BlockedUser?
-  metadata      Json?
-  createdAt     DateTime       @default(now())
-  updatedAt     DateTime       @updatedAt
+  id                String            @id @default(uuid())
+  email             String            @unique
+  name              String?
+  password          String
+  isVerified        Boolean           @default(false)
+  emailVerifiedAt   DateTime?
+  lastLogin         DateTime?
+  passwordChangedAt DateTime          @default(now()) // For password rotation
+  role              Role              @default(USER)
+  tickets           Ticket[]
+  orders            Order[]
+  userSessions      UserSession[] // Secure sessions only
+  reviews           Review[]
+  teamRoles         TeamMember[]
+  logs              ActivityLog[]
+  notifications     Notification[]
+  eventLogs         EventLog[]
+  blocked           BlockedUser?
+  passwordHistory   PasswordHistory[]
+  auditLogs         AuditLog[]
+  loginAttempts     LoginAttempt[]
+  metadata          Json?
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
 }
 
 model Organizer {
@@ -96,19 +107,26 @@ model Order {
 }
 
 model Ticket {
-  id          String       @id @default(uuid())
-  user        User?        @relation(fields: [userId], references: [id])
-  userId      String?
-  event       Event        @relation(fields: [eventId], references: [id])
-  eventId     String
-  order       Order?       @relation(fields: [orderId], references: [id])
-  orderId     String?
-  code        String       @unique
-  status      TicketStatus @default(paid)
-  seatNumber  String?
-  qrCode      QRCode?
+  id         String       @id @default(uuid())
+  user       User?        @relation(fields: [userId], references: [id])
+  userId     String?
+  event      Event        @relation(fields: [eventId], references: [id])
+  eventId    String
+  order      Order?       @relation(fields: [orderId], references: [id])
+  orderId    String?
+  code       String       @unique
+  status     TicketStatus @default(paid)
+  seatNumber String?
+
+  // QR Code unified system
+  currentQRCode      String? // Current QR code data URL
+  qrCodeGeneratedAt  DateTime? // When current QR was generated
+  qrRotationInterval Int       @default(12) // Hours between rotations
+  isScanned          Boolean   @default(false)
+  scannedAt          DateTime?
+
   usedAt      DateTime?
-  purchasedAt DateTime     @default(now())
+  purchasedAt DateTime  @default(now())
   metadata    Json?
 }
 
@@ -170,18 +188,6 @@ model Theme {
   updatedAt   DateTime @updatedAt
 }
 
-model QRCode {
-  id        String    @id @default(uuid())
-  ticket    Ticket    @relation(fields: [ticketId], references: [id])
-  ticketId  String    @unique
-  path      String
-  format    String
-  createdAt DateTime  @default(now())
-  expiresAt DateTime?
-  scannedAt DateTime?
-  data      Json?
-}
-
 model ActivityLog {
   id         String   @id @default(uuid())
   user       User     @relation(fields: [userId], references: [id])
@@ -211,17 +217,6 @@ model Notification {
   sentAt  DateTime
 }
 
-model Session {
-  id        String   @id @default(uuid())
-  user      User     @relation(fields: [userId], references: [id])
-  userId    String
-  token     String   @unique
-  ipAddress String?
-  userAgent String?
-  createdAt DateTime @default(now())
-  expiresAt DateTime
-}
-
 model BlockedUser {
   id        String   @id @default(uuid())
   user      User     @relation(fields: [userId], references: [id])
@@ -237,4 +232,122 @@ model Translation {
   locale     String
   field      String
   value      String
+}
+
+model SecurityLog {
+  id        String   @id @default(uuid())
+  type      String // 'login_attempt', 'suspicious_request', 'bot_detected', etc.
+  ip        String
+  userAgent String?
+  url       String?
+  userId    String?
+  data      String? // JSON string with additional details
+  timestamp DateTime @default(now())
+
+  @@index([type, timestamp])
+  @@index([ip, timestamp])
+}
+
+model PasswordHistory {
+  id           String   @id @default(uuid())
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId       String
+  passwordHash String // Hashed password
+  createdAt    DateTime @default(now())
+
+  @@index([userId, createdAt])
+}
+
+model LoginAttempt {
+  id        String   @id @default(uuid())
+  user      User?    @relation(fields: [userId], references: [id])
+  userId    String?
+  email     String
+  ipAddress String
+  userAgent String?
+  success   Boolean
+  timestamp DateTime @default(now())
+  reason    String? // Failure reason if applicable
+  sessionId String? // Link to created session if successful
+  riskScore Int      @default(0) // Risk assessment score
+
+  @@index([email, timestamp])
+  @@index([ipAddress, timestamp])
+  @@index([userId, timestamp])
+}
+
+model SystemBackup {
+  id             String    @id @default(uuid())
+  type           String // 'full', 'incremental', 'logs', 'gdpr_export'
+  status         String // 'pending', 'running', 'completed', 'failed'
+  filePath       String?
+  encryptionKey  String? // Backup encryption key reference
+  fileSize       BigInt?
+  checksumSha256 String? // File integrity verification
+  startedAt      DateTime  @default(now())
+  completedAt    DateTime?
+  error          String?
+  retentionDays  Int       @default(90)
+
+  @@index([type, startedAt])
+  @@index([status])
+}
+
+model AuditLog {
+  id           String   @id @default(uuid())
+  action       String // 'auth.login', 'payment.create', 'data.export', etc.
+  resourceType String // 'user', 'payment', 'ticket', 'system'
+  resourceId   String?
+  userId       String?
+  userEmail    String?
+  ipAddress    String
+  userAgent    String?
+  details      String? // JSON string with additional details
+  timestamp    DateTime @default(now())
+  sessionId    String?
+  result       String // 'success', 'failure', 'error'
+  riskLevel    String // 'low', 'medium', 'high', 'critical'
+  eventHash    String // For integrity verification
+  isSensitive  Boolean  @default(false)
+  User         User?    @relation(fields: [userId], references: [id])
+
+  @@index([action, timestamp])
+  @@index([userId, timestamp])
+  @@index([ipAddress, timestamp])
+  @@index([riskLevel, timestamp])
+}
+
+// New secure session model
+model UserSession {
+  id             String    @id @default(uuid())
+  user           User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId         String
+  token          String    @unique // Hashed token
+  ipAddress      String
+  userAgent      String?
+  deviceInfo     String? // JSON with device details
+  createdAt      DateTime  @default(now())
+  lastActivityAt DateTime  @default(now())
+  expiresAt      DateTime
+  isActive       Boolean   @default(true)
+  destroyedAt    DateTime?
+  destroyReason  String?
+
+  @@index([userId, isActive])
+  @@index([expiresAt])
+}
+
+// IP blocking for security
+model BlockedIP {
+  id          String    @id @default(uuid())
+  ipAddress   String    @unique
+  reason      String
+  blockedAt   DateTime  @default(now())
+  expiresAt   DateTime
+  blockCount  Int       @default(1)
+  unblockedBy String?
+  unblockedAt DateTime?
+
+  @@index([ipAddress])
+  @@index([expiresAt])
 }
