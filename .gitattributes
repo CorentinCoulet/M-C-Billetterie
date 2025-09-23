@@ -1,0 +1,86 @@
+# =================================
+# GIT ATTRIBUTES CONFIGURATION
+# =================================
+
+# Auto-detect text files and perform LF normalization
+* text=auto
+
+# =================================
+# SECURITY & SENSITIVE FILES
+# =================================
+# Mark environment files as binary to prevent diff/merge conflicts
+.env* binary
+*.key binary
+*.pem binary
+*.crt binary
+
+# =================================
+# CODE FILES
+# =================================
+# TypeScript/JavaScript
+*.ts text eol=lf
+*.tsx text eol=lf
+*.js text eol=lf
+*.jsx text eol=lf
+*.json text eol=lf
+
+# CSS/Styling
+*.css text eol=lf
+*.scss text eol=lf
+*.sass text eol=lf
+
+# Configuration files
+*.yml text eol=lf
+*.yaml text eol=lf
+*.toml text eol=lf
+*.ini text eol=lf
+*.conf text eol=lf
+
+# Documentation
+*.md text eol=lf
+*.txt text eol=lf
+
+# =================================
+# BINARY FILES
+# =================================
+# Images
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.svg text eol=lf
+
+# Archives
+*.zip binary
+*.tar binary
+*.gz binary
+*.7z binary
+
+# Fonts
+*.woff binary
+*.woff2 binary
+*.ttf binary
+*.otf binary
+
+# =================================
+# DOCKER & INFRASTRUCTURE
+# =================================
+Dockerfile* text eol=lf
+docker-compose*.yml text eol=lf
+*.dockerignore text eol=lf
+
+# =================================
+# DATABASE & MIGRATIONS
+# =================================
+*.sql text eol=lf
+*.prisma text eol=lf
+
+# =================================
+# EXPORT IGNORE (for git archive)
+# =================================
+.gitattributes export-ignore
+.gitignore export-ignore
+.github/ export-ignore
+tests/ export-ignore
+docs/development/ export-ignore

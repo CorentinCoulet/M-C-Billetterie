@@ -1,73 +1,163 @@
-# Dependencies
-node_modules
+# =================================
+# VERSION CONTROL & GIT
+# =================================
+.git/
+.gitignore
+.gitattributes
+.github/
+
+# =================================
+# NODE.JS & DEPENDENCIES
+# =================================
+node_modules/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+.pnpm-debug.log*
 
-# Next.js
-.next
-.next/cache
+# =================================
+# BUILD ARTIFACTS (exclude from build context)
+# =================================
+.next/
 out/
+dist/
+build/
+coverage/
+.nyc_output/
+test-results/
+*.tsbuildinfo
+tsconfig.tsbuildinfo
 
-# Git
-.git
-.gitignore
-
-# Environment variables (except .env for dev)
+# =================================
+# ENVIRONMENT VARIABLES
+# =================================
+# Exclude sensitive env files from build context
 .env.local
-.env.production
+.env.development.local
+.env.test.local
 .env.production.local
+.env.*.local
 
-# Docker files
-Dockerfile*
-docker-compose*
+# Keep production env for Docker builds
+!.env.production
+!.env.example
 
-# Documentation
-README.md
-*.md
-docs/
-
-# IDE
-.vscode
-.idea
+# =================================
+# DEVELOPMENT TOOLS & CONFIGS
+# =================================
+# IDE configurations
+.vscode/
+.idea/
 *.swp
 *.swo
 
-# Testing
+# Development scripts (not needed in production)
+scripts/development/
+scripts/local/
+debug-*.js
+debug-*.ts
+
+# =================================
+# TESTING (exclude from production builds)
+# =================================
+tests/
+**/*.test.ts
+**/*.test.js
+**/*.spec.ts
+**/*.spec.js
+jest.config.*
 coverage/
 .nyc_output/
 test-results/
 
-# Logs
+# =================================
+# LOGS & MONITORING
+# =================================
 logs/
 *.log
+*.log.*
 
-# Temporary files
+# Exclude local monitoring configs
+monitoring/local/
+grafana/local/
+
+# =================================
+# DOCUMENTATION (selective exclusion)
+# =================================
+# Keep essential docs, exclude development docs
+docs/development/
+docs/local/
+README.local.md
+DEVELOPMENT.md
+CONTRIBUTING.md
+
+# Keep production documentation
+!docs/PRODUCTION.md
+!docs/DEPLOYMENT.md
+!docs/API.md
+
+# =================================
+# INFRASTRUCTURE (exclude local configs)
+# =================================
+# Exclude local Docker configurations
+docker-compose.dev.yml
+docker-compose.local.yml
+docker-compose.override.yml
+
+# Keep production Docker configs
+!docker-compose.prod.yml
+!docker-compose.monitoring.yml
+
+# Exclude Kubernetes local configs
+k8s/local/
+k8s/dev/
+
+# =================================
+# UPLOADS & USER CONTENT
+# =================================
+uploads/
+public/uploads/
+temp/
 *.tmp
 *.temp
 
-# OS
+# =================================
+# BACKUPS & ARCHIVES
+# =================================
+backups/
+archive/
+*.backup
+*.dump
+
+# =================================
+# CERTIFICATES & SECURITY
+# =================================
+# Exclude certificates from build context
+certificates/
+ssl/
+*.pem
+*.key
+*.crt
+
+# =================================
+# OS & SYSTEM FILES
+# =================================
 .DS_Store
 Thumbs.db
+Desktop.ini
 
-# Build artifacts
-dist/
-build/
+# =================================
+# ASSETS (optimized inclusion)
+# =================================
+# Include public assets but exclude large development assets
+public/dev/
+public/mockups/
 
-# Development tools
-diagrams/
-scripts/
-backups/
-uploads/
-
-# Large or unnecessary files
-*.png
-*.jpg
-*.jpeg
-*.gif
-*.svg
-*.ico
-!public/**
-
-# diagrams
-diagrams
+# Include necessary images for production
+!public/icons/
+!public/images/
+!public/logos/
+!public/*.ico
+!public/*.png
+!public/*.jpg
+!public/*.svg
