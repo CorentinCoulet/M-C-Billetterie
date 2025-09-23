@@ -3,8 +3,7 @@
  * Enforces MFA for admin users and protected routes
  */
 
-import { NextFunction, Request, Response } from 'express';
-import { Session } from 'express-session';
+import { NextApiRequest, NextApiResponse } from 'next';
 import { AuditService } from '../lib/audit-service';
 import { logger } from '../lib/logger';
 import { mfaService } from '../lib/mfa-service';

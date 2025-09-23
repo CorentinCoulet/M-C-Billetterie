@@ -5,8 +5,10 @@
 
 import { PrismaClient } from '../generated/prisma';
 import { EventEmitter } from 'events';
-import { auditService } from './audit-service';
+import { AuditService } from './audit-service';
 import { logger } from './logger';
+
+const auditService = new AuditService();
 
 export interface TrustScore {
   userId: string;

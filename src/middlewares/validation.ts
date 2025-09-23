@@ -1,6 +1,8 @@
 import { NextApiRequest, NextApiResponse } from 'next';
-import { NextHandler } from 'next-connect';
 import { Schema, ValidationError } from 'joi';
+
+// Define NextHandler type since we removed next-connect
+type NextHandler = (error?: any) => void;
 
 /**
  * Middleware for validating incoming request data

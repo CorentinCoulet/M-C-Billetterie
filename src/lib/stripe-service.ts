@@ -10,7 +10,7 @@ let stripe: Stripe | null = null;
 // Initialize Stripe only if payment feature is enabled and keys are available
 if (CONFIG.FEATURES.PAYMENTS && CONFIG.STRIPE.SECRET_KEY !== 'sk_test_your_test_key') {
   stripe = new Stripe(CONFIG.STRIPE.SECRET_KEY, {
-    apiVersion: '2025-06-30.basil',
+    apiVersion: '2025-08-27.basil',
     appInfo: {
       name: 'Billetterie',
       version: '1.0.0',

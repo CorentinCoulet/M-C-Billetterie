@@ -1,7 +1,9 @@
 import { NextApiRequest, NextApiResponse } from 'next';
-import { NextHandler } from 'next-connect';
 import { logError } from './logging';
 import { PrismaClientKnownRequestError, PrismaClientValidationError } from '@prisma/client/runtime/library';
+
+// Define NextHandler type for Pages Router middleware compatibility
+export type NextHandler = (error?: any) => void;
 
 /**
  * Error handling middleware

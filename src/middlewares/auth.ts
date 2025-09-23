@@ -1,7 +1,11 @@
 import prisma from '@/lib/prisma';
 import { NextApiRequest, NextApiResponse } from 'next';
-import { NextHandler } from 'next-connect';
+import { NextRequest, NextResponse } from 'next/server';
+import { logger } from '@/lib/logger';
 import authService from '../services/authService';
+
+// Define NextHandler type since we removed next-connect
+type NextHandler = (error?: any) => void;
 
 export interface AuthenticatedRequest extends NextApiRequest {
   user?: {

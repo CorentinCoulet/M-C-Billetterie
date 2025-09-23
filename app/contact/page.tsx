@@ -1,15 +1,16 @@
 'use client'
 
-import { motion } from 'framer-motion'
-import { useState } from 'react'
-import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
-import { ArrowLeft, Envelope, Phone, MapPin } from '@phosphor-icons/react'
+import { ArrowLeft, Envelope, MapPin, Phone } from '@phosphor-icons/react'
+import { motion } from 'framer-motion'
+import { useRouter } from 'next/navigation'
+import { useState } from 'react'
 
 export default function ContactPage() {
   const router = useRouter()
+  const [loading, setLoading] = useState(false)
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -17,10 +18,26 @@ export default function ContactPage() {
     message: ''
   })
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    // TODO: Implement contact form submission
-    console.log('Contact form submitted:', formData)
+    
+    try {
+      setLoading(true)
+      
+      // Simulate API call - Replace with actual contact API endpoint
+      await new Promise(resolve => setTimeout(resolve, 1000))
+      
+      // Show success message
+      alert('Merci pour votre message ! Nous vous répondrons dans les plus brefs délais.')
+      
+      // Reset form
+      setFormData({ name: '', email: '', subject: '', message: '' })
+    } catch (error) {
+      console.error('Erreur lors de l\'envoi du message:', error)
+      alert('Une erreur est survenue lors de l\'envoi. Veuillez réessayer.')
+    } finally {
+      setLoading(false)
+    }
   }
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -197,9 +214,10 @@ export default function ContactPage() {
 
                 <Button 
                   type="submit"
+                  disabled={loading}
                   className="w-full glass-button text-white font-semibold py-3"
                 >
-                  Envoyer le message
+                  {loading ? 'Envoi en cours...' : 'Envoyer le message'}
                 </Button>
               </form>
             </div>

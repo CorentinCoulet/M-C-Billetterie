@@ -1,6 +1,8 @@
 import { NextApiRequest, NextApiResponse } from 'next';
-import { NextHandler } from 'next-connect';
 import { AuthenticatedRequest } from './auth';
+
+// Define NextHandler type since we removed next-connect
+type NextHandler = (error?: any) => void;
 
 /**
  * Role-Based Access Control (RBAC) middleware

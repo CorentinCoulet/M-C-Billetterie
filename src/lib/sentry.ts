@@ -77,14 +77,14 @@ export const SENTRY_CONFIG = {
   
   // Additional integrations
   integrations: [
-    new Sentry.Integrations.Http({ tracing: true }),
-    new Sentry.Integrations.OnUncaughtException({
-      onFatalError: (error) => {
-        logger.error('Fatal uncaught exception:', error);
+    Sentry.httpIntegration(),
+    Sentry.onUncaughtExceptionIntegration({
+      onFatalError: (error: Error) => {
+        logger.error({ error: error.message }, 'Fatal uncaught exception');
         process.exit(1);
       }
     }),
-    new Sentry.Integrations.OnUnhandledRejection({
+    Sentry.onUnhandledRejectionIntegration({
       mode: 'warn'
     })
   ]
@@ -103,7 +103,7 @@ export function initSentry() {
     Sentry.init(SENTRY_CONFIG);
     logger.info('Sentry error tracking initialized');
   } catch (error) {
-    logger.error('Failed to initialize Sentry:', error);
+    logger.error({ error: (error as Error).message }, 'Failed to initialize Sentry');
   }
 }
 
@@ -176,10 +176,10 @@ export class ErrorHandler {
 
   static startTransaction(name: string, operation: string) {
     if (SENTRY_CONFIG.dsn) {
-      return Sentry.startTransaction({
+      return Sentry.startSpan({
         name,
         op: operation
-      });
+      }, (span) => span);
     }
     return null;
   }

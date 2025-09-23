@@ -1,6 +1,8 @@
 import { NextApiRequest, NextApiResponse } from 'next';
-import { NextHandler } from 'next-connect';
 import { v4 as uuidv4 } from 'uuid';
+
+// Define NextHandler type since we removed next-connect
+type NextHandler = (error?: any) => void;
 
 /**
  * Logging middleware
