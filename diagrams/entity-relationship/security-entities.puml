@@ -1,9 +1,5 @@
 @startuml security-entities
 
-!theme aws-orange
-skinparam linetype ortho
-skinparam backgroundColor #FFFFFF
-
 title Entités de Sécurité
 
 ' ========== ENTITÉS DE SÉCURITÉ ==========

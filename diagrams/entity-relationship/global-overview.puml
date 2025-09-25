@@ -1,52 +1,95 @@
 @startuml global-overview
 
-!theme aws-orange
-skinparam linetype ortho
-skinparam backgroundColor #FFFFFF
-
 title Vue Globale - Système de Billetterie
 
-' ========== IMPORTS DES BLOCS ENTITÉ-RELATION ==========
+' ========== MODULES MÉTIER ==========
 
-!include core-entities.puml
-!include event-entities.puml
-!include organizer-entities.puml
-!include payment-entities.puml
-!include configuration-entities.puml
-!include security-entities.puml
-!include system-entities.puml
+package "Core" as CoreModule {
+    note as CoreNote
+    **Entités Principales**
+    • User (multi-rôles)
+    • Order & Ticket
+    • Gestion base utilisateurs
+    end note
+}
+
+package "Events" as EventModule {
+    note as EventNote
+    **Gestion Événements**
+    • Event & Category
+    • Venue & Lieux
+    • Publication événements
+    end note
+}
+
+package "Organizer" as OrganizerModule {
+    note as OrgNote
+    **Organisation**
+    • Organization
+    • TeamMember
+    • Gestion équipes
+    end note
+}
+
+package "Payment" as PaymentModule {
+    note as PayNote
+    **Paiements**
+    • Payment processing
+    • Facturation
+    • Transactions
+    end note
+}
+
+package "Configuration" as ConfigModule {
+    note as ConfigNote
+    **Configuration**
+    • Theme & Personnalisation
+    • Reviews & Avis
+    • Translations
+    end note
+}
+
+package "Security" as SecurityModule {
+    note as SecNote
+    **Sécurité**
+    • UserSession & Auth
+    • AuditLog & Surveillance
+    • LoginAttempt & Protection
+    • BlockedIP
+    end note
+}
+
+package "System" as SystemModule {
+    note as SysNote
+    **Système**
+    • ActivityLog
+    • Notifications
+    • SystemBackup
+    • Monitoring
+    end note
+}
 
 ' ========== RELATIONS INTER-MODULES ==========
 
-' Relations User (avec rôles) ↔ Event
-User ||--o{ Event : "organise (role=ORGANIZER)"
+CoreModule --> EventModule : "Utilisateurs créent/consultent événements"
+CoreModule --> PaymentModule : "Commandes génèrent paiements"
+CoreModule --> OrganizerModule : "Organisateurs gèrent structures"
 
-' Relations Event ↔ Ticket
-Event ||--o{ Ticket : "génère"
+EventModule --> CoreModule : "Événements génèrent tickets"
+EventModule --> ConfigModule : "Utilise thèmes et reviews"
 
-' Relations Payment ↔ Order
-Order ||--o| Payment : "paiement"
+OrganizerModule --> EventModule : "Organisations créent événements"
+OrganizerModule --> CoreModule : "Membres = Users avec rôles"
 
-' Relations Event ↔ Configuration
-Event }o--o| Theme : "thème"
+PaymentModule --> CoreModule : "Paiements liés aux commandes"
 
-' Relations User ↔ Reviews
-Review }o--|| User : "auteur"
-Review }o--|| Event : "événement"
+SecurityModule --> CoreModule : "Sécurise sessions utilisateurs"
+SecurityModule --> SystemModule : "Logs de sécurité"
 
-' Relations User ↔ Security
-UserSession }o--|| User : "sessions"
-AuditLog }o--o| User : "audit"
-LoginAttempt }o--o| User : "tentatives"
+SystemModule --> CoreModule : "Notifications aux utilisateurs"
+SystemModule --> EventModule : "Logs activités événements"
 
-' Relations User ↔ System
-ActivityLog }o--|| User : "activités"
-Notification }o--|| User : "notifications"
-
-' Relations User ↔ Organization
-Organization }o--|| User : "propriétaire (role=ORGANIZER)"
-TeamMember }o--|| Organization : "organisation"
-TeamMember }o--|| User : "membre"
+ConfigModule --> EventModule : "Configuration événements"
 
 ' ========== LÉGENDE ==========
 

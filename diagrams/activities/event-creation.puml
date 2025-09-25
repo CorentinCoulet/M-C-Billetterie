@@ -1,5 +1,4 @@
 @startuml event-creation
-!theme aws-orange
 title Création d'Événement
 
 start
@@ -12,6 +11,7 @@ partition "Informations Générales" {
   :Sélectionne catégorie;
   :Définit date et heure;
   :Saisit lieu/adresse;
+  :Définition du nombre de places disponibles;
   :Upload image de couverture;
 }
 
@@ -35,20 +35,14 @@ if (Données valides ?) then (non)
   :Affiche erreurs de validation;
   stop
 else (oui)
-  :Vérifie disponibilité du lieu;
-  
-  if (Lieu disponible ?) then (non)
-    :Affiche conflit de planning;
-    stop
-  else (oui)
     :Calcule prix total avec commissions;
     :Affiche récapitulatif;
     
     if (Organisateur confirme ?) then (non)
       stop
     else (oui)
+      :Crée l'événement en base;
       fork
-        :Crée l'événement en base;
         :Génère QR codes pour les billets;
         :Configure système de validation;
       fork again
@@ -62,7 +56,6 @@ else (oui)
       :Publie l'événement;
       :Affiche confirmation avec lien;
     endif
-  endif
 endif
 
 stop

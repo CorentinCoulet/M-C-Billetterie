@@ -49,11 +49,11 @@ Visitor --> UC15
 Visitor --> UC16
 
 ' Relations d'inclusion
-UC2 ..> UC3 : include
-UC2 ..> UC4 : include
-UC2 ..> UC5 : include
-UC6 ..> UC7 : include
-UC6 ..> UC8 : include
-UC14 ..> UC15 : extend
+UC2 ..> UC3 : extend
+UC2 ..> UC4 : extend
+UC2 ..> UC5 : extend
+UC6 ..> UC7 : extend
+UC6 ..> UC8 : extend
+UC14 <.. UC15 : include
 
 @enduml

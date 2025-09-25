@@ -1,9 +1,5 @@
 @startuml global-class-overview
 
-!theme aws-orange
-skinparam linetype ortho
-skinparam backgroundColor #FFFFFF
-
 title Vue Globale - Architecture Classes du Système de Billetterie
 
 ' ========== BLOCS MÉTIER ==========

@@ -1,9 +1,5 @@
 @startuml configuration-entities
 
-!theme aws-orange
-skinparam linetype ortho
-skinparam backgroundColor #FFFFFF
-
 title Entités de Configuration
 
 ' ========== ENTITÉS DE CONFIGURATION ==========

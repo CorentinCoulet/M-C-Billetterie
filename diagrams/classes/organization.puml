@@ -1,9 +1,5 @@
 @startuml organization
 
-!theme aws-orange
-skinparam linetype ortho
-skinparam backgroundColor #FFFFFF
-
 title Organization
 
 ' ========== ÉNUMÉRATIONS ==========

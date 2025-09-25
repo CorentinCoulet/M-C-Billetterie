@@ -17,12 +17,13 @@ services:
       NODE_ENV: development
       WATCHPACK_POLLING: true
       CHOKIDAR_USEPOLLING: true
+      DATABASE_URL: postgresql://postgres:postgres123@db-dev:5432/billetterie
+      REDIS_URL: redis://:password@redis-dev:6379
     env_file:
       - .env
     volumes:
       - .:/app
       - node_modules_dev:/app/node_modules
-      - next_cache_dev:/app/.next
       - ./logs:/app/logs
       - ./uploads:/app/uploads
     depends_on:
@@ -40,7 +41,7 @@ services:
     container_name: postgres-dev
     restart: unless-stopped
     ports:
-      - "5432:5432"
+      - "5433:5432"
     environment:
       POSTGRES_USER: ${DB_USER:-postgres}
       POSTGRES_PASSWORD: ${DB_PASSWORD:-postgres123}
@@ -62,7 +63,7 @@ services:
     container_name: redis-dev
     restart: unless-stopped
     ports:
-      - "6379:6379"
+      - "6380:6379"
     command: redis-server --requirepass ${REDIS_PASSWORD:-password} --appendonly yes
     volumes:
       - redis_data_dev:/data

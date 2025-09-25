@@ -1,0 +1,157 @@
+@startuml MLD-Billetterie
+
+class UTILISATEUR {
+    + id : UUID <<PK>>
+    --
+    * email : VARCHAR(255) <<UNIQUE>>
+    nom : VARCHAR(255)
+    * mot_de_passe : VARCHAR(255)
+    est_verifie : BOOLEAN
+    email_verifie_le : TIMESTAMP
+    derniere_connexion : TIMESTAMP
+    mot_de_passe_change_le : TIMESTAMP
+    * role : ENUM
+    metadonnees : JSONB
+    * cree_le : TIMESTAMP
+    * modifie_le : TIMESTAMP
+}
+
+class ORGANISATEUR {
+    + id : UUID <<PK>>
+    --
+    * nom : VARCHAR(255)
+    * cree_le : TIMESTAMP
+    * modifie_le : TIMESTAMP
+}
+
+class EVENEMENT {
+    + id : UUID <<PK>>
+    --
+    * titre : VARCHAR(255)
+    description : TEXT
+    * date : TIMESTAMP
+    * lieu : VARCHAR(255)
+    capacite_max : INTEGER
+    * est_publie : BOOLEAN
+    * est_annule : BOOLEAN
+    * achat_anonyme_autorise : BOOLEAN
+    * transfert_autorise : BOOLEAN
+    # organisateur_id : UUID <<FK>>
+    # categorie_id : UUID <<FK>>
+    # lieu_id : UUID <<FK>>
+    # theme_id : UUID <<FK>>
+    metadonnees : JSONB
+    * cree_le : TIMESTAMP
+    * modifie_le : TIMESTAMP
+}
+
+class COMMANDE {
+    + id : UUID <<PK>>
+    --
+    # utilisateur_id : UUID <<FK>>
+    * prix_total : DECIMAL(10,2)
+    * statut : ENUM
+    code_promo : VARCHAR(50)
+    montant_remise : DECIMAL(10,2)
+    * devise : VARCHAR(3)
+    metadonnees : JSONB
+    * cree_le : TIMESTAMP
+    * modifie_le : TIMESTAMP
+}
+
+class BILLET {
+    + id : UUID <<PK>>
+    --
+    # utilisateur_id : UUID <<FK>>
+    # evenement_id : UUID <<FK>>
+    # commande_id : UUID <<FK>>
+    * code : VARCHAR(255) <<UNIQUE>>
+    * statut : ENUM
+    numero_siege : VARCHAR(50)
+    qr_code_actuel : TEXT
+    qr_genere_le : TIMESTAMP
+    * intervalle_rotation_qr : INTEGER
+    * est_scanne : BOOLEAN
+    scanne_le : TIMESTAMP
+    utilise_le : TIMESTAMP
+    * achete_le : TIMESTAMP
+    metadonnees : JSONB
+}
+
+class PAIEMENT {
+    + id : UUID <<PK>>
+    --
+    # commande_id : UUID <<FK,UNIQUE>>
+    * methode_paiement : VARCHAR(100)
+    * statut_paiement : VARCHAR(100)
+    * date_paiement : TIMESTAMP
+    * id_transaction : VARCHAR(255)
+    * devise : VARCHAR(3)
+}
+
+class CATEGORIE {
+    + id : UUID <<PK>>
+    --
+    * nom : VARCHAR(255) <<UNIQUE>>
+}
+
+class LIEU {
+    + id : UUID <<PK>>
+    --
+    * nom : VARCHAR(255)
+    * adresse : TEXT
+    * capacite : INTEGER
+}
+
+class AVIS {
+    + id : UUID <<PK>>
+    --
+    # utilisateur_id : UUID <<FK>>
+    # evenement_id : UUID <<FK>>
+    * note : INTEGER
+    commentaire : TEXT
+    * cree_le : TIMESTAMP
+}
+
+class THEME {
+    + id : UUID <<PK>>
+    --
+    * nom : VARCHAR(255)
+    description : TEXT
+    * chemin_image : VARCHAR(500)
+    couleur : VARCHAR(7)
+    metadonnees : JSONB
+    * cree_le : TIMESTAMP
+    * modifie_le : TIMESTAMP
+}
+
+class MEMBRE_EQUIPE {
+    + id : UUID <<PK>>
+    --
+    # organisateur_id : UUID <<FK>>
+    # utilisateur_id : UUID <<FK>>
+    * role : VARCHAR(100)
+    * rejoint_le : TIMESTAMP
+}
+
+' Relations avec cardinalités
+UTILISATEUR ||--o{ COMMANDE : "passe"
+COMMANDE ||--o{ BILLET : "contient"
+BILLET }o--|| EVENEMENT : "concerne"
+UTILISATEUR ||--o{ BILLET : "possède"
+ORGANISATEUR ||--|| EVENEMENT : "organise"
+CATEGORIE ||--o{ EVENEMENT : "catégorise"
+LIEU ||--o{ EVENEMENT : "accueille"
+UTILISATEUR ||--o{ AVIS : "rédige"
+EVENEMENT ||--o{ AVIS : "reçoit"
+THEME ||--o{ EVENEMENT : "stylise"
+ORGANISATEUR ||--o{ MEMBRE_EQUIPE : "emploie"
+UTILISATEUR ||--o{ MEMBRE_EQUIPE : "travaille_pour"
+COMMANDE ||--o| PAIEMENT : "règle_par"
+
+' Notes sur les cardinalités
+note right of BILLET : Un billet peut être acheté\nanonymement (utilisateur_id NULL)
+note right of EVENEMENT : Un événement peut ne pas\navoir de catégorie, lieu ou thème
+note right of PAIEMENT : Une commande peut ne pas\navoir de paiement (statut draft)
+
+@enduml

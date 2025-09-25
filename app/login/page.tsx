@@ -2,8 +2,8 @@
 
 import { useRouter } from 'next/navigation'
 import { useState } from 'react'
+import { AuthPage } from '../../src/components/AuthPage'
 import { Background } from '../../src/components/common/Background'
-import { AuthPage } from '../../src/pages/AuthPage'
 
 export default function LoginPage() {
   const router = useRouter()

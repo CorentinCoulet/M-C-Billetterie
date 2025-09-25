@@ -1,9 +1,5 @@
 @startuml event-entities
 
-!theme aws-orange
-skinparam linetype ortho
-skinparam backgroundColor #FFFFFF
-
 title Entités Événement
 
 ' ========== ENTITÉS ÉVÉNEMENT ==========

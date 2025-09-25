@@ -1,0 +1,262 @@
+@startuml MPD-Billetterie-Schema
+
+package "Base de Données PostgreSQL - Système de Billetterie" {
+    
+    class "users" as users <<table>> {
+        + id : UUID <<PK>>
+        --
+        * email : VARCHAR(255) <<UNIQUE>>
+        name : VARCHAR(255)
+        * password : VARCHAR(255)
+        is_verified : BOOLEAN := FALSE
+        email_verified_at : TIMESTAMPTZ
+        last_login : TIMESTAMPTZ
+        password_changed_at : TIMESTAMPTZ := NOW()
+        * role : user_role := 'USER'
+        metadata : JSONB
+        * created_at : TIMESTAMPTZ := NOW()
+        * updated_at : TIMESTAMPTZ := NOW()
+        --
+        <<indexes>>
+        idx_users_email
+        idx_users_role
+        --
+        <<constraints>>
+        email UNIQUE
+        password NOT NULL
+        --
+        <<triggers>>
+        update_updated_at
+    }
+
+    class "organizers" as organizers <<table>> {
+        + id : UUID <<PK>>
+        --
+        * name : VARCHAR(255)
+        * created_at : TIMESTAMPTZ := NOW()
+        * updated_at : TIMESTAMPTZ := NOW()
+        --
+        <<triggers>>
+        update_updated_at
+    }
+
+    class "events" as events <<table>> {
+        + id : UUID <<PK>>
+        --
+        * title : VARCHAR(255)
+        description : TEXT
+        * date : TIMESTAMPTZ
+        * location : VARCHAR(255)
+        max_capacity : INTEGER
+        * is_published : BOOLEAN := FALSE
+        * is_cancelled : BOOLEAN := FALSE
+        * allow_anonymous_purchase : BOOLEAN := FALSE
+        * allow_transfer : BOOLEAN := FALSE
+        * organizer_id : UUID <<FK>>
+        category_id : UUID <<FK>>
+        venue_id : UUID <<FK>>
+        theme_id : UUID <<FK>>
+        metadata : JSONB
+        * created_at : TIMESTAMPTZ := NOW()
+        * updated_at : TIMESTAMPTZ := NOW()
+        --
+        <<indexes>>
+        idx_events_organizer_id
+        idx_events_category_id
+        idx_events_venue_id
+        idx_events_date
+        idx_events_is_published
+        idx_events_date_published (composite)
+        --
+        <<constraints>>
+        chk_event_date_future
+        chk_event_not_published_if_cancelled
+        --
+        <<triggers>>
+        update_updated_at
+    }
+
+    class "orders" as orders <<table>> {
+        + id : UUID <<PK>>
+        --
+        * user_id : UUID <<FK>>
+        * total_price : DECIMAL(10,2)
+        * status : order_status
+        promo_code : VARCHAR(50)
+        discount_amount : DECIMAL(10,2)
+        * currency : VARCHAR(3) := 'EUR'
+        metadata : JSONB
+        * created_at : TIMESTAMPTZ := NOW()
+        * updated_at : TIMESTAMPTZ := NOW()
+        --
+        <<indexes>>
+        idx_orders_user_id
+        idx_orders_status
+        idx_orders_user_status (composite)
+        --
+        <<constraints>>
+        total_price >= 0
+        chk_order_discount
+        --
+        <<triggers>>
+        update_updated_at
+    }
+
+    class "tickets" as tickets <<table>> {
+        + id : UUID <<PK>>
+        --
+        user_id : UUID <<FK>>
+        * event_id : UUID <<FK>>
+        order_id : UUID <<FK>>
+        * code : VARCHAR(255) <<UNIQUE>>
+        * status : ticket_status := 'paid'
+        seat_number : VARCHAR(50)
+        current_qr_code : TEXT
+        qr_code_generated_at : TIMESTAMPTZ
+        * qr_rotation_interval : INTEGER := 12
+        * is_scanned : BOOLEAN := FALSE
+        scanned_at : TIMESTAMPTZ
+        used_at : TIMESTAMPTZ
+        * purchased_at : TIMESTAMPTZ := NOW()
+        metadata : JSONB
+        --
+        <<indexes>>
+        idx_tickets_user_id
+        idx_tickets_event_id
+        idx_tickets_order_id
+        idx_tickets_code
+        idx_tickets_status
+        idx_tickets_event_status (composite)
+        idx_tickets_active (partial)
+        --
+        <<constraints>>
+        code UNIQUE
+        chk_ticket_used_date
+        chk_ticket_scanned_date
+        --
+        <<triggers>>
+        generate_ticket_code
+    }
+
+    class "payments" as payments <<table>> {
+        + id : UUID <<PK>>
+        --
+        * order_id : UUID <<FK,UNIQUE>>
+        * payment_method : VARCHAR(100)
+        * payment_status : VARCHAR(100)
+        * payment_date : TIMESTAMPTZ
+        * transaction_id : VARCHAR(255)
+        * currency : VARCHAR(3) := 'EUR'
+        --
+        <<indexes>>
+        idx_payments_order_id
+        --
+        <<constraints>>
+        order_id UNIQUE
+    }
+
+    class "categories" as categories <<table>> {
+        + id : UUID <<PK>>
+        --
+        * name : VARCHAR(255) <<UNIQUE>>
+        --
+        <<indexes>>
+        idx_categories_name
+        --
+        <<constraints>>
+        name UNIQUE
+    }
+
+    class "venues" as venues <<table>> {
+        + id : UUID <<PK>>
+        --
+        * name : VARCHAR(255)
+        * address : TEXT
+        * capacity : INTEGER
+        --
+        <<constraints>>
+        capacity > 0
+    }
+
+    class "themes" as themes <<table>> {
+        + id : UUID <<PK>>
+        --
+        * name : VARCHAR(255)
+        description : TEXT
+        * image_path : VARCHAR(500)
+        color : VARCHAR(7)
+        metadata : JSONB
+        * created_at : TIMESTAMPTZ := NOW()
+        * updated_at : TIMESTAMPTZ := NOW()
+        --
+        <<constraints>>
+        color ~ '^#[0-9A-Fa-f]{6}$'
+        --
+        <<triggers>>
+        update_updated_at
+    }
+
+    class "reviews" as reviews <<table>> {
+        + id : UUID <<PK>>
+        --
+        * user_id : UUID <<FK>>
+        * event_id : UUID <<FK>>
+        * rating : INTEGER
+        comment : TEXT
+        * created_at : TIMESTAMPTZ := NOW()
+        --
+        <<indexes>>
+        idx_reviews_user_id
+        idx_reviews_event_id
+        --
+        <<constraints>>
+        rating BETWEEN 1 AND 5
+        UNIQUE(user_id, event_id)
+    }
+
+    class "team_members" as team_members <<table>> {
+        + id : UUID <<PK>>
+        --
+        * organizer_id : UUID <<FK>>
+        * user_id : UUID <<FK>>
+        * role : VARCHAR(100)
+        * joined_at : TIMESTAMPTZ := NOW()
+        --
+        <<indexes>>
+        idx_team_members_organizer_id
+        idx_team_members_user_id
+        --
+        <<constraints>>
+        UNIQUE(organizer_id, user_id)
+    }
+}
+
+' Relations avec contraintes référentielles
+events ||--|| organizers : "organizer_id"
+events }o--|| categories : "category_id"
+events }o--|| venues : "venue_id"
+events }o--|| themes : "theme_id"
+
+orders }o--|| users : "user_id"
+tickets }o--|| users : "user_id"
+tickets }o--|| events : "event_id"
+tickets }o--|| orders : "order_id"
+
+payments ||--|| orders : "order_id"
+
+reviews }o--|| users : "user_id"
+reviews }o--|| events : "event_id"
+
+team_members }o--|| organizers : "organizer_id"
+team_members }o--|| users : "user_id"
+
+' Notes techniques
+note right of events : Contraintes métier :\n- Date future\n- Pas publié si annulé\n- Capacité > 0
+
+note right of tickets : Fonctionnalités :\n- Code auto-généré\n- QR Code rotatif\n- Achat anonyme possible
+
+note right of orders : États de commande :\n- draft\n- pending_payment\n- paid\n- cancelled
+
+note left of payments : Relation 1:1 avec orders\nUne commande = un paiement max
+
+@enduml

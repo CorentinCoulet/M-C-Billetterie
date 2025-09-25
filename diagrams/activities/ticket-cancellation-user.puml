@@ -1,0 +1,99 @@
+@startuml ticket-cancellation-user
+
+title Annulation de Billet par l'Utilisateur
+
+start
+:Utilisateur se connecte;
+:Accède à ses billets/commandes;
+:Sélectionne le billet à annuler;
+
+:Vérifie détails du billet;
+note right
+  - Événement et date
+  - Prix payé
+  - Politique de remboursement
+  - Délai d'annulation
+end note
+
+partition "Vérifications d'Éligibilité" {
+  if (Dans délai d'annulation ?) then (non)
+    :Affiche message "Annulation impossible";
+    :Propose contact organisateur;
+    stop
+  else (oui)
+    if (Événement annulé/reporté ?) then (oui)
+      :Affiche options remboursement automatique;
+      :Propose avoir ou remboursement;
+    else (non)
+      :Vérifie politique remboursement;
+      
+      if (Remboursement autorisé ?) then (non)
+        :Affiche conditions non respectées;
+        :Propose contact organisateur;
+        stop
+      else (oui)
+        :Calcule montant remboursement;
+        note right
+          Selon politique :
+          - 100% si > X jours
+          - 50% si < X jours
+          - Frais de traitement éventuels
+        end note
+        
+        :Affiche récapitulatif remboursement;
+        
+        if (Utilisateur confirme ?) then (non)
+          stop
+        endif
+      endif
+    endif
+  endif
+}
+
+partition "Processus de Remboursement" {
+  :Marque billet comme annulé;
+  :Invalide QR code;
+  :Libère place dans l'événement;
+  
+  fork
+    :Initie remboursement Stripe;
+    
+    if (Remboursement réussi ?) then (non)
+      :Log erreur transaction;
+      :Envoie notification admin;
+      :Affiche erreur temporaire;
+      :Propose nouvelle tentative;
+      stop
+    else (oui)
+      :Confirme remboursement;
+      :Met à jour historique;
+    endif
+  fork again
+    :Envoie email confirmation;
+    :Met à jour statut commande;
+  fork again
+    :Notifie organisateur;
+    :Met à jour statistiques événement;
+  fork again
+    :Log audit annulation;
+    :Met à jour métriques utilisateur;
+  end fork
+  
+  if (Liste d'attente active ?) then (oui)
+    :Notifie premier de la liste d'attente;
+    :Propose achat du billet libéré;
+  endif
+  
+  :Affiche confirmation annulation;
+  :Indique délai de remboursement;
+  note right
+    Remboursement sous 3-7 jours
+    selon mode de paiement initial
+  end note
+  
+  :Propose évaluation/feedback;
+  :Met à jour interface utilisateur;
+}
+
+stop
+@enduml

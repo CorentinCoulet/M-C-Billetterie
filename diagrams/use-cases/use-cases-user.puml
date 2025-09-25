@@ -77,9 +77,4 @@ note right of UC15
   QR Code généré pour validation
 end note
 
-note right of UC8
-  Sélection billets et 
-  ajout au panier
-end note
-
 @enduml

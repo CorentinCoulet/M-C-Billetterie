@@ -1,9 +1,5 @@
 @startuml core-entities
 
-!theme aws-orange
-skinparam linetype ortho
-skinparam backgroundColor #FFFFFF
-
 title Entités Métier Principales
 
 ' ========== ENTITÉS UTILISATEUR ET COMMANDE ==========

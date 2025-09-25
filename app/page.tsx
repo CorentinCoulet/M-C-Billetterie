@@ -1,8 +1,8 @@
 'use client'
 
-import { motion } from 'framer-motion'
 import { Button } from '@/components/ui/button'
-import { Ticket, Star, Clock, Users } from '@phosphor-icons/react'
+import { Clock, Star, Ticket, Users } from '@phosphor-icons/react'
+import { motion } from 'framer-motion'
 import { useRouter } from 'next/navigation'
 
 export default function HomePage() {

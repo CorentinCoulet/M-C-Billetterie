@@ -5,7 +5,7 @@ import { useState } from 'react'
 import { Background } from '../../src/components/common/Background'
 import { Footer } from '../../src/components/common/Footer'
 import { Header } from '../../src/components/common/Header'
-import { EventsPage as FrontendEventsPage } from '../../src/pages/EventsPage'
+import { EventsPage as FrontendEventsPage } from '../../src/components/EventsPage'
 
 // Types imported from frontend
 interface Event {

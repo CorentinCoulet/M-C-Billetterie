@@ -1,0 +1,103 @@
+@startuml event-cancellation-organizer
+
+title Annulation d'Événement par l'Organisateur
+
+start
+:Organisateur se connecte;
+:Accède au tableau de bord;
+:Sélectionne l'événement à annuler;
+
+:Vérifie détails de l'événement;
+note right
+  - Nombre de billets vendus
+  - Montant total des ventes
+  - Date de l'événement
+  - Politique de remboursement
+end note
+
+if (Billets vendus ?) then (non)
+  :Annulation simple;
+  :Supprime l'événement;
+  :Affiche confirmation;
+  stop
+else (oui)
+  partition "Processus d'Annulation avec Remboursements" {
+    :Affiche récapitulatif des impacts;
+    note right
+      - X billets à rembourser
+      - Montant total remboursements
+      - Frais de traitement
+      - Pénalités éventuelles
+    end note
+    
+    :Saisit motif d'annulation;
+    :Sélectionne type de remboursement;
+    note right
+      - Remboursement intégral
+      - Remboursement partiel
+      - Avoir/crédit
+    end note
+    
+    if (Confirme annulation ?) then (non)
+      stop
+    else (oui)
+      :Marque événement comme annulé;
+      :Bloque nouvelles ventes;
+      
+      fork
+        partition "Notifications" {
+          :Génère liste des participants;
+          :Envoie email d'annulation;
+          :Publie notification sur plateforme;
+          :Met à jour réseaux sociaux (si configuré);
+        }
+      fork again
+        partition "Remboursements" {
+          :Calcule montants de remboursement;
+          :Initie processus Stripe;
+          
+          repeat
+            :Traite remboursement individuel;
+            
+            if (Remboursement réussi ?) then (non)
+              :Log erreur remboursement;
+              :Ajoute à la liste d'erreurs;
+            else (oui)
+              :Confirme remboursement;
+              :Envoie confirmation client;
+            endif
+          repeat while (Autres billets à rembourser ?)
+          
+          :Génère rapport remboursements;
+        }
+      fork again
+        partition "Mise à jour système" {
+          :Invalide tous les QR codes;
+          :Met à jour base de données;
+          :Supprime de l'index recherche;
+          :Nettoie cache événement;
+          :Archive données événement;
+        }
+      end fork
+      
+      if (Erreurs de remboursement ?) then (oui)
+        :Affiche rapport avec erreurs;
+        :Propose actions correctives;
+        note right
+          L'organisateur peut relancer
+          manuellement les remboursements
+          en erreur
+        end note
+      else (non)
+        :Affiche confirmation complète;
+        :Génère rapport final;
+      endif
+      
+      :Log audit annulation;
+      :Met à jour métriques;
+    endif
+  }
+endif
+
+stop
+@enduml

@@ -1,106 +1,142 @@
-# Scripts PowerShell pour simplifier les commandes du projet Billetterie
 param(
-    [string]$Action = "help"
+    [string]$Action = "help",
+    [switch]$NoBuild,
+    [switch]$Rebuild,
+    [switch]$Clean
 )
 
-# Couleurs pour l'affichage
-$Green = "`e[32m"
-$Blue = "`e[36m"
-$Yellow = "`e[33m"
-$Red = "`e[31m"
-$Reset = "`e[0m"
-
 function Show-Help {
-    Write-Host "${Blue}Commandes disponibles :${Reset}"
-    Write-Host "${Green}  install${Reset}          - Installe les dépendances"
-    Write-Host "${Green}  dev${Reset}              - Lance l'environnement de développement"
-    Write-Host "${Green}  dev-docker${Reset}       - Lance l'environnement de développement avec Docker"
-    Write-Host "${Green}  build${Reset}            - Build l'application"
-    Write-Host "${Green}  test${Reset}             - Lance les tests"
-    Write-Host "${Green}  test-coverage${Reset}    - Lance les tests avec coverage"
-    Write-Host "${Green}  db-setup${Reset}         - Configure la base de données"
-    Write-Host "${Green}  docker-dev-up${Reset}    - Lance tous les services en mode développement"
-    Write-Host "${Green}  docker-dev-down${Reset}  - Arrête les services de développement"
-    Write-Host "${Green}  docker-prod-up${Reset}   - Lance tous les services en mode production"
-    Write-Host "${Green}  monitoring-up${Reset}    - Lance le monitoring"
-    Write-Host "${Green}  clean${Reset}            - Nettoie les containers et volumes Docker"
-    Write-Host "${Green}  lint${Reset}             - Lance le linting"
-    Write-Host "${Green}  type-check${Reset}       - Vérifie les types TypeScript"
+    Write-Host "Commandes disponibles :"
+    Write-Host "  install          - Installe les dependances"
+    Write-Host "  dev              - Lance l'environnement de developpement"
+    Write-Host "  dev-docker       - Lance l'environnement de developpement avec Docker"
+    Write-Host "  build            - Build l'application"
+    Write-Host "  test             - Lance les tests"
+    Write-Host "  test-coverage    - Lance les tests avec coverage"
+    Write-Host "  db-setup         - Configure la base de donnees"
+    Write-Host "  docker-dev-up    - Lance tous les services en mode developpement"
+    Write-Host "  docker-dev-down  - Arrete les services de developpement"
+    Write-Host "  docker-prod-up   - Lance tous les services en mode production"
+    Write-Host "  monitoring-up    - Lance le monitoring"
+    Write-Host "  clean            - Nettoie les containers et volumes Docker"
+    Write-Host "  lint             - Lance le linting"
+    Write-Host "  type-check       - Verifie les types TypeScript"
+    Write-Host ""
+    Write-Host "Options disponibles :"
+    Write-Host "  -NoBuild         - Skip le build Docker (utilise l'image existante)"
+    Write-Host "  -Rebuild         - Force le rebuild complet (--no-cache)"
+    Write-Host "  -Clean           - Nettoie les images avant de rebuild"
 }
 
 function Install-Dependencies {
-    Write-Host "${Yellow}📦 Installation des dépendances...${Reset}"
+    Write-Host "Installation des dependances..."
     yarn install
 }
 
 function Start-Dev {
-    Write-Host "${Yellow}🚀 Lancement du développement...${Reset}"
+    Write-Host "Lancement du developpement..."
     yarn dev
 }
 
 function Start-DevDocker {
-    Write-Host "${Yellow}🐳 Lancement du développement avec Docker...${Reset}"
+    Write-Host "Lancement du developpement avec Docker..."
     docker-compose -f docker-compose.yml -f docker-compose.dev.yml up -d
-    Write-Host "${Green}🚀 Environnement de développement lancé sur http://localhost:3000${Reset}"
+    Write-Host "Environnement de developpement lance sur http://localhost:3000"
 }
 
 function Build-App {
-    Write-Host "${Yellow}🔨 Build de l'application...${Reset}"
+    Write-Host "Build de l'application..."
     npm run build
 }
 
 function Run-Tests {
-    Write-Host "${Yellow}🧪 Lancement des tests...${Reset}"
+    Write-Host "Lancement des tests..."
     npm test
 }
 
 function Run-TestsCoverage {
-    Write-Host "${Yellow}📊 Lancement des tests avec coverage...${Reset}"
+    Write-Host "Lancement des tests avec coverage..."
     npm run test:coverage
 }
 
 function Setup-Database {
-    Write-Host "${Yellow}🗄️ Configuration de la base de données...${Reset}"
+    Write-Host "Configuration de la base de donnees..."
     npm run db:generate
     npm run db:migrate
 }
 
 function Docker-Dev-Up {
-    Write-Host "${Yellow}🐳 Lancement des services de développement...${Reset}"
-    docker-compose -f docker-compose.yml -f docker-compose.dev.yml up -d
+    Write-Host "Lancement des services de developpement..."
+    
+    if ($Clean) {
+        Write-Host "Nettoyage des images Docker..."
+        docker-compose -f docker-compose.dev.yml down --rmi all --volumes --remove-orphans
+        docker system prune -f
+    }
+    
+    if ($NoBuild) {
+        Write-Host "Demarrage rapide sans rebuild..."
+        docker-compose -f docker-compose.dev.yml up -d --no-build
+    } elseif ($Rebuild) {
+        Write-Host "Rebuild complet force..."
+        docker-compose -f docker-compose.dev.yml up -d --build --no-cache
+    } else {
+        docker-compose -f docker-compose.dev.yml up -d
+    }
+    
+    Write-Host "Services de developpement lances !"
+    Write-Host "Application: http://localhost:3001"
 }
 
 function Docker-Dev-Down {
-    Write-Host "${Yellow}🛑 Arrêt des services de développement...${Reset}"
-    docker-compose -f docker-compose.yml -f docker-compose.dev.yml down
+    Write-Host "Arret des services de developpement..."
+    docker-compose -f docker-compose.dev.yml down
 }
 
 function Docker-Prod-Up {
-    Write-Host "${Yellow}🚀 Lancement des services de production...${Reset}"
-    docker-compose -f docker-compose.yml -f docker-compose.prod.yml up -d
+    Write-Host "Lancement des services de production..."
+    
+    if ($Clean) {
+        Write-Host "Nettoyage des images Docker..."
+        docker-compose -f docker-compose.yml -f docker-compose.prod.yml down --rmi all --volumes --remove-orphans
+        docker system prune -f
+    }
+    
+    if ($NoBuild) {
+        Write-Host "Demarrage rapide sans rebuild..."
+        docker-compose -f docker-compose.yml -f docker-compose.prod.yml up -d --no-build
+    } elseif ($Rebuild) {
+        Write-Host "Rebuild complet force..."
+        docker-compose -f docker-compose.yml -f docker-compose.prod.yml up -d --build --no-cache
+    } else {
+        docker-compose -f docker-compose.yml -f docker-compose.prod.yml up -d --build
+    }
+    
+    Write-Host "Services de production lances !"
+    Write-Host "Application: http://localhost:3000"
 }
 
 function Monitoring-Up {
-    Write-Host "${Yellow}📊 Lancement du monitoring...${Reset}"
+    Write-Host "Lancement du monitoring..."
     docker-compose -f docker-compose.monitoring.yml up -d
-    Write-Host "${Green}📊 Monitoring lancé :${Reset}"
-    Write-Host "${Blue}  - Prometheus: http://localhost:9090${Reset}"
-    Write-Host "${Blue}  - Grafana: http://localhost:3001${Reset}"
+    Write-Host "Monitoring lance :"
+    Write-Host "  - Prometheus: http://localhost:9090"
+    Write-Host "  - Grafana: http://localhost:3001"
 }
 
 function Clean-Docker {
-    Write-Host "${Yellow}🧹 Nettoyage des containers et volumes...${Reset}"
+    Write-Host "Nettoyage des containers et volumes..."
     docker-compose down -v --remove-orphans
     docker system prune -f
 }
 
 function Run-Lint {
-    Write-Host "${Yellow}🔍 Lancement du linting...${Reset}"
+    Write-Host "Lancement du linting..."
     npm run lint
 }
 
 function Check-Types {
-    Write-Host "${Yellow}🔍 Vérification des types TypeScript...${Reset}"
+    Write-Host "Verification des types TypeScript..."
     npm run type-check
 }
 
@@ -122,7 +158,7 @@ switch ($Action.ToLower()) {
     "lint" { Run-Lint }
     "type-check" { Check-Types }
     default { 
-        Write-Host "${Red}❌ Action inconnue: $Action${Reset}"
+        Write-Host 'Action inconnue:' $Action
         Show-Help 
     }
 }

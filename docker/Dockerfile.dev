@@ -1,4 +1,4 @@
-FROM node:18-alpine AS base
+FROM node:22-alpine AS base
 
 # Add user first to avoid permission issues
 RUN addgroup --system --gid 1001 nodejs && \
@@ -8,9 +8,11 @@ WORKDIR /app
 
 # Dependencies stage
 FROM base AS deps
-# Install dependencies only
+# Install dependencies with increased timeouts and retry logic
 COPY package.json yarn.lock ./
-RUN yarn install --frozen-lockfile
+RUN yarn config set network-timeout 600000 && \
+    yarn config set registry https://registry.yarnpkg.com && \
+    yarn install --frozen-lockfile --network-timeout 600000
 
 # Development stage
 FROM base AS development
@@ -25,12 +27,14 @@ COPY --chown=nextjs:nodejs prisma ./prisma/
 # Generate Prisma client
 RUN yarn prisma generate
 
-# Create directories with proper ownership
-RUN mkdir -p uploads .next/cache logs && \
-    chown nextjs:nodejs uploads .next logs
-
 # Copy source code (minimal files due to .dockerignore)
-COPY --chown=nextjs:nodejs . .
+COPY . .
+
+# Remove any existing .next directory and recreate with proper permissions
+RUN rm -rf .next && \
+    mkdir -p uploads .next/cache logs && \
+    chown -R nextjs:nodejs /app && \
+    chmod -R 755 /app
 
 # Switch to non-root user
 USER nextjs

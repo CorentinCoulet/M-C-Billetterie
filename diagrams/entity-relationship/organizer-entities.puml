@@ -1,6 +1,5 @@
 @startuml organizer-entities
 
-!theme aws-orange
 skinparam linetype ortho
 skinparam backgroundColor #FFFFFF
 
