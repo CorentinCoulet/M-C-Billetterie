@@ -1,35 +1,33 @@
 'use client'
 
 import { useRouter } from 'next/navigation'
-import { useState } from 'react'
+import { memo, useCallback, useState } from 'react'
 import { AuthPage } from '../../src/components/AuthPage'
-import { Background } from '../../src/components/common/Background'
+
+const Background = memo(() => (
+  <div className="fixed inset-0 -z-10">
+    <div className="absolute inset-0 bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-slate-900 dark:to-slate-800" />
+  </div>
+))
 
 export default function LoginPage() {
   const router = useRouter()
   const [users, setUsers] = useState<any[]>([])
   const [currentUser, setCurrentUser] = useState<any>(null)
 
-  const navigate = (page: string) => {
-    switch (page) {
-      case 'home':
-        router.push('/')
-        break
-      case 'events':
-        router.push('/events')
-        break
-      case 'profile':
-        router.push('/profile')
-        break
-      default:
-        router.push(`/${page}`)
+  const navigate = useCallback((page: string) => {
+    const routes: Record<string, string> = {
+      home: '/',
+      events: '/events',
+      profile: '/profile'
     }
-  }
+    router.push(routes[page] || `/${page}`)
+  }, [router])
 
-  const logout = () => {
+  const logout = useCallback(() => {
     setCurrentUser(null)
     router.push('/')
-  }
+  }, [router])
 
   return (
     <div className="min-h-screen">

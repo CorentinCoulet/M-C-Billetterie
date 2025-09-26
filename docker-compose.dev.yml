@@ -11,19 +11,33 @@ services:
     container_name: billetterie-app-dev
     restart: unless-stopped
     ports:
-      - "3001:3000"
+      - "3001:3001"
       - "9229:9229" # Debug port
     environment:
       NODE_ENV: development
+      # Hot reload ultra-rapide
       WATCHPACK_POLLING: true
       CHOKIDAR_USEPOLLING: true
+      CHOKIDAR_INTERVAL: 100
+      FAST_REFRESH: true
+      # Désactive les features lentes en dev
+      NEXT_TELEMETRY_DISABLED: 1
+      TSC_NONPOLLING_WATCHER: true
+      # Optimisations Node.js
+      NODE_OPTIONS: "--max-old-space-size=4096"
+      # Évite les problèmes JSON
+      FORCE_COLOR: 0
+      CI: false
+      # Services
       DATABASE_URL: postgresql://postgres:postgres123@db-dev:5432/billetterie
       REDIS_URL: redis://:password@redis-dev:6379
+      HOSTNAME: 0.0.0.0
     env_file:
       - .env
     volumes:
       - .:/app
       - node_modules_dev:/app/node_modules
+      - next_cache_dev:/app/.next/cache
       - ./logs:/app/logs
       - ./uploads:/app/uploads
     depends_on:
@@ -33,7 +47,7 @@ services:
         condition: service_healthy
     networks:
       - billetterie-network-dev
-    command: sh -c "yarn dev"
+    command: sh -c "yarn dev:docker"
 
   # PostgreSQL - DEVELOPMENT
   db-dev:

@@ -1,59 +1,65 @@
-const { withSentryConfig } = require('@sentry/nextjs');
-
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   env: {
-    // Expose environment variables to client-side if needed
     NEXT_PUBLIC_APP_NAME: 'Billetterie',
     NEXT_PUBLIC_APP_VERSION: '1.0.0',
   },
+  
+  // Configuration optimisée pour le développement
+  ...(process.env.NODE_ENV === 'development' && {
+    // Fast Refresh optimisé
+    reactStrictMode: false, // Désactive en dev pour éviter les doubles renders
+    
+    // Configuration expérimentale pour Docker
+    experimental: {
+      serverActions: {
+        allowedOrigins: ['localhost:3001', '0.0.0.0:3001']
+      },
+      // Optimisations de développement
+      optimizePackageImports: ['@phosphor-icons/react', '@radix-ui/react-*'],
+    },
+  }),
+  
+  // Configuration de production
+  ...(process.env.NODE_ENV === 'production' && {
+    reactStrictMode: true,
+    compiler: {
+      removeConsole: true,
+    },
+  }),
+  
   poweredByHeader: false,
-  compress: true,
-  swcMinify: true,
-  
-  // Optimize performance
-  compiler: {
-    removeConsole: process.env.NODE_ENV === 'production',
-  },
-  
-  // Enable standalone output for Docker
   output: 'standalone',
   
-  // Temporarily ignore TypeScript errors during build
+  // Ignore les erreurs pendant le développement pour accélérer
   typescript: {
-    ignoreBuildErrors: true,
+    ignoreBuildErrors: process.env.NODE_ENV === 'development',
   },
   
-  // Ignore ESLint errors during build
   eslint: {
-    ignoreDuringBuilds: true,
+    ignoreDuringBuilds: process.env.NODE_ENV === 'development',
   },
   
-  // Configure external packages for server components
-  serverExternalPackages: ['jsonwebtoken', 'ioredis', 'redis'],
+  serverExternalPackages: ['jsonwebtoken', 'ioredis', 'redis', 'bcryptjs', 'nodemailer'],
   
-  // Configure experimental features
-  experimental: {
-    // Optimize performance
-    optimizeCss: true,
-  },
-  
-  // Security headers (additional to middleware)
-  headers: async () => [
-    {
-      source: '/(.*)',
-      headers: [
-        {
-          key: 'X-DNS-Prefetch-Control',
-          value: 'on'
-        },
-        {
-          key: 'X-Frame-Options',
-          value: 'DENY'
-        },
-      ]
-    }
-  ],
+  // Headers sécurisés (uniquement en production)
+  ...(process.env.NODE_ENV === 'production' && {
+    headers: async () => [
+      {
+        source: '/(.*)',
+        headers: [
+          {
+            key: 'X-DNS-Prefetch-Control',
+            value: 'on'
+          },
+          {
+            key: 'X-Frame-Options',
+            value: 'DENY'
+          },
+        ]
+      }
+    ],
+  }),
   
   // Redirects
   redirects: async () => [
@@ -64,47 +70,63 @@ const nextConfig = {
     },
   ],
   
-  // Webpack config for additional optimizations
   webpack: (config, { isServer, dev }) => {
-    // Optimize for production
+    // Configuration spécifique au développement
+    if (dev) {
+      // Hot reload ultra-rapide
+      config.watchOptions = {
+        poll: 100, // Très réactif - 100ms au lieu de 250ms
+        aggregateTimeout: 50, // Encore plus rapide
+        ignored: [
+          '**/node_modules/**',
+          '**/.next/cache/**',
+          '**/coverage/**',
+          '**/logs/**',
+          '**/uploads/**',
+          '**/.git/**',
+          '**/prisma/migrations/**',
+          '**/backups/**'
+        ]
+      };
+      
+      // Cache en mémoire pour éviter les problèmes de permissions
+      config.cache = {
+        type: 'memory',
+        maxGenerations: 1, // Limite le cache pour éviter les corruptions
+      };
+      
+      // Optimisations de développement agressives
+      if (!isServer) {
+        config.optimization = {
+          ...config.optimization,
+          removeAvailableModules: false,
+          removeEmptyChunks: false,
+          splitChunks: false,
+          runtimeChunk: false, // Désactive pour simplifier
+        };
+      }
+      
+      // Module resolution plus rapide
+      config.resolve.alias = {
+        ...config.resolve.alias,
+        '@': require('path').resolve(__dirname),
+      };
+    }
+    
+    // Fallbacks pour le client
     if (!isServer) {
       config.resolve.fallback = {
         ...config.resolve.fallback,
         fs: false,
+        net: false,
+        tls: false,
+        crypto: false,
+        worker_threads: false,
       };
-    }
-    
-    // Skip certain modules during build phase to avoid runtime issues
-    if (process.env.NEXT_PHASE === 'phase-production-build') {
-      config.externals = config.externals || [];
-      config.externals.push({
-        'ioredis': 'commonjs ioredis',
-        'redis': 'commonjs redis',
-      });
     }
     
     return config;
   },
 };
 
-// Sentry configuration options
-const sentryWebpackPluginOptions = {
-  // Additional config for Sentry webpack plugin
-  silent: process.env.NODE_ENV !== 'production',
-  org: process.env.SENTRY_ORG,
-  project: process.env.SENTRY_PROJECT,
-  
-  // Upload source maps only in production
-  upload: process.env.NODE_ENV === 'production' && process.env.SENTRY_AUTH_TOKEN,
-  
-  // Don't upload source maps in development
-  dryRun: process.env.NODE_ENV !== 'production',
-  
-  widenClientFileUpload: true,
-  tunnelRoute: "/monitoring/sentry",
-};
-
-// Export configuration with Sentry integration
-module.exports = process.env.SENTRY_DSN 
-  ? withSentryConfig(nextConfig, sentryWebpackPluginOptions)
-  : nextConfig;
+module.exports = nextConfig;

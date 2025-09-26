@@ -58,6 +58,7 @@ Guide principal avec architecture, quick start, et liens vers toute la documenta
 ### 🧪 Tests et qualité
 - [Tests QR](./QR_SYSTEM.md#tests) - Scripts de validation
 - [Tests Email](./EMAIL_SYSTEM.md#tests) - Templates et envoi
+- [Performance](./RAPPORT-PERFORMANCE.md) - Tests HTTP et diagnostic Docker
 - [Contributing](./CONTRIBUTING.md#tests) - Standards de test
 
 ### 🚀 Déploiement et ops
