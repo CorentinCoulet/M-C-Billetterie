@@ -9,7 +9,7 @@
 
 ## 📊 PROGRESSION GLOBALE
 
-**Date mise à jour:** 6 Octobre 2025 21:00
+**Date mise à jour:** 6 Octobre 2025 21:30
 
 ### Statistiques
 
@@ -17,9 +17,9 @@
 | ------------ | -------- | -------- | ----- | ------ |
 | **Critique** | 4        | 0        | 0     | 4      |
 | **Haute**    | 6        | 0        | 0     | 6      |
-| **Moyenne**  | 0        | 1        | 4     | 5      |
+| **Moyenne**  | 1        | 0        | 4     | 5      |
 | **Basse**    | 0        | 0        | 5     | 5      |
-| **TOTAL**    | 10       | 1        | 9     | **20** |
+| **TOTAL**    | 11       | 0        | 9     | **20** |
 
 ### Tâches complétées (5-6 Oct 2025)
 
@@ -38,12 +38,14 @@
 - ✅ Tests API/Integration validés (171 tests, 100% passent)
 - ✅ Tests API Dashboard créés (7/7 passent, service layer)
 
-**Tests GDPR (6 Oct 2025 21:00):**
-- 🔄 Tests API GDPR créés (25 tests, 10/25 passent - 40%)
-- 🔄 Tests Export GDPR (7 tests, 4 passent)
-- 🔄 Tests Deletion GDPR (10 tests, 1 passe)
-- 🔄 Tests Status GDPR (8 tests, 5 passent)
-- ⚠️ Corrections nécessaires: mocks Prisma et AuditService
+**Tests GDPR (6 Oct 2025 21:30):**
+- ✅ Tests API GDPR finalisés (25 tests, 25/25 passent - 100%)
+- ✅ Tests Export GDPR (7 tests, 100%)
+- ✅ Tests Deletion GDPR (10 tests, 100%)
+- ✅ Tests Status GDPR (8 tests, 100%)
+- ✅ Mocks Prisma et AuditService corrigés
+- ✅ Mock `passwordHistory` ajouté
+- ✅ Mock `$transaction` amélioré
 
 ---
 
