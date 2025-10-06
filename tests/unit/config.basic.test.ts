@@ -145,7 +145,7 @@ describe('Configuration Tests', () => {
       expect(CONFIG.STRIPE).toHaveProperty('SECRET_KEY');
       expect(CONFIG.STRIPE).toHaveProperty('PUBLIC_KEY');
       expect(CONFIG.STRIPE).toHaveProperty('CURRENCY');
-      expect(CONFIG.STRIPE.CURRENCY).toBe('eur');
+      expect(CONFIG.STRIPE.CURRENCY).toBe('EUR'); // Uppercase comme défini dans le config
     });
 
     it('should have email configuration', () => {
