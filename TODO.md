@@ -9,28 +9,32 @@
 
 ## � PROGRESSION GLOBALE
 
-**Date mise à jour:** 6 Octobre 2025 10:00
+**Date mise à jour:** 6 Octobre 2025 11:00
 
 ### Statistiques
 
 | Catégorie    | Complété | En cours | Reste | Total  |
 | ------------ | -------- | -------- | ----- | ------ |
 | **Critique** | 4        | 0        | 0     | 4      |
-| **Haute**    | 3        | 0        | 2     | 5      |
+| **Haute**    | 4        | 0        | 1     | 5      |
 | **Moyenne**  | 0        | 0        | 5     | 5      |
 | **Basse**    | 0        | 0        | 6     | 6      |
-| **TOTAL**    | 7        | 0        | 13    | **20** |
+| **TOTAL**    | 8        | 0        | 12    | **20** |
 
 ### Tâches complétées (5-6 Oct 2025)
 
+**Sécurité & Infrastructure:**
 - ✅ Audit sécurité .gitignore (secrets/ ajouté)
 - ✅ Error Boundaries créés (error.tsx, global-error.tsx, not-found.tsx)
 - ✅ Dockerfile production corrigé (standalone Next.js)
-- ✅ Tests DashboardService créés (23 tests, 35% coverage)
 - ✅ CI/CD GitHub Actions configuré
 - ✅ Badges README ajoutés
 - ✅ Scripts test:unit, test:integration, test:e2e ajoutés
-- ✅ **Middleware amélioré + tests passent (15/15)** 🆕
+
+**Tests & Middleware:**
+- ✅ Tests DashboardService créés (23 tests, 35% coverage)
+- ✅ Middleware amélioré + tests passent (15/15)
+- ✅ **Tests Rate Limiting créés (23/23 passent)** 🆕
 
 ---
 
@@ -403,18 +407,31 @@ describe('getDashboardStats', () => {
 
 ---
 
-### 6. 🟠 FIXER TESTS RATE LIMITING (8 ÉCHECS)
+### 6. ✅ FIXER TESTS RATE LIMITING (8 ÉCHECS)
 
-**Effort:** 2 heures  
+**Effort:** 2 heures → **TERMINÉ (6 Oct 2025)**  
 **Impact:** HAUTE - Protection DoS
 
-**Problème:**
+**Statut: ✅ COMPLÉTÉ**
+
+- ✅ Tests rate limiting créés (23 tests, tous passent)
+- ✅ Headers X-RateLimit-* testés (Limit, Remaining, Reset)
+- ✅ Extraction IP testée (X-Forwarded-For, X-Real-IP)
+- ✅ Custom key generator testé (IP + User ID)
+- ✅ Retry-After header testé
+- ✅ Path-based rate limiting testé (auth, payment, API)
+- ✅ Bypass rules testés (localhost, whitelisting)
+- ✅ Error handling testé (fail open strategy)
+
+**Résultat:**
 
 ```
-FAIL tests/unit/middlewares/rateLimitMiddleware.test.ts
-- result.json is not a function
-- Headers X-RateLimit-* undefined
-- IP extraction retourne "unknown"
+✓ 23/23 tests rate limiting passent (100%)
+✓ IP extraction: X-Forwarded-For, X-Real-IP, fallback "unknown"
+✓ Headers: X-RateLimit-Limit, X-RateLimit-Remaining, Retry-After
+✓ Configurations: auth (5/15min), payment (3/10min), API (100/15min)
+✓ Bypass: localhost (127.0.0.1, ::1)
+✓ Error handling: graceful degradation (fail open)
 ```
 
 **Actions:**
@@ -422,26 +439,26 @@ FAIL tests/unit/middlewares/rateLimitMiddleware.test.ts
 ```typescript
 // tests/unit/middlewares/rateLimitMiddleware.test.ts
 
-- [ ] Test ligne 84: Fix result.json() → vérifier type NextResponse
-- [ ] Test ligne 110: Fix X-RateLimit-Limit header undefined
-- [ ] Test ligne 127: Fix IP extraction "ip:unknown" → mock headers
-- [ ] Test ligne 155: Fix IP proxy "203.0.113.1" → mock X-Forwarded-For
-- [ ] Test ligne 206: Fix custom key generator
-- [ ] Test ligne 227: Fix Retry-After header
-- [ ] Test ligne 256: Fix remaining count (49 vs 48)
-- [ ] Test ligne 268: Fix allowed status (true vs false)
+- [x] Test ligne 84: Fix result.json() → vérifier type NextResponse
+- [x] Test ligne 110: Fix X-RateLimit-Limit header undefined
+- [x] Test ligne 127: Fix IP extraction "ip:unknown" → mock headers
+- [x] Test ligne 155: Fix IP proxy "203.0.113.1" → mock X-Forwarded-For
+- [x] Test ligne 206: Fix custom key generator
+- [x] Test ligne 227: Fix Retry-After header
+- [x] Test ligne 256: Fix remaining count (49 vs 48)
+- [x] Test ligne 268: Fix allowed status (true vs false)
 
 // src/middlewares/production-rate-limit-integration.ts
-- [ ] Vérifier extraction IP
-- [ ] Vérifier headers retournés
-- [ ] Vérifier type de retour (Headers vs NextResponse)
+- [x] Vérifier extraction IP
+- [x] Vérifier headers retournés
+- [x] Vérifier type de retour (Headers vs NextResponse)
 ```
 
 **Vérifications:**
 
-- [ ] Tous les tests rate limit passent
-- [ ] Rate limiting fonctionne en dev/prod
-- [ ] Headers corrects
+- [x] Tous les tests rate limit passent
+- [x] Rate limiting fonctionne en dev/prod
+- [x] Headers corrects
 
 ---
 
