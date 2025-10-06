@@ -190,6 +190,8 @@ export const createMockPrisma = () => {
     userSession: createModel('userSession'),
     session: createModel('session'),
     loginAttempt: createModel('loginAttempt'),
+    teamMember: createModel('teamMember'),
+    eventCreated: createModel('eventCreated'),
     $transaction: jest.fn(),
     $disconnect: jest.fn(),
     $connect: jest.fn(),
