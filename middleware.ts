@@ -1,31 +1,164 @@
 import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
-
-
+import { verifyToken } from './src/lib/jwt';
+import prisma from './src/lib/prisma';
+import { instrumentedRateLimit } from './src/middlewares/production-rate-limit-integration';
 
 export async function middleware(request: NextRequest) {
-  const pathname = request.nextUrl.pathname;
+  try {
+    const pathname = request.nextUrl.pathname;
+    
+    // Apply rate limiting
+    try {
+      await instrumentedRateLimit(request);
+    } catch (error) {
+      // Continue even if rate limiting fails
+      console.error('Rate limit error:', error);
+    }
 
-  // Simple auth check for protected routes
-  if (pathname.startsWith('/admin') || pathname.startsWith('/dashboard')) {
-    const token = request.cookies.get('auth-token')?.value;
+    // Get token from cookie or Authorization header
+    let token = request.cookies.get('auth-token')?.value;
     
     if (!token) {
-      const loginUrl = new URL('/login', request.url);
+      const authHeader = request.headers.get('authorization');
+      if (authHeader?.startsWith('Bearer ')) {
+        token = authHeader.substring(7);
+      }
+    }
+
+    // Verify token and get payload
+    let payload: any = null;
+    let user: any = null;
+    
+    if (token) {
+      try {
+        payload = verifyToken(token);
+        
+        if (payload) {
+          // Try to validate session and user, but don't fail if DB is down
+          try {
+            // Validate session if sessionId is present
+            if (payload.sessionId) {
+              const session = await prisma.userSession.findUnique({
+                where: {
+                  id: payload.sessionId,
+                  expiresAt: { gt: new Date() },
+                  isActive: true
+                }
+              });
+              
+              if (!session) {
+                payload = null; // Invalidate payload if session not found or expired
+              }
+            }
+            
+            // Fetch user to verify they're still active
+            if (payload) {
+              user = await prisma.user.findUnique({
+                where: { id: payload.userId },
+                include: { blocked: true }
+              });
+              
+              // Check if user is blocked or unverified
+              if (!user || user.blocked || !user.isVerified) {
+                payload = null;
+                user = null;
+              }
+            }
+          } catch (dbError) {
+            // Database error: continue with token payload as fallback
+            console.error('Database error in middleware, using token payload as fallback:', dbError);
+            // Keep payload from token, set user to null
+            user = null;
+          }
+        }
+      } catch (error) {
+        // Token verification failed
+        payload = null;
+        user = null;
+      }
+    }
+
+    // Check protected routes
+    const isAdminRoute = pathname.startsWith('/admin');
+    const isOrganizerRoute = pathname.startsWith('/organizer');
+    const isDashboardRoute = pathname.startsWith('/dashboard');
+    const isProtectedRoute = isAdminRoute || isOrganizerRoute || isDashboardRoute;
+
+    if (isProtectedRoute && !payload) {
+      const loginUrl = new URL('/auth/login', request.url);
       loginUrl.searchParams.set('redirect', pathname);
       return NextResponse.redirect(loginUrl);
     }
+
+    // Check role-based access
+    if (isAdminRoute && payload && payload.role !== 'ADMIN') {
+      return NextResponse.json(
+        { error: 'Access denied. Admin role required.' },
+        { status: 403 }
+      );
+    }
+
+    if (isOrganizerRoute && payload && payload.role !== 'ORGANIZER' && payload.role !== 'ADMIN') {
+      return NextResponse.json(
+        { error: 'Access denied. Organizer role required.' },
+        { status: 403 }
+      );
+    }
+
+    // Create response with headers
+    const response = NextResponse.next();
+
+    // Add security headers
+    response.headers.set('X-Content-Type-Options', 'nosniff');
+    response.headers.set('X-Frame-Options', 'DENY');
+    response.headers.set('X-XSS-Protection', '1; mode=block');
+    response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
+    response.headers.set('Server', 'MC-Billetterie/1.0');
+    
+    // CSP Header
+    const csp = [
+      "default-src 'self'",
+      "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
+      "style-src 'self' 'unsafe-inline'",
+      "img-src 'self' data: https:",
+      "font-src 'self' data:",
+      "connect-src 'self'",
+      "frame-ancestors 'none'"
+    ].join('; ');
+    response.headers.set('Content-Security-Policy', csp);
+    
+    // HSTS in production
+    if (process.env.NODE_ENV === 'production') {
+      response.headers.set(
+        'Strict-Transport-Security',
+        'max-age=31536000; includeSubDomains; preload'
+      );
+    }
+    
+    // Cache control
+    if (pathname.startsWith('/api/') || isProtectedRoute) {
+      response.headers.set('Cache-Control', 'no-store, must-revalidate');
+    } else {
+      response.headers.set('Cache-Control', 'public, max-age=300, stale-while-revalidate=60');
+    }
+
+    // Add user info to headers if authenticated
+    if (payload) {
+      response.headers.set('X-User-ID', payload.userId);
+      response.headers.set('X-User-Role', payload.role || user?.role || '');
+    }
+
+    return response;
+  } catch (error) {
+    // In case of any error, return a minimal safe response
+    console.error('Middleware error:', error);
+    const response = NextResponse.next();
+    response.headers.set('X-Content-Type-Options', 'nosniff');
+    response.headers.set('X-Frame-Options', 'DENY');
+    return response;
   }
-
-  // Basic security headers only
-  const response = NextResponse.next();
-  response.headers.set('X-Content-Type-Options', 'nosniff');
-  response.headers.set('X-Frame-Options', 'DENY');
-  
-  return response;
 }
-
-
 
 export const config = {
   matcher: [

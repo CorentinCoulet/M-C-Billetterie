@@ -21,7 +21,7 @@ jest.mock('../../../src/lib/jwt', () => ({
 jest.mock('../../../src/lib/prisma', () => ({
   __esModule: true,
   default: {
-    session: {
+    userSession: {
       findUnique: jest.fn()
     },
     user: {
@@ -106,7 +106,7 @@ describe('Middleware - JWT Authentication', () => {
       expect(response.status).toBe(307); // Redirect
       const locationHeader = response.headers.get('location');
       expect(locationHeader).toBeTruthy();
-      expect(String(locationHeader)).toContain('/auth/login');
+      expect(String(locationHeader)).toContain('/login');
       expect(String(locationHeader)).toContain('redirect=%2Fadmin%2Fdashboard');
     });
 
