@@ -581,48 +581,71 @@ Initialement tenté de tester les routes App Router directement (`/app/api/dashb
 
 ## 💡 PRIORITÉ MOYENNE (2 SEMAINES)
 
-### 10. 🟡 TESTS API ORGANIZATIONS (0% COVERAGE)
+### 10. � TESTS API ORGANIZATIONS (Routes créées - Tests en cours)
 
-**Effort:** 6 heures  
+**Effort:** 6 heures → **EN COURS (6 Oct 2025 23:30)**  
 **Impact:** MOYENNE - Nouvelle fonctionnalité
 
-**Structure à tester:**
+**Statut: 🔄 ROUTES CRÉÉES, TESTS EN PRÉPARATION**
 
-```
-app/api/organizations/
-  ├── route.ts (POST, GET)
-  ├── [id]/route.ts (GET, PUT, DELETE)
-  └── [id]/members/route.ts (GET, POST, DELETE)
-```
+**Routes créées:**
+- ✅ `app/api/organizations/route.ts` (POST, GET) - 162 lignes
+- ✅ `app/api/organizations/[id]/route.ts` (GET, PUT, DELETE) - 337 lignes
+- ✅ `app/api/organizations/[id]/members/route.ts` (GET, POST, DELETE) - 346 lignes
+
+**Tests créés:**
+- ✅ `tests/api/organizations/organizations.api.test.ts` - 17 tests (31 tests avec membres)
+- ✅ `tests/api/organizations/members.api.test.ts` - 14 tests
+
+**Fonctionnalités implémentées:**
+- ✅ Création d'organisation (rôle ORGANIZER/ADMIN requis)
+- ✅ Listage des organisations de l'utilisateur
+- ✅ Récupération des détails d'une organisation (membres uniquement)
+- ✅ Mise à jour d'organisation (OWNER/ADMIN)
+- ✅ Suppression d'organisation (OWNER uniquement, pas d'événements actifs)
+- ✅ Gestion des membres (GET, POST, DELETE)
+- ✅ Système de rôles (OWNER, ADMIN, MANAGER, MEMBER, VIEWER)
+- ✅ Vérification des permissions par rôle
+- ✅ Protection contre suppression du dernier OWNER
+- ✅ Validation avec Zod
+- ✅ Gestion conflits (nom dupliqué)
+
+**Prochaines étapes:**
+- [ ] Créer service layer Organizations (comme DashboardService)
+- [ ] Adapter les tests pour utiliser le service layer
+- [ ] Ajouter tests invitation avec emails
+- [ ] Ajouter coverage > 85%
 
 **Actions:**
 
 ```typescript
-// tests/api/organizations/organizations.api.test.ts
-- [ ] POST /api/organizations - Create org
-- [ ] GET /api/organizations - List user orgs
-- [ ] GET /api/organizations/:id - Get org details
-- [ ] PUT /api/organizations/:id - Update org
-- [ ] DELETE /api/organizations/:id - Delete org (owner only)
-- [ ] Authorization tests (owner/admin/member)
-- [ ] Validation tests (name, description)
-- [ ] Edge cases (org not found, duplicate name)
+// tests/api/organizations/organizations.api.test.ts ✅ CRÉÉ
+✅ 17 tests écrits (besoin service layer pour fonctionner)
+- POST /api/organizations - Create org (5 tests)
+- GET /api/organizations - List user orgs (3 tests)
+- GET /api/organizations/:id - Get org details (3 tests)
+- PUT /api/organizations/:id - Update org (3 tests)
+- DELETE /api/organizations/:id - Delete org (3 tests)
 
-// tests/api/organizations/members.api.test.ts
-- [ ] GET /api/organizations/:id/members - List members
-- [ ] POST /api/organizations/:id/members - Invite member
-- [ ] DELETE /api/organizations/:id/members/:userId - Remove member
-- [ ] Test roles (OWNER, ADMIN, MANAGER, MEMBER, VIEWER)
-- [ ] Test permissions per role
-- [ ] Test invitation flow
-- [ ] Test email notifications
+// tests/api/organizations/members.api.test.ts ✅ CRÉÉ
+✅ 14 tests écrits (besoin service layer pour fonctionner)
+- GET /api/organizations/:id/members - List members (3 tests)
+- POST /api/organizations/:id/members - Invite member (7 tests)
+- DELETE /api/organizations/:id/members/:userId - Remove member (4 tests)
+
+// À FAIRE ENSUITE
+- [ ] Créer OrganizationService (services/organizationService.ts)
+- [ ] Adapter tests pour utiliser service layer
+- [ ] Test invitation flow avec emails
+- [ ] Test permissions avancées
 ```
 
 **Vérifications:**
 
 - [ ] Coverage > 85%
-- [ ] Tous les rôles testés
-- [ ] Permissions validées
+- [x] Tous les rôles implémentés
+- [x] Permissions de base validées
+- [ ] Tests passent (attente service layer)
 
 ---
 
