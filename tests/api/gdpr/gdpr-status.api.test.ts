@@ -13,14 +13,11 @@ jest.mock('@prisma/client', () => {
   };
 });
 
-// Mock AuditService to avoid database calls
-jest.mock('../../../src/lib/audit-service', () => ({
-  AuditService: {
-    logEvent: jest.fn().mockResolvedValue({}),
-  },
-}));
-
+import * as AuditServiceModule from '../../../src/lib/audit-service';
 import { GDPRService } from '../../../src/modules/gdpr/gdpr.service';
+
+// Mock AuditService
+jest.spyOn(AuditServiceModule.AuditService, 'logEvent').mockResolvedValue(undefined as any);
 
 describe('GDPR Status API Tests', () => {
   const mockUserId = 'user-123';
@@ -88,6 +85,8 @@ describe('GDPR Status API Tests', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
+    // Reset AuditService mock
+    jest.spyOn(AuditServiceModule.AuditService, 'logEvent').mockResolvedValue(undefined as any);
   });
 
   describe('GET /api/gdpr/status', () => {
@@ -159,16 +158,13 @@ describe('GDPR Status API Tests', () => {
 
     it('should throw error if user not found', async () => {
       prismaMock.user.findUnique.mockResolvedValue(null);
-      prismaMock.auditLog.create.mockResolvedValue({} as any);
 
       await expect(GDPRService.getComplianceStatus(mockUserId)).rejects.toThrow('User not found');
       
-      expect(prismaMock.auditLog.create).toHaveBeenCalledWith(
+      expect(AuditServiceModule.AuditService.logEvent).toHaveBeenCalledWith(
         expect.objectContaining({
-          data: expect.objectContaining({
-            action: 'GDPR_COMPLIANCE_CHECK',
-            result: 'error'
-          })
+          action: 'GDPR_COMPLIANCE_CHECK',
+          result: 'error'
         })
       );
     });
@@ -223,16 +219,13 @@ describe('GDPR Status API Tests', () => {
 
     it('should handle database errors gracefully', async () => {
       prismaMock.user.findUnique.mockRejectedValue(new Error('Database connection failed'));
-      prismaMock.auditLog.create.mockResolvedValue({} as any);
 
       await expect(GDPRService.getComplianceStatus(mockUserId)).rejects.toThrow('Database connection failed');
       
-      expect(prismaMock.auditLog.create).toHaveBeenCalledWith(
+      expect(AuditServiceModule.AuditService.logEvent).toHaveBeenCalledWith(
         expect.objectContaining({
-          data: expect.objectContaining({
-            action: 'GDPR_COMPLIANCE_CHECK',
-            result: 'error'
-          })
+          action: 'GDPR_COMPLIANCE_CHECK',
+          result: 'error'
         })
       );
     });

@@ -1,4 +1,3 @@
-// Storage global partagé pour toutes les instances
 const globalStorage: Record<string, any[]> = {};
 let globalIdCounters: Record<string, number> = {};
 
@@ -190,9 +189,18 @@ export const createMockPrisma = () => {
     userSession: createModel('userSession'),
     session: createModel('session'),
     loginAttempt: createModel('loginAttempt'),
+    passwordHistory: createModel('passwordHistory'),
     teamMember: createModel('teamMember'),
     eventCreated: createModel('eventCreated'),
-    $transaction: jest.fn(),
+    $transaction: jest.fn().mockImplementation(async (operations: any[]) => {
+      // Execute all operations in the transaction array
+      const results = [];
+      for (const operation of operations) {
+        const result = await operation;
+        results.push(result);
+      }
+      return results;
+    }),
     $disconnect: jest.fn(),
     $connect: jest.fn(),
     $executeRaw: jest.fn(),

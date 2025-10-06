@@ -13,14 +13,11 @@ jest.mock('@prisma/client', () => {
   };
 });
 
-// Mock AuditService to avoid database calls
-jest.mock('../../../src/lib/audit-service', () => ({
-  AuditService: {
-    logEvent: jest.fn().mockResolvedValue({}),
-  },
-}));
-
+import * as AuditServiceModule from '../../../src/lib/audit-service';
 import { GDPRService } from '../../../src/modules/gdpr/gdpr.service';
+
+// Mock AuditService
+jest.spyOn(AuditServiceModule.AuditService, 'logEvent').mockResolvedValue(undefined as any);
 
 describe('GDPR Export API Tests', () => {
   const mockUserId = 'user-123';
@@ -89,6 +86,8 @@ describe('GDPR Export API Tests', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
+    // Reset AuditService mock
+    jest.spyOn(AuditServiceModule.AuditService, 'logEvent').mockResolvedValue(undefined as any);
   });
 
   describe('POST /api/gdpr/export', () => {
@@ -98,8 +97,6 @@ describe('GDPR Export API Tests', () => {
         orders: [mockOrder],
         tickets: [mockTicket]
       } as any);
-
-      prismaMock.auditLog.create.mockResolvedValue({} as any);
 
       const result = await GDPRService.exportUserData(mockUserId);
 
@@ -114,11 +111,9 @@ describe('GDPR Export API Tests', () => {
       });
       expect(result.orders).toHaveLength(1);
       expect(result.tickets).toHaveLength(1);
-      expect(prismaMock.auditLog.create).toHaveBeenCalledWith(
+      expect(AuditServiceModule.AuditService.logEvent).toHaveBeenCalledWith(
         expect.objectContaining({
-          data: expect.objectContaining({
-            action: 'GDPR_DATA_EXPORT'
-          })
+          action: 'GDPR_DATA_EXPORT'
         })
       );
     });
@@ -130,8 +125,6 @@ describe('GDPR Export API Tests', () => {
         tickets: []
       } as any);
 
-      prismaMock.auditLog.create.mockResolvedValue({} as any);
-
       const result = await GDPRService.exportUserData(mockUserId);
 
       expect(result.personalData).toBeDefined();
@@ -141,16 +134,13 @@ describe('GDPR Export API Tests', () => {
 
     it('should throw error if user not found', async () => {
       prismaMock.user.findUnique.mockResolvedValue(null);
-      prismaMock.auditLog.create.mockResolvedValue({} as any);
 
       await expect(GDPRService.exportUserData(mockUserId)).rejects.toThrow('User not found');
       
-      expect(prismaMock.auditLog.create).toHaveBeenCalledWith(
+      expect(AuditServiceModule.AuditService.logEvent).toHaveBeenCalledWith(
         expect.objectContaining({
-          data: expect.objectContaining({
-            action: 'GDPR_DATA_EXPORT',
-            result: 'error'
-          })
+          action: 'GDPR_DATA_EXPORT',
+          result: 'error'
         })
       );
     });
@@ -161,8 +151,6 @@ describe('GDPR Export API Tests', () => {
         orders: [],
         tickets: []
       } as any);
-
-      prismaMock.auditLog.create.mockResolvedValue({} as any);
 
       const result = await GDPRService.exportUserData(mockUserId);
 
@@ -183,8 +171,6 @@ describe('GDPR Export API Tests', () => {
         tickets: [mockTicket]
       } as any);
 
-      prismaMock.auditLog.create.mockResolvedValue({} as any);
-
       const result = await GDPRService.exportUserData(mockUserId);
 
       expect(result.orders[0].tickets).toHaveLength(1);
@@ -198,12 +184,10 @@ describe('GDPR Export API Tests', () => {
         tickets: []
       } as any);
 
-      prismaMock.auditLog.create.mockResolvedValue({} as any);
-
       await GDPRService.exportUserData(mockUserId);
 
-      expect(prismaMock.auditLog.create).toHaveBeenCalledWith({
-        data: expect.objectContaining({
+      expect(AuditServiceModule.AuditService.logEvent).toHaveBeenCalledWith(
+        expect.objectContaining({
           action: 'GDPR_DATA_EXPORT',
           resourceType: 'USER',
           resourceId: mockUserId,
@@ -211,20 +195,18 @@ describe('GDPR Export API Tests', () => {
           result: 'success',
           riskLevel: 'low'
         })
-      });
+      );
     });
 
     it('should handle database errors gracefully', async () => {
       prismaMock.user.findUnique.mockRejectedValue(new Error('Database connection failed'));
-      prismaMock.auditLog.create.mockResolvedValue({} as any);
 
       await expect(GDPRService.exportUserData(mockUserId)).rejects.toThrow('Database connection failed');
       
-      expect(prismaMock.auditLog.create).toHaveBeenCalledWith(
+      expect(AuditServiceModule.AuditService.logEvent).toHaveBeenCalledWith(
         expect.objectContaining({
-          data: expect.objectContaining({
-            result: 'error'
-          })
+          action: 'GDPR_DATA_EXPORT',
+          result: 'error'
         })
       );
     });

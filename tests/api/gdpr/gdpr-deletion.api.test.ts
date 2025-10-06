@@ -13,14 +13,11 @@ jest.mock('@prisma/client', () => {
   };
 });
 
-// Mock AuditService to avoid database calls
-jest.mock('../../../src/lib/audit-service', () => ({
-  AuditService: {
-    logEvent: jest.fn().mockResolvedValue({}),
-  },
-}));
-
+import * as AuditServiceModule from '../../../src/lib/audit-service';
 import { GDPRService } from '../../../src/modules/gdpr/gdpr.service';
+
+// Mock AuditService
+jest.spyOn(AuditServiceModule.AuditService, 'logEvent').mockResolvedValue(undefined as any);
 
 describe('GDPR Deletion API Tests', () => {
   const mockUserId = 'user-123';
@@ -74,6 +71,8 @@ describe('GDPR Deletion API Tests', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
+    // Reset AuditService mock
+    jest.spyOn(AuditServiceModule.AuditService, 'logEvent').mockResolvedValue(undefined as any);
   });
 
   describe('POST /api/gdpr/deletion', () => {
@@ -85,7 +84,6 @@ describe('GDPR Deletion API Tests', () => {
       } as any);
 
       prismaMock.$transaction.mockResolvedValue([{}, {}, {}, {}, {}, mockUser] as any);
-      prismaMock.auditLog.create.mockResolvedValue({} as any);
 
       const result = await GDPRService.deleteUserData(mockUserId);
 
@@ -103,8 +101,6 @@ describe('GDPR Deletion API Tests', () => {
         tickets: []
       } as any);
 
-      prismaMock.auditLog.create.mockResolvedValue({} as any);
-
       await expect(GDPRService.deleteUserData(mockUserId)).rejects.toThrow(
         'Cannot delete user with active orders'
       );
@@ -114,16 +110,13 @@ describe('GDPR Deletion API Tests', () => {
 
     it('should throw error if user not found', async () => {
       prismaMock.user.findUnique.mockResolvedValue(null);
-      prismaMock.auditLog.create.mockResolvedValue({} as any);
 
       await expect(GDPRService.deleteUserData(mockUserId)).rejects.toThrow('User not found');
       
-      expect(prismaMock.auditLog.create).toHaveBeenCalledWith(
+      expect(AuditServiceModule.AuditService.logEvent).toHaveBeenCalledWith(
         expect.objectContaining({
-          data: expect.objectContaining({
-            action: 'GDPR_DATA_DELETION',
-            result: 'error'
-          })
+          action: 'GDPR_DATA_DELETION',
+          result: 'error'
         })
       );
     });
@@ -146,7 +139,6 @@ describe('GDPR Deletion API Tests', () => {
       } as any);
 
       prismaMock.$transaction.mockResolvedValue([{}, {}, {}, {}, {}, mockUser] as any);
-      prismaMock.auditLog.create.mockResolvedValue({} as any);
 
       await GDPRService.deleteUserData(mockUserId);
 
@@ -162,7 +154,6 @@ describe('GDPR Deletion API Tests', () => {
       } as any);
 
       prismaMock.$transaction.mockResolvedValue([{}, {}, {}, {}, {}, mockUser] as any);
-      prismaMock.auditLog.create.mockResolvedValue({} as any);
 
       await GDPRService.deleteUserData(mockUserId);
 
@@ -177,7 +168,6 @@ describe('GDPR Deletion API Tests', () => {
       } as any);
 
       prismaMock.$transaction.mockResolvedValue([{}, {}, {}, {}, {}, mockUser] as any);
-      prismaMock.auditLog.create.mockResolvedValue({} as any);
 
       await GDPRService.deleteUserData(mockUserId);
 
@@ -192,19 +182,18 @@ describe('GDPR Deletion API Tests', () => {
       } as any);
 
       prismaMock.$transaction.mockResolvedValue([{}, {}, {}, {}, {}, mockUser] as any);
-      prismaMock.auditLog.create.mockResolvedValue({} as any);
 
       await GDPRService.deleteUserData(mockUserId);
 
-      expect(prismaMock.auditLog.create).toHaveBeenCalledWith({
-        data: expect.objectContaining({
+      expect(AuditServiceModule.AuditService.logEvent).toHaveBeenCalledWith(
+        expect.objectContaining({
           action: 'GDPR_DATA_DELETION',
           resourceType: 'USER',
           resourceId: mockUserId,
           result: 'success',
           riskLevel: 'high'
         })
-      });
+      );
     });
 
     it('should handle transaction rollback on error', async () => {
@@ -215,15 +204,13 @@ describe('GDPR Deletion API Tests', () => {
       } as any);
 
       prismaMock.$transaction.mockRejectedValue(new Error('Transaction failed'));
-      prismaMock.auditLog.create.mockResolvedValue({} as any);
 
       await expect(GDPRService.deleteUserData(mockUserId)).rejects.toThrow('Transaction failed');
       
-      expect(prismaMock.auditLog.create).toHaveBeenCalledWith(
+      expect(AuditServiceModule.AuditService.logEvent).toHaveBeenCalledWith(
         expect.objectContaining({
-          data: expect.objectContaining({
-            result: 'error'
-          })
+          action: 'GDPR_DATA_DELETION',
+          result: 'error'
         })
       );
     });
@@ -236,7 +223,6 @@ describe('GDPR Deletion API Tests', () => {
       } as any);
 
       prismaMock.$transaction.mockResolvedValue([{}, {}, {}, {}, {}, mockUser] as any);
-      prismaMock.auditLog.create.mockResolvedValue({} as any);
 
       await GDPRService.deleteUserData(mockUserId);
 
@@ -253,7 +239,6 @@ describe('GDPR Deletion API Tests', () => {
       } as any);
 
       prismaMock.$transaction.mockResolvedValue([{}, {}, {}, {}, {}, mockUser] as any);
-      prismaMock.auditLog.create.mockResolvedValue({} as any);
 
       const result = await GDPRService.deleteUserData(mockUserId);
 
