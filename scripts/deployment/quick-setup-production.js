@@ -203,7 +203,7 @@ function runHealthCheck() {
       
       req.on('error', () => {
         log('❌ Application not accessible on localhost:3000', 'warn');
-        log('   Start the app with: npm run dev', 'info');
+        log('   Start the app with: yarn dev', 'info');
         resolve(false);
       });
       
@@ -225,9 +225,9 @@ function displaySummary(results) {
   
   const items = [
     { name: '🔐 Sentry (Error monitoring)', status: results.sentry, action: 'Configure DSN in .env' },
-    { name: '📊 Prometheus/Grafana', status: results.prometheus, action: 'Start: npm run docker:monitoring' },
-    { name: '⚡ Performance tests', status: results.performance, action: 'Test: npm run test:performance:load' },
-    { name: '🏥 Application', status: results.health, action: 'Start: npm run dev' }
+    { name: '📊 Prometheus/Grafana', status: results.prometheus, action: 'Start: yarn docker:monitoring' },
+    { name: '⚡ Performance tests', status: results.performance, action: 'Test: yarn test:performance:load' },
+    { name: '🏥 Application', status: results.health, action: 'Start: yarn dev' }
   ];
   
   items.forEach(item => {
@@ -252,8 +252,8 @@ function displaySummary(results) {
   // Next steps
   log('\n🚀 RECOMMENDED NEXT STEPS:', 'info');
   log('1. Configure Sentry DSN (absolute priority)');
-  log('2. Test monitoring: npm run docker:monitoring');
-  log('3. Run a performance test: npm run test:performance:load');
+  log('2. Test monitoring: yarn docker:monitoring');
+  log('3. Run a performance test: yarn test:performance:load');
   log('4. Check metrics: http://localhost:3000/api/metrics');
   log('5. Check updated TODO list: PRODUCTION_TODO.md');
 }

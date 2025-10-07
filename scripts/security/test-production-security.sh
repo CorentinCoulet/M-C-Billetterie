@@ -180,10 +180,10 @@ echo -e "Tests failed: ${RED}$TESTS_FAILED${NC}"
 if [ $TESTS_FAILED -eq 0 ]; then
     echo -e "\n${GREEN}🎉 ALL TESTS PASSED! Production security implementation is complete.${NC}"
     echo -e "\n${YELLOW}Next Steps:${NC}"
-    echo "1. Run: npm install ioredis (if not already installed)"
+    echo "1. Run: yarn add ioredis (if not already installed)"
     echo "2. Configure your secrets manager (Azure/AWS/Vault)"
     echo "3. Set up your domain and SSL certificates"
-    echo "4. Test with: npm run build"
+    echo "4. Test with: yarn build"
     echo "5. Deploy to staging environment first"
     exit 0
 else

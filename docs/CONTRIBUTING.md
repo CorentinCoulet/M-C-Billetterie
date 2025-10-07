@@ -66,38 +66,38 @@ git checkout -b docs/amélioration-documentation
 
 ```bash
 # Installation des dépendances
-npm install
+yarn install
 
 # Configuration de la base de données
 cp .env.example .env
 # Éditez .env avec vos paramètres locaux
 
 # Setup de la DB
-npm run db:migrate
-npm run db:generate
-npm run db:seed
+yarn db:migrate
+yarn db:generate
+yarn db:seed
 
 # Démarrage en mode développement
-npm run dev
+yarn dev
 ```
 
 ### Tests
 
 ```bash
 # Tests unitaires
-npm test
+yarn test
 
 # Tests d'intégration
-npm run test:integration
+yarn test:integration
 
 # Tests E2E
-npm run test:e2e
+yarn test:e2e
 
 # Tests du système QR
-npm run test:qr
+yarn test:qr
 
 # Tests du système email
-npm run test:emails
+yarn test:emails
 ```
 
 ## 📏 Standards de développement
@@ -221,16 +221,16 @@ test(api): add order validation tests
 
 ```bash
 # Lint
-npm run lint
+yarn lint
 
 # Type checking
-npm run type-check
+yarn type-check
 
 # Tests
-npm test
+yarn test
 
 # Build test
-npm run build
+yarn build
 ```
 
 ## 🔍 Processus de révision

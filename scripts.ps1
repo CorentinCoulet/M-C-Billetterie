@@ -46,23 +46,23 @@ function Start-DevDocker {
 
 function Build-App {
     Write-Host "Build de l'application..."
-    npm run build
+    yarn build
 }
 
 function Run-Tests {
     Write-Host "Lancement des tests..."
-    npm test
+    yarn test
 }
 
 function Run-TestsCoverage {
     Write-Host "Lancement des tests avec coverage..."
-    npm run test:coverage
+    yarn test:coverage
 }
 
 function Setup-Database {
     Write-Host "Configuration de la base de donnees..."
-    npm run db:generate
-    npm run db:migrate
+    yarn db:generate
+    yarn db:migrate
 }
 
 function Docker-Dev-Up {
@@ -132,12 +132,12 @@ function Clean-Docker {
 
 function Run-Lint {
     Write-Host "Lancement du linting..."
-    npm run lint
+    yarn lint
 }
 
 function Check-Types {
     Write-Host "Verification des types TypeScript..."
-    npm run type-check
+    yarn type-check
 }
 
 # Exécution selon l'action demandée

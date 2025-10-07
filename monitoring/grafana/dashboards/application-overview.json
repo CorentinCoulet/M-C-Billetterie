@@ -1,0 +1,167 @@
+{
+  "dashboard": {
+    "title": "Billetterie - Application Overview",
+    "tags": ["billetterie", "overview"],
+    "timezone": "browser",
+    "schemaVersion": 16,
+    "version": 1,
+    "refresh": "30s",
+    "panels": [
+      {
+        "title": "HTTP Requests per Second",
+        "type": "graph",
+        "gridPos": {
+          "x": 0,
+          "y": 0,
+          "w": 12,
+          "h": 8
+        },
+        "targets": [
+          {
+            "expr": "rate(billetterie_http_requests_total[5m])",
+            "legendFormat": "{{method}} {{route}}"
+          }
+        ]
+      },
+      {
+        "title": "HTTP Response Time (p95)",
+        "type": "graph",
+        "gridPos": {
+          "x": 12,
+          "y": 0,
+          "w": 12,
+          "h": 8
+        },
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.95, rate(billetterie_http_request_duration_seconds_bucket[5m]))",
+            "legendFormat": "{{method}} {{route}}"
+          }
+        ]
+      },
+      {
+        "title": "Error Rate",
+        "type": "graph",
+        "gridPos": {
+          "x": 0,
+          "y": 8,
+          "w": 12,
+          "h": 8
+        },
+        "targets": [
+          {
+            "expr": "rate(billetterie_errors_total[5m])",
+            "legendFormat": "{{type}} ({{severity}})"
+          }
+        ]
+      },
+      {
+        "title": "Active Users",
+        "type": "stat",
+        "gridPos": {
+          "x": 12,
+          "y": 8,
+          "w": 6,
+          "h": 4
+        },
+        "targets": [
+          {
+            "expr": "billetterie_active_user_sessions"
+          }
+        ]
+      },
+      {
+        "title": "Total Revenue (EUR)",
+        "type": "stat",
+        "gridPos": {
+          "x": 18,
+          "y": 8,
+          "w": 6,
+          "h": 4
+        },
+        "targets": [
+          {
+            "expr": "billetterie_revenue_total / 100"
+          }
+        ]
+      },
+      {
+        "title": "Tickets Sold per Hour",
+        "type": "graph",
+        "gridPos": {
+          "x": 0,
+          "y": 16,
+          "w": 12,
+          "h": 8
+        },
+        "targets": [
+          {
+            "expr": "rate(billetterie_tickets_sold_total[1h]) * 3600",
+            "legendFormat": "{{event_type}}"
+          }
+        ]
+      },
+      {
+        "title": "Database Query Duration",
+        "type": "graph",
+        "gridPos": {
+          "x": 12,
+          "y": 16,
+          "w": 12,
+          "h": 8
+        },
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.95, rate(billetterie_database_query_duration_seconds_bucket[5m]))",
+            "legendFormat": "{{operation}} on {{table}}"
+          }
+        ]
+      },
+      {
+        "title": "Cache Hit Rate",
+        "type": "gauge",
+        "gridPos": {
+          "x": 0,
+          "y": 24,
+          "w": 8,
+          "h": 6
+        },
+        "targets": [
+          {
+            "expr": "rate(billetterie_cache_hits_total[5m]) / (rate(billetterie_cache_hits_total[5m]) + rate(billetterie_cache_misses_total[5m]))"
+          }
+        ]
+      },
+      {
+        "title": "Payment Success Rate",
+        "type": "gauge",
+        "gridPos": {
+          "x": 8,
+          "y": 24,
+          "w": 8,
+          "h": 6
+        },
+        "targets": [
+          {
+            "expr": "rate(billetterie_payments_total{status='success'}[5m]) / rate(billetterie_payments_total[5m])"
+          }
+        ]
+      },
+      {
+        "title": "QR Code Validation Rate",
+        "type": "gauge",
+        "gridPos": {
+          "x": 16,
+          "y": 24,
+          "w": 8,
+          "h": 6
+        },
+        "targets": [
+          {
+            "expr": "rate(billetterie_qr_codes_validated_total{status='valid'}[5m]) / rate(billetterie_qr_codes_validated_total[5m])"
+          }
+        ]
+      }
+    ]
+  }
+}

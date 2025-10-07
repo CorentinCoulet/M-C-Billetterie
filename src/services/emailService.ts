@@ -70,6 +70,11 @@ export class EmailService {
       const diffHours = Math.ceil(diffMs / (1000 * 60 * 60));
       return diffHours;
     });
+
+    // Equality helper for conditionals
+    Handlebars.registerHelper('eq', function(a: any, b: any) {
+      return a === b;
+    });
   }
 
   /**
@@ -377,6 +382,130 @@ export class EmailService {
           </div>
         </div>
       `
+    };
+
+    await transporter.sendMail(mailOptions);
+  }
+
+  /**
+   * Send individual ticket email with QR code
+   */
+  async sendIndividualTicketEmail(
+    email: string,
+    name: string | null,
+    ticket: {
+      id: string;
+      name: string;
+      eventName: string;
+      eventDate: Date;
+      eventLocation: string;
+      qrCode: string;
+      qrCodeUrl?: string;
+      instructions?: string;
+    }
+  ): Promise<void> {
+    const html = await this.renderTemplate('individual-ticket', {
+      customerName: name || email.split('@')[0],
+      customerEmail: email,
+      ticketId: ticket.id,
+      ticketName: ticket.name,
+      eventName: ticket.eventName,
+      eventDate: ticket.eventDate,
+      eventLocation: ticket.eventLocation,
+      qrCode: ticket.qrCode,
+      qrCodeUrl: ticket.qrCodeUrl,
+      instructions: ticket.instructions || 'Please present this QR code at the venue entrance.',
+      ticketUrl: `${APP_URL}/tickets/${ticket.id}`,
+      qrCodeRefreshTime: '12 hours',
+    });
+
+    const mailOptions = {
+      from: `"${APP_NAME}" <${FROM_EMAIL}>`,
+      to: email,
+      subject: `🎫 Your Ticket for ${ticket.eventName}`,
+      html
+    };
+
+    await transporter.sendMail(mailOptions);
+  }
+
+  /**
+   * Send organization invitation email
+   */
+  async sendOrganizationInvitationEmail(
+    email: string,
+    inviterName: string,
+    organizationName: string,
+    role: string,
+    invitationToken: string
+  ): Promise<void> {
+    const acceptUrl = `${APP_URL}/organizations/invitations/accept?token=${invitationToken}`;
+    const declineUrl = `${APP_URL}/organizations/invitations/decline?token=${invitationToken}`;
+    const expirationDate = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days
+
+    const html = await this.renderTemplate('organization-invitation', {
+      recipientEmail: email,
+      inviterName,
+      organizationName,
+      role,
+      acceptUrl,
+      declineUrl,
+      expirationDate: expirationDate.toLocaleDateString('en-US'),
+      validityDays: 7,
+      organizationsUrl: `${APP_URL}/organizations`,
+    });
+
+    const mailOptions = {
+      from: `"${APP_NAME}" <${FROM_EMAIL}>`,
+      to: email,
+      subject: `🎉 Invitation to join ${organizationName}`,
+      html
+    };
+
+    await transporter.sendMail(mailOptions);
+  }
+
+  /**
+   * Send order cancellation email
+   */
+  async sendOrderCancellationEmail(
+    email: string,
+    name: string | null,
+    orderId: string,
+    cancellationDetails: {
+      orderDate: Date;
+      totalAmount: number;
+      refundAmount: number;
+      cancellationDate: Date;
+      cancellationReason?: string;
+      tickets: Array<{
+        name: string;
+        quantity: number;
+        eventName: string;
+        eventDate: Date;
+      }>;
+    }
+  ): Promise<void> {
+    const html = await this.renderTemplate('order-cancellation', {
+      customerName: name || email.split('@')[0],
+      customerEmail: email,
+      orderId,
+      orderDate: cancellationDetails.orderDate,
+      totalAmount: cancellationDetails.totalAmount,
+      refundAmount: cancellationDetails.refundAmount,
+      cancellationDate: cancellationDetails.cancellationDate,
+      cancellationReason: cancellationDetails.cancellationReason || 'Requested by customer',
+      tickets: cancellationDetails.tickets,
+      refundProcessingDays: 5-7,
+      ordersUrl: `${APP_URL}/orders`,
+      helpUrl: `${APP_URL}/help`,
+    });
+
+    const mailOptions = {
+      from: `"${APP_NAME}" <${FROM_EMAIL}>`,
+      to: email,
+      subject: `❌ Order Cancellation #${orderId} - ${APP_NAME}`,
+      html
     };
 
     await transporter.sendMail(mailOptions);

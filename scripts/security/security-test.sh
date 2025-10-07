@@ -79,7 +79,7 @@ test_backup() {
     
     # Create test backup
     log_message "Creating database backup..."
-    if npm run backup:create -- --test > /dev/null 2>&1; then
+    if yarn backup:create --test > /dev/null 2>&1; then
         log_message "${GREEN}✓ Backup creation: PASSED${NC}"
     else
         log_message "${RED}✗ Backup creation: FAILED${NC}"
@@ -100,7 +100,7 @@ test_backup() {
     # Test backup integrity
     if [ -n "$BACKUP_FILE" ] && [ -f "$BACKUP_FILE" ]; then
         log_message "Verifying backup integrity..."
-        if npm run backup:verify -- "$BACKUP_FILE" > /dev/null 2>&1; then
+        if yarn backup:verify "$BACKUP_FILE" > /dev/null 2>&1; then
             log_message "${GREEN}✓ Backup integrity: PASSED${NC}"
         else
             log_message "${RED}✗ Backup integrity: FAILED${NC}"
@@ -124,7 +124,7 @@ test_restore() {
     
     # Test restore process
     log_message "Testing database restore..."
-    if npm run backup:restore -- "$BACKUP_FILE" --test-mode > /dev/null 2>&1; then
+    if yarn backup:restore "$BACKUP_FILE" --test-mode > /dev/null 2>&1; then
         log_message "${GREEN}✓ Database restore: PASSED${NC}"
     else
         log_message "${RED}✗ Database restore: FAILED${NC}"
@@ -133,7 +133,7 @@ test_restore() {
     
     # Test data consistency after restore
     log_message "Verifying data consistency..."
-    if npm run test:db-consistency > /dev/null 2>&1; then
+    if yarn test:db-consistency > /dev/null 2>&1; then
         log_message "${GREEN}✓ Data consistency: PASSED${NC}"
     else
         log_message "${RED}✗ Data consistency: FAILED${NC}"
@@ -147,7 +147,7 @@ test_application_security() {
     # Start application if not running
     if ! curl -s http://localhost:3001/health > /dev/null 2>&1; then
         log_message "Starting application for security tests..."
-        npm run dev &
+        yarn dev &
         APP_PID=$!
         sleep 10
         
@@ -213,7 +213,7 @@ test_web_security() {
     # Start application if needed
     if ! curl -s http://localhost:3001/health > /dev/null 2>&1; then
         log_message "Starting application for web security tests..."
-        npm run dev &
+        yarn dev &
         APP_PID=$!
         sleep 10
     fi

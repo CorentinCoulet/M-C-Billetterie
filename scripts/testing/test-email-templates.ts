@@ -3,8 +3,8 @@
  * Tests all email templates with sample data
  */
 
-import emailService from '../src/services/emailService';
-import { UserWithRelations } from '../src/types/user';
+import emailService from '../../src/services/emailService';
+import { UserWithRelations } from '../../src/types/user';
 
 async function testEmailTemplates() {
   console.log('🧪 Testing Email Service with Handlebars Templates\n');
@@ -216,7 +216,7 @@ async function main() {
   console.log('\n✨ To test email sending:');
   console.log('1. Configure SMTP environment variables');
   console.log('2. Uncomment test calls in the script');
-  console.log('3. Run: npm run test:emails\n');
+  console.log('3. Run: yarn test:emails\n');
 }
 
 if (require.main === module) {

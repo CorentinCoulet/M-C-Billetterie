@@ -2,7 +2,16 @@
 
 ## Vue d'ensemble
 
-Cette documentation couvre tous les aspects techniques de la plateforme de billetterie Next.js.
+Cet   ```bash
+   yarn dev
+   ```
+
+2. Tests :
+   ```bash
+   yarn test
+   yarn test:qr
+   yarn email:info
+   ```tation couvre tous les aspects techniques de la plateforme de billetterie Next.js.
 
 ## 📋 Documents disponibles
 
@@ -56,36 +65,36 @@ Cette documentation couvre tous les aspects techniques de la plateforme de bille
    ```bash
    git clone <repo>
    cd billetterie
-   npm install
+   yarn install
    cp .env.example .env
    ```
 
 2. **Base de données**
    ```bash
-   npm run db:migrate
-   npm run db:generate
+   yarn db:migrate
+   yarn db:generate
    ```
 
 3. **Développement**
    ```bash
-   npm run dev
+   yarn dev
    ```
 
 4. **Tests**
    ```bash
-   npm test
-   npm run test:qr
-   npm run email:info
+   yarn test
+   yarn test:qr
+   yarn email:info
    ```
 
 ### 🔍 Scripts utiles
 
 | Script | Description |
 |--------|-------------|
-| `npm run test:qr` | Test du système QR codes |
-| `npm run qr:rotate` | Rotation manuelle QR codes |
-| `npm run email:info` | Information système email |
-| `npm run test:emails` | Test des templates email |
+| `yarn test:qr` | Test du système QR codes |
+| `yarn qr:rotate` | Rotation manuelle QR codes |
+| `yarn email:info` | Information système email |
+| `yarn test:emails` | Test des templates email |
 
 ### 🌐 API Endpoints
 

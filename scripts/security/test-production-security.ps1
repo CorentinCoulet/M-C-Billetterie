@@ -159,10 +159,10 @@ Write-Host $TestsFailed -ForegroundColor Red
 if ($TestsFailed -eq 0) {
     Write-Host "`n🎉 ALL TESTS PASSED! Production security implementation is complete." -ForegroundColor Green
     Write-Host "`nNext Steps:" -ForegroundColor Yellow
-    Write-Host "1. Run: npm install ioredis (if not already installed)"
+    Write-Host "1. Run: yarn add ioredis (if not already installed)"
     Write-Host "2. Configure your secrets manager (Azure/AWS/Vault)"
     Write-Host "3. Set up your domain and SSL certificates"
-    Write-Host "4. Test with: npm run build"
+    Write-Host "4. Test with: yarn build"
     Write-Host "5. Deploy to staging environment first"
     exit 0
 } else {

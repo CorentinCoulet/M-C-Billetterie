@@ -352,7 +352,7 @@ post_restoration_tasks() {
     log "Performing post-restoration tasks..."
     
     # Update database migrations if needed
-    # npm run prisma:migrate:deploy
+    # yarn prisma:migrate:deploy
     
     # Restart application services
     # systemctl restart billetterie

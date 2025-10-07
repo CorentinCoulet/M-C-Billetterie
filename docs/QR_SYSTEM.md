@@ -54,7 +54,7 @@ Chaque QR code contient :
 
 ### Configuration
 - `qrRotationInterval` dans le modèle Ticket (en heures)
-- Script cron automatique : `npm run qr:rotate`
+- Script cron automatique : `yarn qr:rotate`
 
 ### Déclenchement manuel
 ```bash
@@ -62,7 +62,7 @@ Chaque QR code contient :
 curl -X POST http://localhost:3000/api/admin/qr-rotation
 
 # Via script
-npm run qr:rotate
+yarn qr:rotate
 ```
 
 ## 📊 Statistiques et Monitoring
@@ -124,7 +124,7 @@ const scannedTickets = await ticketService.getScannedTicketsForEvent(eventId);
 
 ### Test complet du système
 ```bash
-npm run test:qr
+yarn test:qr
 ```
 
 Ce script teste :
@@ -218,13 +218,13 @@ DEFAULT_QR_ROTATION_INTERVAL=12
 ### Script de maintenance
 ```bash
 # Nettoyage des anciennes données QR
-npm run qr:cleanup
+yarn qr:cleanup
 
 # Vérification de l'intégrité
-npm run qr:verify
+yarn qr:verify
 
 # Rapport de santé
-npm run qr:health-check
+yarn qr:health-check
 ```
 
 ## 🎯 Bonnes Pratiques

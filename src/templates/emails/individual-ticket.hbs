@@ -1,0 +1,101 @@
+<!-- Individual Ticket Email Template -->
+<div style="max-width: 600px; margin: 0 auto; padding: 20px; font-family: Arial, sans-serif;">
+  <!-- Header -->
+  <div style="text-align: center; margin-bottom: 30px;">
+    <h1 style="color: #2563eb; margin: 0;">🎫 Votre Billet</h1>
+    <p style="color: #6b7280; font-size: 16px; margin-top: 10px;">
+      {{eventName}}
+    </p>
+  </div>
+
+  <!-- Greeting -->
+  <div style="margin-bottom: 30px;">
+    <p style="font-size: 16px; color: #374151;">
+      Bonjour <strong>{{customerName}}</strong>,
+    </p>
+    <p style="font-size: 16px; color: #374151; line-height: 1.6;">
+      Votre billet est prêt ! Veuillez présenter ce code QR à l'entrée de la salle.
+    </p>
+  </div>
+
+  <!-- Ticket Details Card -->
+  <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 12px; padding: 30px; color: white; margin-bottom: 30px;">
+    <div style="text-align: center; margin-bottom: 25px;">
+      <h2 style="margin: 0 0 10px 0; font-size: 24px;">{{eventName}}</h2>
+      <p style="margin: 0; font-size: 14px; opacity: 0.9;">{{ticketName}}</p>
+    </div>
+
+    <!-- Event Information -->
+    <div style="background: rgba(255, 255, 255, 0.15); border-radius: 8px; padding: 20px; margin-bottom: 25px;">
+      <div style="margin-bottom: 15px;">
+        <p style="margin: 0; font-size: 14px; opacity: 0.8;">📅 Date & Time</p>
+        <p style="margin: 5px 0 0 0; font-size: 16px; font-weight: bold;">
+          {{formatDate eventDate}}
+        </p>
+      </div>
+      <div>
+        <p style="margin: 0; font-size: 14px; opacity: 0.8;">📍 Location</p>
+        <p style="margin: 5px 0 0 0; font-size: 16px; font-weight: bold;">
+          {{eventLocation}}
+        </p>
+      </div>
+    </div>
+
+    <!-- QR Code -->
+    <div style="background: white; border-radius: 8px; padding: 20px; text-align: center;">
+      <div style="background: #f3f4f6; padding: 20px; border-radius: 8px; display: inline-block;">
+        {{#if qrCodeUrl}}
+          <img src="{{qrCodeUrl}}" alt="QR Code" style="width: 200px; height: 200px; display: block;" />
+        {{else}}
+          <div style="width: 200px; height: 200px; background: #e5e7eb; display: flex; align-items: center; justify-content: center; font-size: 12px; color: #6b7280;">
+            QR: {{qrCode}}
+          </div>
+        {{/if}}
+      </div>
+      <p style="margin: 15px 0 0 0; font-size: 12px; color: #6b7280;">
+        ID du billet : {{ticketId}}
+      </p>
+    </div>
+  </div>
+
+  <!-- Important Information -->
+  <div style="background: #fef3c7; border-left: 4px solid #f59e0b; padding: 15px; border-radius: 8px; margin-bottom: 30px;">
+    <p style="margin: 0; font-size: 14px; color: #92400e; font-weight: bold;">
+      ⚠️ Informations Importantes
+    </p>
+    <p style="margin: 10px 0 0 0; font-size: 14px; color: #92400e; line-height: 1.5;">
+      {{instructions}}
+    </p>
+    <p style="margin: 10px 0 0 0; font-size: 12px; color: #92400e;">
+      Remarque : Votre code QR se rafraîchit toutes les {{qrCodeRefreshTime}} pour des raisons de sécurité.
+    </p>
+  </div>
+
+  <!-- Actions -->
+  <div style="text-align: center; margin-bottom: 30px;">
+    <a href="{{ticketUrl}}" style="display: inline-block; background: #2563eb; color: white; padding: 14px 32px; text-decoration: none; border-radius: 8px; font-weight: bold; font-size: 16px; margin-bottom: 10px;">
+      Voir le Billet Complet
+    </a>
+  </div>
+
+  <!-- Tips -->
+  <div style="background: #f3f4f6; border-radius: 8px; padding: 20px; margin-bottom: 30px;">
+    <h3 style="margin: 0 0 15px 0; font-size: 16px; color: #374151;">💡 Conseils pour le Jour de l'Événement</h3>
+    <ul style="margin: 0; padding-left: 20px; color: #6b7280; font-size: 14px; line-height: 1.8;">
+      <li>Arrivez en avance pour éviter les files d'attente</li>
+      <li>Ayez votre code QR prêt sur votre téléphone</li>
+      <li>Apportez une pièce d'identité valide pour vérification</li>
+      <li>Consultez les prévisions météo et habillez-vous en conséquence</li>
+    </ul>
+  </div>
+
+  <!-- Footer -->
+  <div style="text-align: center; padding-top: 20px; border-top: 1px solid #e5e7eb;">
+    <p style="font-size: 14px; color: #6b7280; margin-bottom: 10px;">
+      Besoin d'aide ? Contactez-nous à <a href="mailto:{{supportEmail}}" style="color: #2563eb;">{{supportEmail}}</a>
+    </p>
+    <p style="font-size: 12px; color: #9ca3af;">
+      © {{currentYear}} {{appName}}. Tous droits réservés.
+    </p>
+  </div>
+</div>

@@ -26,8 +26,7 @@ export class TicketService {
       include: {
         event: true,
         user: true,
-        order: true,
-        qrCode: true
+        order: true
       }
     });
   }
@@ -41,8 +40,7 @@ export class TicketService {
       include: {
         event: true,
         user: true,
-        order: true,
-        qrCode: true
+        order: true
       },
       orderBy: {
         purchasedAt: 'desc'
@@ -77,8 +75,7 @@ export class TicketService {
       include: {
         event: true,
         user: true,
-        order: true,
-        qrCode: true
+        order: true
       }
     });
   }
@@ -215,8 +212,7 @@ export class TicketService {
           include: {
             event: true,
             user: true,
-            order: true,
-            qrCode: true
+            order: true
           }
         });
         
@@ -278,8 +274,7 @@ export class TicketService {
       include: {
         event: true,
         user: true,
-        order: true,
-        qrCode: true
+        order: true
       },
       orderBy: {
         scannedAt: 'desc'
@@ -306,8 +301,7 @@ export class TicketService {
       include: {
         event: true,
         user: true,
-        order: true,
-        qrCode: true
+        order: true
       },
       orderBy: {
         purchasedAt: 'desc'
@@ -328,8 +322,7 @@ export class TicketService {
       include: {
         event: true,
         user: true,
-        order: true,
-        qrCode: true
+        order: true
       }
     });
   }
@@ -349,8 +342,7 @@ export class TicketService {
       include: {
         event: true,
         user: true,
-        order: true,
-        qrCode: true
+        order: true
       }
     });
   }
@@ -367,8 +359,7 @@ export class TicketService {
       include: {
         event: true,
         user: true,
-        order: true,
-        qrCode: true
+        order: true
       }
     });
   }

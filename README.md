@@ -56,8 +56,8 @@ yarn build       # Production build
 yarn add <pkg>   # Add dependency
 
 # ❌ DO NOT use
-npm install      # Can cause conflicts
-npm run <cmd>    # Use yarn <cmd> instead
+npm install      # ❌ Can cause conflicts - DO NOT USE
+npm run <cmd>    # ❌ Use yarn <cmd> instead
 ```
 
 ## ✨ Main Features
@@ -90,12 +90,12 @@ npm run <cmd>    # Use yarn <cmd> instead
 
 ```bash
 # System tests
-npm run test:qr          # Test QR codes
-npm run email:info       # Email system info
+yarn test:qr             # Test QR codes
+yarn email:info          # Email system info
 
 # Development tests  
-npm test                 # Unit tests
-npm run type-check       # TypeScript verification
+yarn test                # Unit tests
+yarn type-check          # TypeScript verification
 
 # Test API (dev only)
 curl http://localhost:3000/api/test/emails
@@ -154,12 +154,12 @@ src/
 │   └── payment/               # Payment system
 | Script | Description |
 |--------|-------------|
-| `npm run dev` | Development startup |
-| `npm run build` | Production build |
-| `npm run test` | Unit tests |
-| `npm run test:qr` | QR code system tests |
-| `npm run email:info` | Email system information |
-| `npm run db:migrate` | Database migrations |
+| `yarn dev` | Development startup |
+| `yarn build` | Production build |
+| `yarn test` | Unit tests |
+| `yarn test:qr` | QR code system tests |
+| `yarn email:info` | Email system information |
+| `yarn db:migrate` | Database migrations |
 | `docker-compose up -d` | Standard mode (3 containers) |
 | `docker-compose -f docker-compose.yml -f docker-compose.dev.yml up -d` | Development mode |
 | `docker-compose -f docker-compose.yml -f docker-compose.prod.yml up -d` | Production mode |

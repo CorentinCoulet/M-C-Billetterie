@@ -1,0 +1,226 @@
+groups:
+  - name: business_alerts
+    interval: 1m
+    rules:
+      # ============================================================================
+      # REVENUE & SALES ALERTS
+      # ============================================================================
+      
+      - alert: LowTicketSales
+        expr: rate(billetterie_tickets_sold_total[1h]) < 10
+        for: 2h
+        labels:
+          severity: warning
+          category: business
+        annotations:
+          summary: "Ventes de tickets faibles détectées"
+          description: "Seulement {{ $value | humanize }} tickets vendus dans la dernière heure (moyenne sur 2h). Cible: > 10/h"
+          
+      - alert: NoSalesInLastHour
+        expr: increase(billetterie_tickets_sold_total[1h]) == 0
+        for: 1h
+        labels:
+          severity: warning
+          category: business
+        annotations:
+          summary: "Aucune vente dans la dernière heure"
+          description: "Aucun ticket n'a été vendu durant l'heure écoulée. Vérifier le système de paiement."
+
+      - alert: HighRefundRate
+        expr: |
+          (rate(billetterie_orders_total{status="REFUNDED"}[1h]) 
+          / rate(billetterie_orders_total[1h])) > 0.1
+        for: 30m
+        labels:
+          severity: warning
+          category: business
+        annotations:
+          summary: "Taux de remboursement élevé"
+          description: "Le taux de remboursement est de {{ $value | humanizePercentage }}. Seuil: 10%"
+
+      - alert: RevenueDrop
+        expr: |
+          rate(billetterie_revenue_total[1h]) 
+          < rate(billetterie_revenue_total[1h] offset 24h) * 0.5
+        for: 2h
+        labels:
+          severity: warning
+          category: business
+        annotations:
+          summary: "Chute du revenu détectée"
+          description: "Le revenu actuel est 50% inférieur au même moment hier"
+
+      # ============================================================================
+      # PAYMENT ALERTS
+      # ============================================================================
+      
+      - alert: PaymentFailureSpike
+        expr: rate(billetterie_payments_total{status="failure"}[5m]) > 10
+        for: 5m
+        labels:
+          severity: critical
+          category: payment
+        annotations:
+          summary: "Pic d'échecs de paiement"
+          description: "{{ $value | humanize }} échecs de paiement par seconde. Vérifier l'intégration Stripe."
+
+      - alert: LowPaymentSuccessRate
+        expr: |
+          (rate(billetterie_payments_total{status="success"}[10m]) 
+          / rate(billetterie_payments_total[10m])) < 0.9
+        for: 10m
+        labels:
+          severity: critical
+          category: payment
+        annotations:
+          summary: "Taux de succès des paiements faible"
+          description: "Seulement {{ $value | humanizePercentage }} de succès. Seuil: 90%"
+
+      - alert: PaymentProcessorDown
+        expr: |
+          absent(billetterie_payments_total) 
+          or rate(billetterie_payments_total[5m]) == 0
+        for: 5m
+        labels:
+          severity: critical
+          category: payment
+        annotations:
+          summary: "Processeur de paiement potentiellement hors ligne"
+          description: "Aucune transaction de paiement détectée depuis 5 minutes"
+
+      # ============================================================================
+      # USER & SESSION ALERTS
+      # ============================================================================
+      
+      - alert: HighActiveUsers
+        expr: billetterie_active_user_sessions > 10000
+        for: 5m
+        labels:
+          severity: warning
+          category: capacity
+        annotations:
+          summary: "Nombre élevé d'utilisateurs actifs"
+          description: "{{ $value }} sessions actives. Surveiller les performances."
+
+      - alert: UserDropoff
+        expr: |
+          rate(billetterie_active_user_sessions[5m]) 
+          < rate(billetterie_active_user_sessions[5m] offset 1h) * 0.5
+        for: 10m
+        labels:
+          severity: warning
+          category: user_experience
+        annotations:
+          summary: "Chute du nombre d'utilisateurs actifs"
+          description: "Les utilisateurs actifs ont chuté de 50% comparé à il y a 1h"
+
+      - alert: HighAuthFailureRate
+        expr: |
+          rate(billetterie_auth_attempts_total{status="failure"}[5m]) 
+          / rate(billetterie_auth_attempts_total[5m]) > 0.3
+        for: 10m
+        labels:
+          severity: warning
+          category: security
+        annotations:
+          summary: "Taux élevé d'échecs d'authentification"
+          description: "{{ $value | humanizePercentage }} d'échecs d'authentification. Possible attaque?"
+
+      # ============================================================================
+      # CONVERSION & FUNNEL ALERTS
+      # ============================================================================
+      
+      - alert: LowConversionRate
+        expr: |
+          (rate(billetterie_orders_total{status="COMPLETED"}[1h]) 
+          / rate(billetterie_http_requests_total{route="/events"}[1h])) < 0.01
+        for: 1h
+        labels:
+          severity: warning
+          category: conversion
+        annotations:
+          summary: "Taux de conversion faible"
+          description: "Taux de conversion < 1%. Vérifier l'expérience utilisateur."
+
+      - alert: HighCartAbandonment
+        expr: |
+          (rate(billetterie_orders_total{status="PENDING"}[1h]) 
+          - rate(billetterie_orders_total{status="COMPLETED"}[1h])) 
+          / rate(billetterie_orders_total{status="PENDING"}[1h]) > 0.7
+        for: 30m
+        labels:
+          severity: warning
+          category: conversion
+        annotations:
+          summary: "Taux élevé d'abandon de panier"
+          description: "{{ $value | humanizePercentage }} des paniers sont abandonnés"
+
+      # ============================================================================
+      # QR CODE & TICKET ALERTS
+      # ============================================================================
+      
+      - alert: HighInvalidQRCodeRate
+        expr: |
+          rate(billetterie_qr_codes_validated_total{status="invalid"}[5m]) 
+          / rate(billetterie_qr_codes_validated_total[5m]) > 0.2
+        for: 10m
+        labels:
+          severity: warning
+          category: tickets
+        annotations:
+          summary: "Taux élevé de QR codes invalides"
+          description: "{{ $value | humanizePercentage }} des validations échouent. Problème de génération?"
+
+      - alert: NoQRValidations
+        expr: rate(billetterie_qr_codes_validated_total[30m]) == 0
+        for: 1h
+        labels:
+          severity: info
+          category: tickets
+        annotations:
+          summary: "Aucune validation de QR code"
+          description: "Aucun QR code n'a été validé depuis 1h. Normal si aucun événement en cours."
+
+      # ============================================================================
+      # EMAIL & NOTIFICATIONS
+      # ============================================================================
+      
+      - alert: HighEmailFailureRate
+        expr: |
+          rate(billetterie_emails_sent_total{status="failure"}[5m]) 
+          / rate(billetterie_emails_sent_total[5m]) > 0.1
+        for: 10m
+        labels:
+          severity: warning
+          category: notification
+        annotations:
+          summary: "Taux élevé d'échecs d'envoi d'emails"
+          description: "{{ $value | humanizePercentage }} des emails échouent. Vérifier le service SMTP."
+
+      # ============================================================================
+      # EVENT & CAPACITY ALERTS
+      # ============================================================================
+      
+      - alert: EventNearCapacity
+        expr: |
+          (billetterie_tickets_sold_total 
+          / billetterie_events_capacity_total) > 0.9
+        for: 5m
+        labels:
+          severity: info
+          category: capacity
+        annotations:
+          summary: "Événement proche de la capacité maximale"
+          description: "Un événement a atteint {{ $value | humanizePercentage }} de sa capacité"
+
+      - alert: EventSoldOut
+        expr: |
+          (billetterie_tickets_sold_total 
+          >= billetterie_events_capacity_total)
+        for: 1m
+        labels:
+          severity: info
+          category: capacity
+        annotations:
+          summary: "Événement complet"
+          description: "Un événement a atteint sa capacité maximale"

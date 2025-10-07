@@ -1,0 +1,251 @@
+{
+  "dashboard": {
+    "title": "Billetterie - Business Metrics",
+    "tags": ["billetterie", "business"],
+    "timezone": "browser",
+    "schemaVersion": 16,
+    "version": 1,
+    "refresh": "1m",
+    "panels": [
+      {
+        "title": "Revenue Today",
+        "type": "stat",
+        "gridPos": {
+          "x": 0,
+          "y": 0,
+          "w": 6,
+          "h": 4
+        },
+        "targets": [
+          {
+            "expr": "increase(billetterie_revenue_total[24h]) / 100",
+            "legendFormat": "EUR"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "currencyEUR",
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                { "value": 0, "color": "red" },
+                { "value": 1000, "color": "yellow" },
+                { "value": 5000, "color": "green" }
+              ]
+            }
+          }
+        }
+      },
+      {
+        "title": "Tickets Sold Today",
+        "type": "stat",
+        "gridPos": {
+          "x": 6,
+          "y": 0,
+          "w": 6,
+          "h": 4
+        },
+        "targets": [
+          {
+            "expr": "increase(billetterie_tickets_sold_total[24h])"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "short",
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                { "value": 0, "color": "red" },
+                { "value": 50, "color": "yellow" },
+                { "value": 200, "color": "green" }
+              ]
+            }
+          }
+        }
+      },
+      {
+        "title": "Orders Created Today",
+        "type": "stat",
+        "gridPos": {
+          "x": 12,
+          "y": 0,
+          "w": 6,
+          "h": 4
+        },
+        "targets": [
+          {
+            "expr": "increase(billetterie_orders_total[24h])"
+          }
+        ]
+      },
+      {
+        "title": "Active Users",
+        "type": "stat",
+        "gridPos": {
+          "x": 18,
+          "y": 0,
+          "w": 6,
+          "h": 4
+        },
+        "targets": [
+          {
+            "expr": "billetterie_active_user_sessions"
+          }
+        ]
+      },
+      {
+        "title": "Revenue Over Time",
+        "type": "graph",
+        "gridPos": {
+          "x": 0,
+          "y": 4,
+          "w": 24,
+          "h": 8
+        },
+        "targets": [
+          {
+            "expr": "rate(billetterie_revenue_total[1h]) * 3600 / 100",
+            "legendFormat": "Revenue per hour (EUR)"
+          }
+        ]
+      },
+      {
+        "title": "Tickets Sold by Event Type",
+        "type": "piechart",
+        "gridPos": {
+          "x": 0,
+          "y": 12,
+          "w": 12,
+          "h": 8
+        },
+        "targets": [
+          {
+            "expr": "sum by (event_type) (increase(billetterie_tickets_sold_total[24h]))",
+            "legendFormat": "{{event_type}}"
+          }
+        ]
+      },
+      {
+        "title": "Orders by Status",
+        "type": "piechart",
+        "gridPos": {
+          "x": 12,
+          "y": 12,
+          "w": 12,
+          "h": 8
+        },
+        "targets": [
+          {
+            "expr": "sum by (status) (increase(billetterie_orders_total[24h]))",
+            "legendFormat": "{{status}}"
+          }
+        ]
+      },
+      {
+        "title": "Conversion Funnel",
+        "type": "bargauge",
+        "gridPos": {
+          "x": 0,
+          "y": 20,
+          "w": 24,
+          "h": 6
+        },
+        "targets": [
+          {
+            "expr": "increase(billetterie_http_requests_total{route=~'/events.*'}[1h])",
+            "legendFormat": "Event Views"
+          },
+          {
+            "expr": "increase(billetterie_orders_total{status='PENDING'}[1h])",
+            "legendFormat": "Orders Started"
+          },
+          {
+            "expr": "increase(billetterie_orders_total{status='COMPLETED'}[1h])",
+            "legendFormat": "Orders Completed"
+          },
+          {
+            "expr": "increase(billetterie_tickets_sold_total[1h])",
+            "legendFormat": "Tickets Sold"
+          }
+        ]
+      },
+      {
+        "title": "Average Order Value",
+        "type": "stat",
+        "gridPos": {
+          "x": 0,
+          "y": 26,
+          "w": 8,
+          "h": 4
+        },
+        "targets": [
+          {
+            "expr": "(rate(billetterie_revenue_total[1h]) / rate(billetterie_orders_total{status='COMPLETED'}[1h])) / 100"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "currencyEUR"
+          }
+        }
+      },
+      {
+        "title": "Payment Success Rate",
+        "type": "gauge",
+        "gridPos": {
+          "x": 8,
+          "y": 26,
+          "w": 8,
+          "h": 4
+        },
+        "targets": [
+          {
+            "expr": "rate(billetterie_payments_total{status='success'}[5m]) / rate(billetterie_payments_total[5m]) * 100"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "percent",
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                { "value": 0, "color": "red" },
+                { "value": 90, "color": "yellow" },
+                { "value": 95, "color": "green" }
+              ]
+            }
+          }
+        }
+      },
+      {
+        "title": "Refund Rate",
+        "type": "gauge",
+        "gridPos": {
+          "x": 16,
+          "y": 26,
+          "w": 8,
+          "h": 4
+        },
+        "targets": [
+          {
+            "expr": "rate(billetterie_orders_total{status='REFUNDED'}[1h]) / rate(billetterie_orders_total[1h]) * 100"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "percent",
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                { "value": 0, "color": "green" },
+                { "value": 5, "color": "yellow" },
+                { "value": 10, "color": "red" }
+              ]
+            }
+          }
+        }
+      }
+    ]
+  }
+}

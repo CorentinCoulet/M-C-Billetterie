@@ -134,7 +134,7 @@ spec:
       containers:
       - name: migrate
         image: $registry/billetterie:$VERSION
-        command: ["npm", "run", "prisma:migrate:deploy"]
+        command: ["yarn", "prisma:migrate:deploy"]
         envFrom:
         - secretRef:
             name: billetterie-secrets

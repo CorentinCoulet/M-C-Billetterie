@@ -71,7 +71,7 @@ SUPPORT_EMAIL=support@billetterie.com
 
 ```bash
 # Les dépendances sont déjà installées
-npm install handlebars nodemailer @types/handlebars @types/nodemailer
+yarn add handlebars nodemailer @types/handlebars @types/nodemailer
 ```
 
 ## 📧 Utilisation
@@ -114,14 +114,14 @@ await emailService.sendTicketEmail(
 
 ## 🧪 Tests
 
-### Via NPM Scripts
+### Via Yarn Scripts
 
 ```bash
 # Information du système
-npm run email:info
+yarn email:info
 
 # Tests des templates (si SMTP configuré)
-npm run test:emails
+yarn test:emails
 ```
 
 ### Via API (développement uniquement)

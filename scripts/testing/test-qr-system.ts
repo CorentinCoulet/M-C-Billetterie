@@ -1,14 +1,14 @@
 #!/usr/bin/env node
 
 /**
- * Script de test pour le système de QR codes
+ * Script test for the QR code system
  * 
- * Usage: npm run test:qr
+ * Usage: yarn test:qr
  */
 
-import { PrismaClient } from '../src/generated/prisma';
-import qrRotationService from '../src/services/qrRotationService';
-import ticketService from '../src/services/ticketQRService';
+import { PrismaClient } from '../../src/generated/prisma';
+import qrRotationService from '../../src/services/qrRotationService';
+import ticketService from '../../src/services/ticketQRService';
 
 const prisma = new PrismaClient();
 
@@ -59,7 +59,8 @@ async function testQRSystem() {
     const ticket = await ticketService.createTicket({
       eventId: testEvent.id,
       userId: testUser.id,
-      seatNumber: 'A1'
+      seatNumber: 'A1',
+      status: 'paid'
     });
 
     console.log(`✅ Created ticket: ${ticket.id}\n`);
@@ -86,6 +87,11 @@ async function testQRSystem() {
     console.log(`   QR Code stored on ticket: ${qrDataStart !== -1 ? 'Yes' : 'No'}`);
 
     // For testing, we'll create the expected QR content manually
+    // Generate the correct checksum
+    const crypto = await import('crypto');
+    const checksumData = `${ticket.id}-${testEvent.id}-${testUser.id}`;
+    const correctChecksum = crypto.createHash('md5').update(checksumData).digest('hex');
+    
     const testQRContent = JSON.stringify({
       ticketId: ticket.id,
       eventId: testEvent.id,
@@ -95,7 +101,7 @@ async function testQRSystem() {
       eventDate: testEvent.date.toISOString(),
       issuedAt: new Date().toISOString(),
       token: qrResult.qrCodeToken,
-      checksum: 'test-checksum', // In real validation, this would be calculated
+      checksum: correctChecksum,
       ticketCode: ticket.code
     });
 
