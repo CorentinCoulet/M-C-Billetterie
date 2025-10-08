@@ -37,10 +37,19 @@ yarn start
 ## Commandes disponibles
 
 ```bash
-# Test unique
+# Tests Artillery (Load Testing)
 yarn perf:load      # Test de charge normal
 yarn perf:stress    # Test de stress
 yarn perf:capacity  # Test de capacité
+yarn perf:artillery # Test Artillery standard
+yarn perf:artillery:extreme # Test de charge extrême
+yarn perf:artillery:report  # Générer un rapport HTML
+
+# Tests Jest (Benchmarks)
+yarn perf:api       # Benchmarks des API endpoints
+yarn perf:db        # Benchmarks de la base de données
+yarn perf:cache     # Tests de performance du cache Redis
+yarn perf:all       # Tous les tests de performance Jest
 
 # Tous les tests (environ 20 minutes)
 yarn perf:test

@@ -31,10 +31,10 @@ RUN yarn prisma generate
 COPY . .
 
 # Remove any existing .next directory and recreate with proper permissions
+# Optimized: only chown specific directories, not entire /app (too slow on Windows)
 RUN rm -rf .next && \
     mkdir -p uploads .next/cache logs && \
-    chown -R nextjs:nodejs /app && \
-    chmod -R 755 /app
+    chown -R nextjs:nodejs uploads .next logs prisma 2>/dev/null || true
 
 # Switch to non-root user
 USER nextjs

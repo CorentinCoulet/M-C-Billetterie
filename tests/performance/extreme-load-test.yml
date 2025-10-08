@@ -1,0 +1,36 @@
+# Artillery Stress Test - Extreme Load
+# To test system limits
+
+config:
+  target: "http://localhost:3000"
+  phases:
+    # Progressive ramp up to 1000 users/sec
+    - duration: 60
+      arrivalRate: 100
+      rampTo: 500
+      name: "Ramp up to 500"
+    
+    # High sustained load
+    - duration: 120
+      arrivalRate: 500
+      name: "Sustained 500 users/sec"
+    
+    # Extreme spike
+    - duration: 30
+      arrivalRate: 1000
+      name: "Spike to 1000 users/sec"
+
+  http:
+    timeout: 30
+    pool: 200
+
+  plugins:
+    metrics-by-endpoint: {}
+
+scenarios:
+  - name: "Simple Load"
+    flow:
+      - get:
+          url: "/api/events"
+      - get:
+          url: "/api/health"
