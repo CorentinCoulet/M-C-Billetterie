@@ -23,7 +23,7 @@ export async function GET(request: NextRequest) {
           heapTotal: Math.round(process.memoryUsage().heapTotal / 1024 / 1024),
           external: Math.round(process.memoryUsage().external / 1024 / 1024)
         },
-        version: process.env.npm_package_version || process.env.NEXT_PUBLIC_APP_VERSION || '1.0.0'
+        version: process.env.VERSION || process.env.NEXT_PUBLIC_APP_VERSION || '1.0.0'
       }, { status: 200 });
     }
     

@@ -15,7 +15,7 @@ const traceExporter = new OTLPTraceExporter({
 const sdk = new NodeSDK({
   resource: resourceFromAttributes({
     [ATTR_SERVICE_NAME]: 'billetterie-api',
-    [ATTR_SERVICE_VERSION]: process.env.npm_package_version || '1.0.0',
+    [ATTR_SERVICE_VERSION]: process.env.APP_VERSION || process.env.VERSION || '1.0.0',
     'deployment.environment': process.env.NODE_ENV || 'development',
   }),
   traceExporter: traceExporter as any,

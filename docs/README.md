@@ -61,11 +61,13 @@ Cet   ```bash
 
 ### 🚀 Quick Start
 
+> **⚠️ IMPORTANT : Utiliser YARN uniquement - npm n'est pas supporté**
+
 1. **Installation**
    ```bash
    git clone <repo>
    cd billetterie
-   yarn install
+   yarn install  # Utiliser UNIQUEMENT yarn
    cp .env.example .env
    ```
 

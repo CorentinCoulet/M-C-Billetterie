@@ -1,39 +1,42 @@
 #!/bin/bash
-# Block npm usage script
-# Place this as npm in your PATH (with higher priority than real npm)
+# Enforce Yarn usage script
+# This script has been updated as npm is no longer used in this project
 
-echo "🚫 NPM usage blocked in this project!"
-echo "📦 Please use Yarn instead:"
+echo "✅ This project uses YARN exclusively!"
+echo "📦 All package management is done through Yarn:"
 echo ""
 
-# Convert npm commands to yarn equivalents
-case "$1" in
-  "install"|"i")
-    echo "   Use: yarn install"
-    ;;
-  "run")
-    echo "   Use: yarn $2"
-    ;;
-  "add")
-    echo "   Use: yarn add $2"
-    ;;
-  "remove"|"uninstall")
-    echo "   Use: yarn remove $2"
-    ;;
-  "start")
-    echo "   Use: yarn start"
-    ;;
-  "test")
-    echo "   Use: yarn test"
-    ;;
-  "audit")
-    echo "   Use: yarn audit"
-    ;;
-  *)
-    echo "   Convert 'npm $*' to equivalent yarn command"
-    ;;
-esac
+# Show yarn equivalents for any attempted command
+if [ $# -gt 0 ]; then
+  case "$1" in
+    "install"|"i")
+      echo "   Command: yarn install"
+      ;;
+    "run")
+      echo "   Command: yarn $2"
+      ;;
+    "add")
+      echo "   Command: yarn add $2"
+      ;;
+    "remove"|"uninstall")
+      echo "   Command: yarn remove $2"
+      ;;
+    "start")
+      echo "   Command: yarn start"
+      ;;
+    "test")
+      echo "   Command: yarn test"
+      ;;
+    "audit")
+      echo "   Command: yarn audit"
+      ;;
+    *)
+      echo "   Use Yarn commands instead"
+      ;;
+  esac
+  echo ""
+fi
 
-echo ""
-echo "📚 See YARN_GUIDE.md for complete migration guide"
-exit 1
+echo "📚 This project is fully configured for Yarn"
+echo "🔧 Package manager: yarn@1.22.22"
+exit 0

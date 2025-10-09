@@ -1,16 +1,16 @@
 /**
- * Application constants - Fichier unifié
- * Remplace src/lib/constants.ts et une partie de src/config/app.ts
+ * Application constants - Unified file
+ * Replaces src/lib/constants.ts and part of src/config/app.ts
  */
 
 // ==================== Application Information ====================
 export const APP_CONFIG = {
-  NAME: process.env.APP_NAME || 'M&C Society Billetterie',
-  VERSION: process.env.npm_package_version || process.env.VERSION || '1.0.0',
+  NAME: process.env.APP_NAME || 'M&C Society Ticketing',
+  VERSION: process.env.VERSION || process.env.NEXT_PUBLIC_APP_VERSION || '1.0.0',
   URL: process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000',
   API_URL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api',
-  DEFAULT_LOCALE: process.env.DEFAULT_LOCALE || 'fr',
-  SUPPORTED_LOCALES: (process.env.SUPPORTED_LOCALES || 'fr,en').split(','),
+  DEFAULT_LOCALE: process.env.DEFAULT_LOCALE || 'en',
+  SUPPORTED_LOCALES: (process.env.SUPPORTED_LOCALES || 'en,fr').split(','),
   DEFAULT_TIMEZONE: process.env.DEFAULT_TIMEZONE || 'Europe/Paris',
   DEFAULT_CURRENCY: process.env.DEFAULT_CURRENCY || 'EUR',
 };
@@ -100,9 +100,9 @@ export const UPLOAD_CONFIG = {
 
 // ==================== Email ====================
 export const EMAIL_CONFIG = {
-  FROM: process.env.EMAIL_FROM || 'noreply@billetterie.com',
-  CONTACT: process.env.CONTACT_EMAIL || 'contact@billetterie.com',
-  SUPPORT: process.env.SUPPORT_EMAIL || 'support@billetterie.com',
+  FROM: process.env.EMAIL_FROM || 'noreply@ticketing.com',
+  CONTACT: process.env.CONTACT_EMAIL || 'contact@ticketing.com',
+  SUPPORT: process.env.SUPPORT_EMAIL || 'support@ticketing.com',
   FROM_NAME: process.env.EMAIL_FROM_NAME || 'M&C Society',
   TEMPLATES_DIR: 'src/templates/emails',
   SUBJECTS: {
@@ -144,23 +144,23 @@ export const CACHE_CONFIG = {
 export const EVENT_CATEGORIES = [
   'Concert',
   'Festival',
-  'Théâtre',
-  'Cinéma',
+  'Theater',
+  'Cinema',
   'Sport',
-  'Conférence',
-  'Exposition',
-  'Atelier',
-  'Gastronomie',
-  'Autre',
+  'Conference',
+  'Exhibition',
+  'Workshop',
+  'Gastronomy',
+  'Other',
 ];
 
 export const TICKET_TYPES = [
   'Standard',
   'VIP',
   'Early Bird',
-  'Groupe',
-  'Étudiant',
-  'Enfant',
+  'Group',
+  'Student',
+  'Child',
   'Senior',
 ];
 
@@ -273,7 +273,7 @@ export const MONITORING_CONFIG = {
   TRACING_ENABLED: process.env.MONITORING_TRACING_ENABLED === 'true',
 };
 
-// ==================== Export par défaut pour compatibilité ====================
+// ==================== Default Export for Compatibility ====================
 export default {
   APP_CONFIG,
   AUTH_CONFIG,

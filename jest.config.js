@@ -1,10 +1,15 @@
 /** @type {import("jest").Config} **/
 module.exports = {
-  testEnvironment: "node",
+  testEnvironment: "jsdom",
   preset: "ts-jest/presets/default",
   setupFilesAfterEnv: ["<rootDir>/tests/utils/setup.ts"],
   transform: {
-    "^.+\\.ts$": "ts-jest",
+    "^.+\\.(ts|tsx)$": ["ts-jest", { 
+      tsconfig: {
+        jsx: "react-jsx",
+        esModuleInterop: true
+      }
+    }],
   },
   moduleNameMapper: {
     "^@/(.*)$": "<rootDir>/src/$1",
@@ -30,8 +35,8 @@ module.exports = {
     "<rootDir>/.idea/",
   ],
   testMatch: [
-    "**/__tests__/**/*.(ts|js)",
-    "**/*.(test|spec).(ts|js)"
+    "**/__tests__/**/*.(ts|tsx|js|jsx)",
+    "**/*.(test|spec).(ts|tsx|js|jsx)"
   ],
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'json', 'node'],
   verbose: true,

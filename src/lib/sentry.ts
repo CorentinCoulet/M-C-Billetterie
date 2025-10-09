@@ -10,7 +10,7 @@ import { logger } from '../lib/logger';
 export const SENTRY_CONFIG = {
   dsn: process.env.SENTRY_DSN,
   environment: process.env.NODE_ENV || 'development',
-  release: process.env.npm_package_version || process.env.VERSION || '1.0.0',
+  release: process.env.APP_VERSION || process.env.VERSION || '1.0.0',
   
   // Performance Monitoring
   tracesSampleRate: process.env.NODE_ENV === 'production' ? 0.1 : 1.0,
@@ -37,7 +37,7 @@ export const SENTRY_CONFIG = {
   ],
   
   // Data sanitization
-  beforeSend: (event) => {
+  beforeSend: (event: Sentry.ErrorEvent) => {
     // Remove sensitive data
     if (event.request) {
       if (event.request.headers) {
@@ -60,7 +60,7 @@ export const SENTRY_CONFIG = {
     
     // Remove exception values that contain sensitive data
     if (event.exception?.values) {
-      event.exception.values.forEach(exception => {
+      event.exception.values.forEach((exception: any) => {
         if (exception.value?.includes('password') || 
             exception.value?.includes('token') || 
             exception.value?.includes('secret')) {
@@ -112,7 +112,7 @@ export function initSentry() {
  */
 export class ErrorHandler {
   static captureException(error: Error, context?: Record<string, any>) {
-    logger.error('Exception captured:', error, context);
+    logger.error({ error: error.message, context }, 'Exception captured');
     
     if (SENTRY_CONFIG.dsn) {
       Sentry.withScope(scope => {
@@ -129,7 +129,8 @@ export class ErrorHandler {
   }
 
   static captureMessage(message: string, level: 'info' | 'warning' | 'error' = 'info', context?: Record<string, any>) {
-    logger[level === 'warning' ? 'warn' : level](message, context);
+    const logFn = level === 'warning' ? logger.warn : level === 'error' ? logger.error : logger.info;
+    logFn(context || {}, message);
     
     if (SENTRY_CONFIG.dsn) {
       Sentry.withScope(scope => {
@@ -176,10 +177,10 @@ export class ErrorHandler {
 
   static startTransaction(name: string, operation: string) {
     if (SENTRY_CONFIG.dsn) {
-      return Sentry.startSpan({
+      return Sentry.startInactiveSpan({
         name,
         op: operation
-      }, (span) => span);
+      });
     }
     return null;
   }
@@ -288,14 +289,14 @@ export class PerformanceMonitor {
         });
 
         if (transaction) {
-          transaction.setData('duration', duration);
-          transaction.setData('success', true);
+          transaction.setAttribute('duration', duration);
+          transaction.setAttribute('success', true);
           if (context) {
             Object.keys(context).forEach(key => {
-              transaction.setData(key, context[key]);
+              transaction.setAttribute(key, context[key]);
             });
           }
-          transaction.finish();
+          transaction.end();
         }
 
         resolve(result);
@@ -310,10 +311,10 @@ export class PerformanceMonitor {
         });
 
         if (transaction) {
-          transaction.setData('duration', duration);
-          transaction.setData('success', false);
-          transaction.setData('error', (error as Error).message);
-          transaction.finish();
+          transaction.setAttribute('duration', duration);
+          transaction.setAttribute('success', false);
+          transaction.setAttribute('error', (error as Error).message);
+          transaction.end();
         }
 
         ErrorHandler.captureException(error as Error, {

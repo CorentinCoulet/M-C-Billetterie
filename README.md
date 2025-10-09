@@ -24,7 +24,7 @@
 ## ⚡ Quick Start
 
 > **⚠️ IMPORTANT: This project uses YARN exclusively!**  
-> Do not use `npm` - it can cause dependency conflicts.
+> Ne pas utiliser `npm` - cela peut causer des conflits de dépendances.
 
 ```bash
 # Clone and install
@@ -46,18 +46,17 @@ yarn dev
 
 ## 📦 Package Manager
 
-**YARN ONLY** - This project is optimized for yarn and may have issues with npm.
+**YARN UNIQUEMENT** - Ce projet est optimisé pour yarn.
 
 ```bash
-# ✅ Recommended commands
-yarn install      # Install dependencies
-yarn dev         # Development server
-yarn build       # Production build
-yarn add <pkg>   # Add dependency
+# ✅ Commandes recommandées
+yarn install      # Installer les dépendances
+yarn dev         # Serveur de développement
+yarn build       # Build de production
+yarn add <pkg>   # Ajouter une dépendance
 
-# ❌ DO NOT use
-npm install      # ❌ Can cause conflicts - DO NOT USE
-npm run <cmd>    # ❌ Use yarn <cmd> instead
+# ❌ NE PAS utiliser d'alternatives à yarn
+# Ce projet utilise YARN exclusivement
 ```
 
 ## ✨ Main Features

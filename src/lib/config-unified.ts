@@ -20,7 +20,7 @@ export const ENV = {
 
 export const APP = {
   NAME: process.env.APP_NAME || 'M&C Society Ticketing',
-  VERSION: process.env.npm_package_version || process.env.VERSION || '1.0.0',
+  VERSION: process.env.APP_VERSION || process.env.VERSION || '1.0.0',
   URL: process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000',
   API_URL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api',
   DEFAULT_LOCALE: process.env.DEFAULT_LOCALE || 'fr',

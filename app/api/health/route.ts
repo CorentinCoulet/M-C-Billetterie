@@ -155,7 +155,7 @@ class HealthChecker {
       status: overallStatus,
       timestamp: new Date().toISOString(),
       uptime,
-      version: process.env.npm_package_version || '1.0.0',
+      version: process.env.VERSION || process.env.NEXT_PUBLIC_APP_VERSION || '1.0.0',
       services,
       metrics: {
         memory,
@@ -186,7 +186,7 @@ class HealthChecker {
         environment: process.env.NODE_ENV || 'development',
         architecture: 'Next.js API Routes',
         database: database.status,
-        version: process.env.npm_package_version || '1.0.0',
+        version: process.env.VERSION || process.env.NEXT_PUBLIC_APP_VERSION || '1.0.0',
         uptime: process.uptime(),
       };
     } catch (error) {

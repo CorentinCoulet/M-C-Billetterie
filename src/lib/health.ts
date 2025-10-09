@@ -288,7 +288,7 @@ export async function getHealthStatus(): Promise<HealthStatus> {
       status: overallStatus,
       timestamp: new Date().toISOString(),
       uptime: process.uptime(),
-      version: process.env.npm_package_version || '1.0.0',
+      version: process.env.APP_VERSION || process.env.VERSION || '1.0.0',
       environment: process.env.NODE_ENV || 'development',
       checks
     };
@@ -300,13 +300,13 @@ export async function getHealthStatus(): Promise<HealthStatus> {
     return healthStatus;
 
   } catch (error) {
-    logger.error('Health check failed:', error);
+    logger.error({ err: error }, 'Health check failed');
     
     return {
       status: 'unhealthy',
       timestamp: new Date().toISOString(),
       uptime: process.uptime(),
-      version: process.env.npm_package_version || '1.0.0',
+      version: process.env.APP_VERSION || process.env.VERSION || '1.0.0',
       environment: process.env.NODE_ENV || 'development',
       checks: {
         database: { status: 'down', responseTime: 0, message: 'Health check system failed' },
@@ -330,7 +330,7 @@ export async function getSimpleHealthStatus(): Promise<{ status: string; timesta
       timestamp: new Date().toISOString()
     };
   } catch (error) {
-    logger.error('Simple health check failed:', error);
+    logger.error({ err: error }, 'Simple health check failed');
     
     return {
       status: 'ERROR',

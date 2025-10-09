@@ -65,7 +65,7 @@ git checkout -b docs/amélioration-documentation
 ### Installation développement
 
 ```bash
-# Installation des dépendances
+# Installation des dépendances (TOUJOURS utiliser yarn)
 yarn install
 
 # Configuration de la base de données

@@ -11,6 +11,7 @@ Ce guide décrit le processus complet de déploiement en production de l'applica
 - Kubernetes CLI (kubectl)
 - Helm (v3.0+)
 - Node.js (v18+)
+- Yarn (v1.22+)
 - Git
 
 ### Environnements externes
