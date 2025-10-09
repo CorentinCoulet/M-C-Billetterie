@@ -48,6 +48,7 @@
     "test:api": "jest --testPathPattern=tests/api",
     "test:property": "jest --testPathPattern=tests/property-based",
     "test:mutation": "stryker run",
+    "test:mutation:property": "stryker run -c stryker-property-based.conf.json",
     "test:mutation:ci": "stryker run --ci",
     "test:debug": "node --inspect-brk node_modules/.bin/jest --runInBand",
     "_comment_docker": "=== Docker ===",

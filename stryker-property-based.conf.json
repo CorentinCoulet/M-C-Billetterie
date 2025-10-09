@@ -4,16 +4,12 @@
   "testRunner": "jest",
   "coverageAnalysis": "perTest",
   "mutate": [
-    "src/services/**/*.ts",
-    "src/controllers/**/*.ts",
-    "src/utils/**/*.ts",
-    "!src/**/*.test.ts",
-    "!src/**/*.spec.ts",
-    "!src/**/__tests__/**"
+    "tests/property-based/**/*.test.ts"
   ],
-  "mutator": {
-    "plugins": ["@stryker-mutator/typescript-checker"],
-    "excludedMutations": []
+  "jest": {
+    "projectType": "custom",
+    "configFile": "jest.config.js",
+    "enableFindRelatedTests": true
   },
   "thresholds": {
     "high": 80,
@@ -21,21 +17,21 @@
     "break": 50
   },
   "timeoutMS": 300000,
-  "concurrency": 4,
+  "concurrency": 2,
   "reporters": ["html", "clear-text", "progress", "json"],
   "htmlReporter": {
-    "fileName": "coverage/mutation/index.html"
+    "fileName": "coverage/mutation-property-based/index.html"
   },
   "jsonReporter": {
-    "fileName": "coverage/mutation/mutation.json"
+    "fileName": "coverage/mutation-property-based/mutation.json"
   },
   "checkers": [],
-  "tsconfigFile": "tsconfig.json",
   "ignorePatterns": [
     "node_modules",
     "coverage",
     "dist",
-    ".next",
-    "tests"
-  ]
+    ".next"
+  ],
+  "ignoreStatic": true,
+  "disableTypeChecks": true
 }

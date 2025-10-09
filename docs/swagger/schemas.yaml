@@ -1,0 +1,504 @@
+components:
+  schemas:
+    # ============================================
+    # EVENT SCHEMAS
+    # ============================================
+    
+    Event:
+      type: object
+      required:
+        - id
+        - title
+        - description
+        - date
+        - location
+        - maxAttendees
+        - price
+        - status
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Identifiant unique de l'événement
+          example: "clp1234567890"
+        title:
+          type: string
+          minLength: 3
+          maxLength: 100
+          description: Titre de l'événement
+          example: "Concert de Jazz"
+        slug:
+          type: string
+          description: URL-friendly slug
+          example: "concert-de-jazz-2025"
+        description:
+          type: string
+          minLength: 10
+          maxLength: 5000
+          description: Description détaillée
+          example: "Un concert exceptionnel avec les meilleurs artistes jazz"
+        date:
+          type: string
+          format: date-time
+          description: Date et heure de début
+          example: "2025-12-31T20:00:00Z"
+        endDate:
+          type: string
+          format: date-time
+          nullable: true
+          description: Date et heure de fin (optionnel)
+          example: "2025-12-31T23:00:00Z"
+        location:
+          type: string
+          description: Lieu de l'événement
+          example: "Olympia, Paris"
+        maxAttendees:
+          type: integer
+          minimum: 1
+          maximum: 100000
+          description: Nombre maximum de participants
+          example: 500
+        availableSeats:
+          type: integer
+          minimum: 0
+          description: Places disponibles restantes
+          example: 250
+        price:
+          type: number
+          format: decimal
+          minimum: 0
+          description: Prix du billet en euros
+          example: 45.99
+        currency:
+          type: string
+          default: EUR
+          enum: [EUR, USD, GBP]
+          description: Devise
+          example: "EUR"
+        status:
+          type: string
+          enum: [DRAFT, PUBLISHED, CANCELLED, COMPLETED]
+          description: Statut de l'événement
+          example: "PUBLISHED"
+        category:
+          type: string
+          nullable: true
+          description: Catégorie de l'événement
+          example: "Music"
+        imageUrl:
+          type: string
+          format: uri
+          nullable: true
+          description: URL de l'image de couverture
+          example: "https://cdn.billetterie.app/events/concert-jazz.jpg"
+        organizerId:
+          type: string
+          format: uuid
+          description: ID de l'organisateur
+          example: "clp0987654321"
+        organizer:
+          $ref: '#/components/schemas/UserBasic'
+        createdAt:
+          type: string
+          format: date-time
+          description: Date de création
+        updatedAt:
+          type: string
+          format: date-time
+          description: Dernière mise à jour
+    
+    CreateEventRequest:
+      type: object
+      required:
+        - title
+        - description
+        - date
+        - location
+        - maxAttendees
+        - price
+      properties:
+        title:
+          type: string
+          minLength: 3
+          maxLength: 100
+          example: "Concert de Jazz"
+        description:
+          type: string
+          minLength: 10
+          maxLength: 5000
+          example: "Un concert exceptionnel"
+        date:
+          type: string
+          format: date-time
+          example: "2025-12-31T20:00:00Z"
+        endDate:
+          type: string
+          format: date-time
+          nullable: true
+          example: "2025-12-31T23:00:00Z"
+        location:
+          type: string
+          minLength: 3
+          example: "Olympia, Paris"
+        maxAttendees:
+          type: integer
+          minimum: 1
+          maximum: 100000
+          example: 500
+        price:
+          type: number
+          minimum: 0
+          example: 45.99
+        currency:
+          type: string
+          default: EUR
+          enum: [EUR, USD, GBP]
+        category:
+          type: string
+          nullable: true
+          example: "Music"
+        imageUrl:
+          type: string
+          format: uri
+          nullable: true
+    
+    UpdateEventRequest:
+      type: object
+      properties:
+        title:
+          type: string
+          minLength: 3
+          maxLength: 100
+        description:
+          type: string
+          minLength: 10
+          maxLength: 5000
+        date:
+          type: string
+          format: date-time
+        endDate:
+          type: string
+          format: date-time
+          nullable: true
+        location:
+          type: string
+        maxAttendees:
+          type: integer
+          minimum: 1
+        price:
+          type: number
+          minimum: 0
+        status:
+          type: string
+          enum: [DRAFT, PUBLISHED, CANCELLED, COMPLETED]
+        category:
+          type: string
+          nullable: true
+        imageUrl:
+          type: string
+          format: uri
+          nullable: true
+    
+    EventsResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Event'
+        meta:
+          $ref: '#/components/schemas/PaginationMeta'
+
+    # ============================================
+    # USER SCHEMAS
+    # ============================================
+    
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: "clp1234567890"
+        email:
+          type: string
+          format: email
+          example: "user@example.com"
+        firstName:
+          type: string
+          example: "Jean"
+        lastName:
+          type: string
+          example: "Dupont"
+        role:
+          type: string
+          enum: [USER, ORGANIZER, ADMIN]
+          example: "USER"
+        isVerified:
+          type: boolean
+          example: true
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+    
+    UserBasic:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        email:
+          type: string
+          format: email
+        firstName:
+          type: string
+        lastName:
+          type: string
+        role:
+          type: string
+          enum: [USER, ORGANIZER, ADMIN]
+
+    # ============================================
+    # ORDER SCHEMAS
+    # ============================================
+    
+    Order:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: "clp1234567890"
+        userId:
+          type: string
+          format: uuid
+        eventId:
+          type: string
+          format: uuid
+        event:
+          $ref: '#/components/schemas/Event'
+        quantity:
+          type: integer
+          minimum: 1
+          maximum: 10
+          example: 2
+        totalPrice:
+          type: number
+          format: decimal
+          example: 91.98
+        status:
+          type: string
+          enum: [PENDING, PAID, CANCELLED, REFUNDED]
+          example: "PAID"
+        paymentIntentId:
+          type: string
+          nullable: true
+          example: "pi_1234567890"
+        tickets:
+          type: array
+          items:
+            $ref: '#/components/schemas/Ticket'
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+    
+    CreateOrderRequest:
+      type: object
+      required:
+        - eventId
+        - quantity
+      properties:
+        eventId:
+          type: string
+          format: uuid
+          example: "clp1234567890"
+        quantity:
+          type: integer
+          minimum: 1
+          maximum: 10
+          example: 2
+
+    # ============================================
+    # TICKET SCHEMAS
+    # ============================================
+    
+    Ticket:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: "clp1234567890"
+        orderId:
+          type: string
+          format: uuid
+        eventId:
+          type: string
+          format: uuid
+        userId:
+          type: string
+          format: uuid
+        qrCode:
+          type: string
+          description: Code QR unique pour validation
+          example: "QR_abc123def456"
+        status:
+          type: string
+          enum: [VALID, USED, CANCELLED, EXPIRED]
+          example: "VALID"
+        purchasedAt:
+          type: string
+          format: date-time
+        usedAt:
+          type: string
+          format: date-time
+          nullable: true
+        expiresAt:
+          type: string
+          format: date-time
+          nullable: true
+
+    # ============================================
+    # ORGANIZATION SCHEMAS
+    # ============================================
+    
+    Organization:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: "clp1234567890"
+        name:
+          type: string
+          example: "My Event Company"
+        description:
+          type: string
+          nullable: true
+          example: "Professional event organization"
+        ownerId:
+          type: string
+          format: uuid
+        members:
+          type: array
+          items:
+            $ref: '#/components/schemas/OrganizationMember'
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+    
+    OrganizationMember:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        organizationId:
+          type: string
+          format: uuid
+        userId:
+          type: string
+          format: uuid
+        user:
+          $ref: '#/components/schemas/UserBasic'
+        role:
+          type: string
+          enum: [OWNER, ADMIN, MANAGER, MEMBER, VIEWER]
+          example: "MEMBER"
+        joinedAt:
+          type: string
+          format: date-time
+
+    # ============================================
+    # PAGINATION SCHEMAS
+    # ============================================
+    
+    PaginationMeta:
+      type: object
+      properties:
+        page:
+          type: integer
+          minimum: 1
+          example: 1
+        limit:
+          type: integer
+          minimum: 1
+          maximum: 100
+          example: 20
+        total:
+          type: integer
+          minimum: 0
+          example: 150
+        totalPages:
+          type: integer
+          minimum: 0
+          example: 8
+        hasNext:
+          type: boolean
+          example: true
+        hasPrev:
+          type: boolean
+          example: false
+
+    # ============================================
+    # ERROR SCHEMAS
+    # ============================================
+    
+    Error:
+      type: object
+      required:
+        - error
+        - message
+        - statusCode
+      properties:
+        error:
+          type: string
+          example: "Bad Request"
+        message:
+          type: string
+          example: "Invalid input data"
+        statusCode:
+          type: integer
+          example: 400
+        timestamp:
+          type: string
+          format: date-time
+        path:
+          type: string
+          example: "/api/events"
+    
+    ValidationError:
+      type: object
+      properties:
+        error:
+          type: string
+          example: "Validation Error"
+        message:
+          type: string
+          example: "One or more fields are invalid"
+        statusCode:
+          type: integer
+          example: 400
+        details:
+          type: array
+          items:
+            type: object
+            properties:
+              field:
+                type: string
+                example: "email"
+              message:
+                type: string
+                example: "Invalid email format"
+              value:
+                type: string
+                example: "invalid-email"
