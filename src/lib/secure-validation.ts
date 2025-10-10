@@ -1,6 +1,6 @@
 import DOMPurify from 'isomorphic-dompurify';
 import { z } from 'zod';
-import { logger } from '../lib/logger';
+import { safeLogger } from '../lib/logger';
 
 /**
  * Advanced Input Validation and Sanitization
@@ -86,7 +86,7 @@ export const secureString = (options: {
       // Check for dangerous patterns
       const hasDangerousPattern = DANGEROUS_PATTERNS.some(pattern => pattern.test(value));
       if (hasDangerousPattern) {
-        logger.warn('Dangerous pattern detected in input', { 
+        safeLogger.warn('Dangerous pattern detected in input', { 
           value: value.substring(0, 100),
           patterns: DANGEROUS_PATTERNS.filter(p => p.test(value)).map(p => p.toString())
         });

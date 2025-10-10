@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import prisma from '@/lib/prisma';
 import crypto from 'crypto';
 import QRCode from 'qrcode';
@@ -146,7 +147,7 @@ export class QRCodeService {
       });
       return true;
     } catch (error) {
-      console.error('Error marking ticket as scanned:', error);
+      logger.error({ error, token }, 'Error marking ticket as scanned');
       return false;
     }
   }
@@ -378,7 +379,7 @@ export class QRCodeService {
       });
       return true;
     } catch (error) {
-      console.error('Error setting QR code rotation interval:', error);
+      logger.error({ error, ticketId, intervalHours }, 'Error setting QR code rotation interval');
       return false;
     }
   }

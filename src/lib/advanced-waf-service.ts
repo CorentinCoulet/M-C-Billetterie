@@ -5,7 +5,7 @@
 
 import { NextFunction, Request, Response } from 'express';
 import { incidentResponseService } from './incident-response-service';
-import { logger } from './logger';
+import { safeLogger } from './logger';
 import { threatIntelligenceService } from './threat-intelligence-service';
 
 export interface WAFRule {
@@ -45,7 +45,7 @@ export class AdvancedWAFService {
    */
   middleware = (req: Request, res: Response, next: NextFunction): void => {
     this.processRequest(req, res, next).catch(error => {
-      logger.error('WAF processing error:', error);
+      safeLogger.error('WAF processing error:', error);
       next();
     });
   };
@@ -88,7 +88,7 @@ export class AdvancedWAFService {
 
     // Log clean requests in verbose mode
     if (process.env.WAF_VERBOSE === 'true') {
-      logger.debug('WAF: Clean request', {
+      safeLogger.debug('WAF: Clean request', {
         ip: clientIP,
         method: req.method,
         url: req.url,
@@ -135,7 +135,7 @@ export class AdvancedWAFService {
             blocked: rule.action === 'block'
           };
 
-          logger.warn('WAF rule triggered', {
+          safeLogger.warn('WAF rule triggered', {
             rule: rule.name,
             ip: clientIP,
             severity: rule.severity,
@@ -285,7 +285,7 @@ export class AdvancedWAFService {
       enabled: true
     });
 
-    logger.info(`WAF initialized with ${this.rules.size} rules`);
+    safeLogger.info(`WAF initialized with ${this.rules.size} rules`);
   }
 
   /**
@@ -293,7 +293,7 @@ export class AdvancedWAFService {
    */
   addRule(rule: WAFRule): void {
     this.rules.set(rule.id, rule);
-    logger.info(`WAF rule added: ${rule.name} (${rule.id})`);
+    safeLogger.info(`WAF rule added: ${rule.name} (${rule.id})`);
   }
 
   /**
@@ -329,7 +329,7 @@ export class AdvancedWAFService {
    */
   private async handleAttackDetection(detection: AttackDetection): Promise<void> {
     // Log the attack
-    logger.error('WAF Attack Detected', detection);
+    safeLogger.error('WAF Attack Detected', detection);
     
     // Auto-block IP for critical attacks
     if (detection.severity === 'critical') {
@@ -354,7 +354,7 @@ export class AdvancedWAFService {
     // Update threat intelligence
     if (detection.severity === 'critical') {
       // Could add the IP to threat intelligence feeds
-      logger.info(`Flagging IP ${detection.clientIP} in threat intelligence`);
+      safeLogger.info(`Flagging IP ${detection.clientIP} in threat intelligence`);
     }
   }
 
@@ -378,10 +378,10 @@ export class AdvancedWAFService {
     
     setTimeout(() => {
       this.blockedIPs.delete(ip);
-      logger.info(`IP unblocked: ${ip}`);
+      safeLogger.info(`IP unblocked: ${ip}`);
     }, duration);
     
-    logger.warn(`IP temporarily blocked: ${ip} for ${duration/1000} seconds`);
+    safeLogger.warn(`IP temporarily blocked: ${ip} for ${duration/1000} seconds`);
   }
 
   /**
@@ -431,7 +431,7 @@ export class AdvancedWAFService {
       const rule = this.rules.get(config.enableRule);
       if (rule) {
         rule.enabled = true;
-        logger.info(`WAF rule enabled: ${config.enableRule}`);
+        safeLogger.info(`WAF rule enabled: ${config.enableRule}`);
       }
     }
 
@@ -439,7 +439,7 @@ export class AdvancedWAFService {
       const rule = this.rules.get(config.disableRule);
       if (rule) {
         rule.enabled = false;
-        logger.info(`WAF rule disabled: ${config.disableRule}`);
+        safeLogger.info(`WAF rule disabled: ${config.disableRule}`);
       }
     }
 

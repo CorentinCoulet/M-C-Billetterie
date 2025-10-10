@@ -1,4 +1,4 @@
-import { logger } from '@/lib/logger';
+import { safeLogger } from '@/lib/logger';
 interface Secret {
   id: string;
   name: string;
@@ -41,7 +41,7 @@ export class SecretRotationManager {
         return daysSinceRotation >= this.DEFAULT_CONFIG.rotationIntervalDays - this.DEFAULT_CONFIG.notifyBeforeDays;
       });
     } catch (error) {
-      logger.error({ error: error }, '[SecretRotation] Error checking rotation:');
+      safeLogger.error({ error: error }, '[SecretRotation] Error checking rotation:');
       return [];
     }
   }
@@ -51,7 +51,7 @@ export class SecretRotationManager {
    */
   static async rotateSecret(secretName: string): Promise<boolean> {
     try {
-      logger.info(`[SecretRotation] Starting rotation for: ${secretName}`);
+      safeLogger.info(`[SecretRotation] Starting rotation for: ${secretName}`);
 
       // 1. Generate new secret
       const newValue = await this.generateSecureSecret();
@@ -67,10 +67,10 @@ export class SecretRotationManager {
       // 4. Record rotation
       await this.recordRotation(secretName);
 
-      logger.info(`[SecretRotation] Successfully rotated: ${secretName}`);
+      safeLogger.info(`[SecretRotation] Successfully rotated: ${secretName}`);
       return true;
     } catch (error) {
-      logger.error({ error: error }, `[SecretRotation] Failed to rotate ${secretName}:`);
+      safeLogger.error({ error: error }, `[SecretRotation] Failed to rotate ${secretName}:`);
       return false;
     }
   }
@@ -124,7 +124,7 @@ export class SecretRotationManager {
    * Triggers graceful redeployment
    */
   private static async triggerRedeploy(secretName: string): Promise<void> {
-    logger.info(`[SecretRotation] Triggering redeploy for: ${secretName}`);
+    safeLogger.info(`[SecretRotation] Triggering redeploy for: ${secretName}`);
     // TODO: Implement according to your CI/CD
     // Example: webhook to GitHub Actions, ArgoCD, etc.
   }
@@ -134,7 +134,7 @@ export class SecretRotationManager {
    */
   private static async recordRotation(secretName: string): Promise<void> {
     // TODO: Implement according to your logging system
-    logger.info(`[SecretRotation] Recorded rotation for: ${secretName} at ${new Date().toISOString()}`);
+    safeLogger.info(`[SecretRotation] Recorded rotation for: ${secretName} at ${new Date().toISOString()}`);
   }
 
   // Private methods for each provider
@@ -148,22 +148,22 @@ export class SecretRotationManager {
     }
 
     // TODO: HashiCorp Vault implementation
-    logger.info(`[Vault] Updating secret: ${name}`);
+    safeLogger.info(`[Vault] Updating secret: ${name}`);
   }
 
   private static async updateAWSSecret(name: string, value: string): Promise<void> {
     // TODO: AWS Secrets Manager implementation
-    logger.info(`[AWS] Updating secret: ${name}`);
+    safeLogger.info(`[AWS] Updating secret: ${name}`);
   }
 
   private static async updateAzureSecret(name: string, value: string): Promise<void> {
     // TODO: Azure Key Vault implementation
-    logger.info(`[Azure] Updating secret: ${name}`);
+    safeLogger.info(`[Azure] Updating secret: ${name}`);
   }
 
   private static async updateGCPSecret(name: string, value: string): Promise<void> {
     // TODO: GCP Secret Manager implementation
-    logger.info(`[GCP] Updating secret: ${name}`);
+    safeLogger.info(`[GCP] Updating secret: ${name}`);
   }
 
   private static getDaysSince(date: Date): number {
@@ -181,17 +181,17 @@ export class SecretRotationManager {
    * Daily rotation check cron task
    */
   static async dailyRotationCheck(): Promise<void> {
-    logger.info('[SecretRotation] Running daily rotation check...');
+    safeLogger.info('[SecretRotation] Running daily rotation check...');
     const secretsToRotate = await this.checkRotationNeeded();
 
     if (secretsToRotate.length > 0) {
-      logger.info(`[SecretRotation] Found ${secretsToRotate.length} secrets needing rotation`);
+      safeLogger.info(`[SecretRotation] Found ${secretsToRotate.length} secrets needing rotation`);
       
       for (const secret of secretsToRotate) {
         await this.rotateSecret(secret.name);
       }
     } else {
-      logger.info('[SecretRotation] No secrets need rotation');
+      safeLogger.info('[SecretRotation] No secrets need rotation');
     }
   }
 }

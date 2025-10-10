@@ -7,7 +7,7 @@ import { PrismaClient } from '../generated/prisma';
 import { Request, Response } from 'express';
 import Redis from 'ioredis';
 import * as os from 'os';
-import { logger } from './logger';
+import { safeLogger } from './logger';
 
 interface HealthCheckResult {
   status: 'healthy' | 'degraded' | 'unhealthy';
@@ -136,12 +136,12 @@ export class AdvancedHealthService {
 
       // Log unhealthy status
       if (overallStatus !== 'healthy') {
-        logger.warn('Health check shows degraded/unhealthy status', result);
+        safeLogger.warn('Health check shows degraded/unhealthy status', result);
       }
 
       return result;
     } catch (error) {
-      logger.error('Health check failed:', error);
+      safeLogger.error('Health check failed:', error);
       
       return {
         status: 'unhealthy',
@@ -570,7 +570,7 @@ export class AdvancedHealthService {
         
         res.status(statusCode).json(healthResult);
       } catch (error) {
-        logger.error('Health check endpoint failed:', error);
+        safeLogger.error('Health check endpoint failed:', error);
         res.status(503).json({
           status: 'unhealthy',
           timestamp: new Date().toISOString(),

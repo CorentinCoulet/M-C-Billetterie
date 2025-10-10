@@ -4,7 +4,7 @@
  */
 
 import crypto from 'crypto';
-import { logger } from './logger';
+import { safeLogger } from './logger';
 
 interface EnvConfig {
   name: string;
@@ -68,7 +68,7 @@ export class EnvValidator {
     this.errors = [];
     this.warnings = [];
 
-    logger.info('🔍 Validating environment variables...');
+    safeLogger.info('🔍 Validating environment variables...');
 
     // Validate each configuration
     for (const config of ENV_CONFIG) {
@@ -83,9 +83,9 @@ export class EnvValidator {
     const isValid = this.errors.length === 0;
     
     if (isValid) {
-      logger.info('✅ All environment variables are valid');
+      safeLogger.info('✅ All environment variables are valid');
     } else {
-      logger.error('❌ Environment validation failed', { 
+      safeLogger.error('❌ Environment validation failed', { 
         errors: this.errors,
         warnings: this.warnings 
       });
@@ -326,7 +326,7 @@ export class EnvValidator {
     }
 
     if (validation.warnings.length > 0) {
-      logger.warn('⚠️  Environment validation warnings:', validation.warnings);
+      safeLogger.warn('⚠️  Environment validation warnings:', validation.warnings);
     }
   }
 }

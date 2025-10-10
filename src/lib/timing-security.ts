@@ -1,5 +1,5 @@
 import crypto from 'crypto';
-import { logger } from '../lib/logger';
+import { safeLogger } from '../lib/logger';
 
 /**
  * Timing Attack Protection Utilities
@@ -162,7 +162,7 @@ export class TimingBasedRateLimit {
       const backoffMs = Math.min(this.baseBackoffMs * backoffMultiplier, this.maxBackoffMs);
       attempt.backoffUntil = now + backoffMs;
       
-      logger.warn('Rate limit triggered with exponential backoff', {
+      safeLogger.warn('Rate limit triggered with exponential backoff', {
         identifier,
         attempts: attempt.count,
         backoffUntil: new Date(attempt.backoffUntil).toISOString(),

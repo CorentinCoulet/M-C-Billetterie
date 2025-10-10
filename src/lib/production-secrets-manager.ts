@@ -4,7 +4,7 @@
  */
 
 import { getSecret, setSecret, validateCriticalSecrets } from '../config/secrets';
-import { logger } from './logger';
+import { safeLogger } from './logger';
 
 export interface SecretsValidationResult {
   isValid: boolean;
@@ -58,7 +58,7 @@ class ProductionSecretsManager {
    * Validate all production secrets
    */
   async validateProductionSecrets(): Promise<SecretsValidationResult> {
-    logger.info('🔍 Validating production secrets...');
+    safeLogger.info('🔍 Validating production secrets...');
     
     const result = await validateCriticalSecrets();
     const warnings: string[] = [];
@@ -124,9 +124,9 @@ class ProductionSecretsManager {
     const isValid = result.missing.length === 0 && result.errors.length === 0;
     
     if (isValid) {
-      logger.info('✅ All production secrets validated successfully');
+      safeLogger.info('✅ All production secrets validated successfully');
     } else {
-      logger.error('❌ Production secrets validation failed', {
+      safeLogger.error('❌ Production secrets validation failed', {
         missing: result.missing,
         errors: result.errors
       });
@@ -171,15 +171,15 @@ class ProductionSecretsManager {
    * Generate secure secrets for missing ones
    */
   async generateMissingSecrets(missingSecrets: string[]): Promise<void> {
-    logger.info(`🔧 Generating ${missingSecrets.length} missing secrets...`);
+    safeLogger.info(`🔧 Generating ${missingSecrets.length} missing secrets...`);
 
     for (const secretKey of missingSecrets) {
       try {
         const generatedValue = this.generateSecureSecret(secretKey);
         await setSecret(secretKey, generatedValue);
-        logger.info(`✅ Generated secret for ${secretKey}`);
+        safeLogger.info(`✅ Generated secret for ${secretKey}`);
       } catch (error) {
-        logger.error(`❌ Failed to generate secret for ${secretKey}:`, error);
+        safeLogger.error(`❌ Failed to generate secret for ${secretKey}:`, error);
         throw error;
       }
     }
@@ -248,7 +248,7 @@ class ProductionSecretsManager {
           });
         }
       } catch (error) {
-        logger.warn(`Could not check rotation for ${key}:`, error);
+        safeLogger.warn(`Could not check rotation for ${key}:`, error);
       }
     }
 
@@ -272,7 +272,7 @@ class ProductionSecretsManager {
    * Rotate a specific secret
    */
   async rotateSecret(key: string): Promise<void> {
-    logger.info(`🔄 Rotating secret: ${key}`);
+    safeLogger.info(`🔄 Rotating secret: ${key}`);
 
     try {
       // Generate new secret
@@ -284,13 +284,13 @@ class ProductionSecretsManager {
       // Update rotation metadata
       await this.updateRotationMetadata(key, new Date());
       
-      logger.info(`✅ Successfully rotated secret: ${key}`);
+      safeLogger.info(`✅ Successfully rotated secret: ${key}`);
       
       // Notify monitoring system
       this.notifySecretRotated(key);
       
     } catch (error) {
-      logger.error(`❌ Failed to rotate secret ${key}:`, error);
+      safeLogger.error(`❌ Failed to rotate secret ${key}:`, error);
       throw error;
     }
   }
@@ -315,7 +315,7 @@ class ProductionSecretsManager {
    */
   private notifySecretRotated(key: string): void {
     // TODO: Integrate with your monitoring/alerting system
-    logger.info(`📢 Secret rotated notification: ${key}`);
+    safeLogger.info(`📢 Secret rotated notification: ${key}`);
   }
 
   /**
@@ -371,15 +371,15 @@ export const productionSecretsManager = new ProductionSecretsManager();
  * Initialize production secrets management
  */
 export async function initializeProductionSecrets(): Promise<SecretsValidationResult> {
-  logger.info('🚀 Initializing production secrets management...');
+  safeLogger.info('🚀 Initializing production secrets management...');
   
   const validation = await productionSecretsManager.validateProductionSecrets();
   
   if (!validation.isValid) {
-    logger.error('❌ Production secrets validation failed');
+    safeLogger.error('❌ Production secrets validation failed');
     
     if (process.env.AUTO_GENERATE_SECRETS === 'true') {
-      logger.info('🔧 Auto-generating missing secrets...');
+      safeLogger.info('🔧 Auto-generating missing secrets...');
       await productionSecretsManager.generateMissingSecrets(validation.missingSecrets);
       
       // Re-validate after generation
@@ -394,7 +394,7 @@ export async function initializeProductionSecrets(): Promise<SecretsValidationRe
  * Schedule automatic secret rotation
  */
 export function scheduleSecretRotation(): void {
-  logger.info('⏰ Scheduling automatic secret rotation...');
+  safeLogger.info('⏰ Scheduling automatic secret rotation...');
   
   // Check every 24 hours
   setInterval(async () => {
@@ -402,18 +402,18 @@ export function scheduleSecretRotation(): void {
       const rotationRequired = await productionSecretsManager.checkRotationRequirements();
       
       if (rotationRequired.length > 0) {
-        logger.info(`🔄 ${rotationRequired.length} secrets require rotation`);
+        safeLogger.info(`🔄 ${rotationRequired.length} secrets require rotation`);
         
         for (const secret of rotationRequired) {
           if (process.env.AUTO_ROTATE_SECRETS === 'true') {
             await productionSecretsManager.rotateSecret(secret.key);
           } else {
-            logger.warn(`Secret ${secret.key} requires rotation but auto-rotation is disabled`);
+            safeLogger.warn(`Secret ${secret.key} requires rotation but auto-rotation is disabled`);
           }
         }
       }
     } catch (error) {
-      logger.error('❌ Secret rotation check failed:', error);
+      safeLogger.error('❌ Secret rotation check failed:', error);
     }
   }, 24 * 60 * 60 * 1000); // 24 hours
 }

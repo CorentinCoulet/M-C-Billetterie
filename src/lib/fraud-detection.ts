@@ -5,7 +5,7 @@
 
 import type { Order, User } from '../generated/prisma';
 import { AuditService } from './audit-service';
-import { logger } from './logger';
+import { safeLogger } from './logger';
 import prisma from './prisma';
 
 interface FraudScore {
@@ -317,7 +317,7 @@ export class FraudDetectionService {
         ipAddress: 'system'
       });
 
-      logger.warn(`User ${userId} blocked due to fraud detection`, fraudScore);
+      safeLogger.warn(`User ${userId} blocked due to fraud detection`, fraudScore);
     } else if (fraudScore.risk === 'high') {
       // Log high-risk activity but don't block
       await AuditService.logEvent({
@@ -333,7 +333,7 @@ export class FraudDetectionService {
         ipAddress: 'system'
       });
 
-      logger.warn(`High-risk activity detected for user ${userId}`, fraudScore);
+      safeLogger.warn(`High-risk activity detected for user ${userId}`, fraudScore);
     }
   }
 

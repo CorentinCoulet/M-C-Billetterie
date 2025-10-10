@@ -5,7 +5,7 @@
 
 import { NextApiRequest, NextApiResponse } from 'next';
 import { AuditService } from '../lib/audit-service';
-import { logger } from '../lib/logger';
+import { safeLogger } from '../lib/logger';
 import { mfaService } from '../lib/mfa-service';
 
 interface AuthenticatedRequest extends Request {
@@ -104,7 +104,7 @@ export const requireMFA = async (
     next();
 
   } catch (error) {
-    logger.error('MFA middleware error:', error);
+    safeLogger.error('MFA middleware error:', error);
     res.status(500).json({ 
       error: 'Internal server error',
       code: 'MFA_CHECK_FAILED'
@@ -185,7 +185,7 @@ export const verifyMFACode = async (
     next();
 
   } catch (error) {
-    logger.error('MFA verification error:', error);
+    safeLogger.error('MFA verification error:', error);
     res.status(500).json({ 
       error: 'Internal server error',
       code: 'MFA_VERIFICATION_FAILED'
@@ -231,7 +231,7 @@ export const checkMFASession = (maxAge: number = 8 * 60 * 60 * 1000) => {
           details: { sessionAge: age },
           result: 'success',
           riskLevel: 'low'
-        }).catch(err => logger.error('Failed to log MFA session expiry:', err));
+        }).catch(err => safeLogger.error('Failed to log MFA session expiry:', err));
       }
     }
 

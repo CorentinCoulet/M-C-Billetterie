@@ -213,39 +213,167 @@ curl -X POST https://billetterie.app/api/auth/refresh \
 
 ## ❌ Codes d'erreur
 
-L'API utilise les codes HTTP standards :
+L'API utilise les codes HTTP standards avec des codes d'erreur applicatifs pour un débogage précis :
 
-| Code | Nom                  | Description                                      |
-|------|----------------------|--------------------------------------------------|
-| 200  | OK                   | Requête réussie                                  |
-| 201  | Created              | Ressource créée avec succès                      |
-| 204  | No Content           | Requête réussie, pas de contenu                  |
-| 400  | Bad Request          | Données de requête invalides                     |
-| 401  | Unauthorized         | Token manquant ou invalide                       |
-| 403  | Forbidden            | Permissions insuffisantes                        |
-| 404  | Not Found            | Ressource non trouvée                            |
-| 409  | Conflict             | Conflit (ex: email déjà utilisé)                 |
-| 422  | Unprocessable Entity | Erreur de validation                             |
-| 429  | Too Many Requests    | Rate limit dépassé                               |
-| 500  | Internal Server Error| Erreur serveur                                   |
-| 503  | Service Unavailable  | Service temporairement indisponible              |
+| Code HTTP | Nom                  | Description                                      |
+|-----------|----------------------|--------------------------------------------------|
+| 200       | OK                   | Requête réussie                                  |
+| 201       | Created              | Ressource créée avec succès                      |
+| 204       | No Content           | Requête réussie, pas de contenu                  |
+| 400       | Bad Request          | Données de requête invalides                     |
+| 401       | Unauthorized         | Token manquant ou invalide                       |
+| 403       | Forbidden            | Permissions insuffisantes                        |
+| 404       | Not Found            | Ressource non trouvée                            |
+| 409       | Conflict             | Conflit (ex: email déjà utilisé)                 |
+| 422       | Unprocessable Entity | Erreur de validation                             |
+| 429       | Too Many Requests    | Rate limit dépassé                               |
+| 500       | Internal Server Error| Erreur serveur                                   |
+| 503       | Service Unavailable  | Service temporairement indisponible              |
 
 ### Format des erreurs
 
+Toutes les erreurs suivent ce format standardisé :
+
 ```json
 {
-  "error": "Validation Error",
-  "message": "Invalid email format",
-  "statusCode": 400,
-  "timestamp": "2025-10-09T18:30:00Z",
-  "path": "/api/auth/register",
-  "details": [
-    {
+  "success": false,
+  "error": {
+    "code": "AUTH_001",
+    "message": "Invalid credentials provided",
+    "details": {
       "field": "email",
-      "message": "Email must be a valid email address",
-      "value": "invalid-email"
+      "reason": "Email not found"
     }
-  ]
+  }
+}
+```
+
+### Codes d'erreur applicatifs
+
+#### 🔐 Authentication & Authorization (AUTH_xxx)
+
+| Code     | HTTP | Description                           |
+|----------|------|---------------------------------------|
+| AUTH_001 | 401  | Invalid credentials                   |
+| AUTH_002 | 401  | Token expired                         |
+| AUTH_003 | 401  | Unauthorized access                   |
+| AUTH_004 | 403  | Forbidden - insufficient permissions  |
+| AUTH_005 | 401  | Token missing                         |
+| AUTH_006 | 401  | Token invalid                         |
+| AUTH_007 | 403  | Email not verified                    |
+| AUTH_008 | 403  | Account disabled                      |
+
+#### 🎫 Tickets (TICKET_xxx)
+
+| Code       | HTTP | Description                           |
+|------------|------|---------------------------------------|
+| TICKET_001 | 404  | Ticket not found                      |
+| TICKET_002 | 400  | Ticket already used                   |
+| TICKET_003 | 400  | QR code invalid                       |
+| TICKET_004 | 400  | Ticket expired                        |
+| TICKET_005 | 400  | Event has passed                      |
+
+#### 🎪 Events (EVENT_xxx)
+
+| Code      | HTTP | Description                           |
+|-----------|------|---------------------------------------|
+| EVENT_001 | 404  | Event not found                       |
+| EVENT_002 | 403  | Event not published                   |
+| EVENT_003 | 400  | Event is full                         |
+| EVENT_004 | 400  | Event cancelled                       |
+
+#### 📦 Orders (ORDER_xxx)
+
+| Code      | HTTP | Description                           |
+|-----------|------|---------------------------------------|
+| ORDER_001 | 404  | Order not found                       |
+| ORDER_002 | 400  | Order already paid                    |
+| ORDER_003 | 400  | Order expired                         |
+| ORDER_004 | 400  | Order cancelled                       |
+
+#### 💳 Payments (PAY_xxx)
+
+| Code    | HTTP | Description                           |
+|---------|------|---------------------------------------|
+| PAY_001 | 402  | Payment failed                        |
+| PAY_002 | 500  | Stripe error                          |
+| PAY_003 | 400  | Refund failed                         |
+| PAY_004 | 400  | Invalid webhook signature             |
+
+#### 👤 Users (USER_xxx)
+
+| Code     | HTTP | Description                           |
+|----------|------|---------------------------------------|
+| USER_001 | 404  | User not found                        |
+| USER_002 | 409  | User already exists                   |
+
+#### ⚠️ Validation (VAL_xxx)
+
+| Code    | HTTP | Description                           |
+|---------|------|---------------------------------------|
+| VAL_001 | 400  | Validation error                      |
+
+#### 🔧 Generic (GEN_xxx)
+
+| Code    | HTTP | Description                           |
+|---------|------|---------------------------------------|
+| GEN_001 | 404  | Resource not found                    |
+| GEN_002 | 409  | Resource conflict                     |
+| GEN_003 | 429  | Rate limit exceeded                   |
+| GEN_500 | 500  | Internal server error                 |
+| GEN_501 | 500  | Database error                        |
+
+### Exemples de réponses d'erreur
+
+**Erreur d'authentification:**
+
+```json
+{
+  "success": false,
+  "error": {
+    "code": "AUTH_001",
+    "message": "Invalid email or password"
+  }
+}
+```
+
+**Erreur de validation:**
+
+```json
+{
+  "success": false,
+  "error": {
+    "code": "VAL_001",
+    "message": "Validation failed",
+    "details": {
+      "errors": [
+        {
+          "field": "email",
+          "message": "Email must be a valid email address"
+        },
+        {
+          "field": "password",
+          "message": "Password must be at least 8 characters"
+        }
+      ]
+    }
+  }
+}
+```
+
+**Ticket déjà utilisé:**
+
+```json
+{
+  "success": false,
+  "error": {
+    "code": "TICKET_002",
+    "message": "Ticket has already been scanned",
+    "details": {
+      "scannedAt": "2025-10-09T18:30:00Z",
+      "scannedBy": "organizer@example.com"
+    }
+  }
 }
 ```
 

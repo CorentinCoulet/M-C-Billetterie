@@ -6,7 +6,7 @@
 import { PrismaClient } from '../generated/prisma';
 import { EventEmitter } from 'events';
 import { AuditService } from './audit-service';
-import { logger } from './logger';
+import { safeLogger } from './logger';
 
 const auditService = new AuditService();
 
@@ -456,7 +456,7 @@ export class ZeroTrustService extends EventEmitter {
       await this.detectBehavioralAnomalies();
     }, 15 * 60 * 1000);
 
-    logger.info('Zero Trust continuous monitoring started');
+    safeLogger.info('Zero Trust continuous monitoring started');
   }
 
   /**
@@ -464,7 +464,7 @@ export class ZeroTrustService extends EventEmitter {
    */
   async updateAccessPolicies(policies: any[]): Promise<void> {
     // Implement dynamic policy updates
-    logger.info('Access policies updated', { count: policies.length });
+    safeLogger.info('Access policies updated', { count: policies.length });
   }
 
   // Helper methods (simplified implementations)

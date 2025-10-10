@@ -1,4 +1,4 @@
-import { logger } from './logger';
+import { safeLogger } from './logger';
 import prisma from './prisma';
 
 /**
@@ -295,12 +295,12 @@ export async function getHealthStatus(): Promise<HealthStatus> {
 
     // Log health status
     const totalTime = Date.now() - startTime;
-    logger.info(`Health check completed in ${totalTime}ms - Status: ${overallStatus}`);
+    safeLogger.info(`Health check completed in ${totalTime}ms - Status: ${overallStatus}`);
 
     return healthStatus;
 
   } catch (error) {
-    logger.error({ err: error }, 'Health check failed');
+    safeLogger.error({ err: error }, 'Health check failed');
     
     return {
       status: 'unhealthy',
@@ -330,7 +330,7 @@ export async function getSimpleHealthStatus(): Promise<{ status: string; timesta
       timestamp: new Date().toISOString()
     };
   } catch (error) {
-    logger.error({ err: error }, 'Simple health check failed');
+    safeLogger.error({ err: error }, 'Simple health check failed');
     
     return {
       status: 'ERROR',

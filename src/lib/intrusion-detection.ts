@@ -1,6 +1,6 @@
 import { PrismaClient } from '../generated/prisma';
 import { Request } from 'express';
-import { logger } from '../lib/logger';
+import { safeLogger } from '../lib/logger';
 
 const prisma = new PrismaClient();
 
@@ -295,7 +295,7 @@ export class IntrusionDetectionService {
       };
 
     } catch (error) {
-      logger.error('Error in behavioral analysis:', error);
+      safeLogger.error('Error in behavioral analysis:', error);
       return {
         threatLevel: 'LOW',
         threatType: 'BEHAVIORAL_ANALYSIS_ERROR',
@@ -394,9 +394,9 @@ export class IntrusionDetectionService {
         }
       });
 
-      logger.warn(`IP ${clientIP} blocked automatically: ${reason}`);
+      safeLogger.warn(`IP ${clientIP} blocked automatically: ${reason}`);
     } catch (error) {
-      logger.error('Error blocking IP:', error);
+      safeLogger.error('Error blocking IP:', error);
     }
   }
 
@@ -412,7 +412,7 @@ export class IntrusionDetectionService {
       const alertMessage = `Security Alert: ${threatLevel} threat detected from IP ${clientIP}. Threats: ${threats.join(', ')}`;
       
       // Log the alert
-      logger.warn(alertMessage);
+      safeLogger.warn(alertMessage);
 
       // Send notification to security team
       // This would integrate with your notification service
@@ -424,10 +424,10 @@ export class IntrusionDetectionService {
       // });
       
       // For now, just log the alert
-      logger.error(`SECURITY ALERT: ${threats.join(', ')} detected from IP ${clientIP} (Level: ${threatLevel})`);
+      safeLogger.error(`SECURITY ALERT: ${threats.join(', ')} detected from IP ${clientIP} (Level: ${threatLevel})`);
 
     } catch (error) {
-      logger.error('Error sending security alert:', error);
+      safeLogger.error('Error sending security alert:', error);
     }
   }
 
@@ -459,7 +459,7 @@ export class IntrusionDetectionService {
         }
       });
     } catch (error) {
-      logger.error('Error logging security event:', error);
+      safeLogger.error('Error logging security event:', error);
     }
   }
 
@@ -517,7 +517,7 @@ export class IntrusionDetectionService {
 
       return blockedIP !== null && blockedIP.expiresAt > new Date();
     } catch (error) {
-      logger.error('Error checking blocked IP:', error);
+      safeLogger.error('Error checking blocked IP:', error);
       return false;
     }
   }

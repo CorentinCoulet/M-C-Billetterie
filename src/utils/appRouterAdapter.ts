@@ -1,5 +1,6 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { logger } from '@/lib/logger';
 import { NextApiRequest, NextApiResponse } from 'next';
+import { NextRequest, NextResponse } from 'next/server';
 
 /**
  * Adapter for using Pages Router controllers with App Router
@@ -31,7 +32,7 @@ export async function adaptController(
       body = await request.json();
     } catch (error) {
       // If body parsing fails, continue with undefined body
-      console.error('Failed to parse request body:', error);
+      logger.error({ error }, 'Failed to parse request body');
     }
   }
   

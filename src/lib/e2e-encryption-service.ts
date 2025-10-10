@@ -1,5 +1,5 @@
 import { createCipheriv, createDecipheriv, createHash, pbkdf2Sync, randomBytes } from 'crypto';
-import logger from './logger';
+import { safeLogger } from './logger';
 
 interface EncryptionKey {
   id: string;
@@ -50,9 +50,9 @@ export class E2EEncryptionService {
       // Schedule key rotation check
       setInterval(() => this.checkKeyRotation(), 24 * 60 * 60 * 1000); // Daily
       
-      logger.info('E2E Encryption service initialized');
+      safeLogger.info('E2E Encryption service initialized');
     } catch (error) {
-      logger.error('Failed to initialize E2E encryption service:', error);
+      safeLogger.error('Failed to initialize E2E encryption service:', error);
       throw error;
     }
   }
@@ -149,7 +149,7 @@ export class E2EEncryptionService {
         authTag: authTag.toString('base64')
       };
     } catch (error) {
-      logger.error('Encryption failed:', error);
+      safeLogger.error('Encryption failed:', error);
       throw new Error('Failed to encrypt data');
     }
   }
@@ -178,7 +178,7 @@ export class E2EEncryptionService {
 
       return decrypted;
     } catch (error) {
-      logger.error('Decryption failed:', error);
+      safeLogger.error('Decryption failed:', error);
       throw new Error('Failed to decrypt data');
     }
   }
@@ -199,7 +199,7 @@ export class E2EEncryptionService {
           if (!result._encrypted) result._encrypted = [];
           result._encrypted.push(field);
         } catch (error) {
-          logger.error(`Failed to encrypt field ${field}:`, error);
+          safeLogger.error(`Failed to encrypt field ${field}:`, error);
         }
       }
     }
@@ -223,7 +223,7 @@ export class E2EEncryptionService {
           const encryptionResult = JSON.parse(obj[field]);
           result[field] = await this.decryptData(encryptionResult);
         } catch (error) {
-          logger.error(`Failed to decrypt field ${field}:`, error);
+          safeLogger.error(`Failed to decrypt field ${field}:`, error);
           // Keep encrypted data if decryption fails
         }
       }
@@ -283,7 +283,7 @@ export class E2EEncryptionService {
     const encryptedDEK = await this.encryptData(key.toString('base64'));
     
     // Store encrypted DEK (in production, use secure storage)
-    logger.info(`Generated DEK with ID: ${keyId}`);
+    safeLogger.info(`Generated DEK with ID: ${keyId}`);
     
     return { keyId, key };
   }
@@ -305,7 +305,7 @@ export class E2EEncryptionService {
     const daysUntilExpiry = Math.ceil((currentKey.expiresAt.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
     
     if (daysUntilExpiry <= 7) {
-      logger.warn(`Encryption key ${this.currentKeyId} expires in ${daysUntilExpiry} days`);
+      safeLogger.warn(`Encryption key ${this.currentKeyId} expires in ${daysUntilExpiry} days`);
       await this.rotateKey();
     }
   }
@@ -335,19 +335,19 @@ export class E2EEncryptionService {
       const oldKeyId = this.currentKeyId;
       this.currentKeyId = newKeyId;
       
-      logger.info(`Rotated encryption key from ${oldKeyId} to ${newKeyId}`);
+      safeLogger.info(`Rotated encryption key from ${oldKeyId} to ${newKeyId}`);
       
       // Schedule old key cleanup (after sufficient time for data re-encryption)
       setTimeout(() => {
         if (oldKeyId) {
           this.keys.delete(oldKeyId);
-          logger.info(`Cleaned up old encryption key ${oldKeyId}`);
+          safeLogger.info(`Cleaned up old encryption key ${oldKeyId}`);
         }
       }, 30 * 24 * 60 * 60 * 1000); // 30 days
       
       return newKeyId;
     } catch (error) {
-      logger.error('Key rotation failed:', error);
+      safeLogger.error('Key rotation failed:', error);
       throw error;
     }
   }
@@ -374,7 +374,7 @@ export class E2EEncryptionService {
       const randomData = randomBytes(key.keyData.length);
       key.keyData.set(randomData);
       this.keys.delete(keyId);
-      logger.info(`Wiped encryption key ${keyId} from memory`);
+      safeLogger.info(`Wiped encryption key ${keyId} from memory`);
     }
   }
 
@@ -448,7 +448,7 @@ export class E2EEncryptionService {
       
       return JSON.parse(jsonData);
     } catch (error) {
-      logger.error('Failed to restore from encrypted backup:', error);
+      safeLogger.error('Failed to restore from encrypted backup:', error);
       throw error;
     }
   }

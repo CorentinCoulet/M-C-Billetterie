@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { createTestAdapter, TestRequest, TestResponse } from './test-types';
 
 function getTestPrisma() {
@@ -443,7 +444,7 @@ export const ticketControllerAdapters = {
 
       res.status(200).json(tickets);
     } catch (error) {
-      console.error('DEBUG: Error in list:', error);
+      logger.error({ error }, 'Error in ticket list');
       res.status(500).json({ message: 'Internal server error' });
     }
   }),
@@ -570,7 +571,7 @@ export const ticketControllerAdapters = {
       const isAdmin = req.user.role === 'ADMIN';
       const isOrganizer = organizer && event && organizer.userId === req.user.id;
 
-      console.log('DEBUG getById permissions:', {
+      logger.debug({
         userId: req.user.id,
         ticketUserId: ticket.userId,
         isOwner,
@@ -578,7 +579,7 @@ export const ticketControllerAdapters = {
         isOrganizer,
         organizerId: organizer?.userId,
         eventOrganizerId: event?.organizerId
-      });
+      }, 'Checking getById permissions');
 
       if (!isOwner && !isAdmin && !isOrganizer) {
         res.status(403).json({ message: 'Forbidden: insufficient permissions' });
@@ -706,13 +707,13 @@ export const ticketControllerAdapters = {
       const isAdmin = req.user.role === 'ADMIN';
       const isOrganizer = organizer && event && organizer.userId === req.user.id;
       
-      console.log('DEBUG validate permissions:', {
+      logger.debug({
         userId: req.user.id,
         isAdmin,
         isOrganizer,
         organizerId: organizer?.userId,
         eventOrganizerId: event?.organizerId
-      });
+      }, 'Checking validate permissions');
       
       if (!isAdmin && !isOrganizer) {
         res.status(403).json({ message: 'Forbidden: insufficient permissions' });
@@ -781,14 +782,14 @@ export const ticketControllerAdapters = {
       const isAdmin = req.user.role === 'ADMIN';
       const isOrganizer = organizer && event && organizer.userId === req.user.id;
       
-      console.log('DEBUG cancel permissions:', {
+      logger.debug({
         userId: req.user.id,
         ticketUserId: ticket.userId,
         isOwner,
         isAdmin,
         isOrganizer,
         organizerId: organizer?.userId
-      });
+      }, 'Checking cancel permissions');
       
       if (!isOwner && !isAdmin && !isOrganizer) {
         res.status(403).json({ message: 'Forbidden: insufficient permissions' });
@@ -848,12 +849,12 @@ export const ticketControllerAdapters = {
       const isOwner = ticket.userId === req.user.id;
       const isAdmin = req.user.role === 'ADMIN';
       
-      console.log('DEBUG download permissions:', {
+      logger.debug({
         userId: req.user.id,
         ticketUserId: ticket.userId,
         isOwner,
         isAdmin
-      });
+      }, 'Checking download permissions');
       
       if (!isOwner && !isAdmin) {
         res.status(403).json({ message: 'Forbidden: insufficient permissions' });

@@ -5,7 +5,7 @@
 
 import { PrismaClient } from '../generated/prisma';
 import crypto from 'crypto';
-import { logger } from './logger';
+import { safeLogger } from './logger';
 import { emailService } from './mailer';
 
 const prisma = new PrismaClient();
@@ -134,7 +134,7 @@ class GDPRComplianceManager {
     // Log the request
     await this.logGDPRRequest(request);
 
-    logger.info('GDPR request created', {
+    safeLogger.info('GDPR request created', {
       requestId: request.id,
       type: request.type,
       email: request.email
@@ -170,7 +170,7 @@ class GDPRComplianceManager {
     // Process the request
     await this.executeGDPRRequest(request);
 
-    logger.info('GDPR request verified and processed', {
+    safeLogger.info('GDPR request verified and processed', {
       requestId: request.id,
       type: request.type
     });
@@ -209,7 +209,7 @@ class GDPRComplianceManager {
       await this.sendCompletionNotification(request);
 
     } catch (error) {
-      logger.error('GDPR request execution failed', {
+      safeLogger.error('GDPR request execution failed', {
         requestId: request.id,
         error: error.message
       });
@@ -356,7 +356,7 @@ class GDPRComplianceManager {
       }
     });
 
-    logger.info('Consent recorded', {
+    safeLogger.info('Consent recorded', {
       userId,
       consentType,
       granted,
@@ -393,7 +393,7 @@ class GDPRComplianceManager {
    * Automated data retention management
    */
   async enforceDataRetention(): Promise<void> {
-    logger.info('Starting automated data retention enforcement');
+    safeLogger.info('Starting automated data retention enforcement');
 
     for (const category of this.dataCategories) {
       const cutoffDate = new Date();
@@ -414,7 +414,7 @@ class GDPRComplianceManager {
             }
           });
 
-          logger.info('Data retention enforced', {
+          safeLogger.info('Data retention enforced', {
             category: category.name,
             table,
             deletedRecords: deletedCount.count,
@@ -422,7 +422,7 @@ class GDPRComplianceManager {
           });
 
         } catch (error) {
-          logger.error('Data retention enforcement failed', {
+          safeLogger.error('Data retention enforcement failed', {
             category: category.name,
             table,
             error: error.message
@@ -810,7 +810,7 @@ ${Object.entries(data).map(([key, value]) =>
       }
     }, 60 * 1000); // Check every minute
 
-    logger.info('GDPR automated compliance system started');
+    safeLogger.info('GDPR automated compliance system started');
   }
 
   private groupBy<T>(array: T[], key: string): Record<string, number> {

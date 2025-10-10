@@ -4,7 +4,7 @@
  */
 
 import Redis from 'ioredis';
-import { logger } from './logger';
+import { safeLogger } from './logger';
 import monitoringService from './monitoring';
 
 // Cache configuration
@@ -129,7 +129,7 @@ class CacheService {
       });
 
       this.redis.on('connect', () => {
-        logger.info('Redis connected successfully');
+        safeLogger.info('Redis connected successfully');
         this.isRedisConnected = true;
         this.reconnectAttempts = 0;
         
@@ -138,7 +138,7 @@ class CacheService {
       });
 
       this.redis.on('error', (err) => {
-        logger.error('Redis connection error:', err);
+        safeLogger.error('Redis connection error:', err);
         this.isRedisConnected = false;
         
         // Record cache connection error
@@ -146,7 +146,7 @@ class CacheService {
       });
 
       this.redis.on('close', () => {
-        logger.warn('Redis connection closed');
+        safeLogger.warn('Redis connection closed');
         this.isRedisConnected = false;
         
         if (this.reconnectAttempts < this.maxReconnectAttempts) {
@@ -161,12 +161,12 @@ class CacheService {
       await this.redis.ping();
       
     } catch (error) {
-      logger.error('Failed to initialize Redis:', error);
+      safeLogger.error('Failed to initialize Redis:', error);
       this.redis = null;
       this.isRedisConnected = false;
       
       if (CACHE_CONFIG.ENABLE_FALLBACK) {
-        logger.info('Using memory cache fallback');
+        safeLogger.info('Using memory cache fallback');
       }
     }
   }
@@ -200,7 +200,7 @@ class CacheService {
       return null;
       
     } catch (error) {
-      logger.error('Cache get error:', error, { key: fullKey });
+      safeLogger.error('Cache get error:', error, { key: fullKey });
       monitoringService.recordError(error as Error, { operation: 'cache_get', key: key.split(':')[0] });
       return null;
     }
@@ -231,7 +231,7 @@ class CacheService {
       return true;
       
     } catch (error) {
-      logger.error('Cache set error:', error, { key: fullKey });
+      safeLogger.error('Cache set error:', error, { key: fullKey });
       monitoringService.recordError(error as Error, { operation: 'cache_set', key: key.split(':')[0] });
       return false;
     }
@@ -261,7 +261,7 @@ class CacheService {
       return deleted;
       
     } catch (error) {
-      logger.error('Cache delete error:', error, { key: fullKey });
+      safeLogger.error('Cache delete error:', error, { key: fullKey });
       monitoringService.recordError(error as Error, { operation: 'cache_delete', key: key.split(':')[0] });
       return false;
     }
@@ -296,7 +296,7 @@ class CacheService {
       return true;
       
     } catch (error) {
-      logger.error('Cache clear error:', error, { pattern });
+      safeLogger.error('Cache clear error:', error, { pattern });
       monitoringService.recordError(error as Error, { operation: 'cache_clear' });
       return false;
     }
@@ -326,7 +326,7 @@ class CacheService {
         stats.redis.keys = dbsize;
       }
     } catch (error) {
-      logger.error('Error getting Redis stats:', error);
+      safeLogger.error('Error getting Redis stats:', error);
     }
 
     return stats;
@@ -359,7 +359,7 @@ class CacheService {
       health.healthy = health.redis || health.memory;
       
     } catch (error) {
-      logger.error('Cache health check error:', error);
+      safeLogger.error('Cache health check error:', error);
       health.healthy = false;
     }
 
@@ -425,7 +425,7 @@ export function Cached(ttlSeconds?: number) {
 // Cache invalidation helper
 export async function invalidateCache(pattern: string): Promise<void> {
   await cache.clear(pattern);
-  logger.info('Cache invalidated', { pattern });
+  safeLogger.info('Cache invalidated', { pattern });
 }
 
 // Popular cache methods for common use cases

@@ -1,7 +1,10 @@
 import { NextRequest } from 'next/server';
 import { z } from 'zod';
+import { logger } from '../../../../lib/logger';
 import {
+  createMethodHandler,
   NextApiResponse,
+  validateBody,
   withAuth
 } from '../../../../src/lib/next-api-helpers';
 
@@ -14,27 +17,30 @@ const changePasswordSchema = z.object({
   path: ["confirmPassword"],
 });
 
-export async function POST(request: NextRequest) {
+async function handlePost(request: NextRequest) {
   return withAuth(request, async (req, user) => {
+    const { data, error } = await validateBody(req, changePasswordSchema);
+    if (error) return error;
+
     try {
-      const body = await req.json();
-      const validatedData = changePasswordSchema.parse(body);
-      
       // Import user service
       const { default: userService } = await import('../../../../src/services/userService');
 
       // Verify current password
-      const isCurrentPasswordValid = await userService.verifyPassword(user.id, validatedData.currentPassword);
+      const isCurrentPasswordValid = await userService.verifyPassword(user.id, data.currentPassword);
       if (!isCurrentPasswordValid) {
+        logger.warn({ userId: user.id }, 'Failed password change attempt - incorrect current password');
         return NextApiResponse.error('Mot de passe actuel incorrect', 400);
       }
 
       // Update password
-      await userService.updatePassword(user.id, validatedData.newPassword);
+      await userService.updatePassword(user.id, data.newPassword);
+
+      logger.info({ userId: user.id }, 'Password changed successfully');
 
       return NextApiResponse.success(null, 'Mot de passe modifié avec succès');
     } catch (error: any) {
-      console.error('Change password error:', error);
+      logger.error({ error, userId: user.id }, 'Change password error');
       return NextApiResponse.error(
         error.message || 'Erreur lors de la modification du mot de passe',
         500
@@ -42,3 +48,7 @@ export async function POST(request: NextRequest) {
     }
   });
 }
+
+export default createMethodHandler({
+  POST: handlePost,
+});

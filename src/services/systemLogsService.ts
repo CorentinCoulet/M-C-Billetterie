@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { createHash } from 'crypto';
 import { prisma } from '../lib/prisma';
 
@@ -44,11 +45,16 @@ export class SystemLogsService {
       });
 
       // Also log to application logs for immediate debugging
-      const logMessage = `[${data.level?.toUpperCase() || 'LOW'}] ${data.action} - User: ${data.userId || 'Anonymous'} - IP: ${data.ip || 'Unknown'}`;
-      console.log(logMessage, data.details);
+      logger.info({
+        action: data.action,
+        userId: data.userId || 'Anonymous',
+        ip: data.ip || 'Unknown',
+        level: data.level || 'low',
+        details: data.details
+      }, 'System activity logged');
       
     } catch (error) {
-      console.error('Failed to log system activity:', error);
+      logger.error({ error }, 'Failed to log system activity');
       // Don't throw error to avoid breaking main application flow
     }
   }

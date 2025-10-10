@@ -1,7 +1,7 @@
 import prisma from '@/lib/prisma';
 import { JsonValue } from '@prisma/client/runtime/library';
 import { cache, CacheHelpers } from '../lib/cache';
-import { logger } from '../lib/logger';
+import { safeLogger } from '../lib/logger';
 import { monitoringService } from '../lib/monitoring';
 import { BaseService } from './baseService';
 
@@ -477,9 +477,9 @@ export class EventService extends BaseService<EventWithRelations> {
       await cache.clear('events:popular:*');
       await cache.clear('events:search:*');
       
-      logger.info('Event caches invalidated');
+      safeLogger.info('Event caches invalidated');
     } catch (error) {
-      logger.error('Error invalidating event caches:', error);
+      safeLogger.error('Error invalidating event caches:', error);
     }
   }
 
@@ -488,7 +488,7 @@ export class EventService extends BaseService<EventWithRelations> {
    */
   async warmUpCache(): Promise<void> {
     try {
-      logger.info('Warming up event cache...');
+      safeLogger.info('Warming up event cache...');
       
       // Pre-cache popular events
       await this.getPopularEvents(10);
@@ -502,9 +502,9 @@ export class EventService extends BaseService<EventWithRelations> {
         await this.getEventsByCategory(categoryId, 10);
       }
       
-      logger.info('Event cache warmed up successfully');
+      safeLogger.info('Event cache warmed up successfully');
     } catch (error) {
-      logger.error('Error warming up event cache:', error);
+      safeLogger.error('Error warming up event cache:', error);
     }
   }
 

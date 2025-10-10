@@ -1,6 +1,6 @@
 import { PrismaClient } from '../generated/prisma';
 import { Request, Response } from 'express';
-import { logger } from './logger';
+import { safeLogger } from './logger';
 
 const prisma = new PrismaClient();
 
@@ -79,7 +79,7 @@ export class ProductionMonitor {
     
     // Log slow requests
     if (responseTime > this.thresholds.responseTime) {
-      logger.warn(`Slow request detected`, {
+      safeLogger.warn(`Slow request detected`, {
         endpoint: metric.endpoint,
         responseTime,
         method: metric.method,
@@ -105,7 +105,7 @@ export class ProductionMonitor {
     }
 
     // Log alert
-    logger.warn(`Security alert generated`, alert);
+    safeLogger.warn(`Security alert generated`, alert);
 
     // Persist alert
     await this.persistSecurityAlert(alert);
@@ -294,7 +294,7 @@ export class ProductionMonitor {
         }
       };
     } catch (error) {
-      logger.error('Error generating compliance report:', error);
+      safeLogger.error('Error generating compliance report:', error);
       throw new Error('Failed to generate compliance report');
     }
   }
@@ -374,7 +374,7 @@ export class ProductionMonitor {
         }
       });
     } catch (error) {
-      logger.error('Error persisting metric:', error);
+      safeLogger.error('Error persisting metric:', error);
     }
   }
 
@@ -396,7 +396,7 @@ export class ProductionMonitor {
         }
       });
     } catch (error) {
-      logger.error('Error persisting security alert:', error);
+      safeLogger.error('Error persisting security alert:', error);
     }
   }
 
@@ -406,7 +406,7 @@ export class ProductionMonitor {
   private async sendCriticalAlert(alert: SecurityAlert): Promise<void> {
     // This would integrate with your notification system
     // Email, Slack, PagerDuty, etc.
-    logger.error(`CRITICAL SECURITY ALERT: ${alert.description}`, alert);
+    safeLogger.error(`CRITICAL SECURITY ALERT: ${alert.description}`, alert);
     
     // You could send emails, SMS, or push notifications here
     // Example: await emailService.sendCriticalAlert(alert);
@@ -522,7 +522,7 @@ export class ProductionMonitor {
           });
         }
       } catch (error) {
-        logger.error('Health check failed:', error);
+        safeLogger.error('Health check failed:', error);
       }
     }, 300000); // 5 minutes
   }

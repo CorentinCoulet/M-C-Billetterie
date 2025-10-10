@@ -1,7 +1,7 @@
 import crypto from 'crypto';
 import { NextApiRequest, NextApiResponse } from 'next';
 import { NextHandler } from 'next-connect';
-import { logger } from '../lib/logger';
+import { safeLogger } from '../lib/logger';
 import prisma from '../lib/prisma';
 
 /**
@@ -216,7 +216,7 @@ class BotDetector {
         });
 
         if (blockedIP) {
-          logger.warn('Blocked IP attempted access', { ip, reason: blockedIP.reason });
+          safeLogger.warn('Blocked IP attempted access', { ip, reason: blockedIP.reason });
           return res.status(429).json({
             error: 'Access temporarily blocked',
             retryAfter: Math.ceil((blockedIP.expiresAt.getTime() - Date.now()) / 1000)
@@ -229,7 +229,7 @@ class BotDetector {
           suspicionScore += fingerprintScore;
           
           if (fingerprintScore > 40) {
-            logger.info('Suspicious fingerprint detected', {
+            safeLogger.info('Suspicious fingerprint detected', {
               ip, 
               userAgent: req.headers['user-agent'],
               score: fingerprintScore
@@ -267,7 +267,7 @@ class BotDetector {
           if (!challengeToken || !challengeNonce) {
             const challenge = this.generateChallenge();
             
-            logger.info('Issuing bot challenge', { ip, suspicionScore });
+            safeLogger.info('Issuing bot challenge', { ip, suspicionScore });
             
             return res.status(202).json({
               challenge: challenge.challenge,
@@ -278,10 +278,10 @@ class BotDetector {
 
           // Verify challenge solution
           if (!this.verifyChallenge(challengeToken, challengeNonce, 4)) {
-            logger.warn('Failed bot challenge', { ip });
+            safeLogger.warn('Failed bot challenge', { ip });
             suspicionScore += 30;
           } else {
-            logger.info('Bot challenge passed', { ip });
+            safeLogger.info('Bot challenge passed', { ip });
             suspicionScore = Math.max(0, suspicionScore - 30);
           }
         }
@@ -290,7 +290,7 @@ class BotDetector {
         if (suspicionScore > 80 || (this.config.strictMode && suspicionScore > 50)) {
           await this.blockIP(ip, suspicionScore, 'High bot suspicion score');
           
-          logger.warn('IP blocked due to bot detection', {
+          safeLogger.warn('IP blocked due to bot detection', {
             ip,
             suspicionScore,
             userAgent: req.headers['user-agent']
@@ -308,7 +308,7 @@ class BotDetector {
         return next();
 
       } catch (error) {
-        logger.error('Bot detection error', { error, ip });
+        safeLogger.error('Bot detection error', { error, ip });
         // Fail open - don't block legitimate users due to detection errors
         return next();
       }
@@ -335,7 +335,7 @@ class BotDetector {
         }
       });
     } catch (error) {
-      logger.error('Failed to block IP', { error, ip });
+      safeLogger.error('Failed to block IP', { error, ip });
     }
   }
 

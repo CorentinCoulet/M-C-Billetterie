@@ -64,7 +64,7 @@ describe('Security Tests', () => {
         },
       });
 
-      const response = await loginModule.POST(mockRequest);
+      const response = await loginModule.default(mockRequest);
 
       // Should handle failed login gracefully (401 for auth failure, 400 for validation error)
       expect([400, 401]).toContain(response.status);
@@ -177,14 +177,14 @@ describe('Security Tests', () => {
             'x-forwarded-for': '192.168.1.1', // Same IP for rate limiting
           },
         });
-        loginAttempts.push(loginModule.POST(mockRequest));
+        loginAttempts.push(loginModule.default(mockRequest));
       }
 
       const responses = await Promise.all(loginAttempts);
-      const statuses = responses.map(r => r.status);
+      const statuses = responses.map((r: any) => r.status);
       
       // Should handle multiple login attempts (either success or failure)
-      expect(statuses.every(status => status >= 200 && status < 500)).toBe(true);
+      expect(statuses.every((status: number) => status >= 200 && status < 500)).toBe(true);
     });
 
     test('should require strong passwords', async () => {
@@ -235,7 +235,7 @@ describe('Security Tests', () => {
           },
         });
 
-        const response = await meModule.GET(mockRequest);
+        const response = await meModule.default(mockRequest);
         expect(response.status).toBe(401);
       }
     });
@@ -278,7 +278,7 @@ describe('Security Tests', () => {
         },
       });
 
-      const response = await meModule.GET(mockRequest);
+      const response = await meModule.default(mockRequest);
 
       // Should deny access with invalid token
       expect(response.status).toBe(401);
@@ -306,7 +306,7 @@ describe('Security Tests', () => {
           },
         });
 
-        const response = await loginModule.POST(mockRequest);
+        const response = await loginModule.default(mockRequest);
 
         // Should reject invalid email formats
         expect(response.status).toBe(400);
@@ -452,7 +452,7 @@ describe('Security Tests', () => {
         },
       });
 
-      const response = await meModule.GET(mockRequest);
+      const response = await meModule.default(mockRequest);
 
       // Should return 401 for invalid token
       expect(response.status).toBe(401);

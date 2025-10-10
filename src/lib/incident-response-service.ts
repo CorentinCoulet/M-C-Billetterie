@@ -6,7 +6,7 @@
 import { PrismaClient } from '../generated/prisma';
 import { EventEmitter } from 'events';
 import AuditService from './audit-service';
-import { logger } from './logger';
+import { safeLogger } from './logger';
 
 export interface SecurityIncident {
   id: string;
@@ -59,7 +59,7 @@ export class IncidentResponseService extends EventEmitter {
     await this.executeAutomatedResponse(incident);
     
     // Log and notify
-    logger.error(`Security incident detected: ${incident.id}`, { incident });
+    safeLogger.error(`Security incident detected: ${incident.id}`, { incident });
     this.emit('incidentDetected', incident);
     
     return incident.id;
@@ -194,7 +194,7 @@ export class IncidentResponseService extends EventEmitter {
    * DDoS mitigation
    */
   private async mitigateDDoS(incident: SecurityIncident): Promise<void> {
-    logger.warn('DDoS mitigation activated', { incident: incident.id });
+    safeLogger.warn('DDoS mitigation activated', { incident: incident.id });
     // Implementation for DDoS mitigation
     // This would typically integrate with CDN/WAF services
   }
@@ -203,7 +203,7 @@ export class IncidentResponseService extends EventEmitter {
    * Contain unauthorized access attempts
    */
   private async containUnauthorizedAccess(incident: SecurityIncident): Promise<void> {
-    logger.warn('Containing unauthorized access', { incident: incident.id });
+    safeLogger.warn('Containing unauthorized access', { incident: incident.id });
     
     // Lock affected accounts if any
     if (incident.affectedUsers.length > 0) {
@@ -221,7 +221,7 @@ export class IncidentResponseService extends EventEmitter {
    * Preserve evidence chain
    */
   private async preserveEvidenceChain(incident: SecurityIncident): Promise<void> {
-    logger.info('Preserving evidence chain', { incident: incident.id });
+    safeLogger.info('Preserving evidence chain', { incident: incident.id });
     // Implementation for preserving evidence with cryptographic hashes
     const evidenceSnapshot = {
       timestamp: new Date(),
@@ -239,7 +239,7 @@ export class IncidentResponseService extends EventEmitter {
    * Suspend payment processing
    */
   private async suspendPaymentProcessing(): Promise<void> {
-    logger.warn('Payment processing suspended due to security incident');
+    safeLogger.warn('Payment processing suspended due to security incident');
     // Implementation would integrate with payment systems
     // This is a critical security measure for payment fraud
   }
@@ -250,7 +250,7 @@ export class IncidentResponseService extends EventEmitter {
   private async flagFraudulentTransactions(transactions: any[]): Promise<void> {
     if (!transactions) return;
     
-    logger.warn('Flagging fraudulent transactions', { count: transactions.length });
+    safeLogger.warn('Flagging fraudulent transactions', { count: transactions.length });
     
     for (const transaction of transactions) {
       try {
@@ -263,7 +263,7 @@ export class IncidentResponseService extends EventEmitter {
           }
         });
       } catch (error) {
-        logger.error('Failed to flag transaction', { transactionId: transaction.id, error });
+        safeLogger.error('Failed to flag transaction', { transactionId: transaction.id, error });
       }
     }
   }
@@ -272,7 +272,7 @@ export class IncidentResponseService extends EventEmitter {
    * Notify payment processor
    */
   private async notifyPaymentProcessor(incident: SecurityIncident): Promise<void> {
-    logger.info('Notifying payment processor', { incident: incident.id });
+    safeLogger.info('Notifying payment processor', { incident: incident.id });
     // Implementation would send notifications to Stripe, PayPal, etc.
   }
 
@@ -280,7 +280,7 @@ export class IncidentResponseService extends EventEmitter {
    * Report PCI incident
    */
   private async reportPCIIncident(incident: SecurityIncident): Promise<void> {
-    logger.warn('PCI DSS incident reported', { incident: incident.id });
+    safeLogger.warn('PCI DSS incident reported', { incident: incident.id });
     // Implementation for PCI DSS compliance reporting
   }
 
@@ -288,7 +288,7 @@ export class IncidentResponseService extends EventEmitter {
    * Notify regulatory authorities
    */
   private async notifyRegulatory(notification: any): Promise<void> {
-    logger.warn('Regulatory notification sent', notification);
+    safeLogger.warn('Regulatory notification sent', notification);
     // Implementation for GDPR, PCI DSS, etc. notifications
   }
 
@@ -296,7 +296,7 @@ export class IncidentResponseService extends EventEmitter {
    * Notify affected users
    */
   private async notifyAffectedUsers(incident: SecurityIncident): Promise<void> {
-    logger.info('Notifying affected users', { 
+    safeLogger.info('Notifying affected users', { 
       incident: incident.id, 
       userCount: incident.affectedUsers.length 
     });
@@ -305,9 +305,9 @@ export class IncidentResponseService extends EventEmitter {
     for (const userId of incident.affectedUsers) {
       try {
         // Implementation would send email notifications
-        logger.info('User notification sent', { userId, incident: incident.id });
+        safeLogger.info('User notification sent', { userId, incident: incident.id });
       } catch (error) {
-        logger.error('Failed to notify user', { userId, error });
+        safeLogger.error('Failed to notify user', { userId, error });
       }
     }
   }
@@ -356,7 +356,7 @@ export class IncidentResponseService extends EventEmitter {
    * Add IP to firewall blacklist
    */
   private async addToFirewallBlacklist(ip: string): Promise<void> {
-    logger.warn('IP added to firewall blacklist', { ip });
+    safeLogger.warn('IP added to firewall blacklist', { ip });
     // Implementation would integrate with firewall systems
   }
 
@@ -364,7 +364,7 @@ export class IncidentResponseService extends EventEmitter {
    * Implement preventive measures
    */
   private async implementPreventiveMeasures(measures: string[]): Promise<void> {
-    logger.info('Implementing preventive measures', { measures });
+    safeLogger.info('Implementing preventive measures', { measures });
     // Implementation for applying security improvements
   }
 
@@ -372,7 +372,7 @@ export class IncidentResponseService extends EventEmitter {
    * Archive incident
    */
   private async archiveIncident(incident: SecurityIncident, report: any): Promise<void> {
-    logger.info('Archiving incident', { incident: incident.id });
+    safeLogger.info('Archiving incident', { incident: incident.id });
     
     // Remove from active incidents
     this.activeIncidents.delete(incident.id);
@@ -530,7 +530,7 @@ export class IncidentResponseService extends EventEmitter {
 
   private async restrictDataAccess(systems: string[]): Promise<void> {
     // Implementation for restricting access to affected systems
-    logger.info('Data access restricted for systems:', systems);
+    safeLogger.info('Data access restricted for systems:', systems);
   }
 
   private async lockUserAccounts(userIds: string[]): Promise<void> {

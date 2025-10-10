@@ -6,7 +6,7 @@
 import crypto from 'crypto';
 import QRCode from 'qrcode';
 import { AuditService } from './audit-service';
-import { logger } from './logger';
+import { safeLogger } from './logger';
 import prisma from './prisma';
 import { secretsManager } from './secrets-manager';
 
@@ -81,7 +81,7 @@ class MFAService {
       return { secret, backupCodes, qrCodeUrl };
 
     } catch (error) {
-      logger.error('Failed to generate TOTP secret:', error);
+      safeLogger.error('Failed to generate TOTP secret:', error);
       throw new Error('Failed to generate MFA secret');
     }
   }
@@ -125,7 +125,7 @@ class MFAService {
       return isValid;
 
     } catch (error) {
-      logger.error('TOTP verification failed:', error);
+      safeLogger.error('TOTP verification failed:', error);
       return false;
     }
   }
@@ -175,7 +175,7 @@ class MFAService {
       return true;
 
     } catch (error) {
-      logger.error('Backup code verification failed:', error);
+      safeLogger.error('Backup code verification failed:', error);
       return false;
     }
   }
@@ -208,11 +208,11 @@ class MFAService {
         riskLevel: 'high'
       });
 
-      logger.info(`MFA enabled for user ${userId}`);
+      safeLogger.info(`MFA enabled for user ${userId}`);
       return true;
 
     } catch (error) {
-      logger.error('Failed to enable MFA:', error);
+      safeLogger.error('Failed to enable MFA:', error);
       return false;
     }
   }
@@ -242,10 +242,10 @@ class MFAService {
         riskLevel: 'critical'
       });
 
-      logger.info(`MFA disabled for user ${userId} by admin ${adminUserId}`);
+      safeLogger.info(`MFA disabled for user ${userId} by admin ${adminUserId}`);
 
     } catch (error) {
-      logger.error('Failed to disable MFA:', error);
+      safeLogger.error('Failed to disable MFA:', error);
       throw error;
     }
   }
@@ -258,7 +258,7 @@ class MFAService {
       const mfaConfig = await this.getMFAConfig(userId);
       return mfaConfig?.enabled || false;
     } catch (error) {
-      logger.error('Failed to check MFA status:', error);
+      safeLogger.error('Failed to check MFA status:', error);
       return false;
     }
   }
@@ -278,7 +278,7 @@ class MFAService {
       return user ? adminRoles.includes(user.role) : false;
 
     } catch (error) {
-      logger.error('Failed to check MFA requirement:', error);
+      safeLogger.error('Failed to check MFA requirement:', error);
       return false;
     }
   }
@@ -312,7 +312,7 @@ class MFAService {
       return newBackupCodes;
 
     } catch (error) {
-      logger.error('Failed to regenerate backup codes:', error);
+      safeLogger.error('Failed to regenerate backup codes:', error);
       throw error;
     }
   }
@@ -342,7 +342,7 @@ class MFAService {
       };
 
     } catch (error) {
-      logger.error('Failed to get MFA status:', error);
+      safeLogger.error('Failed to get MFA status:', error);
       return { enabled: false };
     }
   }
@@ -469,7 +469,7 @@ class MFAService {
       return metadata.mfa || null;
 
     } catch (error) {
-      logger.error('Failed to get MFA config:', error);
+      safeLogger.error('Failed to get MFA config:', error);
       return null;
     }
   }
@@ -482,7 +482,7 @@ class MFAService {
         await this.storeMFAConfig(userId, mfaConfig);
       }
     } catch (error) {
-      logger.error('Failed to update MFA last used:', error);
+      safeLogger.error('Failed to update MFA last used:', error);
     }
   }
 }

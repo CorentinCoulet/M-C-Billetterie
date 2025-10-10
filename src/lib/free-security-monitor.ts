@@ -1,5 +1,5 @@
 import { EventEmitter } from 'events';
-import { logger } from '../lib/logger';
+import { safeLogger } from '../lib/logger';
 
 /**
  * FREE Security Monitoring Service
@@ -58,7 +58,7 @@ export class FreeSecurityMonitor extends EventEmitter {
     }
 
     // Log the event
-    logger.info('Security event recorded', {
+    safeLogger.info('Security event recorded', {
       eventId: securityEvent.id,
       type: securityEvent.type,
       subType: securityEvent.subType,
@@ -187,7 +187,7 @@ export class FreeSecurityMonitor extends EventEmitter {
           }
         }
       } catch (error) {
-        logger.error(`Error in alert rule ${ruleName}:`, error);
+        safeLogger.error(`Error in alert rule ${ruleName}:`, error);
       }
     }
   }
@@ -196,7 +196,7 @@ export class FreeSecurityMonitor extends EventEmitter {
    * Handle security alert
    */
   private handleAlert(alert: SecurityAlert): void {
-    logger.error('Security Alert Generated', {
+    safeLogger.error('Security Alert Generated', {
       alertId: alert.id,
       type: alert.alertType,
       severity: alert.severity,
@@ -217,7 +217,7 @@ export class FreeSecurityMonitor extends EventEmitter {
    * Handle critical alerts with automatic response
    */
   private handleCriticalAlert(alert: SecurityAlert): void {
-    logger.error('CRITICAL SECURITY ALERT', {
+    safeLogger.error('CRITICAL SECURITY ALERT', {
       alertId: alert.id,
       type: alert.alertType,
       description: alert.description

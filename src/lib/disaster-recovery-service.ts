@@ -5,7 +5,7 @@
 
 import { EventEmitter } from 'events';
 import { PrismaClient } from '../generated/prisma';
-import { logger, safeLogger } from './logger';
+import { safeLogger } from './logger';
 
 export interface DisasterRecoveryPlan {
   id: string;
@@ -223,7 +223,7 @@ export class DisasterRecoveryService extends EventEmitter {
       ]
     });
 
-    logger.info(`Initialized ${this.recoveryPlans.size} disaster recovery plans`);
+    safeLogger.info(`Initialized ${this.recoveryPlans.size} disaster recovery plans`);
   }
 
   /**
@@ -231,7 +231,7 @@ export class DisasterRecoveryService extends EventEmitter {
    */
   addRecoveryPlan(plan: DisasterRecoveryPlan): void {
     this.recoveryPlans.set(plan.id, plan);
-    logger.info(`Disaster recovery plan added: ${plan.name}`);
+    safeLogger.info(`Disaster recovery plan added: ${plan.name}`);
   }
 
   /**
@@ -267,7 +267,7 @@ export class DisasterRecoveryService extends EventEmitter {
     const plan = this.findRecoveryPlan(type, severity);
     if (plan) {
       disaster.recoveryPlan = plan.id;
-      logger.info(`Recovery plan selected: ${plan.name} for disaster ${disaster.id}`);
+      safeLogger.info(`Recovery plan selected: ${plan.name} for disaster ${disaster.id}`);
     }
 
     // Log the disaster
@@ -305,7 +305,7 @@ export class DisasterRecoveryService extends EventEmitter {
     disaster.status = 'recovering';
     disaster.acknowledgedAt = new Date();
     
-    logger.info(`Starting recovery plan execution: ${plan.name}`);
+    safeLogger.info(`Starting recovery plan execution: ${plan.name}`);
     
     try {
       // Sort steps by order
@@ -326,15 +326,16 @@ export class DisasterRecoveryService extends EventEmitter {
         performedBy: 'system'
       });
 
-      logger.info(`Recovery plan completed successfully: ${plan.name}`);
+      safeLogger.info(`Recovery plan completed successfully: ${plan.name}`);
       this.emit('recoveryCompleted', disaster);
 
     } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
       disaster.timeline.push({
         timestamp: new Date(),
         action: 'Recovery failed',
         result: 'failure',
-        details: error.message,
+        details: errorMessage,
         performedBy: 'system'
       });
 
@@ -350,7 +351,7 @@ export class DisasterRecoveryService extends EventEmitter {
    * Execute a single recovery step
    */
   private async executeRecoveryStep(disaster: DisasterEvent, step: RecoveryStep): Promise<void> {
-    logger.info(`Executing recovery step: ${step.name}`);
+    safeLogger.info(`Executing recovery step: ${step.name}`);
     
     const startTime = Date.now();
     
@@ -373,18 +374,19 @@ export class DisasterRecoveryService extends EventEmitter {
         performedBy: step.type === 'manual' ? 'admin' : 'system'
       });
 
-      logger.info(`Recovery step completed: ${step.name} (${duration}ms)`);
+      safeLogger.info(`Recovery step completed: ${step.name} (${duration}ms)`);
 
     } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
       disaster.timeline.push({
         timestamp: new Date(),
         action: `Step failed: ${step.name}`,
         result: 'failure',
-        details: error.message,
+        details: errorMessage,
         performedBy: 'system'
       });
 
-      throw new Error(`Recovery step failed: ${step.name} - ${error.message}`);
+      throw new Error(`Recovery step failed: ${step.name} - ${errorMessage}`);
     }
   }
 
@@ -404,7 +406,7 @@ export class DisasterRecoveryService extends EventEmitter {
           reject(new Error(`Step timeout: ${step.name}`));
         }, step.timeout * 1000);
 
-        process.on('close', (code) => {
+        process.on('close', (code: number | null) => {
           clearTimeout(timeout);
           if (code === 0) {
             resolve();
@@ -452,10 +454,11 @@ export class DisasterRecoveryService extends EventEmitter {
       if (!plan.enabled) continue;
       
       // Check if any trigger conditions match the disaster type
-      const typeMap = {
+      const typeMap: Record<DisasterEvent['type'], string[]> = {
         'hardware_failure': ['database_connection_failed', 'application_crash'],
         'data_corruption': ['database_corruption_detected'],
         'security_breach': ['security_breach_detected', 'unauthorized_access_confirmed'],
+        'natural_disaster': [],
         'ddos': ['service_unavailable'],
         'power_outage': ['application_crash', 'database_connection_failed']
       };
@@ -476,7 +479,7 @@ export class DisasterRecoveryService extends EventEmitter {
    * Attempt rollback of failed recovery
    */
   private async attemptRollback(disaster: DisasterEvent, plan: DisasterRecoveryPlan): Promise<void> {
-    logger.info('Attempting recovery rollback');
+    safeLogger.info('Attempting recovery rollback');
     
     try {
       // Execute rollback commands in reverse order
@@ -499,16 +502,17 @@ export class DisasterRecoveryService extends EventEmitter {
         }
       }
 
-      logger.info('Recovery rollback completed');
+      safeLogger.info('Recovery rollback completed');
 
     } catch (rollbackError) {
+      const errorMessage = rollbackError instanceof Error ? rollbackError.message : String(rollbackError);
       safeLogger.error('Rollback failed:', rollbackError);
       
       disaster.timeline.push({
         timestamp: new Date(),
         action: 'Rollback failed',
         result: 'failure',
-        details: rollbackError.message,
+        details: errorMessage,
         performedBy: 'system'
       });
     }
@@ -523,16 +527,16 @@ export class DisasterRecoveryService extends EventEmitter {
       throw new Error(`Recovery plan ${planId} not found`);
     }
 
-    logger.info(`Testing recovery plan: ${plan.name} (simulate: ${simulate})`);
+    safeLogger.info(`Testing recovery plan: ${plan.name} (simulate: ${simulate})`);
 
     const testResults = {
       planId,
       planName: plan.name,
       testStartTime: new Date(),
-      testEndTime: null,
-      stepResults: [],
+      testEndTime: null as Date | null,
+      stepResults: [] as any[],
       overallResult: 'pending',
-      issues: []
+      issues: [] as string[]
     };
 
     try {
@@ -551,14 +555,15 @@ export class DisasterRecoveryService extends EventEmitter {
       // Update last tested date
       plan.lastTested = new Date();
 
-      logger.info(`Recovery plan test completed: ${plan.name} - ${testResults.overallResult}`);
+      safeLogger.info(`Recovery plan test completed: ${plan.name} - ${testResults.overallResult}`);
       
       return testResults;
 
     } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
       testResults.overallResult = 'error';
       testResults.testEndTime = new Date();
-      testResults.issues.push(`Test execution failed: ${error.message}`);
+      testResults.issues.push(`Test execution failed: ${errorMessage}`);
       
       throw error;
     }
@@ -573,7 +578,7 @@ export class DisasterRecoveryService extends EventEmitter {
       stepName: step.name,
       success: false,
       duration: 0,
-      error: null
+      error: null as string | null
     };
 
     const startTime = Date.now();
@@ -596,7 +601,7 @@ export class DisasterRecoveryService extends EventEmitter {
         stepResult.success = true;
       }
     } catch (error) {
-      stepResult.error = error.message;
+      stepResult.error = error instanceof Error ? error.message : String(error);
     }
 
     stepResult.duration = Date.now() - startTime;
@@ -623,7 +628,7 @@ export class DisasterRecoveryService extends EventEmitter {
       await this.runScheduledTests();
     }, 60 * 60 * 1000); // Every hour
 
-    logger.info('Disaster recovery monitoring started');
+    safeLogger.info('Disaster recovery monitoring started');
   }
 
   /**
@@ -634,10 +639,11 @@ export class DisasterRecoveryService extends EventEmitter {
       // Database connectivity check
       await this.prisma.$queryRaw`SELECT 1`;
     } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
       await this.detectDisaster(
         'hardware_failure',
         'critical',
-        `Database connection failed: ${error.message}`,
+        `Database connection failed: ${errorMessage}`,
         ['database']
       );
     }
@@ -689,7 +695,7 @@ export class DisasterRecoveryService extends EventEmitter {
       // If it's been more than a week, run the test
       if (hoursSinceLastTest > 168) {
         try {
-          logger.info(`Running scheduled test for recovery plan: ${plan.name}`);
+          safeLogger.info(`Running scheduled test for recovery plan: ${plan.name}`);
           await this.testRecoveryPlan(plan.id, true);
         } catch (error) {
           safeLogger.error(`Scheduled test failed for plan ${plan.name}:`, error);

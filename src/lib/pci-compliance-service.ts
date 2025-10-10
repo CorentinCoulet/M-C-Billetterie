@@ -6,7 +6,7 @@
 import { EventEmitter } from 'events';
 import { PrismaClient } from '../generated/prisma';
 import { AuditService } from './audit-service';
-import { logger } from './logger';
+import { safeLogger } from './logger';
 
 export interface PCIRequirement {
   id: string;
@@ -130,7 +130,7 @@ export class PCIDSSComplianceService extends EventEmitter {
       await this.generateRemediationPlan(assessment, nonCompliant);
     }
 
-    logger.info(`PCI DSS assessment completed: ${assessment.overallStatus}`, { assessment });
+    safeLogger.info(`PCI DSS assessment completed: ${assessment.overallStatus}`, { assessment });
     this.emit('assessmentCompleted', assessment);
 
     return assessment;
@@ -190,7 +190,7 @@ export class PCIDSSComplianceService extends EventEmitter {
           break;
       }
     } catch (error) {
-      logger.error(`Error assessing requirement ${req.id}:`, error);
+      safeLogger.error(`Error assessing requirement ${req.id}:`, error);
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
       requirement.remediationActions.push(`Fix assessment error: ${errorMessage}`);
     }
@@ -364,7 +364,7 @@ export class PCIDSSComplianceService extends EventEmitter {
       
       if (quickAssessment.criticalFindings > 0) {
         this.emit('complianceViolation', quickAssessment);
-        logger.error('PCI compliance violation detected', quickAssessment);
+        safeLogger.error('PCI compliance violation detected', quickAssessment);
       }
     }, 24 * 60 * 60 * 1000); // Daily
 
@@ -373,7 +373,7 @@ export class PCIDSSComplianceService extends EventEmitter {
       await this.performVulnerabilityScan();
     }, 7 * 24 * 60 * 60 * 1000); // Weekly
 
-    logger.info('PCI continuous monitoring started');
+    safeLogger.info('PCI continuous monitoring started');
   }
 
   private async performQuickComplianceCheck(): Promise<any> {
@@ -409,7 +409,7 @@ export class PCIDSSComplianceService extends EventEmitter {
 
   private async storeAssessment(assessment: PCIAssessment): Promise<void> {
     // Store in database (implement according to your schema)
-    logger.info('PCI assessment stored', { assessmentId: assessment.id });
+    safeLogger.info('PCI assessment stored', { assessmentId: assessment.id });
   }
 
   private async getAssessment(id: string): Promise<PCIAssessment> {
@@ -429,7 +429,7 @@ export class PCIDSSComplianceService extends EventEmitter {
       targetCompletionDate: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000) // 90 days
     };
 
-    logger.info('PCI remediation plan generated', plan);
+    safeLogger.info('PCI remediation plan generated', plan);
     this.emit('remediationPlanGenerated', plan);
   }
 
@@ -492,7 +492,7 @@ export class PCIDSSComplianceService extends EventEmitter {
   private async hasWirelessTesting(): Promise<boolean> { return true; }
   private async hasNetworkSegmentationTesting(): Promise<boolean> { return false; }
   private async hasFileIntegrityMonitoring(): Promise<boolean> { return false; }
-  private async performVulnerabilityScan(): Promise<void> { logger.info('Vulnerability scan performed'); }
+  private async performVulnerabilityScan(): Promise<void> { safeLogger.info('Vulnerability scan performed'); }
 }
 
 export const pciComplianceService = new PCIDSSComplianceService();

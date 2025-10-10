@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import crypto from 'crypto';
 import QRCode from 'qrcode';
 import { Prisma } from '../generated/prisma';
@@ -197,7 +198,7 @@ export class TicketService {
       // Check if event date has passed (if needed)
       if (ticket.event && ticket.event.date < new Date()) {
         // Still valid but event has passed - up to business logic
-        console.warn(`Validating ticket for past event: ${ticket.event.title}`);
+        logger.warn({ eventId: ticket.event.id, eventTitle: ticket.event.title }, 'Validating ticket for past event');
       }
 
       // Mark as used if requested
@@ -232,7 +233,7 @@ export class TicketService {
       };
 
     } catch (error) {
-      console.error('Error validating QR code:', error);
+      logger.error({ error }, 'Error validating QR code');
       return { 
         valid: false, 
         error: 'Failed to parse QR code' 

@@ -1,9 +1,9 @@
-import { PrismaClient } from '../generated/prisma';
 import { createHash } from 'crypto';
 import { EventEmitter } from 'events';
 import { promises as fs } from 'fs';
 import path from 'path';
-import logger from './logger';
+import { PrismaClient } from '../generated/prisma';
+import { safeLogger } from './logger';
 
 interface SecurityEvent {
   id: string;
@@ -86,7 +86,7 @@ export class SIEMService extends EventEmitter {
     }
 
     this.isRunning = true;
-    logger.info('SIEM Service starting...');
+    safeLogger.info('SIEM Service starting...');
 
     // Process events in batches
     setInterval(() => this.processEventBatch(), this.BATCH_PROCESS_INTERVAL);
@@ -97,7 +97,7 @@ export class SIEMService extends EventEmitter {
     // Cleanup old events every day
     setInterval(() => this.cleanupOldEvents(), 24 * 60 * 60 * 1000);
 
-    logger.info('SIEM Service started successfully');
+    safeLogger.info('SIEM Service started successfully');
   }
 
   /**
@@ -106,7 +106,7 @@ export class SIEMService extends EventEmitter {
   async stop(): Promise<void> {
     this.isRunning = false;
     await this.processPendingEvents();
-    logger.info('SIEM Service stopped');
+    safeLogger.info('SIEM Service stopped');
   }
 
   /**
@@ -139,7 +139,7 @@ export class SIEMService extends EventEmitter {
    */
   addAlertRule(rule: AlertRule): void {
     this.alertRules.set(rule.id, rule);
-    logger.info(`Alert rule '${rule.name}' added/updated`);
+    safeLogger.info(`Alert rule '${rule.name}' added/updated`);
   }
 
   /**
@@ -147,7 +147,7 @@ export class SIEMService extends EventEmitter {
    */
   removeAlertRule(ruleId: string): void {
     this.alertRules.delete(ruleId);
-    logger.info(`Alert rule with ID '${ruleId}' removed`);
+    safeLogger.info(`Alert rule with ID '${ruleId}' removed`);
   }
 
   /**
@@ -219,7 +219,7 @@ export class SIEMService extends EventEmitter {
         }
       };
     } catch (error) {
-      logger.error('Error generating security analytics:', error);
+      safeLogger.error('Error generating security analytics:', error);
       throw error;
     }
   }
@@ -314,14 +314,14 @@ export class SIEMService extends EventEmitter {
             this.threatIntel.knownAttackPatterns.push(new RegExp(pattern, 'i'));
           });
         } catch (error) {
-          logger.warn(`Failed to load threat intel from ${url}:`, error);
+          safeLogger.warn(`Failed to load threat intel from ${url}:`, error);
         }
       }
 
       this.threatIntel.lastUpdated = new Date();
-      logger.info(`Loaded ${this.threatIntel.maliciousIPs.size} malicious IPs and ${this.threatIntel.knownAttackPatterns.length} attack patterns`);
+      safeLogger.info(`Loaded ${this.threatIntel.maliciousIPs.size} malicious IPs and ${this.threatIntel.knownAttackPatterns.length} attack patterns`);
     } catch (error) {
-      logger.error('Error loading threat intelligence:', error);
+      safeLogger.error('Error loading threat intelligence:', error);
     }
   }
 
@@ -329,7 +329,7 @@ export class SIEMService extends EventEmitter {
    * Update threat intelligence periodically
    */
   private async updateThreatIntelligence(): Promise<void> {
-    logger.info('Updating threat intelligence...');
+    safeLogger.info('Updating threat intelligence...');
     await this.loadThreatIntelligence();
   }
 
@@ -356,7 +356,7 @@ export class SIEMService extends EventEmitter {
       await this.analyzeEventPatterns(events);
       
     } catch (error) {
-      logger.error('Error processing event batch:', error);
+      safeLogger.error('Error processing event batch:', error);
     }
   }
 
@@ -386,7 +386,7 @@ export class SIEMService extends EventEmitter {
         data: auditLogs
       });
     } catch (error) {
-      logger.error('Error storing security events:', error);
+      safeLogger.error('Error storing security events:', error);
     }
   }
 
@@ -428,7 +428,7 @@ export class SIEMService extends EventEmitter {
    * Trigger alert actions
    */
   private async triggerAlert(rule: AlertRule, event: SecurityEvent): Promise<void> {
-    logger.warn(`Security alert triggered: ${rule.name}`, {
+    safeLogger.warn(`Security alert triggered: ${rule.name}`, {
       ruleId: rule.id,
       eventId: event.id,
       severity: rule.severity
@@ -438,7 +438,7 @@ export class SIEMService extends EventEmitter {
       try {
         await this.executeAlertAction(action, rule, event);
       } catch (error) {
-        logger.error(`Failed to execute alert action ${action.type}:`, error);
+        safeLogger.error(`Failed to execute alert action ${action.type}:`, error);
       }
     }
 
@@ -481,8 +481,8 @@ export class SIEMService extends EventEmitter {
         
       case 'log':
         const logLevel = action.config.level || 'info';
-        if (logLevel in logger) {
-          (logger as any)[logLevel](`Security alert: ${rule.name}`, event);
+        if (logLevel in safeLogger) {
+          (safeLogger as any)[logLevel](`Security alert: ${rule.name}`, event);
         }
         break;
     }
@@ -495,7 +495,7 @@ export class SIEMService extends EventEmitter {
     // Check against threat intelligence
     if (event.ipAddress && this.threatIntel.maliciousIPs.has(event.ipAddress)) {
       await this.blockIP(event.ipAddress, 86400); // 24 hours
-      logger.warn(`Blocked known malicious IP: ${event.ipAddress}`);
+      safeLogger.warn(`Blocked known malicious IP: ${event.ipAddress}`);
     }
 
     // Check for known attack patterns
@@ -535,9 +535,9 @@ export class SIEMService extends EventEmitter {
         }
       });
 
-      logger.info(`IP address blocked: ${ipAddress} until ${expiresAt}`);
+      safeLogger.info(`IP address blocked: ${ipAddress} until ${expiresAt}`);
     } catch (error) {
-      logger.error('Error blocking IP address:', error);
+      safeLogger.error('Error blocking IP address:', error);
     }
   }
 
@@ -553,9 +553,9 @@ export class SIEMService extends EventEmitter {
         }
       });
 
-      logger.info(`User suspended: ${userId}`);
+      safeLogger.info(`User suspended: ${userId}`);
     } catch (error) {
-      logger.error('Error suspending user:', error);
+      safeLogger.error('Error suspending user:', error);
     }
   }
 
@@ -568,7 +568,7 @@ export class SIEMService extends EventEmitter {
     config: any
   ): Promise<void> {
     // Implementation depends on your email service
-    logger.info(`Alert email would be sent for rule: ${rule.name}`);
+    safeLogger.info(`Alert email would be sent for rule: ${rule.name}`);
   }
 
   /**
@@ -576,7 +576,7 @@ export class SIEMService extends EventEmitter {
    */
   private async callWebhook(url: string, data: any): Promise<void> {
     // Implementation depends on your webhook requirements
-    logger.info(`Webhook would be called: ${url}`);
+    safeLogger.info(`Webhook would be called: ${url}`);
   }
 
   /**
@@ -613,7 +613,7 @@ export class SIEMService extends EventEmitter {
         userAgent: log.userAgent || undefined
       }));
     } catch (error) {
-      logger.error('Failed to get recent events:', error);
+      safeLogger.error('Failed to get recent events:', error);
       return [];
     }
   }
@@ -678,7 +678,7 @@ export class SIEMService extends EventEmitter {
   private async analyzeEventPatterns(events: SecurityEvent[]): Promise<void> {
     // Implementation of pattern analysis algorithms
     // This could include machine learning models for anomaly detection
-    logger.debug(`Analyzed ${events.length} events for patterns`);
+    safeLogger.debug(`Analyzed ${events.length} events for patterns`);
   }
 
   /**
@@ -705,9 +705,9 @@ export class SIEMService extends EventEmitter {
         }
       });
 
-      logger.info(`Cleaned up ${result.count} old audit logs`);
+      safeLogger.info(`Cleaned up ${result.count} old audit logs`);
     } catch (error) {
-      logger.error('Error cleaning up old events:', error);
+      safeLogger.error('Error cleaning up old events:', error);
     }
   }
 

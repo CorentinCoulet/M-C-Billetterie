@@ -6,7 +6,7 @@
 import crypto from 'crypto';
 import fs from 'fs/promises';
 import path from 'path';
-import { logger } from './logger';
+import { safeLogger } from './logger';
 
 interface SecretMetadata {
   id: string;
@@ -63,7 +63,7 @@ class SecretsManager {
       );
     } catch (error) {
       if ((error as NodeJS.ErrnoException).code !== 'EEXIST') {
-        logger.error('Failed to initialize secrets directory:', error);
+        safeLogger.error('Failed to initialize secrets directory:', error);
       }
     }
   }
@@ -123,13 +123,13 @@ class SecretsManager {
           
           this.secrets.set(secret.metadata.name, secret);
         } catch (error) {
-          logger.error(`Failed to load secret from ${file}:`, error);
+          safeLogger.error(`Failed to load secret from ${file}:`, error);
         }
       }
       
-      logger.info(`Loaded ${this.secrets.size} secrets`);
+      safeLogger.info(`Loaded ${this.secrets.size} secrets`);
     } catch (error) {
-      logger.error('Failed to load secrets:', error);
+      safeLogger.error('Failed to load secrets:', error);
     }
   }
 
@@ -139,9 +139,9 @@ class SecretsManager {
     
     try {
       await fs.writeFile(filePath, JSON.stringify(secret, null, 2));
-      logger.info(`Secret ${secret.metadata.name} saved`);
+      safeLogger.info(`Secret ${secret.metadata.name} saved`);
     } catch (error) {
-      logger.error(`Failed to save secret ${secret.metadata.name}:`, error);
+      safeLogger.error(`Failed to save secret ${secret.metadata.name}:`, error);
       throw error;
     }
   }
@@ -186,7 +186,7 @@ class SecretsManager {
     this.secrets.set(name, secret);
     await this.saveSecret(secret);
     
-    logger.info(`Secret ${name} created with ID ${id}`);
+    safeLogger.info(`Secret ${name} created with ID ${id}`);
     return id;
   }
 
@@ -198,14 +198,14 @@ class SecretsManager {
 
     // Check if secret is expired
     if (secret.metadata.expiresAt && secret.metadata.expiresAt < new Date()) {
-      logger.warn(`Secret ${name} is expired`);
+      safeLogger.warn(`Secret ${name} is expired`);
       return null;
     }
 
     try {
       return this.decrypt(secret.data, this.masterKey);
     } catch (error) {
-      logger.error(`Failed to decrypt secret ${name}:`, error);
+      safeLogger.error(`Failed to decrypt secret ${name}:`, error);
       return null;
     }
   }
@@ -225,7 +225,7 @@ class SecretsManager {
     this.secrets.set(name, secret);
     await this.saveSecret(secret);
     
-    logger.info(`Secret ${name} rotated to version ${secret.metadata.version}`);
+    safeLogger.info(`Secret ${name} rotated to version ${secret.metadata.version}`);
   }
 
   async deleteSecret(name: string): Promise<void> {
@@ -239,7 +239,7 @@ class SecretsManager {
     await this.saveSecret(secret);
     this.secrets.delete(name);
     
-    logger.info(`Secret ${name} deleted`);
+    safeLogger.info(`Secret ${name} deleted`);
   }
 
   async listSecrets(tags?: string[]): Promise<SecretMetadata[]> {
@@ -314,9 +314,9 @@ class SecretsManager {
         await this.saveSecret(secret);
       }
       
-      logger.info(`Imported ${importData.secrets.length} secrets`);
+      safeLogger.info(`Imported ${importData.secrets.length} secrets`);
     } catch (error) {
-      logger.error('Failed to import secrets:', error);
+      safeLogger.error('Failed to import secrets:', error);
       throw new Error('Failed to import secrets: Invalid format or password');
     }
   }

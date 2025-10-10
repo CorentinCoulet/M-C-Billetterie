@@ -5,7 +5,7 @@
 
 import { EventEmitter } from 'events';
 import { incidentResponseService } from './incident-response-service';
-import { logger, safeLogger } from './logger';
+import { safeLogger } from './logger';
 import { siemService } from './siem-service';
 
 export interface ThreatIndicator {
@@ -115,7 +115,7 @@ export class ThreatIntelligenceService extends EventEmitter {
           try {
             await this.updateThreatFeed(feed);
           } catch (error) {
-            safeLogger.error(`Failed to update threat feed ${feed.name}:`, error);
+            safeLogger.error(`Failed to update threat feed ${feed.name}`, { error, feedName: feed.name });
           }
         }
       }
@@ -135,7 +135,7 @@ export class ThreatIntelligenceService extends EventEmitter {
    * Update threat intelligence feed
    */
   private async updateThreatFeed(feed: ThreatIntelFeed): Promise<void> {
-    logger.info(`Updating threat feed: ${feed.name}`);
+    safeLogger.info(`Updating threat feed: ${feed.name}`);
     
     try {
       const headers: Record<string, string> = {
@@ -162,11 +162,11 @@ export class ThreatIntelligenceService extends EventEmitter {
 
       feed.lastUpdate = new Date();
       
-      logger.info(`Updated ${newIndicators.length} indicators from ${feed.name}`);
+      safeLogger.info(`Updated ${newIndicators.length} indicators from ${feed.name}`);
       this.emit('feedUpdated', { feed: feed.name, indicators: newIndicators.length });
       
     } catch (error) {
-      safeLogger.error(`Failed to update feed ${feed.name}:`, error);
+      safeLogger.error(`Failed to update feed ${feed.name}`, { error, feedName: feed.name });
       this.emit('feedError', { feed: feed.name, error });
     }
   }
@@ -213,15 +213,13 @@ export class ThreatIntelligenceService extends EventEmitter {
         // Parse Spamhaus DROP list
         const spamhausData = await this.parseSpamhausDROP(data, source);
         indicators.push(...spamhausData);
-      }
-    } catch (error) {
-      safeLogger.error(`Failed to extract indicators from ${source}:`, error);
     }
-    
-    return indicators;
+  } catch (error) {
+    safeLogger.error(`Failed to extract indicators from ${source}`, { error, source });
   }
-
-  /**
+  
+  return indicators;
+}  /**
    * Parse MISP threat intelligence format
    */
   private parseMISPData(data: any, source: string): ThreatIndicator[] {
@@ -316,18 +314,16 @@ export class ThreatIntelligenceService extends EventEmitter {
         matches.push(match);
         this.matchCache.set(value, matches);
 
-        // Emit threat detected event
-        this.emit('threatDetected', { indicator, match });
-        
-        // Log the threat
-        safeLogger.warn('Threat indicator matched:', {
-          indicator: indicator.id,
-          value,
-          severity: indicator.severity,
-          confidence: indicator.confidence
-        });
-
-        return match;
+      // Emit threat detected event
+      this.emit('threatDetected', { indicator, match });
+      
+      // Log the threat
+      safeLogger.warn('Threat indicator matched', {
+        indicator: indicator.id,
+        value,
+        severity: indicator.severity,
+        confidence: indicator.confidence
+      });        return match;
       }
     }
 
@@ -338,7 +334,7 @@ export class ThreatIntelligenceService extends EventEmitter {
    * Proactive threat hunting
    */
   private async performThreatHunting(): Promise<void> {
-    logger.info('Starting threat hunting cycle');
+    safeLogger.info('Starting threat hunting cycle');
     
     try {
       // Hunt for indicators in recent logs
@@ -351,15 +347,13 @@ export class ThreatIntelligenceService extends EventEmitter {
       // Hunt for behavioral anomalies
       await this.huntBehavioralAnomalies();
       
-      // Hunt for compromised accounts
-      await this.huntCompromisedAccounts();
-      
-    } catch (error) {
-      safeLogger.error('Threat hunting failed:', error);
-    }
+    // Hunt for compromised accounts
+    await this.huntCompromisedAccounts();
+    
+  } catch (error) {
+    safeLogger.error('Threat hunting failed', { error });
   }
-
-  /**
+}  /**
    * Hunt for threats in specific event
    */
   private async huntInEvent(event: any): Promise<void> {
@@ -403,7 +397,7 @@ export class ThreatIntelligenceService extends EventEmitter {
    * Block threat automatically
    */
   private async blockThreat(match: ThreatMatch): Promise<void> {
-    logger.warn(`Auto-blocking threat: ${match.indicatorId}`);
+    safeLogger.warn(`Auto-blocking threat: ${match.indicatorId}`);
     
     // Add to firewall blacklist
     await this.addToFirewallBlacklist(match.sourceIp);
@@ -551,15 +545,13 @@ export class ThreatIntelligenceService extends EventEmitter {
             });
           }
         }
-      }
-    } catch (error) {
-      safeLogger.error('Failed to parse Abuse.ch data:', error);
     }
-    
-    return indicators;
+  } catch (error) {
+    safeLogger.error('Failed to parse Abuse.ch data', { error });
   }
-
-  private async parseSpamhausDROP(data: string, source: string): Promise<ThreatIndicator[]> {
+  
+  return indicators;
+}  private async parseSpamhausDROP(data: string, source: string): Promise<ThreatIndicator[]> {
     const indicators: ThreatIndicator[] = [];
     const lines = data.split('\n');
     
@@ -594,7 +586,7 @@ export class ThreatIntelligenceService extends EventEmitter {
   }
 
   private async huntCompromisedAccounts(): Promise<void> {
-    logger.info('Hunting for compromised accounts');
+    safeLogger.info('Hunting for compromised accounts');
     
     try {
       // Look for multiple failed logins followed by successful login from different IPs
@@ -623,7 +615,7 @@ export class ThreatIntelligenceService extends EventEmitter {
       }
       
     } catch (error) {
-      safeLogger.error('Failed to hunt compromised accounts:', error);
+      safeLogger.error('Failed to hunt compromised accounts', { error });
     }
   }
 
@@ -661,15 +653,13 @@ export class ThreatIntelligenceService extends EventEmitter {
             });
           }
         }
-      }
-    } catch (error) {
-      safeLogger.error('Failed to detect suspicious logins:', error);
     }
-    
-    return suspicious;
+  } catch (error) {
+    safeLogger.error('Failed to detect suspicious logins', { error });
   }
-
-  private async detectDataExfiltration(): Promise<any[]> {
+  
+  return suspicious;
+}  private async detectDataExfiltration(): Promise<any[]> {
     const exfiltrationAttempts: any[] = [];
     
     try {
@@ -692,15 +682,13 @@ export class ThreatIntelligenceService extends EventEmitter {
             });
           }
         }
-      }
-    } catch (error) {
-      safeLogger.error('Failed to detect data exfiltration:', error);
     }
-    
-    return exfiltrationAttempts;
+  } catch (error) {
+    safeLogger.error('Failed to detect data exfiltration', { error });
   }
-
-  private async detectPrivilegeEscalation(): Promise<any[]> {
+  
+  return exfiltrationAttempts;
+}  private async detectPrivilegeEscalation(): Promise<any[]> {
     const escalationAttempts: any[] = [];
     
     try {
@@ -720,15 +708,13 @@ export class ThreatIntelligenceService extends EventEmitter {
             riskScore: 75
           });
         }
-      }
-    } catch (error) {
-      safeLogger.error('Failed to detect privilege escalation:', error);
     }
-    
-    return escalationAttempts;
+  } catch (error) {
+    safeLogger.error('Failed to detect privilege escalation', { error });
   }
-
-  private async createBehavioralThreat(anomaly: any): Promise<void> {
+  
+  return escalationAttempts;
+}  private async createBehavioralThreat(anomaly: any): Promise<void> {
     // Create a dynamic threat indicator based on behavioral analysis
     const indicator: ThreatIndicator = {
       id: `behavioral-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
@@ -745,17 +731,15 @@ export class ThreatIntelligenceService extends EventEmitter {
       ttl: 1 // 1 hour for behavioral indicators
     };
     
-    this.indicators.set(indicator.id, indicator);
-    
-    safeLogger.warn('Behavioral threat created:', {
-      indicator: indicator.id,
-      anomaly: anomaly.type,
-      riskScore: anomaly.riskScore
-    });
-  }
-
-  private async addToFirewallBlacklist(ip: string): Promise<void> {
-    logger.warn(`Adding IP ${ip} to firewall blacklist`);
+  this.indicators.set(indicator.id, indicator);
+  
+  safeLogger.warn('Behavioral threat created', {
+    indicator: indicator.id,
+    anomaly: anomaly.type,
+    riskScore: anomaly.riskScore
+  });
+}  private async addToFirewallBlacklist(ip: string): Promise<void> {
+    safeLogger.warn(`Adding IP ${ip} to firewall blacklist`);
     
     // In a real implementation, this would integrate with:
     // - Cloud WAF (CloudFlare, AWS WAF, etc.)

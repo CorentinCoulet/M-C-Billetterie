@@ -9,7 +9,7 @@ import fs from 'fs/promises';
 import path from 'path';
 import { promisify } from 'util';
 import { AuditService } from './audit-service';
-import { logger } from './logger';
+import { safeLogger } from './logger';
 import prisma from './prisma';
 import { secretsManager } from './secrets-manager';
 
@@ -74,7 +74,7 @@ class BackupService {
     const backupPath = path.join(this.backupDir, backupFileName);
 
     try {
-      logger.info(`Starting ${config.type} backup: ${backupId}`);
+      safeLogger.info(`Starting ${config.type} backup: ${backupId}`);
 
       // Get database connection details
       const dbUrl = process.env.DATABASE_URL;
@@ -146,11 +146,11 @@ class BackupService {
         riskLevel: 'medium'
       });
 
-      logger.info(`Backup completed successfully: ${backupId}, Size: ${this.formatBytes(finalStats.size)}`);
+      safeLogger.info(`Backup completed successfully: ${backupId}, Size: ${this.formatBytes(finalStats.size)}`);
       return backupId;
 
     } catch (error) {
-      logger.error(`Backup creation failed: ${error}`);
+      safeLogger.error(`Backup creation failed: ${error}`);
       
       await AuditService.logEvent({
         action: 'backup.failed',
@@ -171,7 +171,7 @@ class BackupService {
    */
   async restoreBackup(backupId: string, options: RestoreOptions = { dryRun: false, validateIntegrity: true }): Promise<void> {
     try {
-      logger.info(`Starting restore from backup: ${backupId}`);
+      safeLogger.info(`Starting restore from backup: ${backupId}`);
 
       // Get backup metadata
       const metadata = await this.getBackupMetadata(backupId);
@@ -191,13 +191,13 @@ class BackupService {
       const restoreFilePath = await this.prepareRestoreFile(metadata);
 
       if (options.dryRun) {
-        logger.info('Dry run completed successfully - backup is valid and can be restored');
+        safeLogger.info('Dry run completed successfully - backup is valid and can be restored');
         await fs.unlink(restoreFilePath);
         return;
       }
 
       // Create pre-restore backup of current state
-      logger.info('Creating pre-restore backup...');
+      safeLogger.info('Creating pre-restore backup...');
       const preRestoreBackupId = await this.createBackup({
         type: 'full',
         compression: 'gzip',
@@ -224,10 +224,10 @@ class BackupService {
           riskLevel: 'critical'
         });
 
-        logger.info(`Database restore completed successfully from backup: ${backupId}`);
+        safeLogger.info(`Database restore completed successfully from backup: ${backupId}`);
 
       } catch (restoreError) {
-        logger.error(`Restore failed, attempting to rollback: ${restoreError}`);
+        safeLogger.error(`Restore failed, attempting to rollback: ${restoreError}`);
         
         // Attempt to restore from pre-restore backup
         try {
@@ -235,10 +235,10 @@ class BackupService {
           if (preRestoreMetadata) {
             const rollbackFilePath = await this.prepareRestoreFile(preRestoreMetadata);
             await this.performDatabaseRestore(rollbackFilePath, { dryRun: false, validateIntegrity: false });
-            logger.info('Successfully rolled back to pre-restore state');
+            safeLogger.info('Successfully rolled back to pre-restore state');
           }
         } catch (rollbackError) {
-          logger.error(`Rollback failed: ${rollbackError}`);
+          safeLogger.error(`Rollback failed: ${rollbackError}`);
         }
 
         throw restoreError;
@@ -252,7 +252,7 @@ class BackupService {
       }
 
     } catch (error) {
-      logger.error(`Restore failed: ${error}`);
+      safeLogger.error(`Restore failed: ${error}`);
       
       await AuditService.logEvent({
         action: 'backup.restore_failed',
@@ -276,14 +276,14 @@ class BackupService {
       // Check if file exists
       const exists = await fs.access(metadata.filePath).then(() => true).catch(() => false);
       if (!exists) {
-        logger.error(`Backup file not found: ${metadata.filePath}`);
+        safeLogger.error(`Backup file not found: ${metadata.filePath}`);
         return false;
       }
 
       // Verify checksum
       const currentChecksum = await this.calculateChecksum(metadata.filePath);
       if (currentChecksum !== metadata.checksum) {
-        logger.error(`Backup checksum mismatch for ${metadata.id}`);
+        safeLogger.error(`Backup checksum mismatch for ${metadata.id}`);
         return false;
       }
 
@@ -291,16 +291,16 @@ class BackupService {
       if (metadata.encrypted && metadata.encryptionKeyId) {
         const canDecrypt = await this.testDecryption(metadata.filePath, metadata.encryptionKeyId);
         if (!canDecrypt) {
-          logger.error(`Cannot decrypt backup ${metadata.id}`);
+          safeLogger.error(`Cannot decrypt backup ${metadata.id}`);
           return false;
         }
       }
 
-      logger.info(`Backup integrity validation passed for ${metadata.id}`);
+      safeLogger.info(`Backup integrity validation passed for ${metadata.id}`);
       return true;
 
     } catch (error) {
-      logger.error(`Integrity validation failed: ${error}`);
+      safeLogger.error(`Integrity validation failed: ${error}`);
       return false;
     }
   }
@@ -330,7 +330,7 @@ class BackupService {
       }));
 
     } catch (error) {
-      logger.error(`Failed to list backups: ${error}`);
+      safeLogger.error(`Failed to list backups: ${error}`);
       return [];
     }
   }
@@ -339,7 +339,7 @@ class BackupService {
    * Test backup and restore process
    */
   async testBackupRestore(): Promise<boolean> {
-    logger.info('Starting backup/restore test');
+    safeLogger.info('Starting backup/restore test');
 
     try {
       // Create a test backup
@@ -367,11 +367,11 @@ class BackupService {
         validateIntegrity: true 
       });
 
-      logger.info('Backup/restore test completed successfully');
+      safeLogger.info('Backup/restore test completed successfully');
       return true;
 
     } catch (error) {
-      logger.error(`Backup/restore test failed: ${error}`);
+      safeLogger.error(`Backup/restore test failed: ${error}`);
       return false;
     }
   }
@@ -408,11 +408,11 @@ class BackupService {
         }
       }
 
-      logger.info(`Cleaned up ${cleanedCount} old backups`);
+      safeLogger.info(`Cleaned up ${cleanedCount} old backups`);
       return cleanedCount;
 
     } catch (error) {
-      logger.error(`Backup cleanup failed: ${error}`);
+      safeLogger.error(`Backup cleanup failed: ${error}`);
       return 0;
     }
   }
@@ -520,7 +520,7 @@ class BackupService {
       `;
       return result.map(row => row.tablename);
     } catch (error) {
-      logger.error('Failed to get table list:', error);
+      safeLogger.error('Failed to get table list:', error);
       return [];
     }
   }
@@ -565,7 +565,7 @@ class BackupService {
       };
 
     } catch (error) {
-      logger.error(`Failed to get backup metadata: ${error}`);
+      safeLogger.error(`Failed to get backup metadata: ${error}`);
       return null;
     }
   }
@@ -682,7 +682,7 @@ class BackupService {
       });
 
     } catch (error) {
-      logger.error(`Failed to delete backup ${backupId}: ${error}`);
+      safeLogger.error(`Failed to delete backup ${backupId}: ${error}`);
       throw error;
     }
   }

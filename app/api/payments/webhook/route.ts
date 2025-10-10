@@ -1,4 +1,6 @@
+import { logger } from '@/lib/logger';
 import { getStripeApiVersion, STRIPE_CONFIG, validateStripeConfig } from '@/src/config/stripe';
+import { createMethodHandler } from '@/src/lib/next-api-helpers';
 import prisma from '@/src/lib/prisma';
 import { OrderService } from '@/src/services/orderService';
 import { PaymentService } from '@/src/services/paymentService';
@@ -36,8 +38,8 @@ const CACHE_CLEANUP_INTERVAL = STRIPE_CONFIG.CACHE_CLEANUP_INTERVAL;
 const MAX_CACHE_SIZE = STRIPE_CONFIG.MAX_PROCESSED_EVENTS;
 const CACHE_KEEP_SIZE = STRIPE_CONFIG.CACHE_CLEANUP_SIZE;
 
-export async function POST(request: NextRequest) {
-  console.log('🔔 Stripe webhook received at', new Date().toISOString());
+async function handlePost(request: NextRequest) {
+  logger.info('Stripe webhook received');
   
   // Skip webhook processing during build phase
   if (process.env.NEXT_PHASE === 'phase-production-build') {
@@ -50,7 +52,7 @@ export async function POST(request: NextRequest) {
   validateStripeConfig();
   
   if (!webhookSecret) {
-    console.error('❌ STRIPE_WEBHOOK_SECRET missing');
+    logger.error('STRIPE_WEBHOOK_SECRET missing');
     return NextResponse.json({ 
       error: 'Webhook secret not configured' 
     }, { status: 500 });
@@ -60,7 +62,7 @@ export async function POST(request: NextRequest) {
   const signature = request.headers.get('stripe-signature');
 
   if (!signature) {
-    console.error('❌ Stripe signature missing');
+    logger.error('Stripe signature missing');
     return NextResponse.json({ 
       error: 'No signature provided' 
     }, { status: 400 });
@@ -72,9 +74,9 @@ export async function POST(request: NextRequest) {
   try {
     const stripeInstance = await getStripe();
     event = stripeInstance.webhooks.constructEvent(body, signature, webhookSecret);
-    console.log(`✅ Signature verified for event: ${event.type}`);
+    logger.info({ eventType: event.type, eventId: event.id }, 'Signature verified for event');
   } catch (err) {
-    console.error('❌ Stripe signature verification failed:', err);
+    logger.error({ error: err }, 'Stripe signature verification failed');
     return NextResponse.json({ 
       error: 'Invalid signature' 
     }, { status: 400 });
@@ -82,7 +84,7 @@ export async function POST(request: NextRequest) {
 
   // 🚀 Avoid processing the same event multiple times
   if (processedEvents.has(event.id)) {
-    console.log(`⚠️ Event ${event.id} already processed - ignored`);
+    logger.warn({ eventId: event.id }, 'Event already processed - ignored');
     return NextResponse.json({ 
       received: true, 
       status: 'already_processed',
@@ -124,11 +126,11 @@ export async function POST(request: NextRequest) {
       case 'customer.subscription.created':
       case 'customer.subscription.updated':
       case 'customer.subscription.deleted':
-        console.log(`📋 Subscription event received: ${event.type} - processing not implemented`);
+        logger.info({ eventType: event.type }, 'Subscription event received - processing not implemented');
         break;
 
       default:
-        console.log(`📋 Unhandled event: ${event.type}`);
+        logger.info({ eventType: event.type }, 'Unhandled event');
         break;
     }
 
@@ -142,10 +144,10 @@ export async function POST(request: NextRequest) {
       entries.slice(-CACHE_KEEP_SIZE).forEach(([id, processed]) => {
         processedEvents.set(id, processed);
       });
-      console.log(`🧹 Idempotency cache cleaned - kept ${CACHE_KEEP_SIZE} entries`);
+      logger.info({ keptEntries: CACHE_KEEP_SIZE }, 'Idempotency cache cleaned');
     }
 
-    console.log(`✅ Event ${event.type} processed successfully`);
+    logger.info({ eventType: event.type, eventId: event.id }, 'Event processed successfully');
     return NextResponse.json({ 
       received: true, 
       event_type: event.type,
@@ -153,7 +155,7 @@ export async function POST(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error(`❌ Error processing webhook ${event.type}:`, error);
+    logger.error({ error, eventType: event.type, eventId: event.id }, 'Error processing webhook');
     
     // 📊 Logging for debugging
     await logWebhookError(event, error);
@@ -166,37 +168,44 @@ export async function POST(request: NextRequest) {
   }
 }
 
+export default createMethodHandler({
+  POST: handlePost,
+});
+
 /**
  * 🎯 Processing of successful payments
  */
 async function handlePaymentIntentSucceeded(event: any) {
   const paymentIntent = event.data.object;
   
-  console.log(`💰 Payment Intent succeeded: ${paymentIntent.id}`);
-  console.log(`   Amount: ${paymentIntent.amount} ${paymentIntent.currency}`);
-  console.log(`   Metadata:`, paymentIntent.metadata);
+  logger.info({ 
+    paymentIntentId: paymentIntent.id,
+    amount: paymentIntent.amount,
+    currency: paymentIntent.currency,
+    metadata: paymentIntent.metadata
+  }, 'Payment Intent succeeded');
 
   try {
     // 🚀 Use our service with atomic transaction
     const paymentService = new PaymentService();
     const processedPayment = await paymentService.processSuccessfulPayment(paymentIntent.id);
     
-    console.log(`✅ Payment processed successfully:`, {
+    logger.info({
       paymentId: processedPayment.id,
       orderId: processedPayment.order?.id,
       userId: processedPayment.order?.user?.id,
       email: processedPayment.order?.user?.email
-    });
+    }, 'Payment processed successfully');
 
     // 📧 Send confirmation email (to be implemented)
     if (processedPayment.order?.user?.email) {
       await sendPaymentConfirmationEmail(processedPayment);
     } else {
-      console.warn(`⚠️ No email found for payment ${processedPayment.id}`);
+      logger.warn({ paymentId: processedPayment.id }, 'No email found for payment');
     }
     
   } catch (error) {
-    console.error(`❌ Error processing payment_intent.succeeded:`, error);
+    logger.error({ error, paymentIntentId: paymentIntent.id }, 'Error processing payment_intent.succeeded');
     throw error;
   }
 }
@@ -207,8 +216,10 @@ async function handlePaymentIntentSucceeded(event: any) {
 async function handlePaymentIntentFailed(event: any) {
   const paymentIntent = event.data.object;
   
-  console.log(`💥 Payment Intent failed: ${paymentIntent.id}`);
-  console.log(`   Error:`, paymentIntent.last_payment_error?.message);
+  logger.error({ 
+    paymentIntentId: paymentIntent.id,
+    error: paymentIntent.last_payment_error?.message
+  }, 'Payment Intent failed');
 
   try {
     const paymentService = new PaymentService();
@@ -217,21 +228,21 @@ async function handlePaymentIntentFailed(event: any) {
       paymentIntent.last_payment_error?.message
     );
     
-    console.log(`✅ Failed payment processed:`, {
+    logger.info({
       paymentId: failedPayment.id,
       orderId: failedPayment.order?.id,
       reason: paymentIntent.last_payment_error?.message
-    });
+    }, 'Failed payment processed');
 
     // 📧 Send payment failure email
     if (failedPayment.order?.user?.email) {
       await sendPaymentFailedEmail(failedPayment, paymentIntent.last_payment_error?.message);
     } else {
-      console.warn(`⚠️ No email found for failed payment ${failedPayment.id}`);
+      logger.warn({ paymentId: failedPayment.id }, 'No email found for failed payment');
     }
     
   } catch (error) {
-    console.error(`❌ Error processing payment_intent.failed:`, error);
+    logger.error({ error, paymentIntentId: paymentIntent.id }, 'Error processing payment_intent.failed');
     throw error;
   }
 }
@@ -242,8 +253,10 @@ async function handlePaymentIntentFailed(event: any) {
 async function handlePaymentIntentRequiresAction(event: any) {
   const paymentIntent = event.data.object;
   
-  console.log(`🔐 Payment Intent requires action: ${paymentIntent.id}`);
-  console.log(`   Next action:`, paymentIntent.next_action?.type);
+  logger.info({ 
+    paymentIntentId: paymentIntent.id,
+    nextAction: paymentIntent.next_action?.type
+  }, 'Payment Intent requires action');
 
   // Log for tracking - no DB action needed
   await logPaymentRequiresAction(paymentIntent);
@@ -255,16 +268,16 @@ async function handlePaymentIntentRequiresAction(event: any) {
 async function handlePaymentIntentCanceled(event: any) {
   const paymentIntent = event.data.object;
   
-  console.log(`❌ Payment Intent canceled: ${paymentIntent.id}`);
+  logger.info({ paymentIntentId: paymentIntent.id }, 'Payment Intent canceled');
 
   try {
     const paymentService = new PaymentService();
     await paymentService.handleFailedPayment(paymentIntent.id, 'Payment cancelled');
     
-    console.log(`✅ Payment cancellation processed: ${paymentIntent.id}`);
+    logger.info({ paymentIntentId: paymentIntent.id }, 'Payment cancellation processed');
     
   } catch (error) {
-    console.error(`❌ Error processing payment_intent.canceled:`, error);
+    logger.error({ error, paymentIntentId: paymentIntent.id }, 'Error processing payment_intent.canceled');
     throw error;
   }
 }
@@ -275,9 +288,11 @@ async function handlePaymentIntentCanceled(event: any) {
 async function handleCheckoutSessionCompleted(event: any) {
   const session = event.data.object;
   
-  console.log(`🛒 Checkout session completed: ${session.id}`);
-  console.log(`   Payment Intent:`, session.payment_intent);
-  console.log(`   Metadata:`, session.metadata);
+  logger.info({ 
+    sessionId: session.id,
+    paymentIntent: session.payment_intent,
+    metadata: session.metadata
+  }, 'Checkout session completed');
 
   // If we have a payment_intent, it will be processed by the payment_intent.succeeded event
   // Otherwise, process here
@@ -285,7 +300,7 @@ async function handleCheckoutSessionCompleted(event: any) {
     try {
       await handleCheckoutDirectPayment(session);
     } catch (error) {
-      console.error(`❌ Error processing checkout.session.completed:`, error);
+      logger.error({ error, sessionId: session.id }, 'Error processing checkout.session.completed');
       throw error;
     }
   }
@@ -297,7 +312,7 @@ async function handleCheckoutSessionCompleted(event: any) {
 async function handleCheckoutSessionExpired(event: any) {
   const session = event.data.object;
   
-  console.log(`⏰ Checkout session expired: ${session.id}`);
+  logger.info({ sessionId: session.id }, 'Checkout session expired');
   
   // Release reserved resources
   if (session.metadata?.orderId) {
@@ -305,9 +320,9 @@ async function handleCheckoutSessionExpired(event: any) {
       const orderService = new OrderService();
       await orderService.cancelOrder(session.metadata.orderId);
       
-      console.log(`✅ Order canceled for expired session: ${session.metadata.orderId}`);
+      logger.info({ orderId: session.metadata.orderId }, 'Order canceled for expired session');
     } catch (error) {
-      console.error(`❌ Error canceling order for expired session:`, error);
+      logger.error({ error, orderId: session.metadata.orderId }, 'Error canceling order for expired session');
       throw error;
     }
   }
@@ -319,9 +334,11 @@ async function handleCheckoutSessionExpired(event: any) {
 async function handleInvoicePaymentSucceeded(event: any) {
   const invoice = event.data.object;
   
-  console.log(`🧾 Invoice payment succeeded: ${invoice.id}`);
-  console.log(`   Customer:`, invoice.customer);
-  console.log(`   Amount paid:`, invoice.amount_paid);
+  logger.info({ 
+    invoiceId: invoice.id,
+    customer: invoice.customer,
+    amountPaid: invoice.amount_paid
+  }, 'Invoice payment succeeded');
   
   // Specific processing for subscriptions if applicable
   // Note: subscription info would need to be accessed differently based on your use case
@@ -334,12 +351,12 @@ async function handleCheckoutDirectPayment(session: any) {
   const { orderId } = session.metadata || {};
   
   if (!orderId) {
-    console.error('❌ No orderId in checkout session metadata');
+    logger.error({ sessionId: session.id }, 'No orderId in checkout session metadata');
     throw new Error('Missing orderId in session metadata');
   }
 
   if (!session.amount_total) {
-    console.error('❌ No amount_total in checkout session');
+    logger.error({ sessionId: session.id }, 'No amount_total in checkout session');
     throw new Error('Missing amount_total in session');
   }
 
@@ -359,7 +376,7 @@ async function handleCheckoutDirectPayment(session: any) {
       }
 
       if (existingOrder.status === 'paid') {
-        console.log(`⚠️ Order ${orderId} already paid - skipping`);
+        logger.warn({ orderId }, 'Order already paid - skipping');
         return;
       }
 
@@ -379,10 +396,10 @@ async function handleCheckoutDirectPayment(session: any) {
       await orderService.completeOrder(orderId, payment.id);
     });
     
-    console.log(`✅ Direct checkout payment processed: ${session.id} → ${orderId}`);
+    logger.info({ sessionId: session.id, orderId }, 'Direct checkout payment processed');
     
   } catch (error) {
-    console.error(`❌ Error processing direct checkout payment:`, error);
+    logger.error({ error, sessionId: session.id }, 'Error processing direct checkout payment');
     throw error;
   }
 }
@@ -392,7 +409,7 @@ async function handleCheckoutDirectPayment(session: any) {
  */
 async function sendPaymentConfirmationEmail(payment: any) {
   // TODO: Implement email sending with email service
-  console.log(`📧 Confirmation email to send to: ${payment.order?.user?.email}`);
+  logger.info({ email: payment.order?.user?.email }, 'Confirmation email to send');
 }
 
 /**
@@ -400,7 +417,7 @@ async function sendPaymentConfirmationEmail(payment: any) {
  */
 async function sendPaymentFailedEmail(payment: any, reason?: string) {
   // TODO: Implement failure email sending
-  console.log(`📧 Failure email to send to: ${payment.order?.user?.email}, reason: ${reason}`);
+  logger.info({ email: payment.order?.user?.email, reason }, 'Failure email to send');
 }
 
 /**
@@ -408,11 +425,10 @@ async function sendPaymentFailedEmail(payment: any, reason?: string) {
  */
 async function logPaymentRequiresAction(paymentIntent: any) {
   // TODO: Store in logs or monitoring system
-  console.log(`📊 Log: Payment requires action`, {
+  logger.info({
     id: paymentIntent.id,
-    nextAction: paymentIntent.next_action?.type,
-    timestamp: new Date().toISOString()
-  });
+    nextAction: paymentIntent.next_action?.type
+  }, 'Payment requires action');
 }
 
 /**
@@ -421,15 +437,14 @@ async function logPaymentRequiresAction(paymentIntent: any) {
 async function logWebhookError(event: any, error: any) {
   try {
     // TODO: Implement logging to DB or external service
-    console.error(`📊 Webhook Error Log:`, {
+    logger.error({
       eventId: event.id,
       eventType: event.type,
       error: error instanceof Error ? error.message : String(error),
-      timestamp: new Date().toISOString(),
       eventData: JSON.stringify(event.data, null, 2).substring(0, 1000) // Truncate to avoid long logs
-    });
+    }, 'Webhook Error Log');
   } catch (logError) {
-    console.error(`❌ Error logging webhook error:`, logError);
+    logger.error({ error: logError }, 'Error logging webhook error');
   }
 }
 
@@ -438,9 +453,10 @@ setInterval(() => {
   if (processedEvents.size > CACHE_KEEP_SIZE) {
     const entries = Array.from(processedEvents.entries());
     processedEvents.clear();
-    entries.slice(-Math.floor(CACHE_KEEP_SIZE / 2)).forEach(([id, processed]) => {
+    const keptEntries = Math.floor(CACHE_KEEP_SIZE / 2);
+    entries.slice(-keptEntries).forEach(([id, processed]) => {
       processedEvents.set(id, processed);
     });
-    console.log(`🧹 Scheduled idempotency cache cleanup - kept ${Math.floor(CACHE_KEEP_SIZE / 2)} entries`);
+    logger.info({ keptEntries }, 'Scheduled idempotency cache cleanup');
   }
 }, CACHE_CLEANUP_INTERVAL);

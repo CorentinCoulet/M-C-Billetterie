@@ -6,7 +6,7 @@
 import { createHash } from 'crypto';
 import * as fs from 'fs/promises';
 import * as path from 'path';
-import { logger } from './logger';
+import { safeLogger } from './logger';
 
 export interface SSLCertificate {
   cert: string;
@@ -86,7 +86,7 @@ class ProductionSSLManager {
    * Initialize SSL configuration for production
    */
   async initializeSSL(): Promise<void> {
-    logger.info('🔒 Initializing production SSL configuration...');
+    safeLogger.info('🔒 Initializing production SSL configuration...');
 
     try {
       // Ensure SSL directory exists
@@ -100,7 +100,7 @@ class ProductionSSLManager {
         if (process.env.NODE_ENV !== 'production') {
           await this.generateSelfSignedCertificate();
         } else {
-          logger.warn('⚠️ No SSL certificates found in production environment');
+          safeLogger.warn('⚠️ No SSL certificates found in production environment');
           await this.setupLetsEncrypt();
         }
       }
@@ -111,10 +111,10 @@ class ProductionSSLManager {
       // Setup certificate monitoring
       this.setupCertificateMonitoring();
       
-      logger.info('✅ SSL configuration initialized successfully');
+      safeLogger.info('✅ SSL configuration initialized successfully');
 
     } catch (error) {
-      logger.error('❌ Failed to initialize SSL configuration:', error);
+      safeLogger.error('❌ Failed to initialize SSL configuration:', error);
       throw error;
     }
   }
@@ -128,7 +128,7 @@ class ProductionSSLManager {
     try {
       await fs.access(sslDir);
     } catch {
-      logger.info(`Creating SSL directory: ${sslDir}`);
+      safeLogger.info(`Creating SSL directory: ${sslDir}`);
       await fs.mkdir(sslDir, { recursive: true });
       await fs.chmod(sslDir, 0o700); // Secure permissions
     }
@@ -153,7 +153,7 @@ class ProductionSSLManager {
    * Generate self-signed certificate for development
    */
   private async generateSelfSignedCertificate(): Promise<void> {
-    logger.info('🔧 Generating self-signed SSL certificate...');
+    safeLogger.info('🔧 Generating self-signed SSL certificate...');
 
     try {
       const { spawn } = require('child_process');
@@ -197,10 +197,10 @@ class ProductionSSLManager {
       await fs.chmod(this.config.keyPath, 0o600);
       await fs.chmod(this.config.certificatePath, 0o644);
 
-      logger.info('✅ Self-signed certificate generated successfully');
+      safeLogger.info('✅ Self-signed certificate generated successfully');
 
     } catch (error) {
-      logger.error('❌ Failed to generate self-signed certificate:', error);
+      safeLogger.error('❌ Failed to generate self-signed certificate:', error);
       throw error;
     }
   }
@@ -209,13 +209,13 @@ class ProductionSSLManager {
    * Setup Let's Encrypt certificates for production
    */
   private async setupLetsEncrypt(): Promise<void> {
-    logger.info('🌐 Setting up Let\'s Encrypt certificates...');
+    safeLogger.info('🌐 Setting up Let\'s Encrypt certificates...');
 
     const domain = process.env.DOMAIN || 'localhost';
     const email = process.env.ADMIN_EMAIL || 'admin@localhost';
 
     if (domain === 'localhost' || email === 'admin@localhost') {
-      logger.warn('⚠️ Please configure DOMAIN and ADMIN_EMAIL environment variables');
+      safeLogger.warn('⚠️ Please configure DOMAIN and ADMIN_EMAIL environment variables');
       return;
     }
 
@@ -238,7 +238,7 @@ class ProductionSSLManager {
       await new Promise((resolve, reject) => {
         certbotProcess.on('close', (code: number) => {
           if (code === 0) {
-            logger.info('✅ Let\'s Encrypt certificates obtained successfully');
+            safeLogger.info('✅ Let\'s Encrypt certificates obtained successfully');
             resolve(null);
           } else {
             reject(new Error(`Certbot failed with code ${code}`));
@@ -250,7 +250,7 @@ class ProductionSSLManager {
       this.setupCertificateRenewal();
 
     } catch (error) {
-      logger.error('❌ Let\'s Encrypt setup failed:', error);
+      safeLogger.error('❌ Let\'s Encrypt setup failed:', error);
       // Fallback to self-signed for now
       await this.generateSelfSignedCertificate();
     }
@@ -260,7 +260,7 @@ class ProductionSSLManager {
    * Validate SSL certificates
    */
   async validateCertificates(): Promise<SSLCertificate> {
-    logger.info('🔍 Validating SSL certificates...');
+    safeLogger.info('🔍 Validating SSL certificates...');
 
     try {
       const [certContent, keyContent] = await Promise.all([
@@ -280,10 +280,10 @@ class ProductionSSLManager {
 
       // Check expiration
       if (certInfo.daysUntilExpiry !== undefined && certInfo.daysUntilExpiry <= 30) {
-        logger.warn(`⚠️ Certificate expires in ${certInfo.daysUntilExpiry} days`);
+        safeLogger.warn(`⚠️ Certificate expires in ${certInfo.daysUntilExpiry} days`);
       }
 
-      logger.info('✅ SSL certificates validated successfully', {
+      safeLogger.info('✅ SSL certificates validated successfully', {
         subject: certInfo.subject,
         issuer: certInfo.issuer,
         validUntil: certInfo.validTo,
@@ -296,7 +296,7 @@ class ProductionSSLManager {
       return certInfo;
 
     } catch (error) {
-      logger.error('❌ SSL certificate validation failed:', error);
+      safeLogger.error('❌ SSL certificate validation failed:', error);
       throw error;
     }
   }
@@ -410,7 +410,7 @@ class ProductionSSLManager {
    * Setup certificate monitoring and renewal
    */
   private setupCertificateMonitoring(): void {
-    logger.info('📊 Setting up certificate monitoring...');
+    safeLogger.info('📊 Setting up certificate monitoring...');
 
     // Check certificates every 24 hours
     setInterval(async () => {
@@ -418,7 +418,7 @@ class ProductionSSLManager {
         const cert = await this.validateCertificates();
         
         if (cert.daysUntilExpiry !== undefined && cert.daysUntilExpiry <= 30) {
-          logger.warn(`⚠️ Certificate expiring soon: ${cert.daysUntilExpiry} days`);
+          safeLogger.warn(`⚠️ Certificate expiring soon: ${cert.daysUntilExpiry} days`);
           
           // Attempt automatic renewal if Let's Encrypt
           if (cert.issuer?.includes('Let\'s Encrypt')) {
@@ -426,7 +426,7 @@ class ProductionSSLManager {
           }
         }
       } catch (error) {
-        logger.error('Certificate monitoring check failed:', error);
+        safeLogger.error('Certificate monitoring check failed:', error);
       }
     }, 24 * 60 * 60 * 1000); // 24 hours
   }
@@ -435,14 +435,14 @@ class ProductionSSLManager {
    * Setup automatic certificate renewal
    */
   private setupCertificateRenewal(): void {
-    logger.info('🔄 Setting up automatic certificate renewal...');
+    safeLogger.info('🔄 Setting up automatic certificate renewal...');
 
     // Run renewal check twice daily (recommended by Let's Encrypt)
     setInterval(async () => {
       try {
         await this.renewCertificate();
       } catch (error) {
-        logger.error('Automatic certificate renewal failed:', error);
+        safeLogger.error('Automatic certificate renewal failed:', error);
       }
     }, 12 * 60 * 60 * 1000); // 12 hours
   }
@@ -451,7 +451,7 @@ class ProductionSSLManager {
    * Renew SSL certificate
    */
   async renewCertificate(): Promise<void> {
-    logger.info('🔄 Attempting certificate renewal...');
+    safeLogger.info('🔄 Attempting certificate renewal...');
 
     try {
       const { spawn } = require('child_process');
@@ -465,7 +465,7 @@ class ProductionSSLManager {
       await new Promise((resolve, reject) => {
         renewProcess.on('close', (code: number) => {
           if (code === 0) {
-            logger.info('✅ Certificate renewal completed successfully');
+            safeLogger.info('✅ Certificate renewal completed successfully');
             resolve(null);
           } else {
             reject(new Error(`Certificate renewal failed with code ${code}`));
@@ -477,7 +477,7 @@ class ProductionSSLManager {
       await this.reloadSSLConfiguration();
 
     } catch (error) {
-      logger.error('❌ Certificate renewal failed:', error);
+      safeLogger.error('❌ Certificate renewal failed:', error);
       throw error;
     }
   }
@@ -486,7 +486,7 @@ class ProductionSSLManager {
    * Reload SSL configuration (notify services to reload)
    */
   private async reloadSSLConfiguration(): Promise<void> {
-    logger.info('🔃 Reloading SSL configuration...');
+    safeLogger.info('🔃 Reloading SSL configuration...');
 
     // Notify nginx to reload
     try {
@@ -497,7 +497,7 @@ class ProductionSSLManager {
       await new Promise((resolve, reject) => {
         reloadProcess.on('close', (code: number) => {
           if (code === 0) {
-            logger.info('✅ Nginx configuration reloaded');
+            safeLogger.info('✅ Nginx configuration reloaded');
             resolve(null);
           } else {
             reject(new Error(`Nginx reload failed with code ${code}`));
@@ -505,7 +505,7 @@ class ProductionSSLManager {
         });
       });
     } catch (error) {
-      logger.warn('Could not reload nginx configuration:', error);
+      safeLogger.warn('Could not reload nginx configuration:', error);
     }
   }
 

@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { NextApiRequest, NextApiResponse } from 'next';
 import { z } from 'zod';
 import authService from '../services/authService';
@@ -84,7 +85,7 @@ export async function register(req: NextApiRequest, res: NextApiResponse) {
       token: result.token
     });
   } catch (error: any) {
-    console.error('Registration error:', error);
+    logger.error({ error }, 'Registration error');
     return res.status(400).json({ message: error.message || 'Registration failed' });
   }
 }
@@ -124,7 +125,7 @@ export async function login(req: NextApiRequest, res: NextApiResponse) {
       token: result.token
     });
   } catch (error: any) {
-    console.error('Login error:', error);
+    logger.error({ error }, 'Login error');
     return res.status(401).json({ message: error.message || 'Invalid credentials' });
   }
 }
@@ -155,7 +156,7 @@ export async function logout(req: NextApiRequest, res: NextApiResponse) {
 
     return res.status(200).json({ message: 'Successfully logged out' });
   } catch (error: any) {
-    console.error('Logout error:', error);
+    logger.error({ error }, 'Logout error');
     return res.status(500).json({ message: error.message || 'Logout failed' });
   }
 }
@@ -190,7 +191,7 @@ export async function getCurrentUser(req: NextApiRequest, res: NextApiResponse) 
 
     return res.status(200).json({ user: safeUser });
   } catch (error: any) {
-    console.error('Get current user error:', error);
+    logger.error({ error }, 'Get current user error');
     return res.status(401).json({ message: 'Authentication failed' });
   }
 }
@@ -239,7 +240,7 @@ export async function changePassword(req: NextApiRequest, res: NextApiResponse) 
 
     return res.status(200).json({ message: 'Password changed successfully' });
   } catch (error: any) {
-    console.error('Change password error:', error);
+    logger.error({ error }, 'Change password error');
     return res.status(400).json({ message: error.message || 'Password change failed' });
   }
 }

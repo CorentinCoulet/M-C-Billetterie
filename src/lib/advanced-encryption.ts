@@ -1,5 +1,5 @@
 import crypto from 'crypto';
-import { logger } from './logger';
+import { safeLogger } from './logger';
 
 /**
  * Advanced Encryption Service
@@ -85,7 +85,7 @@ export class EncryptionService {
 
       return combined.toString('base64');
     } catch (error) {
-      logger.error('Encryption failed:', error);
+      safeLogger.error('Encryption failed:', error);
       throw new Error('Data encryption failed');
     }
   }
@@ -116,7 +116,7 @@ export class EncryptionService {
 
       return decrypted;
     } catch (error) {
-      logger.error('Decryption failed:', error);
+      safeLogger.error('Decryption failed:', error);
       throw new Error('Data decryption failed');
     }
   }
@@ -152,7 +152,7 @@ export class EncryptionService {
       const combined = Buffer.concat([salt, hash]);
       return combined.toString('base64');
     } catch (error) {
-      logger.error('Password hashing failed:', error);
+      safeLogger.error('Password hashing failed:', error);
       throw new Error('Password hashing failed');
     }
   }
@@ -186,7 +186,7 @@ export class EncryptionService {
 
       return crypto.timingSafeEqual(hash, storedHash);
     } catch (error) {
-      logger.error('Password verification failed:', error);
+      safeLogger.error('Password verification failed:', error);
       return false;
     }
   }

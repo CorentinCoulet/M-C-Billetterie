@@ -1,5 +1,5 @@
 import { Request, Response, Router } from 'express';
-import { logger } from '../lib/logger';
+import { safeLogger } from '../lib/logger';
 import { AdvancedWAF } from '../middlewares/simple-waf';
 
 const securityRouter = Router();
@@ -40,7 +40,7 @@ securityRouter.get('/config', (req: Request, res: Response) => {
       }
     });
   } catch (error: any) {
-    logger.error({ error: error.message }, 'Security API: Error getting config');
+    safeLogger.error({ error: error.message }, 'Security API: Error getting config');
     res.status(500).json({ 
       success: false, 
       error: 'Failed to get configuration' 
@@ -64,7 +64,7 @@ securityRouter.post('/mode', (req: Request, res: Response) => {
     AdvancedWAF.updateConfig({ mode });
     
     // Log the mode change
-    logger.info({ 
+    safeLogger.info({ 
       mode, 
       adminUser: req.user?.id || 'unknown',
       timestamp: new Date().toISOString() 
@@ -92,7 +92,7 @@ securityRouter.post('/mode', (req: Request, res: Response) => {
       }
     });
   } catch (error: any) {
-    logger.error({ error: error.message }, 'Security API: Error switching mode');
+    safeLogger.error({ error: error.message }, 'Security API: Error switching mode');
     res.status(500).json({ 
       success: false, 
       error: 'Failed to switch mode' 
@@ -121,7 +121,7 @@ securityRouter.put('/config', (req: Request, res: Response) => {
     // Update WAF configuration
     AdvancedWAF.updateConfig(validUpdate);
     
-    logger.info({ 
+    safeLogger.info({ 
       updates: validUpdate,
       adminUser: req.user?.id || 'unknown',
       timestamp: new Date().toISOString()
@@ -136,7 +136,7 @@ securityRouter.put('/config', (req: Request, res: Response) => {
       config
     });
   } catch (error: any) {
-    logger.error({ error: error.message }, 'Security API: Error updating config');
+    safeLogger.error({ error: error.message }, 'Security API: Error updating config');
     res.status(500).json({ 
       success: false, 
       error: 'Failed to update configuration' 
@@ -177,7 +177,7 @@ securityRouter.get('/stats', (req: Request, res: Response) => {
       }
     });
   } catch (error: any) {
-    logger.error({ error: error.message }, 'Security API: Error getting stats');
+    safeLogger.error({ error: error.message }, 'Security API: Error getting stats');
     res.status(500).json({ 
       success: false, 
       error: 'Failed to get statistics' 
@@ -190,7 +190,7 @@ securityRouter.post('/clear-cache', (req: Request, res: Response) => {
   try {
     AdvancedWAF.clearCache();
     
-    logger.info({ 
+    safeLogger.info({ 
       adminUser: req.user?.id || 'unknown',
       timestamp: new Date().toISOString()
     }, 'Security: WAF cache cleared');
@@ -200,7 +200,7 @@ securityRouter.post('/clear-cache', (req: Request, res: Response) => {
       message: 'WAF cache cleared successfully'
     });
   } catch (error: any) {
-    logger.error({ error: error.message }, 'Security API: Error clearing cache');
+    safeLogger.error({ error: error.message }, 'Security API: Error clearing cache');
     res.status(500).json({ 
       success: false, 
       error: 'Failed to clear cache' 
@@ -241,7 +241,7 @@ securityRouter.get('/test', (req: Request, res: Response) => {
       note: 'Send these in request parameters, body, or headers to trigger WAF'
     });
   } catch (error: any) {
-    logger.error({ error: error.message }, 'Security API: Error getting test patterns');
+    safeLogger.error({ error: error.message }, 'Security API: Error getting test patterns');
     res.status(500).json({ 
       success: false, 
       error: 'Failed to get test patterns' 
@@ -290,7 +290,7 @@ securityRouter.get('/health', (req: Request, res: Response) => {
       }
     });
   } catch (error: any) {
-    logger.error({ error: error.message }, 'Security API: Error checking health');
+    safeLogger.error({ error: error.message }, 'Security API: Error checking health');
     res.status(500).json({ 
       success: false, 
       error: 'Failed to check security health' 

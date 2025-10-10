@@ -1,5 +1,5 @@
 import Redis from 'ioredis';
-import { logger } from './logger';
+import { safeLogger } from './logger';
 
 /**
  * Redis service for caching and session management
@@ -27,23 +27,23 @@ export function initRedis(): Redis {
 
   // Event listeners
   redis.on('connect', () => {
-    logger.info('Redis connected successfully');
+    safeLogger.info('Redis connected successfully');
   });
 
   redis.on('ready', () => {
-    logger.info('Redis ready to accept commands');
+    safeLogger.info('Redis ready to accept commands');
   });
 
   redis.on('error', (error) => {
-    logger.error('Redis connection error:', error);
+    safeLogger.error('Redis connection error:', error);
   });
 
   redis.on('close', () => {
-    logger.warn('Redis connection closed');
+    safeLogger.warn('Redis connection closed');
   });
 
   redis.on('reconnecting', () => {
-    logger.info('Redis reconnecting...');
+    safeLogger.info('Redis reconnecting...');
   });
 
   return redis;
@@ -81,9 +81,9 @@ export class CacheService {
       
       await this.redis.setex(this.prefixKey(key), ttlToUse, serialized);
       
-      logger.debug(`Cache set: ${key} (TTL: ${ttlToUse}s)`);
+      safeLogger.debug(`Cache set: ${key} (TTL: ${ttlToUse}s)`);
     } catch (error) {
-      logger.error('Cache set error:', error);
+      safeLogger.error('Cache set error:', error);
       throw new Error('Failed to set cache');
     }
   }
@@ -96,14 +96,14 @@ export class CacheService {
       const value = await this.redis.get(this.prefixKey(key));
       
       if (value === null) {
-        logger.debug(`Cache miss: ${key}`);
+        safeLogger.debug(`Cache miss: ${key}`);
         return null;
       }
 
-      logger.debug(`Cache hit: ${key}`);
+      safeLogger.debug(`Cache hit: ${key}`);
       return JSON.parse(value);
     } catch (error) {
-      logger.error('Cache get error:', error);
+      safeLogger.error('Cache get error:', error);
       return null; // Fail silently for cache errors
     }
   }
@@ -114,9 +114,9 @@ export class CacheService {
   async del(key: string): Promise<void> {
     try {
       await this.redis.del(this.prefixKey(key));
-      logger.debug(`Cache deleted: ${key}`);
+      safeLogger.debug(`Cache deleted: ${key}`);
     } catch (error) {
-      logger.error('Cache delete error:', error);
+      safeLogger.error('Cache delete error:', error);
       throw new Error('Failed to delete cache');
     }
   }
@@ -129,7 +129,7 @@ export class CacheService {
       const exists = await this.redis.exists(this.prefixKey(key));
       return exists === 1;
     } catch (error) {
-      logger.error('Cache exists error:', error);
+      safeLogger.error('Cache exists error:', error);
       return false;
     }
   }
@@ -151,7 +151,7 @@ export class CacheService {
         }
       });
     } catch (error) {
-      logger.error('Cache mget error:', error);
+      safeLogger.error('Cache mget error:', error);
       return keys.map(() => null);
     }
   }
@@ -171,9 +171,9 @@ export class CacheService {
       });
 
       await pipeline.exec();
-      logger.debug(`Cache mset: ${Object.keys(keyValues).length} keys`);
+      safeLogger.debug(`Cache mset: ${Object.keys(keyValues).length} keys`);
     } catch (error) {
-      logger.error('Cache mset error:', error);
+      safeLogger.error('Cache mset error:', error);
       throw new Error('Failed to set multiple cache values');
     }
   }
@@ -194,7 +194,7 @@ export class CacheService {
       const results = await pipeline.exec();
       return results?.[0]?.[1] as number || 0;
     } catch (error) {
-      logger.error('Cache incr error:', error);
+      safeLogger.error('Cache incr error:', error);
       throw new Error('Failed to increment counter');
     }
   }
@@ -206,7 +206,7 @@ export class CacheService {
     try {
       return await this.redis.ttl(this.prefixKey(key));
     } catch (error) {
-      logger.error('Cache TTL error:', error);
+      safeLogger.error('Cache TTL error:', error);
       return -1;
     }
   }
@@ -224,10 +224,10 @@ export class CacheService {
       
       if (keys.length > 0) {
         await this.redis.del(...keys);
-        logger.info(`Cache cleared: ${keys.length} keys`);
+        safeLogger.info(`Cache cleared: ${keys.length} keys`);
       }
     } catch (error) {
-      logger.error('Cache clear error:', error);
+      safeLogger.error('Cache clear error:', error);
       throw new Error('Failed to clear cache');
     }
   }
@@ -251,7 +251,7 @@ export class CacheService {
         }, {})
       };
     } catch (error) {
-      logger.error('Cache stats error:', error);
+      safeLogger.error('Cache stats error:', error);
       return null;
     }
   }
@@ -316,14 +316,14 @@ export const sessionStore = new RedisSessionStore();
 process.on('SIGINT', async () => {
   if (redis) {
     await redis.quit();
-    logger.info('Redis connection closed');
+    safeLogger.info('Redis connection closed');
   }
 });
 
 process.on('SIGTERM', async () => {
   if (redis) {
     await redis.quit();
-    logger.info('Redis connection closed');
+    safeLogger.info('Redis connection closed');
   }
 });
 

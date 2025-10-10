@@ -4,7 +4,7 @@
  */
 
 import * as Sentry from '@sentry/nextjs';
-import { logger } from '../lib/logger';
+import { safeLogger } from '../lib/logger';
 
 // Sentry configuration
 export const SENTRY_CONFIG = {
@@ -80,7 +80,7 @@ export const SENTRY_CONFIG = {
     Sentry.httpIntegration(),
     Sentry.onUncaughtExceptionIntegration({
       onFatalError: (error: Error) => {
-        logger.error({ error: error.message }, 'Fatal uncaught exception');
+        safeLogger.error({ error: error.message }, 'Fatal uncaught exception');
         process.exit(1);
       }
     }),
@@ -95,15 +95,15 @@ export const SENTRY_CONFIG = {
  */
 export function initSentry() {
   if (!SENTRY_CONFIG.dsn) {
-    logger.warn('Sentry DSN not configured, error tracking disabled');
+    safeLogger.warn('Sentry DSN not configured, error tracking disabled');
     return;
   }
 
   try {
     Sentry.init(SENTRY_CONFIG);
-    logger.info('Sentry error tracking initialized');
+    safeLogger.info('Sentry error tracking initialized');
   } catch (error) {
-    logger.error({ error: (error as Error).message }, 'Failed to initialize Sentry');
+    safeLogger.error({ error: (error as Error).message }, 'Failed to initialize Sentry');
   }
 }
 
@@ -112,7 +112,7 @@ export function initSentry() {
  */
 export class ErrorHandler {
   static captureException(error: Error, context?: Record<string, any>) {
-    logger.error({ error: error.message, context }, 'Exception captured');
+    safeLogger.error({ error: error.message, context }, 'Exception captured');
     
     if (SENTRY_CONFIG.dsn) {
       Sentry.withScope(scope => {
@@ -129,7 +129,7 @@ export class ErrorHandler {
   }
 
   static captureMessage(message: string, level: 'info' | 'warning' | 'error' = 'info', context?: Record<string, any>) {
-    const logFn = level === 'warning' ? logger.warn : level === 'error' ? logger.error : logger.info;
+    const logFn = level === 'warning' ? safeLogger.warn : level === 'error' ? safeLogger.error : safeLogger.info;
     logFn(context || {}, message);
     
     if (SENTRY_CONFIG.dsn) {

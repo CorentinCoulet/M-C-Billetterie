@@ -1,37 +1,51 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
+import { z } from 'zod';
+import { logger } from '../../../../lib/logger';
+import {
+  createMethodHandler,
+  NextApiResponse,
+  validateBody,
+} from '../../../../src/lib/next-api-helpers';
 import ticketService from '../../../../src/services/ticketQRService';
+
+const validateQRSchema = z.object({
+  qrContent: z.string().min(1, 'QR content is required'),
+  markAsUsed: z.boolean().default(false),
+});
 
 /**
  * POST /api/tickets/validate
  * Validate a QR code and optionally mark ticket as used
  */
-export async function POST(request: NextRequest) {
+async function handlePost(request: NextRequest) {
+  const { data, error } = await validateBody(request, validateQRSchema);
+  if (error) return error;
+
+  const { qrContent, markAsUsed } = data;
+
   try {
-    const { qrContent, markAsUsed = false } = await request.json();
-    
-    if (!qrContent) {
-      return NextResponse.json(
-        { error: 'QR content is required' },
-        { status: 400 }
-      );
-    }
+    logger.info({ qrContent, markAsUsed }, 'Validating ticket QR code');
 
     const validation = await ticketService.validateTicketQRCode(qrContent, markAsUsed);
     
     // Return appropriate status code based on validation result
     if (!validation.valid) {
-      return NextResponse.json(
-        { 
-          valid: false, 
-          error: validation.error,
-          canBeScanned: validation.canBeScanned || false 
-        },
-        { status: 400 }
-      );
+      logger.warn({ qrContent, error: validation.error }, 'Ticket validation failed');
+      
+      return NextApiResponse.badRequest(validation.error || 'Validation failed', {
+        valid: false,
+        canBeScanned: validation.canBeScanned || false,
+      });
     }
 
     // Success response
-    return NextResponse.json({
+    logger.info({ 
+      ticketId: validation.ticket?.id, 
+      isAlreadyScanned: validation.isAlreadyScanned,
+      markAsUsed 
+    }, 'Ticket validated successfully');
+
+    return NextApiResponse.success({
       valid: true,
       ticket: {
         id: validation.ticket?.id,
@@ -52,13 +66,12 @@ export async function POST(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error('QR validation error:', error);
-    return NextResponse.json(
-      { 
-        valid: false, 
-        error: 'Internal validation error' 
-      },
-      { status: 500 }
-    );
+    logger.error({ error, qrContent }, 'QR validation error');
+    
+    return NextApiResponse.error('Internal validation error', 500);
   }
 }
+
+export const POST = createMethodHandler({
+  POST: handlePost,
+});

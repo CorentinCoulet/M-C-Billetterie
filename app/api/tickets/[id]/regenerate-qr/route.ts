@@ -1,42 +1,43 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
+import { logger } from '../../../../../lib/logger';
+import {
+    NextApiResponse,
+    createMethodHandler,
+} from '../../../../../src/lib/next-api-helpers';
 import ticketService from '../../../../../src/services/ticketQRService';
 
 /**
  * POST /api/tickets/[id]/regenerate-qr
  * Regenerate QR code for a ticket
  */
-export async function POST(request: NextRequest, { params }: { params: { id: string } }) {
+async function handlePost(request: NextRequest, { params }: { params: { id: string } }) {
   try {
     const ticketId = params.id;
     
     if (!ticketId) {
-      return NextResponse.json(
-        { error: 'Ticket ID is required' },
-        { status: 400 }
-      );
+      return NextApiResponse.badRequest('Ticket ID is required');
     }
+
+    logger.info({ ticketId }, 'Regenerating QR code for ticket');
 
     // Check if ticket exists and is not already scanned
     const existingTicket = await ticketService.getTicketById(ticketId);
     if (!existingTicket) {
-      return NextResponse.json(
-        { error: 'Ticket not found' },
-        { status: 404 }
-      );
+      logger.warn({ ticketId }, 'Ticket not found for QR regeneration');
+      return NextApiResponse.notFound('Ticket not found');
     }
 
     if (existingTicket.isScanned) {
-      return NextResponse.json(
-        { error: 'Cannot regenerate QR code for already used ticket' },
-        { status: 400 }
-      );
+      logger.warn({ ticketId }, 'Cannot regenerate QR code for already scanned ticket');
+      return NextApiResponse.badRequest('Cannot regenerate QR code for already used ticket');
     }
 
     // Generate new QR code
     const qrResult = await ticketService.generateTicketQRCode(ticketId);
     
-    return NextResponse.json({
-      success: true,
+    logger.info({ ticketId, eventId: existingTicket.eventId }, 'QR code regenerated successfully');
+
+    return NextApiResponse.success({
       message: 'QR code regenerated successfully',
       qrCode: qrResult.qrCodeDataUrl,
       generatedAt: new Date().toISOString(),
@@ -47,13 +48,11 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
     });
 
   } catch (error) {
-    console.error('QR regeneration error:', error);
-    return NextResponse.json(
-      { 
-        success: false,
-        error: 'Failed to regenerate QR code' 
-      },
-      { status: 500 }
-    );
+    logger.error({ error, ticketId: params.id }, 'QR regeneration error');
+    return NextApiResponse.error('Failed to regenerate QR code', 500);
   }
 }
+
+export const POST = createMethodHandler({
+  POST: handlePost,
+});

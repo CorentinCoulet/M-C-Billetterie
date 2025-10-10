@@ -4,14 +4,14 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { logger, safeLogger } from '../lib/logger';
+import { safeLogger } from '../lib/logger';
 import {
-    apiRateLimiter,
-    authRateLimiter,
-    createProductionRateLimiter,
-    getRateLimiterStatus,
-    keyGenerators,
-    paymentRateLimiter
+  apiRateLimiter,
+  authRateLimiter,
+  createProductionRateLimiter,
+  getRateLimiterStatus,
+  keyGenerators,
+  paymentRateLimiter
 } from './productionRateLimit';
 
 export interface RateLimitConfig {
@@ -262,7 +262,7 @@ export async function getRateLimitStatus(req: NextRequest): Promise<NextResponse
     });
 
   } catch (error) {
-    logger.error('Failed to get rate limit status:', error);
+    safeLogger.error('Failed to get rate limit status:', error);
     
     return NextResponse.json({
       status: 'error',

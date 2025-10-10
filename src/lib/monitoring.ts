@@ -1,6 +1,6 @@
 import { exec } from 'child_process';
 import { promisify } from 'util';
-import { logger } from '../lib/logger';
+import { safeLogger } from '../lib/logger';
 import prisma from '../lib/prisma';
 
 const execAsync = promisify(exec);
@@ -384,7 +384,7 @@ class MonitoringService {
       ...context
     });
     
-    logger.error('Error recorded in metrics', {
+    safeLogger.error('Error recorded in metrics', {
       error: error.message,
       stack: error.stack,
       context
@@ -508,7 +508,7 @@ export const monitoringService = new MonitoringService();
 // Start system metrics collection if monitoring is enabled
 if (process.env.MONITORING_ENABLED === 'true') {
   monitoringService.startSystemMetricsCollection();
-  logger.info('System metrics collection started');
+  safeLogger.info('System metrics collection started');
 }
 
 export default monitoringService;

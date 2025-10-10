@@ -6,7 +6,7 @@
 import crypto from 'crypto';
 import cron from 'node-cron';
 import { AuditService } from './audit-service';
-import { logger } from './logger';
+import { safeLogger } from './logger';
 import { secretsManager } from './secrets-manager';
 
 interface RotationStrategy {
@@ -78,17 +78,17 @@ class SecretsRotationService {
       await this.performSecurityScan();
     });
 
-    logger.info('Secrets rotation service scheduled');
+    safeLogger.info('Secrets rotation service scheduled');
   }
 
   async checkAndRotateSecrets(): Promise<void> {
     if (this.isRunning) {
-      logger.info('Secrets rotation already in progress, skipping');
+      safeLogger.info('Secrets rotation already in progress, skipping');
       return;
     }
 
     this.isRunning = true;
-    logger.info('Starting secrets rotation check');
+    safeLogger.info('Starting secrets rotation check');
 
     try {
       const secretsNeedingRotation = await secretsManager.checkRotationNeeded();
@@ -109,7 +109,7 @@ class SecretsRotationService {
       }
 
     } catch (error) {
-      logger.error('Error during secrets rotation:', error);
+      safeLogger.error('Error during secrets rotation', { error });
       await AuditService.logEvent({
         action: 'secrets.rotation_failed',
         resourceType: 'system',
@@ -120,12 +120,12 @@ class SecretsRotationService {
       });
     } finally {
       this.isRunning = false;
-      logger.info('Secrets rotation check completed');
+      safeLogger.info('Secrets rotation check completed');
     }
   }
 
   async rotateSecret(secretName: string): Promise<void> {
-    logger.info(`Rotating secret: ${secretName}`);
+    safeLogger.info(`Rotating secret: ${secretName}`);
 
     try {
       // Extract strategy from secret name (e.g., "jwt_secret" -> "jwt")
@@ -133,7 +133,7 @@ class SecretsRotationService {
       const strategy = this.strategies.get(strategyKey);
 
       if (!strategy) {
-        logger.warn(`No rotation strategy found for secret: ${secretName}`);
+        safeLogger.warn(`No rotation strategy found for secret: ${secretName}`);
         return;
       }
 
@@ -158,7 +158,7 @@ class SecretsRotationService {
       await this.notifySecretRotation(secretName, newValue);
 
     } catch (error) {
-      logger.error(`Failed to rotate secret ${secretName}:`, error);
+      safeLogger.error(`Failed to rotate secret ${secretName}`, { error, secretName });
       await AuditService.logEvent({
         action: 'secrets.rotation_failed',
         resourceType: 'secret',
@@ -184,12 +184,12 @@ class SecretsRotationService {
         process.env.SESSION_SECRET = newValue;
         break;
       default:
-        logger.info(`No specific notification needed for ${secretName}`);
+        safeLogger.info(`No specific notification needed for ${secretName}`);
     }
   }
 
   async forceRotateSecret(secretName: string): Promise<void> {
-    logger.info(`Forcing rotation of secret: ${secretName}`);
+    safeLogger.info(`Forcing rotation of secret: ${secretName}`);
     
     await AuditService.logEvent({
       action: 'secrets.force_rotation_initiated',
@@ -205,7 +205,7 @@ class SecretsRotationService {
   }
 
   async performSecurityScan(): Promise<void> {
-    logger.info('Performing security scan of secrets');
+    safeLogger.info('Performing security scan of secrets');
 
     try {
       const secrets = await secretsManager.listSecrets();
@@ -231,7 +231,7 @@ class SecretsRotationService {
       }
 
       if (warnings.length > 0) {
-        logger.warn('Security scan found issues:', warnings);
+        safeLogger.warn('Security scan found issues', { warnings, count: warnings.length });
         await AuditService.logEvent({
           action: 'secrets.security_scan_warnings',
           resourceType: 'system',
@@ -241,11 +241,11 @@ class SecretsRotationService {
           ipAddress: 'system'
         });
       } else {
-        logger.info('Security scan completed with no issues');
+        safeLogger.info('Security scan completed with no issues');
       }
 
     } catch (error) {
-      logger.error('Security scan failed:', error);
+      safeLogger.error('Security scan failed', { error });
       await AuditService.logEvent({
         action: 'secrets.security_scan_failed',
         resourceType: 'system',
@@ -259,7 +259,7 @@ class SecretsRotationService {
 
   async addRotationStrategy(key: string, strategy: RotationStrategy): Promise<void> {
     this.strategies.set(key, strategy);
-    logger.info(`Added rotation strategy: ${key} - ${strategy.name}`);
+    safeLogger.info(`Added rotation strategy: ${key} - ${strategy.name}`);
   }
 
   async getRotationStatus(): Promise<any> {

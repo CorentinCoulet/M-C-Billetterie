@@ -5,7 +5,7 @@
 
 import { EventEmitter } from 'events';
 import { incidentResponseService } from './incident-response-service';
-import { logger } from './logger';
+import { safeLogger } from './logger';
 
 export interface SecurityScan {
   id: string;
@@ -79,7 +79,7 @@ export class SecurityTestingService extends EventEmitter {
       await this.runCodeAnalysis(deployment);
     });
 
-    logger.info('Automated security testing started');
+    safeLogger.info('Automated security testing started');
   }
 
   /**
@@ -103,7 +103,7 @@ export class SecurityTestingService extends EventEmitter {
     };
 
     this.scans.set(scanId, scan);
-    logger.info(`Starting vulnerability scan: ${scanId}`);
+    safeLogger.info(`Starting vulnerability scan: ${scanId}`);
 
     try {
       // OWASP ZAP scan
@@ -125,7 +125,7 @@ export class SecurityTestingService extends EventEmitter {
       // Process critical findings immediately
       await this.processCriticalFindings(scan.findings);
 
-      logger.info(`Vulnerability scan completed: ${scanId}, found ${scan.findings.length} issues`);
+      safeLogger.info(`Vulnerability scan completed: ${scanId}, found ${scan.findings.length} issues`);
       this.emit('scanCompleted', scan);
 
       return scanId;
@@ -133,7 +133,7 @@ export class SecurityTestingService extends EventEmitter {
     } catch (error) {
       scan.status = 'failed';
       scan.endTime = new Date();
-      logger.error(`Vulnerability scan failed: ${scanId}`, error);
+      safeLogger.error(`Vulnerability scan failed: ${scanId}`, error);
       throw error;
     }
   }
@@ -146,7 +146,7 @@ export class SecurityTestingService extends EventEmitter {
     
     try {
       // In a real implementation, this would use OWASP ZAP API
-      logger.info('Running OWASP ZAP scan...');
+      safeLogger.info('Running OWASP ZAP scan...');
       
       // Simulate ZAP findings
       const simulatedFindings = [
@@ -183,7 +183,7 @@ export class SecurityTestingService extends EventEmitter {
       }
 
     } catch (error) {
-      logger.error('OWASP ZAP scan failed:', error);
+      safeLogger.error('OWASP ZAP scan failed:', error);
     }
 
     return findings;
@@ -196,7 +196,7 @@ export class SecurityTestingService extends EventEmitter {
     const findings: SecurityFinding[] = [];
     
     try {
-      logger.info('Running Nmap port scan...');
+      safeLogger.info('Running Nmap port scan...');
       
       // Simulate port scan results
       const openPorts = [80, 443, 22, 5432, 6379];
@@ -218,7 +218,7 @@ export class SecurityTestingService extends EventEmitter {
       }
 
     } catch (error) {
-      logger.error('Nmap scan failed:', error);
+      safeLogger.error('Nmap scan failed:', error);
     }
 
     return findings;
@@ -231,7 +231,7 @@ export class SecurityTestingService extends EventEmitter {
     const findings: SecurityFinding[] = [];
     
     try {
-      logger.info('Running SSL/TLS assessment...');
+      safeLogger.info('Running SSL/TLS assessment...');
       
       // Simulate SSL findings
       findings.push({
@@ -247,7 +247,7 @@ export class SecurityTestingService extends EventEmitter {
       });
 
     } catch (error) {
-      logger.error('SSL scan failed:', error);
+      safeLogger.error('SSL scan failed:', error);
     }
 
     return findings;
@@ -260,7 +260,7 @@ export class SecurityTestingService extends EventEmitter {
     const findings: SecurityFinding[] = [];
     
     try {
-      logger.info('Running dependency vulnerability check...');
+      safeLogger.info('Running dependency vulnerability check...');
       
       const { exec } = require('child_process');
       
@@ -288,13 +288,13 @@ export class SecurityTestingService extends EventEmitter {
               });
             }
           } catch (parseError) {
-            logger.error('Failed to parse yarn audit output:', parseError);
+            safeLogger.error('Failed to parse yarn audit output:', parseError);
           }
         }
       });
 
     } catch (error) {
-      logger.error('Dependency check failed:', error);
+      safeLogger.error('Dependency check failed:', error);
     }
 
     return findings;
@@ -320,7 +320,7 @@ export class SecurityTestingService extends EventEmitter {
     };
 
     this.scans.set(scanId, scan);
-    logger.info(`Starting penetration test: ${scanId}`);
+    safeLogger.info(`Starting penetration test: ${scanId}`);
 
     try {
       // Authentication bypass tests
@@ -338,13 +338,13 @@ export class SecurityTestingService extends EventEmitter {
 
       await this.processCriticalFindings(scan.findings);
 
-      logger.info(`Penetration test completed: ${scanId}`);
+      safeLogger.info(`Penetration test completed: ${scanId}`);
       return scanId;
 
     } catch (error) {
       scan.status = 'failed';
       scan.endTime = new Date();
-      logger.error(`Penetration test failed: ${scanId}`, error);
+      safeLogger.error(`Penetration test failed: ${scanId}`, error);
       throw error;
     }
   }
@@ -359,7 +359,7 @@ export class SecurityTestingService extends EventEmitter {
     // Test session fixation
     // Test password reset flaws
     
-    logger.info('Testing authentication mechanisms...');
+    safeLogger.info('Testing authentication mechanisms...');
     
     // Simulate auth testing
     return findings;
@@ -375,7 +375,7 @@ export class SecurityTestingService extends EventEmitter {
     // Test privilege escalation
     // Test race conditions
     
-    logger.info('Testing business logic...');
+    safeLogger.info('Testing business logic...');
     
     return findings;
   }
@@ -390,7 +390,7 @@ export class SecurityTestingService extends EventEmitter {
     // Test privilege escalation
     // Test access control bypasses
     
-    logger.info('Testing authorization controls...');
+    safeLogger.info('Testing authorization controls...');
     
     return findings;
   }
@@ -402,7 +402,7 @@ export class SecurityTestingService extends EventEmitter {
     const criticalFindings = findings.filter(f => f.severity === 'critical');
     
     if (criticalFindings.length > 0) {
-      logger.error(`Found ${criticalFindings.length} critical security vulnerabilities`);
+      safeLogger.error(`Found ${criticalFindings.length} critical security vulnerabilities`);
       
       // Create security incidents for critical findings
       for (const finding of criticalFindings) {
@@ -459,7 +459,7 @@ export class SecurityTestingService extends EventEmitter {
     this.bugBountySubmissions.set(submissionId, bugBounty);
     this.findings.set(finding.id, finding);
 
-    logger.info(`Bug bounty submission received: ${submissionId}`);
+    safeLogger.info(`Bug bounty submission received: ${submissionId}`);
     this.emit('bugBountySubmitted', bugBounty);
 
     // Auto-triage based on severity and known patterns
@@ -494,7 +494,7 @@ export class SecurityTestingService extends EventEmitter {
       submission.reward = this.calculateBountyReward(submission.finding);
       submission.feedback = `Valid security finding accepted. Reward: $${submission.reward}`;
       
-      logger.info(`Bug bounty accepted: ${submissionId}, reward: $${submission.reward}`);
+      safeLogger.info(`Bug bounty accepted: ${submissionId}, reward: $${submission.reward}`);
     } else {
       submission.status = 'rejected';
       submission.feedback = 'Unable to reproduce the reported vulnerability';

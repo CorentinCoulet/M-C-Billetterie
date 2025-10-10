@@ -1,9 +1,10 @@
 import { NextRequest } from 'next/server';
 import { z } from 'zod';
+import { logger } from '../../../lib/logger';
 import {
-  NextApiResponse,
-  validateBody,
-  withAuth
+    NextApiResponse,
+    validateBody,
+    withAuth
 } from '../../../src/lib/next-api-helpers';
 
 const createEventSchema = z.object({
@@ -18,36 +19,44 @@ const createEventSchema = z.object({
   organizerId: z.string().min(1, 'Organisateur requis'),
 });
 
-export async function GET(request: NextRequest) {
+async function handleGet(request: NextRequest) {
   try {
+    logger.info('Fetching events list');
+
     // Import event service
     const eventServiceModule = await import('../../../src/modules/event/event.service');
 
     // Get events with filters - use the exported functions
     const events = await eventServiceModule.list();
 
+    logger.info({ count: events?.length || 0 }, 'Events retrieved successfully');
+
     return NextApiResponse.success(events, 'Événements récupérés');
   } catch (error: any) {
-    console.error('Get events error:', error);
+    logger.error({ error }, 'Get events error');
     return NextApiResponse.error('Erreur lors de la récupération des événements', 500);
   }
 }
 
-export async function POST(request: NextRequest) {
+async function handlePost(request: NextRequest) {
   return withAuth(request, async (req, user) => {
     const { data, error } = await validateBody(req, createEventSchema);
     if (error) return error;
 
     try {
+      logger.info({ userId: user.id, eventData: data }, 'Creating new event');
+
       // Import event service
       const eventServiceModule = await import('../../../src/modules/event/event.service');
 
       // Create event
       const event = await eventServiceModule.create(data);
 
+      logger.info({ eventId: event.id, userId: user.id }, 'Event created successfully');
+
       return NextApiResponse.success(event, 'Événement créé avec succès', 201);
     } catch (error: any) {
-      console.error('Create event error:', error);
+      logger.error({ error, userId: user.id }, 'Create event error');
       return NextApiResponse.error(
         error.message || 'Erreur lors de la création de l\'événement',
         500
@@ -55,3 +64,6 @@ export async function POST(request: NextRequest) {
     }
   });
 }
+
+export const GET = (req: NextRequest) => handleGet(req);
+export const POST = (req: NextRequest) => handlePost(req);

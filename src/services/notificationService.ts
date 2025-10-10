@@ -1,4 +1,4 @@
-import { logAuditEvent, logger } from '../lib/logger';
+import { logAuditEvent, safeLogger } from '../lib/logger';
 import prisma from '../lib/prisma';
 import { BaseService } from './baseService';
 
@@ -230,7 +230,7 @@ class NotificationService extends BaseService<any> {
       }
 
       // Log notification
-      logger.info('Notification sent', {
+      safeLogger.info('Notification sent', {
         notificationId: notification.id,
         userId: data.userId,
         type: data.type,
@@ -246,7 +246,7 @@ class NotificationService extends BaseService<any> {
       return notification;
 
     } catch (error) {
-      logger.error('Failed to send notification', {
+      safeLogger.error('Failed to send notification', {
         error: error instanceof Error ? error.message : 'Unknown error',
         userId: data.userId,
         type: data.type
@@ -371,7 +371,7 @@ class NotificationService extends BaseService<any> {
       }
     });
 
-    logger.info(`Cleaned up ${result.count} expired notifications`);
+    safeLogger.info(`Cleaned up ${result.count} expired notifications`);
     return result.count;
   }
 
@@ -387,7 +387,7 @@ class NotificationService extends BaseService<any> {
       });
 
       if (!user?.email) {
-        logger.warn('Cannot send email notification - user email not found', {
+        safeLogger.warn('Cannot send email notification - user email not found', {
           userId: data.userId
         });
         return;
@@ -407,7 +407,7 @@ class NotificationService extends BaseService<any> {
       });
 
     } catch (error) {
-      logger.error('Failed to send email notification', {
+      safeLogger.error('Failed to send email notification', {
         error: error instanceof Error ? error.message : 'Unknown error',
         userId: data.userId,
         type: data.type
@@ -421,13 +421,13 @@ class NotificationService extends BaseService<any> {
   private async sendPushNotification(data: NotificationData, template: NotificationTemplate): Promise<void> {
     try {
       // Implementation would depend on push notification service (FCM, APNs, etc.)
-      logger.info('Push notification would be sent here', {
+      safeLogger.info('Push notification would be sent here', {
         userId: data.userId,
         type: data.type,
         priority: data.priority
       });
     } catch (error) {
-      logger.error('Failed to send push notification', {
+      safeLogger.error('Failed to send push notification', {
         error: error instanceof Error ? error.message : 'Unknown error',
         userId: data.userId,
         type: data.type

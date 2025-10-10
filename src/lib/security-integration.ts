@@ -3,7 +3,7 @@ import securityRouter from '../controllers/security.controller';
 import { adminAuth, logAdminAction } from '../middlewares/admin-auth';
 import { securityHeaders } from '../middlewares/security-headers';
 import { wafMiddleware } from '../middlewares/simple-waf';
-import { logger } from './logger';
+import { safeLogger } from './logger';
 
 /**
  * Security Integration Module
@@ -13,15 +13,15 @@ import { logger } from './logger';
 export const setupSecurityMiddleware = (app: express.Application): void => {
   // 1. WAF Protection (should be one of the first middlewares)
   app.use(wafMiddleware());
-  logger.info('Security: WAF middleware enabled');
+  safeLogger.info('Security: WAF middleware enabled');
 
   // 2. Security Headers
   app.use(securityHeaders());
-  logger.info('Security: Security headers middleware enabled');
+  safeLogger.info('Security: Security headers middleware enabled');
   
   // 3. Admin Routes with Authentication
   app.use('/api/admin/security', adminAuth, logAdminAction, securityRouter);
-  logger.info('Security: Admin security routes enabled at /api/admin/security');
+  safeLogger.info('Security: Admin security routes enabled at /api/admin/security');
 };
 
 /**
@@ -59,7 +59,7 @@ export const setupPublicSecurityRoutes = (app: express.Application): void => {
         }
       });
     } catch (error: any) {
-      logger.error('Public Security Status: Error', { error: error.message });
+      safeLogger.error('Public Security Status: Error', { error: error.message });
       res.status(500).json({
         success: false,
         error: 'Unable to retrieve security status'
@@ -67,7 +67,7 @@ export const setupPublicSecurityRoutes = (app: express.Application): void => {
     }
   });
   
-  logger.info('Security: Public security status route enabled at /api/security/status');
+  safeLogger.info('Security: Public security status route enabled at /api/security/status');
 };
 
 /**

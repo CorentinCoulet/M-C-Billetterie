@@ -1,6 +1,6 @@
 import crypto from 'crypto';
 import { NextFunction, Request, Response } from 'express';
-import { logger } from './logger';
+import { safeLogger } from './logger';
 import prisma from './prisma';
 
 /**
@@ -206,10 +206,10 @@ class UnifiedSecurityService {
         }
       });
     } catch (error) {
-      logger.error('Failed to log IP block', { error, ip, reason });
+      safeLogger.error('Failed to log IP block', { error, ip, reason });
     }
 
-    logger.warn('IP blocked', { ip, reason, duration });
+    safeLogger.warn('IP blocked', { ip, reason, duration });
   }
 
   /**
@@ -240,7 +240,7 @@ class UnifiedSecurityService {
         (req as any).securityAnalysis = analysis;
         
         if (analysis.blocked) {
-          logger.warn('Request blocked by security analysis', {
+          safeLogger.warn('Request blocked by security analysis', {
             ip: analysis.ip,
             threats: analysis.threats.map(t => ({ type: t.type, level: t.level })),
             path: req.path
@@ -255,7 +255,7 @@ class UnifiedSecurityService {
         // Log high-risk requests
         const highRiskThreats = analysis.threats.filter(t => ['high', 'critical'].includes(t.level));
         if (highRiskThreats.length > 0) {
-          logger.warn('High-risk request detected', {
+          safeLogger.warn('High-risk request detected', {
             ip: analysis.ip,
             threats: highRiskThreats,
             path: req.path,
@@ -265,7 +265,7 @@ class UnifiedSecurityService {
         
         next();
       } catch (error) {
-        logger.error('Security analysis failed', { error, ip: this.getClientIP(req) });
+        safeLogger.error('Security analysis failed', { error, ip: this.getClientIP(req) });
         next(); // Don't block on security analysis errors
       }
     };

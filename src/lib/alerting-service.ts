@@ -6,7 +6,7 @@
 import cron from 'node-cron';
 import nodemailer from 'nodemailer';
 import { AuditService } from './audit-service';
-import { logger } from './logger';
+import { safeLogger } from './logger';
 
 interface Alert {
   id: string;
@@ -68,7 +68,7 @@ class AlertingService {
         });
       }
     } catch (error) {
-      logger.error('Failed to initialize email transporter:', error);
+      safeLogger.error('Failed to initialize email transporter:', error);
     }
   }
 
@@ -183,7 +183,7 @@ class AlertingService {
       ]
     });
 
-    logger.info(`Initialized ${this.rules.size} alert rules`);
+    safeLogger.info(`Initialized ${this.rules.size} alert rules`);
   }
 
   private startMonitoring(): void {
@@ -197,7 +197,7 @@ class AlertingService {
       this.cleanupOldMetrics();
     });
 
-    logger.info('Alert monitoring started');
+    safeLogger.info('Alert monitoring started');
   }
 
   async recordMetric(key: string, value: any, metadata?: Record<string, any>): Promise<void> {
@@ -236,7 +236,7 @@ class AlertingService {
           await this.triggerAlert(rule, data);
         }
       } catch (error) {
-        logger.error(`Error checking alert rule ${rule.id}:`, error);
+        safeLogger.error(`Error checking alert rule ${rule.id}:`, error);
       }
     }
   }
@@ -287,7 +287,7 @@ class AlertingService {
           await this.triggerAlert(rule, alertData);
         }
       } catch (error) {
-        logger.error(`Error checking immediate alert for ${key}:`, error);
+        safeLogger.error(`Error checking immediate alert for ${key}:`, error);
       }
     }
   }
@@ -365,7 +365,7 @@ class AlertingService {
     this.alerts.set(alert.id, alert);
     rule.lastTriggered = new Date();
 
-    logger.warn(`Alert triggered: ${alert.title}`, { alertId: alert.id, details: alert.details });
+    safeLogger.warn(`Alert triggered: ${alert.title}`, { alertId: alert.id, details: alert.details });
 
     // Send notifications
     await this.sendNotifications(alert, rule.notifications);
@@ -431,17 +431,17 @@ class AlertingService {
             await this.sendWebhookNotification(alert, channel.config);
             break;
           default:
-            logger.warn(`Unsupported notification channel: ${channel.type}`);
+            safeLogger.warn(`Unsupported notification channel: ${channel.type}`);
         }
       } catch (error) {
-        logger.error(`Failed to send ${channel.type} notification:`, error);
+        safeLogger.error(`Failed to send ${channel.type} notification:`, error);
       }
     }
   }
 
   private async sendEmailNotification(alert: Alert, config: any): Promise<void> {
     if (!this.emailTransporter) {
-      logger.warn('Email transporter not configured');
+      safeLogger.warn('Email transporter not configured');
       return;
     }
 
@@ -530,13 +530,13 @@ class AlertingService {
 
   addRule(rule: AlertRule): void {
     this.rules.set(rule.id, rule);
-    logger.info(`Added alert rule: ${rule.name}`);
+    safeLogger.info(`Added alert rule: ${rule.name}`);
   }
 
   removeRule(ruleId: string): boolean {
     const removed = this.rules.delete(ruleId);
     if (removed) {
-      logger.info(`Removed alert rule: ${ruleId}`);
+      safeLogger.info(`Removed alert rule: ${ruleId}`);
     }
     return removed;
   }
@@ -562,7 +562,7 @@ class AlertingService {
       riskLevel: 'low'
     });
 
-    logger.info(`Alert resolved: ${alertId} by ${resolvedBy}`);
+    safeLogger.info(`Alert resolved: ${alertId} by ${resolvedBy}`);
     return true;
   }
 

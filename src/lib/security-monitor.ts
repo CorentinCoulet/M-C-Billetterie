@@ -1,6 +1,6 @@
 import { EventEmitter } from 'events';
 import nodemailer from 'nodemailer';
-import { logger } from '../lib/logger';
+import { safeLogger } from '../lib/logger';
 import prisma from '../lib/prisma';
 
 /**
@@ -199,7 +199,7 @@ class SecurityMonitor extends EventEmitter {
     // Check if this triggers any alerts
     await this.checkAlertRules(event);
 
-    logger.info('Security event recorded', {
+    safeLogger.info('Security event recorded', {
       eventId,
       type,
       severity: event.severity,
@@ -283,7 +283,7 @@ class SecurityMonitor extends EventEmitter {
       eventCount: events.length
     };
 
-    logger.warn('Security alert triggered', {
+    safeLogger.warn('Security alert triggered', {
       eventType: rule.eventType,
       severity: rule.severity,
       threshold: rule.threshold,
@@ -296,7 +296,7 @@ class SecurityMonitor extends EventEmitter {
       try {
         await this.executeAlertAction(action, alertData);
       } catch (error) {
-        logger.error('Failed to execute alert action', { action, error });
+        safeLogger.error('Failed to execute alert action', { action, error });
       }
     }
 
@@ -329,7 +329,7 @@ class SecurityMonitor extends EventEmitter {
         break;
         
       case 'log':
-        logger.error('SECURITY ALERT', alertData);
+        safeLogger.error('SECURITY ALERT', alertData);
         break;
     }
   }
@@ -498,7 +498,7 @@ class SecurityMonitor extends EventEmitter {
       })
     };
 
-    logger.info('Hourly security report generated', report);
+    safeLogger.info('Hourly security report generated', report);
     this.emit('securityReport', report);
   }
 

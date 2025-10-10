@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import prisma from '../lib/prisma';
 import { TicketService } from './ticketQRService';
 
@@ -58,7 +59,7 @@ export class QRRotationService {
     };
 
     try {
-      console.log('🔄 Starting QR code rotation...');
+      logger.info('Starting QR code rotation');
 
       // Get all tickets that might need rotation
       const tickets = await prisma.ticket.findMany({
@@ -76,7 +77,7 @@ export class QRRotationService {
       });
 
       stats.total = tickets.length;
-      console.log(`📊 Found ${tickets.length} tickets to check for rotation`);
+      logger.info({ count: tickets.length }, 'Found tickets to check for rotation');
 
       for (const ticket of tickets) {
         try {
@@ -84,18 +85,18 @@ export class QRRotationService {
             // Regenerate QR code
             await this.ticketService.generateTicketQRCode(ticket.id);
             stats.regenerated++;
-            console.log(`✅ Regenerated QR code for ticket ${ticket.id}`);
+            logger.info({ ticketId: ticket.id }, 'Regenerated QR code for ticket');
           } else {
             stats.skipped++;
-            console.log(`⏭️ Skipping ticket ${ticket.id} (rotation not needed)`);
+            logger.debug({ ticketId: ticket.id }, 'Skipping ticket - rotation not needed');
           }
         } catch (error) {
           stats.errors++;
-          console.error(`❌ Error processing ticket ${ticket.id}:`, error);
+          logger.error({ error, ticketId: ticket.id }, 'Error processing ticket');
         }
       }
 
-      console.log(`✅ QR rotation completed:`, stats);
+      logger.info({ stats }, 'QR rotation completed');
       
       return {
         success: true,
@@ -103,7 +104,7 @@ export class QRRotationService {
       };
 
     } catch (error) {
-      console.error('❌ QR rotation process failed:', error);
+      logger.error({ error }, 'QR rotation process failed');
       
       return {
         success: false,

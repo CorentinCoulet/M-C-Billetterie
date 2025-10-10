@@ -4,7 +4,7 @@
  */
 
 import { PrismaClient } from '../generated/prisma';
-import { logger } from './logger';
+import { safeLogger } from './logger';
 import { emailService } from './mailer';
 import { slackService } from './slack-integration';
 
@@ -83,7 +83,7 @@ class SecurityIncidentResponse {
     this.incidents.set(incident.id, incident);
 
     // Log incident
-    logger.error('Security incident detected', {
+    safeLogger.error('Security incident detected', {
       incidentId: incident.id,
       type: incident.type,
       severity: incident.severity,
@@ -210,7 +210,7 @@ class SecurityIncidentResponse {
       this.blockedIPs.delete(ipAddress);
     }, durationMinutes * 60 * 1000);
 
-    logger.warn(`IP ${ipAddress} blocked`, { reason, durationMinutes });
+    safeLogger.warn(`IP ${ipAddress} blocked`, { reason, durationMinutes });
   }
 
   /**
@@ -352,7 +352,7 @@ Evidence: ${JSON.stringify(incident.evidence, null, 2)}
         priority: 'high'
       });
     } catch (error) {
-      logger.error('Failed to send security email alert', error);
+      safeLogger.error('Failed to send security email alert', error);
     }
 
     // Slack notification for critical incidents
@@ -364,7 +364,7 @@ Evidence: ${JSON.stringify(incident.evidence, null, 2)}
           details: message
         });
       } catch (error) {
-        logger.error('Failed to send Slack security alert', error);
+        safeLogger.error('Failed to send Slack security alert', error);
       }
     }
 
@@ -392,7 +392,7 @@ Evidence: ${JSON.stringify(incident.evidence, null, 2)}
         }
       });
     } catch (error) {
-      logger.error('Failed to persist security incident', error);
+      safeLogger.error('Failed to persist security incident', error);
     }
   }
 
@@ -468,7 +468,7 @@ Evidence: ${JSON.stringify(incident.evidence, null, 2)}
   }
 
   private async initiateEmergencyLockdown(): Promise<void> {
-    logger.error('Emergency lockdown initiated - Data breach detected');
+    safeLogger.error('Emergency lockdown initiated - Data breach detected');
     
     // TODO: Implement emergency procedures:
     // - Disable non-essential endpoints
@@ -478,7 +478,7 @@ Evidence: ${JSON.stringify(incident.evidence, null, 2)}
   }
 
   private async activateEmergencyRateLimiting(): Promise<void> {
-    logger.warn('Emergency rate limiting activated - DDoS detected');
+    safeLogger.warn('Emergency rate limiting activated - DDoS detected');
     
     // TODO: Implement emergency rate limiting:
     // - Reduce rate limits by 90%
@@ -502,9 +502,9 @@ Evidence: ${JSON.stringify(incident.evidence, null, 2)}
       // TODO: Integrate with threat intelligence providers
       // Examples: AbuseIPDB, VirusTotal, OTX, etc.
       
-      logger.info('Threat intelligence updated');
+      safeLogger.info('Threat intelligence updated');
     } catch (error) {
-      logger.error('Failed to update threat intelligence', error);
+      safeLogger.error('Failed to update threat intelligence', error);
     }
   }
 }

@@ -5,7 +5,7 @@
 
 import type { Redis } from 'ioredis';
 import { NextRequest, NextResponse } from 'next/server';
-import { logger, safeLogger } from '../lib/logger';
+import { safeLogger } from '../lib/logger';
 
 export interface RateLimitOptions {
   windowMs: number;
@@ -55,26 +55,24 @@ class RedisRateLimiter {
         this.isRedisAvailable = true;
         
         this.redisClient.on('error', (error: Error) => {
-          safeLogger.error('Redis rate limiter error:', error);
+          safeLogger.error('Redis rate limiter error', { error });
           this.isRedisAvailable = false;
         });
 
         this.redisClient.on('connect', () => {
-          logger.info('Redis rate limiter connected');
+          safeLogger.info('Redis rate limiter connected');
           this.isRedisAvailable = true;
-        });
+      });
 
-        logger.info('Redis rate limiter initialized');
-      } else {
-        safeLogger.warn('Redis URL not provided, using in-memory fallback for rate limiting');
-      }
-    } catch (error) {
-      safeLogger.error('Failed to initialize Redis for rate limiting:', error);
-      this.isRedisAvailable = false;
+      safeLogger.info('Redis rate limiter initialized');
+    } else {
+      safeLogger.warn('Redis URL not provided, using in-memory fallback for rate limiting');
     }
+  } catch (error) {
+    safeLogger.error('Failed to initialize Redis for rate limiting', { error });
+    this.isRedisAvailable = false;
   }
-
-  async checkLimit(key: string, windowMs: number, maxRequests: number): Promise<RateLimitResult> {
+}  async checkLimit(key: string, windowMs: number, maxRequests: number): Promise<RateLimitResult> {
     if (this.isRedisAvailable && this.redisClient) {
       return this.checkRedisRateLimit(key, windowMs, maxRequests);
     } else {
@@ -195,16 +193,14 @@ class RedisRateLimiter {
   async reset(key: string): Promise<void> {
     if (this.isRedisAvailable && this.redisClient) {
       try {
-        await this.redisClient.del(key);
-      } catch (error) {
-        safeLogger.error('Failed to reset Redis rate limit:', error);
-      }
-    } else {
-      this.fallbackStore.delete(key);
+      await this.redisClient.del(key);
+    } catch (error) {
+      safeLogger.error('Failed to reset Redis rate limit', { error, key });
     }
+  } else {
+    this.fallbackStore.delete(key);
   }
-
-  async getStatus(): Promise<{ redis: boolean; fallback: boolean; keys: number }> {
+}  async getStatus(): Promise<{ redis: boolean; fallback: boolean; keys: number }> {
     return {
       redis: this.isRedisAvailable,
       fallback: !this.isRedisAvailable,
@@ -315,19 +311,17 @@ export function createProductionRateLimiter(options: {
       headers.set('X-RateLimit-Remaining', result.remaining.toString());
       headers.set('X-RateLimit-Reset', new Date(result.resetTime).toISOString());
       
-      if (!result.allowed) {
-        // Log rate limit exceeded
-        safeLogger.warn(`Rate limit exceeded for key: ${key}`, {
-          key,
-          limit: result.limit,
-          totalAttempts: result.totalAttempts,
-          resetTime: new Date(result.resetTime).toISOString(),
-          url: request.url,
-          userAgent: request.headers.get('user-agent'),
-          ip: keyGenerators.ip(request)
-        });
-
-        return NextResponse.json(
+    if (!result.allowed) {
+      // Log rate limit exceeded
+      safeLogger.warn(`Rate limit exceeded for key: ${key}`, {
+        key,
+        limit: result.limit,
+        totalAttempts: result.totalAttempts,
+        resetTime: new Date(result.resetTime).toISOString(),
+        url: request.url,
+        userAgent: request.headers.get('user-agent'),
+        ip: keyGenerators.ip(request)
+      });        return NextResponse.json(
           { 
             error: 'Too many requests',
             retryAfter: Math.ceil((result.resetTime - Date.now()) / 1000)
@@ -344,16 +338,14 @@ export function createProductionRateLimiter(options: {
         );
       }
       
-      return headers;
-    } catch (error) {
-      safeLogger.error('Rate limiting error:', error);
-      // If rate limiting fails, allow the request to proceed
-      return new Headers();
-    }
-  };
-}
-
-// Export pre-configured rate limiters
+    return headers;
+  } catch (error) {
+    safeLogger.error('Rate limiting error', { error });
+    // If rate limiting fails, allow the request to proceed
+    return new Headers();
+  }
+};
+}// Export pre-configured rate limiters
 export const authRateLimiter = createProductionRateLimiter({
   max: 5, // Very strict for auth
   windowMs: 15 * 60 * 1000, // 15 minutes

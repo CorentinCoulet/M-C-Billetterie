@@ -81,9 +81,9 @@ export class AdvancedBackupService {
       await this.scheduleBackups();
       await this.cleanupOldBackups();
       
-      logger.info('Advanced backup service initialized successfully');
+      safeLogger.info('Advanced backup service initialized successfully');
     } catch (error) {
-      logger.error('Failed to initialize backup service:', error);
+      safeLogger.error('Failed to initialize backup service:', error);
       throw error;
     }
   }
@@ -104,7 +104,7 @@ export class AdvancedBackupService {
     };
 
     try {
-      logger.info(`Starting full backup: ${backupId}`);
+      safeLogger.info(`Starting full backup: ${backupId}`);
       await this.updateBackupMetadata(metadata);
 
       metadata.status = 'running';
@@ -134,7 +134,7 @@ export class AdvancedBackupService {
           await this.uploadBackup(finalPath, destination, backupId);
           metadata.destinations.push(destination.type);
         } catch (error) {
-          logger.error(`Failed to upload to ${destination.type}:`, error);
+          safeLogger.error(`Failed to upload to ${destination.type}:`, error);
         }
       }
       
@@ -145,7 +145,7 @@ export class AdvancedBackupService {
       metadata.endTime = new Date();
       await this.updateBackupMetadata(metadata);
       
-      logger.info(`Full backup completed: ${backupId}`);
+      safeLogger.info(`Full backup completed: ${backupId}`);
       return backupId;
       
     } catch (error) {
@@ -154,7 +154,7 @@ export class AdvancedBackupService {
       metadata.endTime = new Date();
       await this.updateBackupMetadata(metadata);
       
-      logger.error(`Full backup failed: ${backupId}`, error);
+      safeLogger.error(`Full backup failed: ${backupId}`, error);
       throw error;
     }
   }
@@ -175,12 +175,12 @@ export class AdvancedBackupService {
     };
 
     try {
-      logger.info(`Starting incremental backup: ${backupId}`);
+      safeLogger.info(`Starting incremental backup: ${backupId}`);
       
       // Get last backup timestamp
       const lastBackupTime = await this.getLastBackupTimestamp();
       if (!lastBackupTime) {
-        logger.warn('No previous backup found, creating full backup instead');
+        safeLogger.warn('No previous backup found, creating full backup instead');
         return await this.createFullBackup();
       }
 
@@ -191,7 +191,7 @@ export class AdvancedBackupService {
       const changes = await this.exportIncrementalChanges(lastBackupTime);
       
       if (changes.recordCount === 0) {
-        logger.info('No changes since last backup');
+        safeLogger.info('No changes since last backup');
         metadata.status = 'completed';
         metadata.endTime = new Date();
         await this.updateBackupMetadata(metadata);
@@ -216,7 +216,7 @@ export class AdvancedBackupService {
           await this.uploadBackup(finalPath, destination, backupId);
           metadata.destinations.push(destination.type);
         } catch (error) {
-          logger.error(`Failed to upload incremental backup to ${destination.type}:`, error);
+          safeLogger.error(`Failed to upload incremental backup to ${destination.type}:`, error);
         }
       }
       
@@ -224,7 +224,7 @@ export class AdvancedBackupService {
       metadata.endTime = new Date();
       await this.updateBackupMetadata(metadata);
       
-      logger.info(`Incremental backup completed: ${backupId}`);
+      safeLogger.info(`Incremental backup completed: ${backupId}`);
       return backupId;
       
     } catch (error) {
@@ -233,7 +233,7 @@ export class AdvancedBackupService {
       metadata.endTime = new Date();
       await this.updateBackupMetadata(metadata);
       
-      logger.error(`Incremental backup failed: ${backupId}`, error);
+      safeLogger.error(`Incremental backup failed: ${backupId}`, error);
       throw error;
     }
   }
@@ -254,7 +254,7 @@ export class AdvancedBackupService {
     };
 
     try {
-      logger.info(`Starting GDPR export for user ${userId}: ${backupId}`);
+      safeLogger.info(`Starting GDPR export for user ${userId}: ${backupId}`);
 
       metadata.status = 'running';
       await this.updateBackupMetadata(metadata);
@@ -271,7 +271,7 @@ export class AdvancedBackupService {
       metadata.endTime = new Date();
       await this.updateBackupMetadata(metadata);
       
-      logger.info(`GDPR export completed: ${backupId}`);
+      safeLogger.info(`GDPR export completed: ${backupId}`);
       return exportPath;
       
     } catch (error) {
@@ -280,7 +280,7 @@ export class AdvancedBackupService {
       metadata.endTime = new Date();
       await this.updateBackupMetadata(metadata);
       
-      logger.error(`GDPR export failed: ${backupId}`, error);
+      safeLogger.error(`GDPR export failed: ${backupId}`, error);
       throw error;
     }
   }
@@ -294,7 +294,7 @@ export class AdvancedBackupService {
     dryRun?: boolean;
   } = {}): Promise<void> {
     try {
-      logger.info(`Starting restore from backup: ${backupId}`);
+      safeLogger.info(`Starting restore from backup: ${backupId}`);
       
       // Get backup metadata
       const metadata = await this.getBackupMetadata(backupId);
@@ -317,7 +317,7 @@ export class AdvancedBackupService {
       const extractedDir = await this.extractBackupArchive(decryptedPath);
       
       if (options.dryRun) {
-        logger.info('Dry run completed - backup is valid and can be restored');
+        safeLogger.info('Dry run completed - backup is valid and can be restored');
         await fs.rm(extractedDir, { recursive: true });
         return;
       }
@@ -328,10 +328,10 @@ export class AdvancedBackupService {
       // Restore application data
       await this.restoreApplicationData(extractedDir);
       
-      logger.info(`Restore completed successfully from backup: ${backupId}`);
+      safeLogger.info(`Restore completed successfully from backup: ${backupId}`);
       
     } catch (error) {
-      logger.error(`Restore failed for backup ${backupId}:`, error);
+      safeLogger.error(`Restore failed for backup ${backupId}:`, error);
       throw error;
     }
   }
@@ -361,7 +361,7 @@ export class AdvancedBackupService {
       }));
       
     } catch (error) {
-      logger.error('Failed to list backups:', error);
+      safeLogger.error('Failed to list backups:', error);
       throw error;
     }
   }
@@ -371,7 +371,7 @@ export class AdvancedBackupService {
    */
   async testBackupRestore(): Promise<boolean> {
     try {
-      logger.info('Starting backup/restore test...');
+      safeLogger.info('Starting backup/restore test...');
       
       // Create a test backup
       const testBackupId = await this.createFullBackup();
@@ -379,11 +379,11 @@ export class AdvancedBackupService {
       // Attempt a dry-run restore
       await this.restoreFromBackup(testBackupId, { dryRun: true });
       
-      logger.info('Backup/restore test passed');
+      safeLogger.info('Backup/restore test passed');
       return true;
       
     } catch (error) {
-      logger.error('Backup/restore test failed:', error);
+      safeLogger.error('Backup/restore test failed:', error);
       return false;
     }
   }
@@ -471,11 +471,11 @@ export class AdvancedBackupService {
         stdio: 'pipe'
       });
       
-      logger.info(`Database dump created: ${dumpPath}`);
+      safeLogger.info(`Database dump created: ${dumpPath}`);
       return dumpPath;
       
     } catch (error) {
-      logger.error('Failed to create database dump:', error);
+      safeLogger.error('Failed to create database dump:', error);
       throw error;
     }
   }
@@ -505,7 +505,7 @@ export class AdvancedBackupService {
       execSync(`tar -czf "${appDataPath}" ${dataPaths.join(' ')}`);
     }
     
-    logger.info(`Application data backup created: ${appDataPath}`);
+    safeLogger.info(`Application data backup created: ${appDataPath}`);
     return appDataPath;
   }
 
@@ -524,7 +524,7 @@ export class AdvancedBackupService {
     // Clean up temp files
     await Promise.all(filePaths.map(p => fs.rm(p).catch(() => {})));
     
-    logger.info(`Backup archive created: ${archivePath}`);
+    safeLogger.info(`Backup archive created: ${archivePath}`);
     return archivePath;
   }
 
@@ -564,11 +564,11 @@ export class AdvancedBackupService {
       // Remove unencrypted file
       await fs.rm(filePath);
       
-      logger.info(`Backup encrypted: ${encryptedPath}`);
+      safeLogger.info(`Backup encrypted: ${encryptedPath}`);
       return encryptedPath;
       
     } catch (error) {
-      logger.error('Backup encryption failed:', error);
+      safeLogger.error('Backup encryption failed:', error);
       throw error;
     }
   }
@@ -609,7 +609,7 @@ export class AdvancedBackupService {
         break;
         
       default:
-        logger.warn(`Unsupported destination type: ${destination.type}`);
+        safeLogger.warn(`Unsupported destination type: ${destination.type}`);
     }
   }
 
@@ -618,7 +618,7 @@ export class AdvancedBackupService {
    */
   private async uploadToS3(filePath: string, config: any, backupId: string): Promise<void> {
     // Implementation would use AWS SDK
-    logger.info(`Would upload ${filePath} to S3 bucket ${config.bucket}`);
+    safeLogger.info(`Would upload ${filePath} to S3 bucket ${config.bucket}`);
   }
 
   /**
@@ -626,7 +626,7 @@ export class AdvancedBackupService {
    */
   private async uploadToAzure(filePath: string, config: any, backupId: string): Promise<void> {
     // Implementation would use Azure SDK
-    logger.info(`Would upload ${filePath} to Azure container ${config.container}`);
+    safeLogger.info(`Would upload ${filePath} to Azure container ${config.container}`);
   }
 
   /**
@@ -634,7 +634,7 @@ export class AdvancedBackupService {
    */
   private async uploadToGCP(filePath: string, config: any, backupId: string): Promise<void> {
     // Implementation would use Google Cloud SDK
-    logger.info(`Would upload ${filePath} to GCP bucket ${config.bucket}`);
+    safeLogger.info(`Would upload ${filePath} to GCP bucket ${config.bucket}`);
   }
 
   /**
@@ -652,7 +652,7 @@ export class AdvancedBackupService {
       await this.testRestoreBackup(filePath);
     }
     
-    logger.info(`Backup verification passed: ${metadata.id}`);
+    safeLogger.info(`Backup verification passed: ${metadata.id}`);
   }
 
   /**
@@ -660,7 +660,7 @@ export class AdvancedBackupService {
    */
   private async testRestoreBackup(filePath: string): Promise<void> {
     // Implementation would create temporary database and test restore
-    logger.info(`Would test restore from ${filePath}`);
+    safeLogger.info(`Would test restore from ${filePath}`);
   }
 
   /**
@@ -699,7 +699,7 @@ export class AdvancedBackupService {
         }
       });
     } catch (error) {
-      logger.error('Failed to update backup metadata:', error);
+      safeLogger.error('Failed to update backup metadata:', error);
     }
   }
 
@@ -727,7 +727,7 @@ export class AdvancedBackupService {
         error: backup.error || undefined
       };
     } catch (error) {
-      logger.error('Failed to get backup metadata:', error);
+      safeLogger.error('Failed to get backup metadata:', error);
       return null;
     }
   }
@@ -747,7 +747,7 @@ export class AdvancedBackupService {
       
       return lastBackup?.completedAt || null;
     } catch (error) {
-      logger.error('Failed to get last backup timestamp:', error);
+      safeLogger.error('Failed to get last backup timestamp:', error);
       return null;
     }
   }
@@ -757,7 +757,7 @@ export class AdvancedBackupService {
    */
   private async exportIncrementalChanges(since: Date): Promise<{ recordCount: number; filePath: string }> {
     // Implementation would export changed records since timestamp
-    logger.info(`Would export changes since ${since}`);
+    safeLogger.info(`Would export changes since ${since}`);
     return { recordCount: 0, filePath: '' };
   }
 
@@ -800,7 +800,7 @@ export class AdvancedBackupService {
       return await this.encryptionService.decryptUserPII(userData);
       
     } catch (error) {
-      logger.error(`Failed to export user data for ${userId}:`, error);
+      safeLogger.error(`Failed to export user data for ${userId}:`, error);
       throw error;
     }
   }
@@ -825,7 +825,7 @@ export class AdvancedBackupService {
     
     await fs.writeFile(exportPath, JSON.stringify(exportData, null, 2));
     
-    logger.info(`GDPR export file created: ${exportPath}`);
+    safeLogger.info(`GDPR export file created: ${exportPath}`);
     return exportPath;
   }
 
@@ -838,18 +838,18 @@ export class AdvancedBackupService {
     // Schedule full backups
     cron.schedule(this.config.schedule.full, () => {
       this.createFullBackup().catch(error => {
-        logger.error('Scheduled full backup failed:', error);
+        safeLogger.error('Scheduled full backup failed:', error);
       });
     });
     
     // Schedule incremental backups
     cron.schedule(this.config.schedule.incremental, () => {
       this.createIncrementalBackup().catch(error => {
-        logger.error('Scheduled incremental backup failed:', error);
+        safeLogger.error('Scheduled incremental backup failed:', error);
       });
     });
     
-    logger.info('Backup schedules configured');
+    safeLogger.info('Backup schedules configured');
   }
 
   /**
@@ -877,9 +877,9 @@ export class AdvancedBackupService {
         }
       });
       
-      logger.info('Old backup cleanup completed');
+      safeLogger.info('Old backup cleanup completed');
     } catch (error) {
-      logger.error('Backup cleanup failed:', error);
+      safeLogger.error('Backup cleanup failed:', error);
     }
   }
 
@@ -946,7 +946,7 @@ export class AdvancedBackupService {
     
     execSync(command);
     
-    logger.info('Database restore completed');
+    safeLogger.info('Database restore completed');
   }
 
   /**
@@ -957,9 +957,9 @@ export class AdvancedBackupService {
     
     try {
       execSync(`tar -xzf "${appDataFile}" -C .`);
-      logger.info('Application data restore completed');
+      safeLogger.info('Application data restore completed');
     } catch (error) {
-      logger.warn('Application data restore failed (may be empty):', error);
+      safeLogger.warn('Application data restore failed (may be empty):', error);
     }
   }
 }
