@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { NextRequest } from 'next/server';
 import { z } from 'zod';
 import {
@@ -32,7 +33,7 @@ async function handleGetOrders(request: NextRequest) {
 
       return NextApiResponse.success(orders, 'Commandes récupérées');
     } catch (error: any) {
-      console.error('Get orders error:', error);
+      logger.error({ error, userId: user.id }, 'Get orders error');
       return NextApiResponse.error('Erreur lors de la récupération des commandes', 500);
     }
   });
@@ -57,7 +58,7 @@ async function handleCreateOrder(request: NextRequest) {
 
       return NextApiResponse.success(order, 'Commande créée avec succès', 201);
     } catch (error: any) {
-      console.error('Create order error:', error);
+      logger.error({ error, userId: user.id }, 'Create order error');
       return NextApiResponse.error(
         error.message || 'Erreur lors de la création de la commande',
         500

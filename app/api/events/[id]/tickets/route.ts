@@ -1,15 +1,16 @@
+import { logger } from '@/lib/logger';
 import { NextRequest } from 'next/server';
 import {
-    createMethodHandler,
-    NextApiResponse,
-    withAuth
+  createMethodHandler,
+  NextApiResponse,
+  withAuth
 } from '../../../../../src/lib/next-api-helpers';
 
 async function handleGetEventTickets(request: NextRequest, { params }: { params: { id: string } }) {
   return withAuth(request, async (req, user) => {
+    const { id } = params;
+    
     try {
-      const { id } = params;
-
       // Import ticket service
       const ticketServiceModule = await import('../../../../../src/modules/ticket/ticket.service');
 
@@ -18,7 +19,7 @@ async function handleGetEventTickets(request: NextRequest, { params }: { params:
 
       return NextApiResponse.success(tickets, 'Tickets récupérés');
     } catch (error: any) {
-      console.error('Get event tickets error:', error);
+      logger.error({ error, userId: user.id, eventId: id }, 'Get event tickets error');
       return NextApiResponse.error('Erreur lors de la récupération des tickets', 500);
     }
   });

@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { NextRequest } from 'next/server';
 import { z } from 'zod';
 import {
@@ -28,7 +29,7 @@ async function handleGetTickets(request: NextRequest) {
 
       return NextApiResponse.success(tickets, 'Billets récupérés');
     } catch (error: any) {
-      console.error('Get tickets error:', error);
+      logger.error({ error, userId: user.id }, 'Get tickets error');
       return NextApiResponse.error('Erreur lors de la récupération des billets', 500);
     }
   });
@@ -53,7 +54,7 @@ async function handleCreateTicket(request: NextRequest) {
 
       return NextApiResponse.success(ticket, 'Billet créé avec succès', 201);
     } catch (error: any) {
-      console.error('Create ticket error:', error);
+      logger.error({ error, userId: user.id }, 'Create ticket error');
       return NextApiResponse.error(
         error.message || 'Erreur lors de la création du billet',
         500

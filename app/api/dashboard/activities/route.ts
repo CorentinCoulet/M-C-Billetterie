@@ -1,8 +1,8 @@
-import { NextApiResponse, withAuth, createMethodHandler } from '@/lib/next-api-helpers';
+import { logger } from '@/lib/logger';
+import { createMethodHandler, NextApiResponse, withAuth } from '@/lib/next-api-helpers';
 import { DashboardService } from '@/services/dashboard.service';
 import { UserRole } from '@/types/enums/user.enum';
 import { NextRequest } from 'next/server';
-import { logger } from '@/lib/logger';
 
 async function handleGet(request: NextRequest) {
   return withAuth(request, async (req, user) => {

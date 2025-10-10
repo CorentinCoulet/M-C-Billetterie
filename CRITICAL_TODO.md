@@ -135,11 +135,16 @@ logger.debug({ userId, permissions }, 'Checking permissions');
 **Impact immédiat:**
 - ✅ Toutes les routes critiques d'authentification standardisées
 - ✅ Webhook Stripe entièrement converti avec logs structurés
-- ✅ 45+ console.log remplacés par logger dans les routes critiques
+- ✅ Routes dashboard et admin avec auth et logger
+- ✅ Routes monitoring/health avec logger structuré
+- ✅ 50+ console.log remplacés par logger (en cours)
 - ✅ Tests de sécurité mis à jour et fonctionnels
 - ✅ Code cohérent et maintenable
+- ⏳ Il reste 13 routes secondaires à standardiser (organisations, test, docs, etc.)
 
 **Impact:** 🟡 IMPORTANT - Facilite la maintenance et onboarding
+
+**Note:** Les 13 routes restantes sont principalement des routes de test, documentation, et organisations. Elles peuvent être standardisées progressivement car elles sont moins critiques.
 
 ---
 

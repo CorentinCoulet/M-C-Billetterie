@@ -1,21 +1,18 @@
 {
   "total": 46,
-  "standardized": 23,
-  "withAuth": 3,
-  "direct": 20,
+  "standardized": 32,
+  "withAuth": 0,
+  "direct": 14,
   "routes": [
     {
       "path": "app\\api\\admin\\qr-rotation\\route.ts",
-      "pattern": "direct",
-      "methods": [
-        "POST",
-        "GET"
-      ],
-      "hasAuth": false,
+      "pattern": "createMethodHandler",
+      "methods": [],
+      "hasAuth": true,
       "hasValidation": false,
-      "hasLogger": false,
-      "hasConsoleLog": true,
-      "priority": "medium"
+      "hasLogger": true,
+      "hasConsoleLog": false,
+      "priority": "low"
     },
     {
       "path": "app\\api\\auth\\change-password\\route.ts",
@@ -53,8 +50,8 @@
       "methods": [],
       "hasAuth": true,
       "hasValidation": false,
-      "hasLogger": false,
-      "hasConsoleLog": true,
+      "hasLogger": true,
+      "hasConsoleLog": false,
       "priority": "low"
     },
     {
@@ -73,8 +70,8 @@
       "methods": [],
       "hasAuth": false,
       "hasValidation": true,
-      "hasLogger": false,
-      "hasConsoleLog": true,
+      "hasLogger": true,
+      "hasConsoleLog": false,
       "priority": "low"
     },
     {
@@ -83,21 +80,19 @@
       "methods": [],
       "hasAuth": false,
       "hasValidation": true,
-      "hasLogger": false,
-      "hasConsoleLog": true,
+      "hasLogger": true,
+      "hasConsoleLog": false,
       "priority": "low"
     },
     {
       "path": "app\\api\\cache\\health\\route.ts",
-      "pattern": "direct",
-      "methods": [
-        "GET"
-      ],
+      "pattern": "createMethodHandler",
+      "methods": [],
       "hasAuth": false,
       "hasValidation": false,
-      "hasLogger": false,
+      "hasLogger": true,
       "hasConsoleLog": false,
-      "priority": "medium"
+      "priority": "low"
     },
     {
       "path": "app\\api\\cache\\warmup\\route.ts",
@@ -114,49 +109,43 @@
     },
     {
       "path": "app\\api\\dashboard\\activities\\route.ts",
-      "pattern": "withAuth",
-      "methods": [
-        "GET"
-      ],
+      "pattern": "createMethodHandler",
+      "methods": [],
       "hasAuth": true,
       "hasValidation": false,
-      "hasLogger": false,
-      "hasConsoleLog": true,
-      "priority": "medium"
+      "hasLogger": true,
+      "hasConsoleLog": false,
+      "priority": "low"
     },
     {
       "path": "app\\api\\dashboard\\stats\\route.ts",
-      "pattern": "withAuth",
-      "methods": [
-        "GET"
-      ],
+      "pattern": "createMethodHandler",
+      "methods": [],
       "hasAuth": true,
       "hasValidation": false,
-      "hasLogger": false,
-      "hasConsoleLog": true,
-      "priority": "medium"
+      "hasLogger": true,
+      "hasConsoleLog": false,
+      "priority": "low"
     },
     {
       "path": "app\\api\\docs\\route.ts",
-      "pattern": "direct",
-      "methods": [
-        "GET"
-      ],
+      "pattern": "createMethodHandler",
+      "methods": [],
       "hasAuth": false,
       "hasValidation": false,
-      "hasLogger": false,
-      "hasConsoleLog": true,
-      "priority": "medium"
+      "hasLogger": true,
+      "hasConsoleLog": false,
+      "priority": "low"
     },
     {
       "path": "app\\api\\events\\route.ts",
-      "pattern": "withAuth",
+      "pattern": "createMethodHandler",
       "methods": [],
       "hasAuth": true,
       "hasValidation": true,
       "hasLogger": true,
       "hasConsoleLog": false,
-      "priority": "medium"
+      "priority": "low"
     },
     {
       "path": "app\\api\\events\\[id]\\route.ts",
@@ -164,8 +153,8 @@
       "methods": [],
       "hasAuth": true,
       "hasValidation": true,
-      "hasLogger": false,
-      "hasConsoleLog": true,
+      "hasLogger": true,
+      "hasConsoleLog": false,
       "priority": "low"
     },
     {
@@ -194,8 +183,8 @@
       "methods": [],
       "hasAuth": true,
       "hasValidation": false,
-      "hasLogger": false,
-      "hasConsoleLog": true,
+      "hasLogger": true,
+      "hasConsoleLog": false,
       "priority": "low"
     },
     {
@@ -204,8 +193,8 @@
       "methods": [],
       "hasAuth": true,
       "hasValidation": false,
-      "hasLogger": false,
-      "hasConsoleLog": true,
+      "hasLogger": true,
+      "hasConsoleLog": false,
       "priority": "low"
     },
     {
@@ -214,8 +203,8 @@
       "methods": [],
       "hasAuth": true,
       "hasValidation": false,
-      "hasLogger": false,
-      "hasConsoleLog": true,
+      "hasLogger": true,
+      "hasConsoleLog": false,
       "priority": "low"
     },
     {
@@ -224,8 +213,8 @@
       "methods": [],
       "hasAuth": true,
       "hasValidation": false,
-      "hasLogger": false,
-      "hasConsoleLog": true,
+      "hasLogger": true,
+      "hasConsoleLog": false,
       "priority": "low"
     },
     {
@@ -234,8 +223,8 @@
       "methods": [],
       "hasAuth": true,
       "hasValidation": false,
-      "hasLogger": false,
-      "hasConsoleLog": true,
+      "hasLogger": true,
+      "hasConsoleLog": false,
       "priority": "low"
     },
     {
@@ -244,8 +233,8 @@
       "methods": [],
       "hasAuth": true,
       "hasValidation": false,
-      "hasLogger": false,
-      "hasConsoleLog": true,
+      "hasLogger": true,
+      "hasConsoleLog": false,
       "priority": "low"
     },
     {
@@ -292,8 +281,8 @@
       ],
       "hasAuth": false,
       "hasValidation": false,
-      "hasLogger": false,
-      "hasConsoleLog": true,
+      "hasLogger": true,
+      "hasConsoleLog": false,
       "priority": "medium"
     },
     {
@@ -314,8 +303,8 @@
       "methods": [],
       "hasAuth": true,
       "hasValidation": false,
-      "hasLogger": false,
-      "hasConsoleLog": true,
+      "hasLogger": true,
+      "hasConsoleLog": false,
       "priority": "low"
     },
     {
@@ -349,50 +338,39 @@
       "methods": [],
       "hasAuth": true,
       "hasValidation": true,
-      "hasLogger": false,
-      "hasConsoleLog": true,
+      "hasLogger": true,
+      "hasConsoleLog": false,
       "priority": "low"
     },
     {
       "path": "app\\api\\organizations\\route.ts",
-      "pattern": "direct",
-      "methods": [
-        "POST",
-        "GET"
-      ],
-      "hasAuth": false,
-      "hasValidation": false,
-      "hasLogger": false,
-      "hasConsoleLog": true,
-      "priority": "medium"
+      "pattern": "createMethodHandler",
+      "methods": [],
+      "hasAuth": true,
+      "hasValidation": true,
+      "hasLogger": true,
+      "hasConsoleLog": false,
+      "priority": "low"
     },
     {
       "path": "app\\api\\organizations\\[id]\\members\\route.ts",
-      "pattern": "direct",
-      "methods": [
-        "GET",
-        "POST",
-        "DELETE"
-      ],
-      "hasAuth": false,
-      "hasValidation": false,
-      "hasLogger": false,
-      "hasConsoleLog": true,
-      "priority": "medium"
+      "pattern": "createMethodHandler",
+      "methods": [],
+      "hasAuth": true,
+      "hasValidation": true,
+      "hasLogger": true,
+      "hasConsoleLog": false,
+      "priority": "low"
     },
     {
       "path": "app\\api\\organizations\\[id]\\route.ts",
-      "pattern": "direct",
-      "methods": [
-        "GET",
-        "PUT",
-        "DELETE"
-      ],
-      "hasAuth": false,
-      "hasValidation": false,
-      "hasLogger": false,
-      "hasConsoleLog": true,
-      "priority": "medium"
+      "pattern": "createMethodHandler",
+      "methods": [],
+      "hasAuth": true,
+      "hasValidation": true,
+      "hasLogger": true,
+      "hasConsoleLog": false,
+      "priority": "low"
     },
     {
       "path": "app\\api\\payments\\route.ts",
@@ -400,8 +378,8 @@
       "methods": [],
       "hasAuth": true,
       "hasValidation": true,
-      "hasLogger": false,
-      "hasConsoleLog": true,
+      "hasLogger": true,
+      "hasConsoleLog": false,
       "priority": "low"
     },
     {
@@ -496,8 +474,8 @@
       "methods": [],
       "hasAuth": true,
       "hasValidation": true,
-      "hasLogger": false,
-      "hasConsoleLog": true,
+      "hasLogger": true,
+      "hasConsoleLog": false,
       "priority": "low"
     },
     {

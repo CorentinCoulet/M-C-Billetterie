@@ -1,10 +1,10 @@
 import { NextRequest } from 'next/server';
-import {
-  NextApiResponse,
-  withAdminAuth,
-  createMethodHandler,
-} from '../../../../src/lib/next-api-helpers';
 import { logger } from '../../../../lib/logger';
+import {
+    createMethodHandler,
+    NextApiResponse,
+    withAdminAuth,
+} from '../../../../src/lib/next-api-helpers';
 import qrRotationService from '../../../../src/services/qrRotationService';
 
 /**

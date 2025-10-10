@@ -1,10 +1,10 @@
 import { NextRequest } from 'next/server';
+import { logger } from '../../../../lib/logger';
 import {
     createMethodHandler,
     NextApiResponse,
     withAuth
 } from '../../../../src/lib/next-api-helpers';
-import { logger } from '../../../../lib/logger';
 
 async function handleLogout(request: NextRequest) {
   return withAuth(request, async (req, user) => {

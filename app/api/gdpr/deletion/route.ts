@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { NextRequest } from 'next/server';
 import {
     createMethodHandler,
@@ -22,7 +23,7 @@ async function handleGDPRDeletion(request: NextRequest) {
 
       return NextApiResponse.success(deleteResult, 'Demande de suppression des données traitée');
     } catch (error: any) {
-      console.error('GDPR deletion error:', error);
+      logger.error({ error, userId: user.id }, 'GDPR deletion error');
       return NextApiResponse.error('Erreur lors de la suppression des données', 500);
     }
   });

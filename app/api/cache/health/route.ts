@@ -3,10 +3,10 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { createMethodHandler, NextApiResponse } from '../../../../src/lib/next-api-helpers';
 import { logger } from '../../../../lib/logger';
 import { cache } from '../../../../src/lib/cache';
 import { monitoringService } from '../../../../src/lib/monitoring';
+import { createMethodHandler, NextApiResponse } from '../../../../src/lib/next-api-helpers';
 
 async function handleGet(request: NextRequest) {
   try {

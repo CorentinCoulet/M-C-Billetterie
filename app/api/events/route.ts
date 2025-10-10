@@ -2,9 +2,10 @@ import { NextRequest } from 'next/server';
 import { z } from 'zod';
 import { logger } from '../../../lib/logger';
 import {
-    NextApiResponse,
-    validateBody,
-    withAuth
+  createMethodHandler,
+  NextApiResponse,
+  validateBody,
+  withAuth
 } from '../../../src/lib/next-api-helpers';
 
 const createEventSchema = z.object({
@@ -65,5 +66,7 @@ async function handlePost(request: NextRequest) {
   });
 }
 
-export const GET = (req: NextRequest) => handleGet(req);
-export const POST = (req: NextRequest) => handlePost(req);
+export default createMethodHandler({
+  GET: handleGet,
+  POST: handlePost,
+});

@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { NextRequest } from 'next/server';
 import {
     createMethodHandler,
@@ -7,9 +8,9 @@ import {
 
 async function handleGetEventStatistics(request: NextRequest, { params }: { params: { id: string } }) {
   return withAdminAuth(request, async (req, user) => {
+    const { id } = params;
+    
     try {
-      const { id } = params;
-
       // Import event service
       const eventServiceModule = await import('../../../../../src/modules/event/event.service');
 
@@ -18,7 +19,7 @@ async function handleGetEventStatistics(request: NextRequest, { params }: { para
 
       return NextApiResponse.success(stats, 'Statistiques récupérées');
     } catch (error: any) {
-      console.error('Get event statistics error:', error);
+      logger.error({ error, userId: user.id, eventId: id }, 'Get event statistics error');
       return NextApiResponse.error('Erreur lors de la récupération des statistiques', 500);
     }
   });

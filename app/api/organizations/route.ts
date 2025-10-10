@@ -1,16 +1,13 @@
-import { verifyToken } from '@/lib/jwt';
+import { logger } from '@/lib/logger';
 import { prisma } from '@/lib/prisma';
-import { NextRequest, NextResponse } from 'next/server';
+import {
+  createMethodHandler,
+  NextApiResponse,
+  validateBody,
+  withAuth,
+} from '@/src/lib/next-api-helpers';
+import { NextRequest } from 'next/server';
 import { z } from 'zod';
-
-// JWT Payload interface
-interface JWTPayload {
-  userId: string;
-  email?: string;
-  role?: string;
-  iat?: number;
-  exp?: number;
-}
 
 // Validation schema for organization creation
 const createOrganizerSchema = z.object({
@@ -19,178 +16,128 @@ const createOrganizerSchema = z.object({
 
 /**
  * POST /api/organizations
- * Create a new organization
+ * Create a new organization (ORGANIZER or ADMIN only)
  */
-export async function POST(request: NextRequest) {
-  try {
-    // Verify authentication
-    const authHeader = request.headers.get('authorization');
-    if (!authHeader?.startsWith('Bearer ')) {
-      return NextResponse.json(
-        { error: 'Not authenticated' },
-        { status: 401 }
-      );
-    }
-
-    const token = authHeader.substring(7);
-    const payload = await verifyToken<JWTPayload>(token);
-    
-    if (!payload?.userId) {
-      return NextResponse.json(
-        { error: 'Invalid token' },
-        { status: 401 }
-      );
-    }
-
-    // Verify that the user exists and has ORGANIZER or ADMIN role
-    const user = await prisma.user.findUnique({
-      where: { id: payload.userId },
-    });
-
-    if (!user) {
-      return NextResponse.json(
-        { error: 'User not found' },
-        { status: 404 }
-      );
-    }
-
+async function handlePost(request: NextRequest) {
+  return withAuth(request, async (req, user) => {
+    // Verify role
     if (user.role !== 'ORGANIZER' && user.role !== 'ADMIN') {
-      return NextResponse.json(
-        { error: 'Access denied. Only organizers can create an organization.' },
-        { status: 403 }
-      );
+      logger.warn({ userId: user.id, role: user.role }, 'User attempted to create organization without proper role');
+      return NextApiResponse.forbidden('Access denied. Only organizers can create an organization.');
     }
 
-    // Parse and validate body
-    const body = await request.json();
-    const validation = createOrganizerSchema.safeParse(body);
+    const { data, error } = await validateBody(request, createOrganizerSchema);
+    if (error) return error;
 
-    if (!validation.success) {
-      return NextResponse.json(
-        { error: 'Invalid data', details: validation.error.errors },
-        { status: 400 }
-      );
-    }
+    try {
+      const { name } = data;
 
-    const { name } = validation.data;
+      logger.info({ userId: user.id, organizationName: name }, 'Creating new organization');
 
-    // Check if an organization with this name already exists
-    const existingOrganizer = await prisma.organizer.findFirst({
-      where: { name },
-    });
+      // Check if an organization with this name already exists
+      const existingOrganizer = await prisma.organizer.findFirst({
+        where: { name },
+      });
 
-    if (existingOrganizer) {
-      return NextResponse.json(
-        { error: 'An organization with this name already exists' },
-        { status: 409 }
-      );
-    }
+      if (existingOrganizer) {
+        logger.warn({ userId: user.id, organizationName: name }, 'Organization name already exists');
+        return NextApiResponse.error('An organization with this name already exists', 409);
+      }
 
-    // Create the organization and add the user as owner
-    const organizer = await prisma.organizer.create({
-      data: {
-        name,
-        team: {
-          create: {
-            userId: payload.userId,
-            role: 'OWNER',
+      // Create the organization and add the user as owner
+      const organizer = await prisma.organizer.create({
+        data: {
+          name,
+          team: {
+            create: {
+              userId: user.id,
+              role: 'OWNER',
+            },
           },
         },
-      },
-      include: {
-        team: {
-          include: {
-            user: {
-              select: {
-                id: true,
-                email: true,
-                name: true,
+        include: {
+          team: {
+            include: {
+              user: {
+                select: {
+                  id: true,
+                  email: true,
+                  name: true,
+                },
               },
             },
           },
         },
-      },
-    });
+      });
 
-    return NextResponse.json(organizer, { status: 201 });
-  } catch (error) {
-    console.error('Error creating organizer:', error);
-    return NextResponse.json(
-      { error: 'Server error while creating organization' },
-      { status: 500 }
-    );
-  }
+      logger.info({ userId: user.id, organizationId: organizer.id }, 'Organization created successfully');
+
+      return NextApiResponse.success(organizer, 'Organization created successfully', 201);
+    } catch (error) {
+      logger.error({ error, userId: user.id }, 'Error creating organizer');
+      return NextApiResponse.error('Server error while creating organization', 500);
+    }
+  });
 }
 
 /**
  * GET /api/organizations
  * Retrieve user's organizations
  */
-export async function GET(request: NextRequest) {
-  try {
-    // Verify authentication
-    const authHeader = request.headers.get('authorization');
-    if (!authHeader?.startsWith('Bearer ')) {
-      return NextResponse.json(
-        { error: 'Not authenticated' },
-        { status: 401 }
-      );
-    }
+async function handleGet(request: NextRequest) {
+  return withAuth(request, async (req, user) => {
+    try {
+      logger.info({ userId: user.id }, 'Fetching user organizations');
 
-    const token = authHeader.substring(7);
-    const payload = await verifyToken<JWTPayload>(token);
-    
-    if (!payload?.userId) {
-      return NextResponse.json(
-        { error: 'Invalid token' },
-        { status: 401 }
-      );
-    }
-
-    // Retrieve organizations where the user is a member
-    const organizations = await prisma.organizer.findMany({
-      where: {
-        team: {
-          some: {
-            userId: payload.userId,
-          },
-        },
-      },
-      include: {
-        team: {
-          include: {
-            user: {
-              select: {
-                id: true,
-                email: true,
-                name: true,
-              },
+      // Retrieve organizations where the user is a member
+      const organizations = await prisma.organizer.findMany({
+        where: {
+          team: {
+            some: {
+              userId: user.id,
             },
           },
         },
-        events: {
-          select: {
-            id: true,
-            title: true,
-            date: true,
-            isPublished: true,
+        include: {
+          team: {
+            include: {
+              user: {
+                select: {
+                  id: true,
+                  email: true,
+                  name: true,
+                },
+              },
+            },
           },
-          orderBy: {
-            date: 'desc',
+          events: {
+            select: {
+              id: true,
+              title: true,
+              date: true,
+              isPublished: true,
+            },
+            orderBy: {
+              date: 'desc',
+            },
           },
         },
-      },
-      orderBy: {
-        createdAt: 'desc',
-      },
-    });
+        orderBy: {
+          createdAt: 'desc',
+        },
+      });
 
-    return NextResponse.json(organizations, { status: 200 });
-  } catch (error) {
-    console.error('Error fetching organizations:', error);
-    return NextResponse.json(
-      { error: 'Server error while retrieving organizations' },
-      { status: 500 }
-    );
-  }
+      logger.info({ userId: user.id, count: organizations.length }, 'Organizations retrieved successfully');
+
+      return NextApiResponse.success(organizations);
+    } catch (error) {
+      logger.error({ error, userId: user.id }, 'Error fetching organizations');
+      return NextApiResponse.error('Server error while retrieving organizations', 500);
+    }
+  });
 }
+
+export default createMethodHandler({
+  GET: handleGet,
+  POST: handlePost,
+});

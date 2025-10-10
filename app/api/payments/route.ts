@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { NextRequest } from 'next/server';
 import { z } from 'zod';
 import {
@@ -35,7 +36,7 @@ async function handleGetPayments(request: NextRequest) {
 
       return NextApiResponse.success(payments, 'Paiements récupérés');
     } catch (error: any) {
-      console.error('Get payments error:', error);
+      logger.error({ error, userId: user.id }, 'Get payments error');
       return NextApiResponse.error('Erreur lors de la récupération des paiements', 500);
     }
   });
@@ -56,7 +57,7 @@ async function handleCreatePaymentIntent(request: NextRequest) {
 
       return NextApiResponse.success(paymentIntent, 'Intention de paiement créée', 201);
     } catch (error: any) {
-      console.error('Create payment intent error:', error);
+      logger.error({ error, userId: user.id }, 'Create payment intent error');
       return NextApiResponse.error(
         error.message || 'Erreur lors de la création de l\'intention de paiement',
         500

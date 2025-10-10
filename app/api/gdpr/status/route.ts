@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { NextRequest } from 'next/server';
 import {
     createMethodHandler,
@@ -22,7 +23,7 @@ async function handleGDPRStatus(request: NextRequest) {
 
       return NextApiResponse.success(status, 'Statut de conformité GDPR récupéré');
     } catch (error: any) {
-      console.error('GDPR status error:', error);
+      logger.error({ error, userId: user.id }, 'GDPR status error');
       return NextApiResponse.error('Erreur lors de la récupération du statut GDPR', 500);
     }
   });

@@ -1,16 +1,13 @@
-import { verifyToken } from '@/lib/jwt';
+import { logger } from '@/lib/logger';
 import { prisma } from '@/lib/prisma';
-import { NextRequest, NextResponse } from 'next/server';
+import {
+  createMethodHandler,
+  NextApiResponse,
+  validateBody,
+  withAuth
+} from '@/src/lib/next-api-helpers';
+import { NextRequest } from 'next/server';
 import { z } from 'zod';
-
-// JWT Payload interface
-interface JWTPayload {
-  userId: string;
-  email: string;
-  role?: string;
-  iat?: number;
-  exp?: number;
-}
 
 // Validation schema for adding a member
 const addMemberSchema = z.object({
@@ -45,325 +42,256 @@ async function checkPermission(
  * GET /api/organizations/:id/members
  * Retrieve organization members
  */
-export async function GET(
+async function handleGet(
   request: NextRequest,
   { params }: { params: { id: string } }
 ) {
-  try {
-    const { id } = params;
+  return withAuth(request, async (req, user) => {
+    try {
+      const { id } = params;
 
-    // Check authentication
-    const authHeader = request.headers.get('authorization');
-    if (!authHeader?.startsWith('Bearer ')) {
-      return NextResponse.json(
-        { error: 'Unauthenticated' },
-        { status: 401 }
+      logger.info({ userId: user.id, organizationId: id }, 'Fetching organization members');
+
+      // Check if organization exists
+      const organizer = await prisma.organizer.findUnique({
+        where: { id },
+      });
+
+      if (!organizer) {
+        logger.warn({ userId: user.id, organizationId: id }, 'Organization not found');
+        return NextApiResponse.notFound('Organization not found');
+      }
+
+      // Check if user is a member of the organization
+      const { hasPermission } = await checkPermission(
+        id,
+        user.id,
+        ['OWNER', 'ADMIN', 'MANAGER', 'MEMBER', 'VIEWER']
       );
-    }
 
-    const token = authHeader.substring(7);
-    const payload = await verifyToken<JWTPayload>(token);
-    
-    if (!payload?.userId) {
-      return NextResponse.json(
-        { error: 'Invalid token' },
-        { status: 401 }
-      );
-    }
+      if (!hasPermission) {
+        logger.warn({ userId: user.id, organizationId: id }, 'User not member of organization');
+        return NextApiResponse.forbidden('Access denied');
+      }
 
-    // Check if organization exists
-    const organizer = await prisma.organizer.findUnique({
-      where: { id },
-    });
-
-    if (!organizer) {
-      return NextResponse.json(
-        { error: 'Organization not found' },
-        { status: 404 }
-      );
-    }
-
-    // Check if user is a member of the organization
-    const { hasPermission } = await checkPermission(
-      id,
-      payload.userId,
-      ['OWNER', 'ADMIN', 'MANAGER', 'MEMBER', 'VIEWER']
-    );
-
-    if (!hasPermission) {
-      return NextResponse.json(
-        { error: 'Access denied' },
-        { status: 403 }
-      );
-    }
-
-    // Retrieve members
-    const members = await prisma.teamMember.findMany({
-      where: { organizerId: id },
-      include: {
-        user: {
-          select: {
-            id: true,
-            email: true,
-            name: true,
-            role: true,
+      // Retrieve members
+      const members = await prisma.teamMember.findMany({
+        where: { organizerId: id },
+        include: {
+          user: {
+            select: {
+              id: true,
+              email: true,
+              name: true,
+              role: true,
+            },
           },
         },
-      },
-      orderBy: {
-        joinedAt: 'asc',
-      },
-    });
+        orderBy: {
+          joinedAt: 'asc',
+        },
+      });
 
-    return NextResponse.json(members, { status: 200 });
-  } catch (error) {
-    console.error('Error fetching members:', error);
-    return NextResponse.json(
-      { error: 'Server error' },
-      { status: 500 }
-    );
-  }
+      logger.info({ userId: user.id, organizationId: id, memberCount: members.length }, 'Members retrieved successfully');
+
+      return NextApiResponse.success(members);
+    } catch (error) {
+      logger.error({ error, userId: user.id }, 'Error fetching members');
+      return NextApiResponse.error('Server error', 500);
+    }
+  });
 }
 
 /**
  * POST /api/organizations/:id/members
  * Add a member to the organization
  */
-export async function POST(
+async function handlePost(
   request: NextRequest,
   { params }: { params: { id: string } }
 ) {
-  try {
-    const { id } = params;
+  return withAuth(request, async (req, user) => {
+    try {
+      const { id } = params;
 
-    // Check authentication
-    const authHeader = request.headers.get('authorization');
-    if (!authHeader?.startsWith('Bearer ')) {
-      return NextResponse.json(
-        { error: 'Unauthenticated' },
-        { status: 401 }
+      logger.info({ userId: user.id, organizationId: id }, 'Adding member to organization');
+
+      // Check if organization exists
+      const organizer = await prisma.organizer.findUnique({
+        where: { id },
+      });
+
+      if (!organizer) {
+        logger.warn({ userId: user.id, organizationId: id }, 'Organization not found');
+        return NextApiResponse.notFound('Organization not found');
+      }
+
+      // Check permissions (OWNER, ADMIN, or MANAGER can add members)
+      const { hasPermission } = await checkPermission(
+        id,
+        user.id,
+        ['OWNER', 'ADMIN', 'MANAGER']
       );
-    }
 
-    const token = authHeader.substring(7);
-    const payload = await verifyToken<JWTPayload>(token);
-    
-    if (!payload?.userId) {
-      return NextResponse.json(
-        { error: 'Invalid token' },
-        { status: 401 }
-      );
-    }
+      if (!hasPermission) {
+        logger.warn({ userId: user.id, organizationId: id }, 'User lacks permission to add members');
+        return NextApiResponse.forbidden('Access denied. Only owners, administrators, and managers can add members.');
+      }
 
-    // Check if organization exists
-    const organizer = await prisma.organizer.findUnique({
-      where: { id },
-    });
+      // Validate body
+      const { data, error } = await validateBody(request, addMemberSchema);
+      if (error) return error;
 
-    if (!organizer) {
-      return NextResponse.json(
-        { error: 'Organization not found' },
-        { status: 404 }
-      );
-    }
+      const { userId: newUserId, role } = data;
 
-    // Check permissions (OWNER, ADMIN, or MANAGER can add members)
-    const { hasPermission } = await checkPermission(
-      id,
-      payload.userId,
-      ['OWNER', 'ADMIN', 'MANAGER']
-    );
+      // Check if user exists
+      const newUser = await prisma.user.findUnique({
+        where: { id: newUserId },
+      });
 
-    if (!hasPermission) {
-      return NextResponse.json(
-        { error: 'Access denied. Only owners, administrators, and managers can add members.' },
-        { status: 403 }
-      );
-    }
+      if (!newUser) {
+        logger.warn({ userId: user.id, newUserId }, 'User to add not found');
+        return NextApiResponse.notFound('User not found');
+      }
 
-    // Parse and validate body
-    const body = await request.json();
-    const validation = addMemberSchema.safeParse(body);
+      // Check if user is not already a member
+      const existingMember = await prisma.teamMember.findFirst({
+        where: {
+          organizerId: id,
+          userId: newUserId,
+        },
+      });
 
-    if (!validation.success) {
-      return NextResponse.json(
-        { error: 'Invalid data', details: validation.error.errors },
-        { status: 400 }
-      );
-    }
+      if (existingMember) {
+        logger.warn({ userId: user.id, newUserId, organizationId: id }, 'User already member');
+        return NextApiResponse.error('This user is already a member of the organization', 409);
+      }
 
-    const { userId, role } = validation.data;
-
-    // Check if user exists
-    const user = await prisma.user.findUnique({
-      where: { id: userId },
-    });
-
-    if (!user) {
-      return NextResponse.json(
-        { error: 'User not found' },
-        { status: 404 }
-      );
-    }
-
-    // Check if user is not already a member
-    const existingMember = await prisma.teamMember.findFirst({
-      where: {
-        organizerId: id,
-        userId,
-      },
-    });
-
-    if (existingMember) {
-      return NextResponse.json(
-        { error: 'This user is already a member of the organization' },
-        { status: 409 }
-      );
-    }
-
-    // Add member
-    const member = await prisma.teamMember.create({
-      data: {
-        organizerId: id,
-        userId,
-        role,
-      },
-      include: {
-        user: {
-          select: {
-            id: true,
-            email: true,
-            name: true,
-            role: true,
+      // Add member
+      const member = await prisma.teamMember.create({
+        data: {
+          organizerId: id,
+          userId: newUserId,
+          role,
+        },
+        include: {
+          user: {
+            select: {
+              id: true,
+              email: true,
+              name: true,
+              role: true,
+            },
           },
         },
-      },
-    });
+      });
 
-    return NextResponse.json(member, { status: 201 });
-  } catch (error) {
-    console.error('Error adding member:', error);
-    return NextResponse.json(
-      { error: 'Server error' },
-      { status: 500 }
-    );
-  }
+      logger.info({ userId: user.id, newUserId, organizationId: id, role }, 'Member added successfully');
+
+      return NextApiResponse.success(member, 'Member added successfully', 201);
+    } catch (error) {
+      logger.error({ error, userId: user.id }, 'Error adding member');
+      return NextApiResponse.error('Server error', 500);
+    }
+  });
 }
 
 /**
  * DELETE /api/organizations/:id/members/:userId
  * Remove a member from the organization
  */
-export async function DELETE(
+async function handleDelete(
   request: NextRequest,
   context: { params: { id: string } }
 ) {
-  try {
-    const { id } = context.params;
-    
-    // Extract userId from URL
-    const url = new URL(request.url);
-    const pathParts = url.pathname.split('/');
-    const userIdToRemove = pathParts[pathParts.length - 1];
+  return withAuth(request, async (req, user) => {
+    try {
+      const { id } = context.params;
+      
+      // Extract userId from URL
+      const url = new URL(request.url);
+      const pathParts = url.pathname.split('/');
+      const userIdToRemove = pathParts[pathParts.length - 1];
 
-    if (!userIdToRemove) {
-      return NextResponse.json(
-        { error: 'User ID missing' },
-        { status: 400 }
+      if (!userIdToRemove) {
+        logger.warn({ userId: user.id, organizationId: id }, 'Member user ID not provided');
+        return NextApiResponse.error('User ID missing', 400);
+      }
+
+      logger.info({ userId: user.id, organizationId: id, userIdToRemove }, 'Removing member from organization');
+
+      // Check if organization exists
+      const organizer = await prisma.organizer.findUnique({
+        where: { id },
+      });
+
+      if (!organizer) {
+        logger.warn({ userId: user.id, organizationId: id }, 'Organization not found');
+        return NextApiResponse.notFound('Organization not found');
+      }
+
+      // Check permissions (OWNER, ADMIN, or MANAGER can remove members)
+      // Or the user can remove themselves
+      const { hasPermission } = await checkPermission(
+        id,
+        user.id,
+        ['OWNER', 'ADMIN', 'MANAGER']
       );
-    }
 
-    // Check authentication
-    const authHeader = request.headers.get('authorization');
-    if (!authHeader?.startsWith('Bearer ')) {
-      return NextResponse.json(
-        { error: 'Unauthenticated' },
-        { status: 401 }
-      );
-    }
+      const isSelf = user.id === userIdToRemove;
 
-    const token = authHeader.substring(7);
-    const payload = await verifyToken<JWTPayload>(token);
-    
-    if (!payload?.userId) {
-      return NextResponse.json(
-        { error: 'Invalid token' },
-        { status: 401 }
-      );
-    }
+      if (!hasPermission && !isSelf) {
+        logger.warn({ userId: user.id, organizationId: id }, 'User lacks permission to remove members');
+        return NextApiResponse.forbidden('Access denied');
+      }
 
-    // Check if organization exists
-    const organizer = await prisma.organizer.findUnique({
-      where: { id },
-    });
-
-    if (!organizer) {
-      return NextResponse.json(
-        { error: 'Organization not found' },
-        { status: 404 }
-      );
-    }
-
-    // Check permissions
-    const { hasPermission } = await checkPermission(
-      id,
-      payload.userId,
-      ['OWNER', 'ADMIN', 'MANAGER']
-    );
-
-    if (!hasPermission) {
-      return NextResponse.json(
-        { error: 'Access denied' },
-        { status: 403 }
-      );
-    }
-
-    // Check if member exists
-    const memberToRemove = await prisma.teamMember.findFirst({
-      where: {
-        organizerId: id,
-        userId: userIdToRemove,
-      },
-    });
-
-    if (!memberToRemove) {
-      return NextResponse.json(
-        { error: 'Member not found' },
-        { status: 404 }
-      );
-    }
-
-    // Prevent deletion of the last owner
-    if (memberToRemove.role === 'OWNER') {
-      const ownerCount = await prisma.teamMember.count({
+      // Check if member exists
+      const memberToRemove = await prisma.teamMember.findFirst({
         where: {
           organizerId: id,
-          role: 'OWNER',
+          userId: userIdToRemove,
         },
       });
 
-      if (ownerCount === 1) {
-        return NextResponse.json(
-          { error: 'Cannot remove the last owner of the organization' },
-          { status: 400 }
-        );
+      if (!memberToRemove) {
+        logger.warn({ userId: user.id, userIdToRemove, organizationId: id }, 'Member not found');
+        return NextApiResponse.notFound('Member not found');
       }
+
+      // Prevent deletion of the last owner
+      if (memberToRemove.role === 'OWNER') {
+        const ownerCount = await prisma.teamMember.count({
+          where: {
+            organizerId: id,
+            role: 'OWNER',
+          },
+        });
+
+        if (ownerCount === 1) {
+          logger.warn({ userId: user.id, organizationId: id }, 'Cannot remove last owner');
+          return NextApiResponse.error('Cannot remove the last owner of the organization', 400);
+        }
+      }
+
+      // Remove member
+      await prisma.teamMember.delete({
+        where: { id: memberToRemove.id },
+      });
+
+      logger.info({ userId: user.id, userIdToRemove, organizationId: id }, 'Member removed successfully');
+
+      return NextApiResponse.success(
+        { message: 'Member removed successfully' }
+      );
+    } catch (error) {
+      logger.error({ error, userId: user.id }, 'Error removing member');
+      return NextApiResponse.error('Server error', 500);
     }
-
-    // Remove member
-    await prisma.teamMember.delete({
-      where: { id: memberToRemove.id },
-    });
-
-    return NextResponse.json(
-      { message: 'Member removed successfully' },
-      { status: 200 }
-    );
-  } catch (error) {
-    console.error('Error removing member:', error);
-    return NextResponse.json(
-      { error: 'Server error' },
-      { status: 500 }
-    );
-  }
+  });
 }
+
+export default createMethodHandler({
+  GET: handleGet,
+  POST: handlePost,
+  DELETE: handleDelete,
+});

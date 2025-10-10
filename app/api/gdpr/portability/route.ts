@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { NextRequest } from 'next/server';
 import {
     createMethodHandler,
@@ -22,7 +23,7 @@ async function handleGDPRPortability(request: NextRequest) {
 
       return NextApiResponse.success(portResult, 'Données portables exportées');
     } catch (error: any) {
-      console.error('GDPR portability error:', error);
+      logger.error({ error, userId: user.id }, 'GDPR portability error');
       return NextApiResponse.error('Erreur lors de l\'export des données portables', 500);
     }
   });
