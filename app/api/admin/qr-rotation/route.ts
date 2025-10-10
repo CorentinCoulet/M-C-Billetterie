@@ -1,61 +1,71 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
+import {
+  NextApiResponse,
+  withAdminAuth,
+  createMethodHandler,
+} from '../../../../src/lib/next-api-helpers';
+import { logger } from '../../../../lib/logger';
 import qrRotationService from '../../../../src/services/qrRotationService';
 
 /**
  * POST /api/admin/qr-rotation
- * Run QR code rotation process
+ * Run QR code rotation process (Admin only)
  */
-export async function POST(request: NextRequest) {
-  try {
-    const result = await qrRotationService.runQRRotation();
-    
-    if (!result.success) {
-      return NextResponse.json(
-        { 
-          success: false, 
-          error: result.error,
-          stats: result.stats 
-        },
-        { status: 500 }
-      );
-    }
-    
-    return NextResponse.json({
-      success: true,
-      message: 'QR code rotation completed successfully',
-      stats: result.stats
-    });
+async function handlePost(request: NextRequest) {
+  return withAdminAuth(request, async (req, user) => {
+    try {
+      logger.info({ adminId: user.id }, 'Starting QR code rotation process');
 
-  } catch (error) {
-    console.error('Error running QR rotation:', error);
-    return NextResponse.json(
-      { 
-        success: false, 
-        error: 'Failed to run QR rotation' 
-      },
-      { status: 500 }
-    );
-  }
+      const result = await qrRotationService.runQRRotation();
+      
+      if (!result.success) {
+        logger.error({ adminId: user.id, error: result.error, stats: result.stats }, 'QR rotation failed');
+        
+        return NextApiResponse.error(result.error || 'QR rotation failed', 500, {
+          stats: result.stats,
+        });
+      }
+      
+      logger.info({ adminId: user.id, stats: result.stats }, 'QR rotation completed successfully');
+
+      return NextApiResponse.success({
+        message: 'QR code rotation completed successfully',
+        stats: result.stats,
+      });
+
+    } catch (error) {
+      logger.error({ error, adminId: user.id }, 'Error running QR rotation');
+      return NextApiResponse.error('Failed to run QR rotation', 500);
+    }
+  });
 }
 
 /**
  * GET /api/admin/qr-rotation
- * Get QR rotation statistics
+ * Get QR rotation statistics (Admin only)
  */
-export async function GET(request: NextRequest) {
-  try {
-    const stats = await qrRotationService.getRotationStats();
-    
-    return NextResponse.json({
-      success: true,
-      stats
-    });
+async function handleGet(request: NextRequest) {
+  return withAdminAuth(request, async (req, user) => {
+    try {
+      logger.info({ adminId: user.id }, 'Fetching QR rotation statistics');
 
-  } catch (error) {
-    console.error('Error getting rotation stats:', error);
-    return NextResponse.json(
-      { error: 'Failed to get rotation statistics' },
-      { status: 500 }
-    );
-  }
+      const stats = await qrRotationService.getRotationStats();
+      
+      logger.info({ adminId: user.id, stats }, 'Rotation statistics retrieved');
+
+      return NextApiResponse.success({ stats });
+
+    } catch (error) {
+      logger.error({ error, adminId: user.id }, 'Error getting rotation stats');
+      return NextApiResponse.error('Failed to get rotation statistics', 500);
+    }
+  });
 }
+
+export const GET = createMethodHandler({
+  GET: handleGet,
+});
+
+export const POST = createMethodHandler({
+  POST: handlePost,
+});

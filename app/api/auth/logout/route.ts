@@ -4,17 +4,20 @@ import {
     NextApiResponse,
     withAuth
 } from '../../../../src/lib/next-api-helpers';
+import { logger } from '../../../../lib/logger';
 
 async function handleLogout(request: NextRequest) {
   return withAuth(request, async (req, user) => {
     try {
+      logger.info({ userId: user.id }, 'User logging out');
+
       // Pour le moment, le logout côté client suffit 
       // (supprimer le token du localStorage/cookies)
       // TODO: Implémenter une blacklist de tokens côté serveur si nécessaire
 
       return NextApiResponse.success(null, 'Déconnexion réussie');
     } catch (error: any) {
-      console.error('Logout error:', error);
+      logger.error({ error, userId: user.id }, 'Logout error');
       return NextApiResponse.error('Erreur lors de la déconnexion', 500);
     }
   });

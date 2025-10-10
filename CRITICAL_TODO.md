@@ -115,10 +115,22 @@ logger.debug({ userId, permissions }, 'Checking permissions');
   - [x] ✅ app/api/events/route.ts
   - [x] ✅ app/api/events/[id]/scan-stats/route.ts
   - [x] ✅ app/api/events/[id]/scanned-tickets/route.ts
-- [ ] **Phase 3 - Routes secondaires (27 restantes)**
-  - Dashboard, monitoring, admin, etc.
+- [ ] **Phase 3 - Routes secondaires (en cours)**
+  - [x] ✅ app/api/dashboard/stats/route.ts
+  - [x] ✅ app/api/dashboard/activities/route.ts
+  - [x] ✅ app/api/admin/qr-rotation/route.ts
+  - [x] ✅ app/api/cache/health/route.ts
+  - [x] ✅ app/api/health/route.ts (logger ajouté)
+  - [x] ✅ app/api/metrics/route.ts (logger ajouté)
+  - [ ] app/api/organizations/route.ts
+  - [ ] app/api/organizations/[id]/route.ts
+  - [ ] app/api/organizations/[id]/members/route.ts
+  - [ ] app/api/docs/route.ts
+  - [ ] app/api/monitoring/sentry/route.ts
+  - [ ] app/api/test/* (routes de test)
+  - [ ] + 8 autres routes secondaires
 
-**Progrès:** 27/46 routes standardisées (59%) ✨
+**Progrès:** 33/46 routes standardisées (72%) ✨
 
 **Impact immédiat:**
 - ✅ Toutes les routes critiques d'authentification standardisées

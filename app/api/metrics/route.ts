@@ -405,7 +405,8 @@ export async function GET() {
       },
     });
   } catch (error) {
-    console.error('Error generating metrics:', error);
+    const { logger } = await import('../../../lib/logger');
+    logger.error({ error }, 'Error generating metrics');
     return NextResponse.json(
       { error: 'Failed to collect metrics' },
       { status: 500 }

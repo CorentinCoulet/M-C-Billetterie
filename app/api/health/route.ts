@@ -228,7 +228,8 @@ export async function GET(request: NextRequest) {
     return NextResponse.json(health);
     
   } catch (error) {
-    console.error('Health check error:', error);
+    const { logger } = await import('../../../lib/logger');
+    logger.error({ error }, 'Health check error');
     return NextResponse.json(
       { 
         status: 'unhealthy', 

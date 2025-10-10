@@ -57,7 +57,8 @@ async function handleRegister(request: NextRequest) {
 
     return response;
   } catch (error: any) {
-    console.error('Register error:', error);
+    const { logger } = await import('../../../../lib/logger');
+    logger.error({ error, email: data.email }, 'Register error');
     return NextApiResponse.error(
       error.message || 'Erreur lors de l\'inscription',
       500

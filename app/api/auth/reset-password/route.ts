@@ -22,7 +22,8 @@ async function handleResetPassword(request: NextRequest) {
       'Mot de passe réinitialisé avec succès'
     );
   } catch (error: any) {
-    console.error('Reset password error:', error);
+    const { logger } = await import('../../../../lib/logger');
+    logger.error({ error }, 'Reset password error');
     return NextApiResponse.badRequest(
       error.message || 'Erreur lors de la réinitialisation'
     );

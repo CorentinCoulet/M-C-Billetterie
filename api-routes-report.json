@@ -1,8 +1,8 @@
 {
   "total": 46,
-  "standardized": 14,
-  "withAuth": 5,
-  "direct": 27,
+  "standardized": 23,
+  "withAuth": 3,
+  "direct": 20,
   "routes": [
     {
       "path": "app\\api\\admin\\qr-rotation\\route.ts",
@@ -19,39 +19,33 @@
     },
     {
       "path": "app\\api\\auth\\change-password\\route.ts",
-      "pattern": "withAuth",
-      "methods": [
-        "POST"
-      ],
+      "pattern": "createMethodHandler",
+      "methods": [],
       "hasAuth": true,
-      "hasValidation": false,
-      "hasLogger": false,
-      "hasConsoleLog": true,
-      "priority": "medium"
+      "hasValidation": true,
+      "hasLogger": true,
+      "hasConsoleLog": false,
+      "priority": "low"
     },
     {
       "path": "app\\api\\auth\\forgot-password\\route.ts",
-      "pattern": "direct",
-      "methods": [
-        "POST"
-      ],
+      "pattern": "createMethodHandler",
+      "methods": [],
       "hasAuth": false,
       "hasValidation": true,
-      "hasLogger": false,
-      "hasConsoleLog": true,
-      "priority": "medium"
+      "hasLogger": true,
+      "hasConsoleLog": false,
+      "priority": "low"
     },
     {
       "path": "app\\api\\auth\\login\\route.ts",
-      "pattern": "direct",
-      "methods": [
-        "POST"
-      ],
+      "pattern": "createMethodHandler",
+      "methods": [],
       "hasAuth": false,
       "hasValidation": true,
-      "hasLogger": false,
-      "hasConsoleLog": true,
-      "priority": "medium"
+      "hasLogger": true,
+      "hasConsoleLog": false,
+      "priority": "low"
     },
     {
       "path": "app\\api\\auth\\logout\\route.ts",
@@ -65,16 +59,13 @@
     },
     {
       "path": "app\\api\\auth\\me\\route.ts",
-      "pattern": "withAuth",
-      "methods": [
-        "GET",
-        "POST"
-      ],
+      "pattern": "createMethodHandler",
+      "methods": [],
       "hasAuth": true,
       "hasValidation": false,
-      "hasLogger": false,
-      "hasConsoleLog": true,
-      "priority": "medium"
+      "hasLogger": true,
+      "hasConsoleLog": false,
+      "priority": "low"
     },
     {
       "path": "app\\api\\auth\\register\\route.ts",
@@ -160,14 +151,11 @@
     {
       "path": "app\\api\\events\\route.ts",
       "pattern": "withAuth",
-      "methods": [
-        "GET",
-        "POST"
-      ],
+      "methods": [],
       "hasAuth": true,
       "hasValidation": true,
-      "hasLogger": false,
-      "hasConsoleLog": true,
+      "hasLogger": true,
+      "hasConsoleLog": false,
       "priority": "medium"
     },
     {
@@ -182,27 +170,23 @@
     },
     {
       "path": "app\\api\\events\\[id]\\scan-stats\\route.ts",
-      "pattern": "direct",
-      "methods": [
-        "GET"
-      ],
+      "pattern": "createMethodHandler",
+      "methods": [],
       "hasAuth": false,
       "hasValidation": false,
-      "hasLogger": false,
-      "hasConsoleLog": true,
-      "priority": "medium"
+      "hasLogger": true,
+      "hasConsoleLog": false,
+      "priority": "low"
     },
     {
       "path": "app\\api\\events\\[id]\\scanned-tickets\\route.ts",
-      "pattern": "direct",
-      "methods": [
-        "GET"
-      ],
+      "pattern": "createMethodHandler",
+      "methods": [],
       "hasAuth": false,
       "hasValidation": false,
-      "hasLogger": false,
-      "hasConsoleLog": true,
-      "priority": "medium"
+      "hasLogger": true,
+      "hasConsoleLog": false,
+      "priority": "low"
     },
     {
       "path": "app\\api\\events\\[id]\\statistics\\route.ts",
@@ -422,15 +406,13 @@
     },
     {
       "path": "app\\api\\payments\\webhook\\route.ts",
-      "pattern": "direct",
-      "methods": [
-        "POST"
-      ],
+      "pattern": "createMethodHandler",
+      "methods": [],
       "hasAuth": false,
       "hasValidation": false,
-      "hasLogger": false,
-      "hasConsoleLog": true,
-      "priority": "medium"
+      "hasLogger": true,
+      "hasConsoleLog": false,
+      "priority": "low"
     },
     {
       "path": "app\\api\\sentry\\test\\route.ts",
@@ -520,27 +502,23 @@
     },
     {
       "path": "app\\api\\tickets\\validate\\route.ts",
-      "pattern": "direct",
-      "methods": [
-        "POST"
-      ],
+      "pattern": "createMethodHandler",
+      "methods": [],
       "hasAuth": false,
-      "hasValidation": false,
-      "hasLogger": false,
-      "hasConsoleLog": true,
-      "priority": "medium"
+      "hasValidation": true,
+      "hasLogger": true,
+      "hasConsoleLog": false,
+      "priority": "low"
     },
     {
       "path": "app\\api\\tickets\\[id]\\regenerate-qr\\route.ts",
-      "pattern": "direct",
-      "methods": [
-        "POST"
-      ],
+      "pattern": "createMethodHandler",
+      "methods": [],
       "hasAuth": false,
       "hasValidation": false,
-      "hasLogger": false,
-      "hasConsoleLog": true,
-      "priority": "medium"
+      "hasLogger": true,
+      "hasConsoleLog": false,
+      "priority": "low"
     }
   ]
 }

@@ -3,11 +3,15 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { createMethodHandler, NextApiResponse } from '../../../../src/lib/next-api-helpers';
+import { logger } from '../../../../lib/logger';
 import { cache } from '../../../../src/lib/cache';
 import { monitoringService } from '../../../../src/lib/monitoring';
 
-export async function GET(request: NextRequest) {
+async function handleGet(request: NextRequest) {
   try {
+    logger.info('Checking cache health');
+
     // Get cache statistics
     const stats = await cache.getStats();
     const health = await cache.healthCheck();
@@ -17,6 +21,8 @@ export async function GET(request: NextRequest) {
       redis: health.redis ? 'healthy' : 'unhealthy',
       memory: health.memory ? 'healthy' : 'unhealthy'
     });
+
+    logger.info({ health, stats }, 'Cache health check completed');
 
     return NextResponse.json({
       status: health.healthy ? 'healthy' : 'unhealthy',
@@ -47,11 +53,14 @@ export async function GET(request: NextRequest) {
     });
 
   } catch (error) {
-    return NextResponse.json({
-      status: 'error',
-      timestamp: new Date().toISOString(),
-      error: 'Cache health check failed',
+    logger.error({ error }, 'Cache health check failed');
+    
+    return NextApiResponse.error('Cache health check failed', 500, {
       details: error instanceof Error ? error.message : 'Unknown error'
-    }, { status: 500 });
+    });
   }
 }
+
+export const GET = createMethodHandler({
+  GET: handleGet,
+});
