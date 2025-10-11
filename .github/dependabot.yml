@@ -1,0 +1,75 @@
+# Dependabot configuration to keep dependencies up to date
+# https://docs.github.com/en/code-security/dependabot/dependabot-version-updates/configuration-options-for-the-dependabot.yml-file
+
+version: 2
+updates:
+  # npm/yarn dependencies
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+      timezone: "Europe/Paris"
+    open-pull-requests-limit: 10
+    labels:
+      - "dependencies"
+      - "npm"
+    commit-message:
+      prefix: "chore(deps):"
+      include: "scope"
+    # Group minor updates together
+    groups:
+      next:
+        patterns:
+          - "next*"
+      react:
+        patterns:
+          - "react*"
+      testing:
+        patterns:
+          - "@testing-library/*"
+          - "jest*"
+          - "@playwright/*"
+          - "@stryker-mutator/*"
+      prisma:
+        patterns:
+          - "@prisma/*"
+          - "prisma"
+      radix-ui:
+        patterns:
+          - "@radix-ui/*"
+      opentelemetry:
+        patterns:
+          - "@opentelemetry/*"
+      sentry:
+        patterns:
+          - "@sentry/*"
+
+  # GitHub Actions
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+      timezone: "Europe/Paris"
+    labels:
+      - "dependencies"
+      - "github-actions"
+    commit-message:
+      prefix: "chore(ci):"
+
+  # Docker (if used)
+  - package-ecosystem: "docker"
+    directory: "/docker"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+      timezone: "Europe/Paris"
+    labels:
+      - "dependencies"
+      - "docker"
+    commit-message:
+      prefix: "chore(docker):"

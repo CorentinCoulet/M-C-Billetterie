@@ -300,7 +300,7 @@ export async function getHealthStatus(): Promise<HealthStatus> {
     return healthStatus;
 
   } catch (error) {
-    safeLogger.error({ err: error }, 'Health check failed');
+    safeLogger.error('Health check failed', { err: error });
     
     return {
       status: 'unhealthy',
@@ -330,7 +330,7 @@ export async function getSimpleHealthStatus(): Promise<{ status: string; timesta
       timestamp: new Date().toISOString()
     };
   } catch (error) {
-    safeLogger.error({ err: error }, 'Simple health check failed');
+    safeLogger.error('Simple health check failed', { err: error });
     
     return {
       status: 'ERROR',

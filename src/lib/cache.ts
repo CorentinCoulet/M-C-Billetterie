@@ -200,7 +200,7 @@ class CacheService {
       return null;
       
     } catch (error) {
-      safeLogger.error('Cache get error:', error, { key: fullKey });
+      safeLogger.error('Cache get error:', { error, key: fullKey });
       monitoringService.recordError(error as Error, { operation: 'cache_get', key: key.split(':')[0] });
       return null;
     }
@@ -231,7 +231,7 @@ class CacheService {
       return true;
       
     } catch (error) {
-      safeLogger.error('Cache set error:', error, { key: fullKey });
+      safeLogger.error('Cache set error:', { error, key: fullKey });
       monitoringService.recordError(error as Error, { operation: 'cache_set', key: key.split(':')[0] });
       return false;
     }
@@ -261,7 +261,7 @@ class CacheService {
       return deleted;
       
     } catch (error) {
-      safeLogger.error('Cache delete error:', error, { key: fullKey });
+      safeLogger.error('Cache delete error:', { error, key: fullKey });
       monitoringService.recordError(error as Error, { operation: 'cache_delete', key: key.split(':')[0] });
       return false;
     }
@@ -296,7 +296,7 @@ class CacheService {
       return true;
       
     } catch (error) {
-      safeLogger.error('Cache clear error:', error, { pattern });
+      safeLogger.error('Cache clear error:', { error, pattern });
       monitoringService.recordError(error as Error, { operation: 'cache_clear' });
       return false;
     }

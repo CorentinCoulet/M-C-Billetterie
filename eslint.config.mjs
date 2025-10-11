@@ -42,6 +42,18 @@ const eslintConfig = [
       '**/tsconfig.tsbuildinfo',
     ],
   },
+  {
+    rules: {
+      '@typescript-eslint/no-unused-vars': [
+        'error',
+        {
+          argsIgnorePattern: '^_',
+          varsIgnorePattern: '^_',
+          caughtErrorsIgnorePattern: '^_',
+        },
+      ],
+    },
+  },
 ]
 
 export default eslintConfig

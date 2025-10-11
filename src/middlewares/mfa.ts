@@ -1,6 +1,7 @@
 /**
  * MFA Middleware
  * Enforces MFA for admin users and protected routes
+ * Note: This middleware needs to be adapted for Next.js API routes
  */
 
 import { NextApiRequest, NextApiResponse } from 'next';
@@ -8,31 +9,43 @@ import { AuditService } from '../lib/audit-service';
 import { safeLogger } from '../lib/logger';
 import { mfaService } from '../lib/mfa-service';
 
-interface AuthenticatedRequest extends Request {
+// Helper to get IP from Next.js request
+function getIpAddress(req: NextApiRequest): string {
+  const forwarded = req.headers['x-forwarded-for'];
+  if (typeof forwarded === 'string') {
+    return forwarded.split(',')[0];
+  }
+  return req.socket?.remoteAddress || 'unknown';
+}
+
+interface SessionData {
+  mfaVerified?: boolean;
+  mfaVerifiedAt?: Date;
+}
+
+interface MFARequest extends NextApiRequest {
   user?: {
     id: string;
     email: string;
     role: string;
   };
-  session: Session & Partial<SessionData>;
-}
-
-interface SessionData {
-  mfaVerified: boolean;
-  mfaVerifiedAt: Date;
-}
-
-interface MFARequest extends AuthenticatedRequest {
+  session?: SessionData;
   mfaVerified?: boolean;
 }
+
+type NextApiMiddleware = (
+  req: MFARequest,
+  res: NextApiResponse,
+  next: () => void
+) => Promise<void>;
 
 /**
  * Middleware to check if MFA is required and verified
  */
 export const requireMFA = async (
   req: MFARequest,
-  res: Response,
-  next: NextFunction
+  res: NextApiResponse,
+  next: () => void
 ): Promise<void> => {
   try {
     if (!req.user) {
@@ -44,7 +57,7 @@ export const requireMFA = async (
     }
 
     const { id: userId } = req.user;
-    const ipAddress = req.ip || req.connection.remoteAddress || 'unknown';
+    const ipAddress = getIpAddress(req);
 
     // Check if user requires MFA
     const requiresMFA = await mfaService.requiresMFA(userId);
@@ -69,8 +82,8 @@ export const requireMFA = async (
         resourceId: userId,
         userEmail: req.user.email,
         ipAddress,
-        userAgent: req.get('User-Agent'),
-        details: { path: req.path, method: req.method },
+        userAgent: req.headers['user-agent'] || 'unknown',
+        details: { path: req.url, method: req.method },
         result: 'failure',
         riskLevel: 'high'
       });
@@ -91,8 +104,8 @@ export const requireMFA = async (
         resourceId: userId,
         userEmail: req.user.email,
         ipAddress,
-        userAgent: req.get('User-Agent'),
-        details: { path: req.path, method: req.method },
+        userAgent: req.headers['user-agent'] || 'unknown',
+        details: { path: req.url, method: req.method },
         result: 'failure',
         riskLevel: 'medium'
       });
@@ -117,8 +130,8 @@ export const requireMFA = async (
  */
 export const verifyMFACode = async (
   req: MFARequest,
-  res: Response,
-  next: NextFunction
+  res: NextApiResponse,
+  next: () => void
 ): Promise<void> => {
   try {
     if (!req.user) {
@@ -131,7 +144,7 @@ export const verifyMFACode = async (
 
     const { code, backupCode } = req.body;
     const { id: userId, email } = req.user;
-    const ipAddress = req.ip || req.connection.remoteAddress || 'unknown';
+    const ipAddress = getIpAddress(req);
 
     if (!code && !backupCode) {
       res.status(400).json({
@@ -173,10 +186,10 @@ export const verifyMFACode = async (
       resourceId: userId,
       userEmail: email,
       ipAddress,
-      userAgent: req.get('User-Agent'),
+      userAgent: req.headers['user-agent'] || 'unknown',
       details: { 
         method: code ? 'totp' : 'backup_code',
-        path: req.path 
+        path: req.url 
       },
       result: 'success',
       riskLevel: 'medium'
@@ -197,7 +210,7 @@ export const verifyMFACode = async (
  * Middleware to check MFA session validity
  */
 export const checkMFASession = (maxAge: number = 8 * 60 * 60 * 1000) => {
-  return (req: MFARequest, res: Response, next: NextFunction): void => {
+  return (req: MFARequest, res: NextApiResponse, next: () => void): void => {
     if (!req.session || !req.session.mfaVerified) {
       next();
       return;
@@ -207,7 +220,9 @@ export const checkMFASession = (maxAge: number = 8 * 60 * 60 * 1000) => {
     if (!mfaVerifiedAt) {
       // Clear invalid MFA session
       req.session.mfaVerified = false;
-      delete req.session.mfaVerifiedAt;
+      if (req.session.mfaVerifiedAt) {
+        req.session.mfaVerifiedAt = undefined;
+      }
       next();
       return;
     }
@@ -218,16 +233,19 @@ export const checkMFASession = (maxAge: number = 8 * 60 * 60 * 1000) => {
     if (age > maxAge) {
       // MFA session expired
       req.session.mfaVerified = false;
-      delete req.session.mfaVerifiedAt;
+      if (req.session.mfaVerifiedAt) {
+        req.session.mfaVerifiedAt = undefined;
+      }
 
       if (req.user) {
+        const ipAddress = getIpAddress(req);
         AuditService.logEvent({
           action: 'mfa.session_expired',
           resourceType: 'user',
           resourceId: req.user.id,
           userEmail: req.user.email,
-          ipAddress: req.ip || 'unknown',
-          userAgent: req.get('User-Agent'),
+          ipAddress,
+          userAgent: req.headers['user-agent'] || 'unknown',
           details: { sessionAge: age },
           result: 'success',
           riskLevel: 'low'
@@ -240,14 +258,10 @@ export const checkMFASession = (maxAge: number = 8 * 60 * 60 * 1000) => {
 };
 
 /**
- * Express session type augmentation
+ * Session type augmentation
+ * Note: This would need to be adapted based on your session implementation
+ * (e.g., iron-session, next-auth, etc.)
  */
-declare module 'express-session' {
-  interface SessionData {
-    mfaVerified?: boolean;
-    mfaVerifiedAt?: Date;
-  }
-}
 
 export default {
   requireMFA,

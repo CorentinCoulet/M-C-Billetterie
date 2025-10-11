@@ -1,52 +1,61 @@
 #!/usr/bin/env node
 
 /**
- * Cron job pour la rotation automatique des QR codes
+ * Cron job for automatic QR code rotation
  * 
- * Ce script doit être exécuté périodiquement (ex: toutes les heures)
+ * This script should be executed periodically (e.g., every hour)
  * Usage: node scripts/qr-rotation-cron.js
  */
 
-import qrRotationService from '../src/services/qrRotationService';
+import { logger } from '../../lib/logger';
+import qrRotationService from '../../src/services/qrRotationService';
 
 async function runQRRotationCron() {
-  console.log(`🕐 [${new Date().toISOString()}] Starting QR rotation cron job...`);
+  logger.info('Starting QR rotation cron job');
 
   try {
     const result = await qrRotationService.runQRRotation();
     
     if (result.success) {
-      console.log(`✅ QR rotation completed successfully:`);
-      console.log(`   - Total checked: ${result.stats.total}`);
-      console.log(`   - Regenerated: ${result.stats.regenerated}`);
-      console.log(`   - Skipped: ${result.stats.skipped}`);
-      console.log(`   - Errors: ${result.stats.errors}`);
+      logger.info({
+        stats: result.stats,
+        message: 'QR rotation completed successfully'
+      });
     } else {
-      console.error(`❌ QR rotation failed: ${result.error}`);
+      logger.error({
+        error: result.error,
+        message: 'QR rotation failed'
+      });
       process.exit(1);
     }
 
   } catch (error) {
-    console.error(`❌ Cron job failed:`, error);
+    logger.error({
+      error,
+      message: 'Cron job failed with unexpected error'
+    });
     process.exit(1);
   }
 
-  console.log(`🏁 QR rotation cron job completed at ${new Date().toISOString()}`);
+  logger.info('QR rotation cron job completed');
 }
 
-// Gestion des signaux pour arrêt propre
+// Handle signals for graceful shutdown
 process.on('SIGTERM', () => {
-  console.log('📴 Received SIGTERM, shutting down gracefully');
+  logger.info('Received SIGTERM, shutting down gracefully');
   process.exit(0);
 });
 
 process.on('SIGINT', () => {
-  console.log('📴 Received SIGINT, shutting down gracefully');
+  logger.info('Received SIGINT, shutting down gracefully');
   process.exit(0);
 });
 
-// Exécution du job
+// Execute the job
 runQRRotationCron().catch(error => {
-  console.error('💥 Unhandled error in cron job:', error);
+  logger.error({
+    error,
+    message: 'Unhandled error in cron job'
+  });
   process.exit(1);
 });

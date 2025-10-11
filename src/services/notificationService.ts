@@ -81,6 +81,12 @@ const NOTIFICATION_TEMPLATES: Record<NotificationType, NotificationTemplate> = {
     emailTemplate: 'password-reset'
   },
   
+  [NotificationType.PASSWORD_CHANGED]: {
+    subject: 'Mot de passe modifié',
+    body: 'Votre mot de passe a été modifié avec succès.',
+    emailTemplate: 'password-changed'
+  },
+  
   [NotificationType.TICKET_PURCHASED]: {
     subject: 'Billet acheté avec succès',
     body: 'Votre billet pour {{ eventTitle }} a été acheté avec succès.',
@@ -360,18 +366,21 @@ class NotificationService extends BaseService<any> {
   }
 
   /**
-   * Clean up expired notifications
+   * Clean up old notifications (older than 30 days)
    */
   async cleanupExpiredNotifications(): Promise<number> {
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+    
     const result = await prisma.notification.deleteMany({
       where: {
-        expiresAt: {
-          lt: new Date()
+        sentAt: {
+          lt: thirtyDaysAgo
         }
       }
     });
 
-    safeLogger.info(`Cleaned up ${result.count} expired notifications`);
+    safeLogger.info(`Cleaned up ${result.count} old notifications`);
     return result.count;
   }
 
@@ -396,15 +405,14 @@ class NotificationService extends BaseService<any> {
       // Dynamic import to handle optional dependency
       const { sendEmail } = await import('../lib/mailer');
       
-      await sendEmail({
-        to: user.email,
-        subject: this.renderTemplate(template.subject, data.data || {}),
-        template: template.emailTemplate!,
-        context: {
-          userName: user.name,
-          ...data.data
-        }
-      });
+      const subject = this.renderTemplate(template.subject, data.data || {});
+      const body = this.renderTemplate(template.body, { userName: user.name, ...data.data });
+      
+      await sendEmail(
+        user.email,
+        subject,
+        body
+      );
 
     } catch (error) {
       safeLogger.error('Failed to send email notification', {

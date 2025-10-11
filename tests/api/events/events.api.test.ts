@@ -1,22 +1,22 @@
 import { NextApiResponse } from 'next';
 import { eventController } from '../../../src/utils/test-controllers';
 import {
-  createAuthenticatedRequest,
-  createMockRequest,
-  expectError,
-  expectForbidden,
-  expectNotFound,
-  expectSuccess,
-  expectUnauthorized,
-  expectValidationError,
-  Role
+    createAuthenticatedRequest,
+    createMockRequest,
+    expectError,
+    expectForbidden,
+    expectNotFound,
+    expectSuccess,
+    expectUnauthorized,
+    expectValidationError,
+    Role
 } from '../../utils/helpers';
 
 describe('Events API', () => {
   // Helper function to create a test user
   function createTestUser(role: Role = 'USER') {
     return {
-      id: Math.floor(Math.random() * 1000),
+      id: `user-${Math.floor(Math.random() * 1000)}`,
       email: `test-${Date.now()}@example.com`,
       password: 'hashed_password',
       name: 'Test User',
@@ -28,7 +28,7 @@ describe('Events API', () => {
   }
 
   // Helper function to create a test event
-  function createTestEvent(organizerId: number, isPublished = true) {
+  function createTestEvent(organizerId: string, isPublished = true) {
     return {
       id: Math.floor(Math.random() * 1000),
       title: 'Test Event',

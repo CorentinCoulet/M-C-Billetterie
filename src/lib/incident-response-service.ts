@@ -3,8 +3,8 @@
  * Handles security breaches, data leaks, and emergency responses
  */
 
-import { PrismaClient } from '../generated/prisma';
 import { EventEmitter } from 'events';
+import { PrismaClient } from '../generated/prisma';
 import AuditService from './audit-service';
 import { safeLogger } from './logger';
 
@@ -257,9 +257,9 @@ export class IncidentResponseService extends EventEmitter {
         await this.prisma.payment.update({
           where: { id: transaction.id },
           data: { 
-            status: 'FLAGGED_FRAUD',
-            flaggedAt: new Date(),
-            flagReason: 'SECURITY_INCIDENT'
+            paymentStatus: 'FLAGGED_FRAUD'
+            // Note: flaggedAt and flagReason fields don't exist in Payment schema
+            // TODO: Add these fields to Payment model if fraud tracking is needed
           }
         });
       } catch (error) {
@@ -534,12 +534,17 @@ export class IncidentResponseService extends EventEmitter {
   }
 
   private async lockUserAccounts(userIds: string[]): Promise<void> {
+    // Note: User model doesn't have status, lockedAt, or lockReason fields
+    // TODO: Add these fields to User model if account locking is needed
+    // For now, we can use metadata field to track locked status
     await this.prisma.user.updateMany({
       where: { id: { in: userIds } },
       data: { 
-        status: 'LOCKED',
-        lockedAt: new Date(),
-        lockReason: 'SECURITY_INCIDENT'
+        metadata: {
+          locked: true,
+          lockedAt: new Date().toISOString(),
+          lockReason: 'SECURITY_INCIDENT'
+        }
       }
     });
   }

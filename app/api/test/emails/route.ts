@@ -1,12 +1,18 @@
-import { NextResponse } from 'next/server';
+import { logger } from '@/lib/logger';
+import { createMethodHandler, NextApiResponse } from '@/src/lib/next-api-helpers';
+import { NextRequest } from 'next/server';
 
 /**
  * Main test endpoint listing all available email tests
  */
-export async function GET() {
+async function handleGet(request: NextRequest) {
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
   
-  return NextResponse.json({
+  logger.info({ 
+    pathname: '/api/test/emails' 
+  }, 'Email testing system accessed');
+  
+  return NextApiResponse.success({
     message: 'Email Testing System - Billetterie',
     available_tests: [
       {
@@ -70,3 +76,7 @@ export async function GET() {
     }
   });
 }
+
+export default createMethodHandler({
+  GET: handleGet,
+});

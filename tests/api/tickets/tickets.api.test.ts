@@ -1,18 +1,18 @@
 import { NextApiResponse } from 'next';
 import { ticketController } from '../../../src/utils/test-controllers';
 import {
-  createAuthenticatedRequest,
-  createMockRequest,
-  expectError,
-  expectForbidden,
-  expectNotFound,
-  expectSuccess,
-  expectUnauthorized,
-  expectValidationError,
-  generateRandomEmail,
-  hashTestPassword,
-  Role,
-  User
+    createAuthenticatedRequest,
+    createMockRequest,
+    expectError,
+    expectForbidden,
+    expectNotFound,
+    expectSuccess,
+    expectUnauthorized,
+    expectValidationError,
+    generateRandomEmail,
+    hashTestPassword,
+    Role,
+    User
 } from '../../utils/helpers';
 import { setupTests, teardownTests, testPrisma } from '../../utils/setup';
 function toTestUser(prismaUser: any): Partial<User> {
@@ -21,7 +21,7 @@ function toTestUser(prismaUser: any): Partial<User> {
     email: prismaUser.email,
     name: prismaUser.name,
     role: prismaUser.role as Role,
-    isVerified: prismaUser.isVerified,
+    isEmailVerified: prismaUser.isVerified, // Map isVerified to isEmailVerified
     createdAt: prismaUser.createdAt,
     updatedAt: prismaUser.updatedAt
   };

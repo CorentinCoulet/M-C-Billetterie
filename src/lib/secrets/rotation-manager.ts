@@ -41,7 +41,7 @@ export class SecretRotationManager {
         return daysSinceRotation >= this.DEFAULT_CONFIG.rotationIntervalDays - this.DEFAULT_CONFIG.notifyBeforeDays;
       });
     } catch (error) {
-      safeLogger.error({ error: error }, '[SecretRotation] Error checking rotation:');
+      safeLogger.error('[SecretRotation] Error checking rotation:', { error });
       return [];
     }
   }
@@ -70,7 +70,7 @@ export class SecretRotationManager {
       safeLogger.info(`[SecretRotation] Successfully rotated: ${secretName}`);
       return true;
     } catch (error) {
-      safeLogger.error({ error: error }, `[SecretRotation] Failed to rotate ${secretName}:`);
+      safeLogger.error(`[SecretRotation] Failed to rotate ${secretName}:`, { error });
       return false;
     }
   }

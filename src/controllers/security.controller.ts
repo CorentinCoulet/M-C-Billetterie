@@ -40,7 +40,7 @@ securityRouter.get('/config', (req: Request, res: Response) => {
       }
     });
   } catch (error: any) {
-    safeLogger.error({ error: error.message }, 'Security API: Error getting config');
+    safeLogger.error('Security API: Error getting config', { error: error.message });
     res.status(500).json({ 
       success: false, 
       error: 'Failed to get configuration' 
@@ -64,11 +64,11 @@ securityRouter.post('/mode', (req: Request, res: Response) => {
     AdvancedWAF.updateConfig({ mode });
     
     // Log the mode change
-    safeLogger.info({ 
+    safeLogger.info('Security: WAF mode changed', { 
       mode, 
       adminUser: req.user?.id || 'unknown',
       timestamp: new Date().toISOString() 
-    }, 'Security: WAF mode changed');
+    });
 
     // Get updated configuration
     const config = AdvancedWAF.getConfig();
@@ -92,7 +92,7 @@ securityRouter.post('/mode', (req: Request, res: Response) => {
       }
     });
   } catch (error: any) {
-    safeLogger.error({ error: error.message }, 'Security API: Error switching mode');
+    safeLogger.error('Security API: Error switching mode', { error: error.message });
     res.status(500).json({ 
       success: false, 
       error: 'Failed to switch mode' 
@@ -121,11 +121,11 @@ securityRouter.put('/config', (req: Request, res: Response) => {
     // Update WAF configuration
     AdvancedWAF.updateConfig(validUpdate);
     
-    safeLogger.info({ 
+    safeLogger.info('Security: WAF configuration updated', { 
       updates: validUpdate,
       adminUser: req.user?.id || 'unknown',
       timestamp: new Date().toISOString()
-    }, 'Security: WAF configuration updated');
+    });
     
     // Return updated configuration
     const config = AdvancedWAF.getConfig();
@@ -136,7 +136,7 @@ securityRouter.put('/config', (req: Request, res: Response) => {
       config
     });
   } catch (error: any) {
-    safeLogger.error({ error: error.message }, 'Security API: Error updating config');
+    safeLogger.error('Security API: Error updating config', { error: error.message });
     res.status(500).json({ 
       success: false, 
       error: 'Failed to update configuration' 
@@ -177,7 +177,7 @@ securityRouter.get('/stats', (req: Request, res: Response) => {
       }
     });
   } catch (error: any) {
-    safeLogger.error({ error: error.message }, 'Security API: Error getting stats');
+    safeLogger.error('Security API: Error getting stats', { error: error.message });
     res.status(500).json({ 
       success: false, 
       error: 'Failed to get statistics' 
@@ -190,17 +190,17 @@ securityRouter.post('/clear-cache', (req: Request, res: Response) => {
   try {
     AdvancedWAF.clearCache();
     
-    safeLogger.info({ 
+    safeLogger.info('Security: WAF cache cleared', { 
       adminUser: req.user?.id || 'unknown',
       timestamp: new Date().toISOString()
-    }, 'Security: WAF cache cleared');
+    });
     
     res.json({
       success: true,
       message: 'WAF cache cleared successfully'
     });
   } catch (error: any) {
-    safeLogger.error({ error: error.message }, 'Security API: Error clearing cache');
+    safeLogger.error('Security API: Error clearing cache', { error: error.message });
     res.status(500).json({ 
       success: false, 
       error: 'Failed to clear cache' 
@@ -241,7 +241,7 @@ securityRouter.get('/test', (req: Request, res: Response) => {
       note: 'Send these in request parameters, body, or headers to trigger WAF'
     });
   } catch (error: any) {
-    safeLogger.error({ error: error.message }, 'Security API: Error getting test patterns');
+    safeLogger.error('Security API: Error getting test patterns', { error: error.message });
     res.status(500).json({ 
       success: false, 
       error: 'Failed to get test patterns' 
@@ -290,7 +290,7 @@ securityRouter.get('/health', (req: Request, res: Response) => {
       }
     });
   } catch (error: any) {
-    safeLogger.error({ error: error.message }, 'Security API: Error checking health');
+    safeLogger.error('Security API: Error checking health', { error: error.message });
     res.status(500).json({ 
       success: false, 
       error: 'Failed to check security health' 

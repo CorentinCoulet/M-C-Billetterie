@@ -1,5 +1,4 @@
-import nodemailer from 'nodemailer';
-import { SentMessageInfo } from 'nodemailer';
+import nodemailer, { SentMessageInfo } from 'nodemailer';
 
 // Email configuration from environment variables
 const emailConfig = {
@@ -248,9 +247,11 @@ export async function verifyEmailConfig(): Promise<boolean> {
   }
 }
 
-export default {
+export const emailService = {
   transporter,
   sendEmail,
   sendTemplateEmail,
   verifyEmailConfig,
 };
+
+export default emailService;

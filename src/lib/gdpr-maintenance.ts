@@ -201,13 +201,16 @@ export class GDPRMaintenanceService {
       }, {});
 
       // Get data retention stats
-      const retentionStats = await prisma.dataRetention.groupBy({
-        by: ['entityType'],
-        _count: { id: true },
-        where: {
-          scheduledDeleteAt: { gte: startDate, lte: endDate }
-        }
-      });
+      // Note: dataRetention table doesn't exist in schema, using placeholder
+      const retentionStats: any[] = [];
+      // TODO: Implement data retention tracking when table is added to schema
+      // const retentionStats = await prisma.dataRetention.groupBy({
+      //   by: ['entityType'],
+      //   _count: { id: true },
+      //   where: {
+      //     scheduledDeleteAt: { gte: startDate, lte: endDate }
+      //   }
+      // });
 
       // Count of users with recent GDPR requests
       const activeUsers = new Set(gdprActivities.map((log: any) => log.userId)).size;

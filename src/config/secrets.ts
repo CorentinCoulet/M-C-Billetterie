@@ -67,7 +67,7 @@ class AzureKeyVaultProvider implements SecretsProvider {
         SecretClient: keyVault.SecretClient
       };
     } catch (error) {
-      safeLogger.warn({ error }, 'Azure Key Vault dependencies not available');
+      safeLogger.warn('Azure Key Vault dependencies not available', { error });
       throw new Error('Azure Key Vault provider requires @azure/identity and @azure/keyvault-secrets packages');
     }
   }
@@ -88,7 +88,7 @@ class AzureKeyVaultProvider implements SecretsProvider {
       
       return secret.value || null;
     } catch (error) {
-      safeLogger.error({ error, key }, `Azure Key Vault error for key ${key}`);
+      safeLogger.error(`Azure Key Vault error for key ${key}`, { error, key });
       return null;
     }
   }
@@ -107,9 +107,9 @@ class AzureKeyVaultProvider implements SecretsProvider {
       const client = new SecretClient(vaultUrl, credential);
       await client.setSecret(key, value);
       
-      safeLogger.info({ key }, `Secret ${key} stored in Azure Key Vault`);
+      safeLogger.info(`Secret ${key} stored in Azure Key Vault`, { key });
     } catch (error) {
-      safeLogger.error({ error, key }, `Failed to store secret ${key} in Azure Key Vault`);
+      safeLogger.error(`Failed to store secret ${key} in Azure Key Vault`, { error, key });
       throw error;
     }
   }
@@ -128,9 +128,9 @@ class AzureKeyVaultProvider implements SecretsProvider {
       const client = new SecretClient(vaultUrl, credential);
       await client.beginDeleteSecret(key);
       
-      safeLogger.info({ key }, `Secret ${key} deleted from Azure Key Vault`);
+      safeLogger.info(`Secret ${key} deleted from Azure Key Vault`, { key });
     } catch (error) {
-      safeLogger.error({ error, key }, `Failed to delete secret ${key} from Azure Key Vault`);
+      safeLogger.error(`Failed to delete secret ${key} from Azure Key Vault`, { error, key });
       throw error;
     }
   }
@@ -158,7 +158,7 @@ class AWSSecretsProvider implements SecretsProvider {
         DeleteSecretCommand: awsSecrets.DeleteSecretCommand
       };
     } catch (error) {
-      safeLogger.warn({ error }, 'AWS Secrets Manager dependencies not available');
+      safeLogger.warn('AWS Secrets Manager dependencies not available', { error });
       throw new Error('AWS Secrets Manager provider requires @aws-sdk/client-secrets-manager package');
     }
   }
@@ -178,7 +178,7 @@ class AWSSecretsProvider implements SecretsProvider {
       const response = await client.send(command);
       return response.SecretString || null;
     } catch (error) {
-      safeLogger.error({ error, key }, `AWS Secrets Manager error for key ${key}`);
+      safeLogger.error(`AWS Secrets Manager error for key ${key}`, { error, key });
       return null;
     }
   }
@@ -209,9 +209,9 @@ class AWSSecretsProvider implements SecretsProvider {
         await client.send(createCommand);
       }
       
-      safeLogger.info({ key }, `Secret ${key} stored in AWS Secrets Manager`);
+      safeLogger.info(`Secret ${key} stored in AWS Secrets Manager`, { key });
     } catch (error) {
-      safeLogger.error({ error, key }, `Failed to store secret ${key} in AWS Secrets Manager`);
+      safeLogger.error(`Failed to store secret ${key} in AWS Secrets Manager`, { error, key });
       throw error;
     }
   }
@@ -230,9 +230,9 @@ class AWSSecretsProvider implements SecretsProvider {
       });
 
       await client.send(command);
-      safeLogger.info({ key }, `Secret ${key} deleted from AWS Secrets Manager`);
+      safeLogger.info(`Secret ${key} deleted from AWS Secrets Manager`, { key });
     } catch (error) {
-      safeLogger.error({ error, key }, `Failed to delete secret ${key} from AWS Secrets Manager`);
+      safeLogger.error(`Failed to delete secret ${key} from AWS Secrets Manager`, { error, key });
       throw error;
     }
   }
@@ -254,7 +254,7 @@ class HashiCorpVaultProvider implements SecretsProvider {
       
       return nodeVault.default || nodeVault;
     } catch (error) {
-      safeLogger.warn({ error }, 'HashiCorp Vault dependencies not available');
+      safeLogger.warn('HashiCorp Vault dependencies not available', { error });
       throw new Error('HashiCorp Vault provider requires node-vault package');
     }
   }
@@ -272,7 +272,7 @@ class HashiCorpVaultProvider implements SecretsProvider {
       const result = await vault.read(`secret/data/${key}`);
       return result.data?.data?.value || null;
     } catch (error) {
-      safeLogger.error({ error, key }, `HashiCorp Vault error for key ${key}`);
+      safeLogger.error(`HashiCorp Vault error for key ${key}`, { error, key });
       return null;
     }
   }
@@ -291,9 +291,9 @@ class HashiCorpVaultProvider implements SecretsProvider {
         data: { value }
       });
       
-      safeLogger.info({ key }, `Secret ${key} stored in HashiCorp Vault`);
+      safeLogger.info(`Secret ${key} stored in HashiCorp Vault`, { key });
     } catch (error) {
-      safeLogger.error({ error, key }, `Failed to store secret ${key} in HashiCorp Vault`);
+      safeLogger.error(`Failed to store secret ${key} in HashiCorp Vault`, { error, key });
       throw error;
     }
   }
@@ -309,9 +309,9 @@ class HashiCorpVaultProvider implements SecretsProvider {
       });
 
       await vault.delete(`secret/data/${key}`);
-      safeLogger.info({ key }, `Secret ${key} deleted from HashiCorp Vault`);
+      safeLogger.info(`Secret ${key} deleted from HashiCorp Vault`, { key });
     } catch (error) {
-      safeLogger.error({ error, key }, `Failed to delete secret ${key} from HashiCorp Vault`);
+      safeLogger.error(`Failed to delete secret ${key} from HashiCorp Vault`, { error, key });
       throw error;
     }
   }
@@ -336,7 +336,7 @@ class SecretsManager {
         this.providers.push(new AzureKeyVaultProvider());
         safeLogger.info('Azure Key Vault provider initialized');
       } catch (error) {
-        safeLogger.warn({ error }, 'Failed to initialize Azure Key Vault provider');
+        safeLogger.warn('Failed to initialize Azure Key Vault provider', { error });
       }
     }
     
@@ -345,7 +345,7 @@ class SecretsManager {
         this.providers.push(new AWSSecretsProvider());
         safeLogger.info('AWS Secrets Manager provider initialized');
       } catch (error) {
-        safeLogger.warn({ error }, 'Failed to initialize AWS Secrets Manager provider');
+        safeLogger.warn('Failed to initialize AWS Secrets Manager provider', { error });
       }
     }
     
@@ -354,7 +354,7 @@ class SecretsManager {
         this.providers.push(new HashiCorpVaultProvider());
         safeLogger.info('HashiCorp Vault provider initialized');
       } catch (error) {
-        safeLogger.warn({ error }, 'Failed to initialize HashiCorp Vault provider');
+        safeLogger.warn('Failed to initialize HashiCorp Vault provider', { error });
       }
     }
     
@@ -381,7 +381,7 @@ class SecretsManager {
           return value;
         }
       } catch (error) {
-        safeLogger.warn({ error, key, provider: provider.name }, `Provider ${provider.name} failed for key ${key}`);
+        safeLogger.warn(`Provider ${provider.name} failed for key ${key}`, { error, key, provider: provider.name });
         continue;
       }
     }
@@ -474,7 +474,7 @@ export async function getSecret(key: string, defaultValue?: string): Promise<str
 
     throw new Error(`Secret ${key} not found and no default provided`);
   } catch (error) {
-    safeLogger.error({ error, key }, `Failed to get secret ${key}`);
+    safeLogger.error(`Failed to get secret ${key}`, { error, key });
     
     if (CRITICAL_SECRETS.includes(key as any)) {
       throw new Error(`Critical secret ${key} is required for production`);

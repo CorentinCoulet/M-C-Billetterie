@@ -4,7 +4,7 @@
  */
 
 import { program } from 'commander';
-import { backupService } from '../src/lib/backup-service';
+import { backupService } from '../../src/lib/backup-service';
 
 program
   .name('backup')
@@ -163,7 +163,7 @@ program
       console.log(`Validating backup: ${backupId}`);
       
       const backups = await backupService.listBackups(1000);
-      const backup = backups.find(b => b.id === backupId);
+      const backup = backups.find((b: any) => b.id === backupId);
       
       if (!backup) {
         console.error('Backup not found');

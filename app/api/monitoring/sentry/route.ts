@@ -1,13 +1,18 @@
 import { logger } from '@/lib/logger';
 import { sentryService } from '@/lib/sentryService';
+import { createMethodHandler, NextApiResponse } from '@/src/lib/next-api-helpers';
 import { NextRequest, NextResponse } from 'next/server';
 
-export async function GET() {
+async function handleGet(request: NextRequest) {
   try {
     const healthCheck = sentryService.healthCheck();
     
-    logger.info({ result: healthCheck }, 'Sentry health check requested');
+    logger.info({ 
+      result: healthCheck,
+      pathname: '/api/monitoring/sentry' 
+    }, 'Sentry health check requested');
     
+    // Use NextResponse for non-200 status codes
     return NextResponse.json({
       service: 'sentry',
       ...healthCheck,
@@ -18,7 +23,10 @@ export async function GET() {
     });
     
   } catch (error) {
-    logger.error({ error }, 'Sentry health check failed');
+    logger.error({ 
+      error,
+      pathname: '/api/monitoring/sentry' 
+    }, 'Sentry health check failed');
     
     return NextResponse.json({
       service: 'sentry',
@@ -30,15 +38,18 @@ export async function GET() {
   }
 }
 
-export async function POST(request: NextRequest) {
+async function handlePost(request: NextRequest) {
   try {
     const body = await request.json();
     const { type, message, level, tags, extra, user } = body;
     
+    logger.info({ 
+      type,
+      pathname: '/api/monitoring/sentry' 
+    }, 'Sentry test requested');
+    
     if (!type || !message) {
-      return NextResponse.json({
-        error: 'Missing required fields: type and message'
-      }, { status: 400 });
+      return NextApiResponse.error('Missing required fields: type and message', 400);
     }
     
     switch (type) {
@@ -50,8 +61,7 @@ export async function POST(request: NextRequest) {
           user,
         });
         
-        return NextResponse.json({
-          success: true,
+        return NextApiResponse.success({
           message: 'Test error sent to Sentry',
           errorId,
           timestamp: new Date().toISOString()
@@ -68,8 +78,7 @@ export async function POST(request: NextRequest) {
           }
         );
         
-        return NextResponse.json({
-          success: true,
+        return NextApiResponse.success({
           message: 'Test message sent to Sentry',
           messageId,
           timestamp: new Date().toISOString()
@@ -78,9 +87,7 @@ export async function POST(request: NextRequest) {
       case 'business-metric':
         const { metric, value } = body;
         if (!metric || value === undefined) {
-          return NextResponse.json({
-            error: 'Missing required fields for business metric: metric and value'
-          }, { status: 400 });
+          return NextApiResponse.error('Missing required fields for business metric: metric and value', 400);
         }
         
         sentryService.trackBusinessMetric(
@@ -90,8 +97,7 @@ export async function POST(request: NextRequest) {
           user?.id
         );
         
-        return NextResponse.json({
-          success: true,
+        return NextApiResponse.success({
           message: 'Business metric tracked',
           metric,
           value,
@@ -99,19 +105,20 @@ export async function POST(request: NextRequest) {
         });
         
       default:
-        return NextResponse.json({
-          error: `Unknown test type: ${type}. Supported types: test-error, test-message, business-metric`
-        }, { status: 400 });
+        return NextApiResponse.error(`Unknown test type: ${type}. Supported types: test-error, test-message, business-metric`, 400);
     }
     
   } catch (error) {
-    logger.error({ error }, 'Sentry test endpoint error');
+    logger.error({ 
+      error,
+      pathname: '/api/monitoring/sentry' 
+    }, 'Sentry test endpoint error');
     
-    return NextResponse.json({
-      success: false,
-      message: 'Failed to process Sentry test',
-      error: error instanceof Error ? error.message : 'Unknown error',
-      timestamp: new Date().toISOString()
-    }, { status: 500 });
+    return NextApiResponse.error('Failed to process Sentry test', 500);
   }
 }
+
+export default createMethodHandler({
+  GET: handleGet,
+  POST: handlePost,
+});

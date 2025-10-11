@@ -5,10 +5,10 @@
  * Sets up secrets management, SSL certificates, and validates production readiness
  */
 
-import { logger } from '../src/lib/logger';
-import { initializeProductionSecrets, scheduleSecretRotation } from '../src/lib/production-secrets-manager';
-import { initializeProductionSSL } from '../src/lib/production-ssl-manager';
-import { getRateLimiterStatus } from '../src/middlewares/productionRateLimit';
+import { logger } from '../../lib/logger';
+import { initializeProductionSecrets, scheduleSecretRotation } from '../../src/lib/production-secrets-manager';
+import { initializeProductionSSL } from '../../src/lib/production-ssl-manager';
+import { getRateLimiterStatus } from '../../src/middlewares/productionRateLimit';
 
 async function initializeProduction() {
   console.log('🚀 Starting production initialization...');
@@ -197,7 +197,7 @@ export async function productionHealthCheck() {
 
   try {
     // Check secrets
-    const { initializeProductionSecrets } = await import('../src/lib/production-secrets-manager');
+    const { initializeProductionSecrets } = await import('../../src/lib/production-secrets-manager');
     const secretsValidation = await initializeProductionSecrets();
     health.checks.secrets = {
       status: secretsValidation.isValid ? 'healthy' : 'critical',
@@ -210,7 +210,7 @@ export async function productionHealthCheck() {
     }
 
     // Check SSL
-    const { productionSSLManager } = await import('../src/lib/production-ssl-manager');
+    const { productionSSLManager } = await import('../../src/lib/production-ssl-manager');
     const sslStatus = await productionSSLManager.getSSLHealthStatus();
     health.checks.ssl = sslStatus;
 

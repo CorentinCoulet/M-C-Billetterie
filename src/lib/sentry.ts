@@ -80,7 +80,7 @@ export const SENTRY_CONFIG = {
     Sentry.httpIntegration(),
     Sentry.onUncaughtExceptionIntegration({
       onFatalError: (error: Error) => {
-        safeLogger.error({ error: error.message }, 'Fatal uncaught exception');
+        safeLogger.error('Fatal uncaught exception', { error: error.message });
         process.exit(1);
       }
     }),
@@ -103,7 +103,7 @@ export function initSentry() {
     Sentry.init(SENTRY_CONFIG);
     safeLogger.info('Sentry error tracking initialized');
   } catch (error) {
-    safeLogger.error({ error: (error as Error).message }, 'Failed to initialize Sentry');
+    safeLogger.error('Failed to initialize Sentry', { error: (error as Error).message });
   }
 }
 
@@ -112,7 +112,7 @@ export function initSentry() {
  */
 export class ErrorHandler {
   static captureException(error: Error, context?: Record<string, any>) {
-    safeLogger.error({ error: error.message, context }, 'Exception captured');
+    safeLogger.error('Exception captured', { error: error.message, context });
     
     if (SENTRY_CONFIG.dsn) {
       Sentry.withScope(scope => {
@@ -130,7 +130,7 @@ export class ErrorHandler {
 
   static captureMessage(message: string, level: 'info' | 'warning' | 'error' = 'info', context?: Record<string, any>) {
     const logFn = level === 'warning' ? safeLogger.warn : level === 'error' ? safeLogger.error : safeLogger.info;
-    logFn(context || {}, message);
+    logFn(message, context || {});
     
     if (SENTRY_CONFIG.dsn) {
       Sentry.withScope(scope => {

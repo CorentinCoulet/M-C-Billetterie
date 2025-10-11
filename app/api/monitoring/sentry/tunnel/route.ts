@@ -1,15 +1,20 @@
+import { logger } from '@/lib/logger';
+import { createMethodHandler, NextApiResponse } from '@/src/lib/next-api-helpers';
 import { NextRequest, NextResponse } from 'next/server';
 
 /**
  * Sentry tunnel endpoint to bypass ad blockers
  * This proxies Sentry requests through our domain
  */
-export async function POST(request: NextRequest) {
+async function handlePost(request: NextRequest) {
   try {
     const envelope = await request.text();
     
     if (!envelope) {
-      return NextResponse.json({ error: 'Empty envelope' }, { status: 400 });
+      logger.warn({ 
+        pathname: '/api/monitoring/sentry/tunnel' 
+      }, 'Empty Sentry envelope received');
+      return NextApiResponse.error('Empty envelope', 400);
     }
 
     // Parse the envelope header to get the DSN
@@ -17,13 +22,20 @@ export async function POST(request: NextRequest) {
     const headerData = JSON.parse(envelopeHeader);
     
     if (!headerData.dsn) {
-      return NextResponse.json({ error: 'No DSN in envelope' }, { status: 400 });
+      logger.warn({ 
+        pathname: '/api/monitoring/sentry/tunnel' 
+      }, 'No DSN in envelope');
+      return NextApiResponse.error('No DSN in envelope', 400);
     }
 
     // Extract project ID from DSN
     const dsnMatch = headerData.dsn.match(/https:\/\/(.+)@(.+)\/(.+)/);
     if (!dsnMatch) {
-      return NextResponse.json({ error: 'Invalid DSN format' }, { status: 400 });
+      logger.warn({ 
+        dsn: headerData.dsn,
+        pathname: '/api/monitoring/sentry/tunnel' 
+      }, 'Invalid DSN format');
+      return NextApiResponse.error('Invalid DSN format', 400);
     }
 
     const [, publicKey, host, projectId] = dsnMatch;
@@ -31,6 +43,12 @@ export async function POST(request: NextRequest) {
     // Forward to Sentry
     const sentryUrl = `https://${host}/api/${projectId}/envelope/`;
     
+    logger.debug({ 
+      sentryUrl,
+      projectId,
+      pathname: '/api/monitoring/sentry/tunnel' 
+    }, 'Forwarding to Sentry');
+
     const response = await fetch(sentryUrl, {
       method: 'POST',
       headers: {
@@ -41,20 +59,35 @@ export async function POST(request: NextRequest) {
     });
 
     if (!response.ok) {
-      console.error(`Sentry tunnel failed: ${response.status} ${response.statusText}`);
+      logger.error({ 
+        status: response.status,
+        statusText: response.statusText,
+        pathname: '/api/monitoring/sentry/tunnel' 
+      }, 'Sentry tunnel failed');
       return NextResponse.json({ 
         error: 'Failed to forward to Sentry',
         status: response.status 
       }, { status: response.status });
     }
 
+    logger.debug({ 
+      pathname: '/api/monitoring/sentry/tunnel' 
+    }, 'Successfully forwarded to Sentry');
+
     return new NextResponse(null, { status: 200 });
 
   } catch (error) {
-    console.error('Sentry tunnel error:', error);
+    logger.error({ 
+      error,
+      pathname: '/api/monitoring/sentry/tunnel' 
+    }, 'Sentry tunnel error');
     return NextResponse.json({ 
       error: 'Tunnel processing failed',
       message: error instanceof Error ? error.message : 'Unknown error'
     }, { status: 500 });
   }
 }
+
+export default createMethodHandler({
+  POST: handlePost,
+});

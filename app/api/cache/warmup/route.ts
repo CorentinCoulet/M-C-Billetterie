@@ -1,12 +1,16 @@
 import { logger } from '@/lib/logger';
 import { cache } from '@/src/lib/cache';
+import { createMethodHandler, NextApiResponse } from '@/src/lib/next-api-helpers';
 import { EventService } from '@/src/services/eventService';
 import { TicketService } from '@/src/services/ticketService';
-import { NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
 
-export async function POST() {
+async function handlePost(request: NextRequest) {
   try {
-    logger.info('Starting cache warm-up process');
+    logger.info({ 
+      pathname: '/api/cache/warmup',
+      method: 'POST'
+    }, 'Starting cache warm-up process');
     const startTime = Date.now();
     let warmedKeys = 0;
     const errors = [];
@@ -62,10 +66,13 @@ export async function POST() {
 
     const duration = Date.now() - startTime;
     
-    logger.info(`Cache warm-up completed in ${duration}ms, ${warmedKeys} key patterns warmed`);
+    logger.info({ 
+      duration, 
+      warmedKeys, 
+      errorsCount: errors.length 
+    }, `Cache warm-up completed in ${duration}ms`);
 
-    return NextResponse.json({
-      success: true,
+    return NextApiResponse.success({
       message: 'Cache warm-up completed successfully',
       stats: {
         duration: `${duration}ms`,
@@ -77,24 +84,22 @@ export async function POST() {
     });
 
   } catch (error) {
-    logger.error({ error }, 'Cache warm-up process failed');
+    logger.error({ 
+      error,
+      pathname: '/api/cache/warmup' 
+    }, 'Cache warm-up process failed');
     
-    return NextResponse.json({
-      success: false,
-      message: 'Cache warm-up failed',
-      error: error instanceof Error ? error.message : 'Unknown error',
-      timestamp: new Date().toISOString()
-    }, { status: 500 });
+    return NextApiResponse.error('Cache warm-up failed', 500);
   }
 }
 
-export async function GET() {
+async function handleGet(request: NextRequest) {
   try {
     // Get cache warming status
     const warmupTimestamp = await cache.get('billetterie:config:warmup-timestamp');
     
     if (!warmupTimestamp) {
-      return NextResponse.json({
+      return NextApiResponse.success({
         warmed: false,
         message: 'Cache has not been warmed up yet'
       });
@@ -107,7 +112,12 @@ export async function GET() {
     // Consider cache "cold" if last warm-up was more than 1 hour ago
     const isCacheWarm = timeSinceWarmup < 3600000; // 1 hour
 
-    return NextResponse.json({
+    logger.info({ 
+      warmed: isCacheWarm, 
+      lastWarmup: lastWarmup.toISOString() 
+    }, 'Cache warmup status checked');
+
+    return NextApiResponse.success({
       warmed: isCacheWarm,
       lastWarmup: lastWarmup.toISOString(),
       timeSinceWarmup: `${Math.round(timeSinceWarmup / 1000)}s`,
@@ -118,12 +128,16 @@ export async function GET() {
     });
 
   } catch (error) {
-    logger.error({ error }, 'Failed to check cache warm-up status');
+    logger.error({ 
+      error,
+      pathname: '/api/cache/warmup' 
+    }, 'Failed to check cache warm-up status');
     
-    return NextResponse.json({
-      warmed: false,
-      error: error instanceof Error ? error.message : 'Unknown error',
-      message: 'Failed to check cache status'
-    }, { status: 500 });
+    return NextApiResponse.error('Failed to check cache status', 500);
   }
 }
+
+export default createMethodHandler({
+  GET: handleGet,
+  POST: handlePost,
+});

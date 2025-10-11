@@ -3,8 +3,8 @@
  * Complete GDPR compliance with automated data management
  */
 
-import { PrismaClient } from '../generated/prisma';
 import crypto from 'crypto';
+import { PrismaClient } from '../generated/prisma';
 import { safeLogger } from './logger';
 import { emailService } from './mailer';
 
@@ -209,13 +209,14 @@ class GDPRComplianceManager {
       await this.sendCompletionNotification(request);
 
     } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
       safeLogger.error('GDPR request execution failed', {
         requestId: request.id,
-        error: error.message
+        error: errorMessage
       });
       
       request.status = 'REJECTED';
-      await this.sendErrorNotification(request, error.message);
+      await this.sendErrorNotification(request, errorMessage);
     }
   }
 
@@ -275,7 +276,7 @@ class GDPRComplianceManager {
     const userData = await this.collectUserData(request.userId);
     const portableData = this.filterPortableData(userData);
     
-    const formats = ['json', 'csv', 'xml'];
+    const formats: Array<'json' | 'csv' | 'xml'> = ['json', 'csv', 'xml'];
     const exports = await Promise.all(
       formats.map(format => this.generateDataExport(portableData, format))
     );
@@ -348,6 +349,7 @@ class GDPRComplianceManager {
         resourceType: 'consent',
         resourceId: `${userId}:${consentType}`,
         userId,
+        ipAddress: 'system',
         details: JSON.stringify(consent),
         timestamp: new Date(),
         result: 'success',
@@ -422,10 +424,11 @@ class GDPRComplianceManager {
           });
 
         } catch (error) {
+          const errorMessage = error instanceof Error ? error.message : 'Unknown error';
           safeLogger.error('Data retention enforcement failed', {
             category: category.name,
             table,
-            error: error.message
+            error: errorMessage
           });
         }
       }
@@ -530,7 +533,6 @@ class GDPRComplianceManager {
             payment: true
           }
         },
-        sessions: true,
         reviews: true,
         notifications: true,
         auditLogs: true,
@@ -666,10 +668,10 @@ ${Object.entries(data).map(([key, value]) =>
   private async sendVerificationEmail(request: GDPRRequest): Promise<void> {
     const verificationLink = `${process.env.NEXT_PUBLIC_APP_URL}/gdpr/verify/${request.id}/${request.verificationToken}`;
     
-    await emailService.sendEmail({
-      to: request.email,
-      subject: `GDPR Request Verification - ${request.type}`,
-      html: `
+    await emailService.sendEmail(
+      request.email,
+      `GDPR Request Verification - ${request.type}`,
+      `
         <h2>GDPR Data Subject Request Verification</h2>
         <p>We received a ${request.type} request for your personal data.</p>
         <p>To proceed with this request, please click the link below:</p>
@@ -677,49 +679,51 @@ ${Object.entries(data).map(([key, value]) =>
         <p>This link will expire in 24 hours.</p>
         <p>If you did not make this request, please ignore this email.</p>
       `
-    });
+    );
   }
 
   private async sendCompletionNotification(request: GDPRRequest): Promise<void> {
-    await emailService.sendEmail({
-      to: request.email,
-      subject: `GDPR Request Completed - ${request.type}`,
-      html: `
+    await emailService.sendEmail(
+      request.email,
+      `GDPR Request Completed - ${request.type}`,
+      `
         <h2>GDPR Request Completed</h2>
         <p>Your ${request.type} request has been successfully processed.</p>
         <p>Request ID: ${request.id}</p>
         <p>Completed at: ${request.completedAt?.toISOString()}</p>
       `
-    });
+    );
   }
 
   private async sendErrorNotification(request: GDPRRequest, error: string): Promise<void> {
-    await emailService.sendEmail({
-      to: request.email,
-      subject: `GDPR Request Error - ${request.type}`,
-      html: `
+    await emailService.sendEmail(
+      request.email,
+      `GDPR Request Error - ${request.type}`,
+      `
         <h2>GDPR Request Error</h2>
         <p>We encountered an error processing your ${request.type} request.</p>
         <p>Error: ${error}</p>
         <p>Please contact our privacy team at privacy@company.com</p>
       `
-    });
+    );
   }
 
   private async sendDataExport(email: string, exportFile: Buffer): Promise<void> {
-    await emailService.sendEmail({
-      to: email,
-      subject: 'Your Personal Data Export',
-      html: `
+    await emailService.sendEmail(
+      email,
+      'Your Personal Data Export',
+      `
         <h2>Your Personal Data Export</h2>
         <p>As requested, please find your personal data export attached.</p>
         <p>This export contains all personal data we process about you.</p>
       `,
-      attachments: [{
-        filename: 'personal_data_export.json',
-        content: exportFile
-      }]
-    });
+      {
+        attachments: [{
+          filename: 'personal_data_export.json',
+          content: exportFile
+        }]
+      }
+    );
   }
 
   private async sendDataPortability(email: string, exports: Buffer[]): Promise<void> {
@@ -728,16 +732,16 @@ ${Object.entries(data).map(([key, value]) =>
       content: buffer
     }));
 
-    await emailService.sendEmail({
-      to: email,
-      subject: 'Your Data Portability Export',
-      html: `
+    await emailService.sendEmail(
+      email,
+      'Your Data Portability Export',
+      `
         <h2>Your Data Portability Export</h2>
         <p>As requested, please find your data in multiple formats.</p>
         <p>This data can be imported into other services.</p>
       `,
-      attachments
-    });
+      { attachments }
+    );
   }
 
   private async logGDPRRequest(request: GDPRRequest): Promise<void> {
@@ -747,6 +751,7 @@ ${Object.entries(data).map(([key, value]) =>
         resourceType: 'user',
         resourceId: request.userId,
         userId: request.userId,
+        ipAddress: 'system',
         details: JSON.stringify({
           requestId: request.id,
           type: request.type,
@@ -792,6 +797,7 @@ ${Object.entries(data).map(([key, value]) =>
         resourceType: 'user',
         resourceId: userId,
         userId,
+        ipAddress: 'system',
         details: JSON.stringify(details),
         timestamp: new Date(),
         result: 'success',

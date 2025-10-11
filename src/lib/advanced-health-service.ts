@@ -3,10 +3,10 @@
  * Comprehensive system health monitoring for production
  */
 
-import { PrismaClient } from '../generated/prisma';
 import { Request, Response } from 'express';
 import Redis from 'ioredis';
 import * as os from 'os';
+import { PrismaClient } from '../generated/prisma';
 import { safeLogger } from './logger';
 
 interface HealthCheckResult {
@@ -526,7 +526,7 @@ export class AdvancedHealthService {
           'Authorization': `Bearer ${process.env.STRIPE_SECRET_KEY}`
         },
         timeout: 5000
-      }, (res) => {
+      }, (res: any) => {
         if (res.statusCode && res.statusCode < 400) {
           resolve();
         } else {

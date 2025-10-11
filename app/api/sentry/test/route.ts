@@ -1,5 +1,7 @@
+import { logger } from '@/lib/logger';
+import { createMethodHandler, NextApiResponse } from '@/src/lib/next-api-helpers';
 import * as Sentry from '@sentry/nextjs';
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
 
 /**
  * Test endpoint for Sentry error tracking
@@ -10,21 +12,26 @@ import { NextRequest, NextResponse } from 'next/server';
  * POST /api/sentry/test - Test error capture with custom data
  */
 
-export async function GET() {
+async function handleGet(request: NextRequest) {
   // Only allow in non-production environments
   if (process.env.NODE_ENV === 'production') {
-    return NextResponse.json(
-      { error: 'Test endpoint not available in production' },
-      { status: 403 }
-    );
+    logger.warn({ 
+      pathname: '/api/sentry/test' 
+    }, 'Attempt to access test endpoint in production');
+    return NextApiResponse.error('Test endpoint not available in production', 403);
   }
 
   try {
     // Test Sentry configuration
     const sentryDsn = process.env.NEXT_PUBLIC_SENTRY_DSN;
     
+    logger.info({ 
+      configured: !!sentryDsn,
+      pathname: '/api/sentry/test' 
+    }, 'Sentry test endpoint accessed');
+    
     if (!sentryDsn) {
-      return NextResponse.json({
+      return NextApiResponse.success({
         status: 'error',
         message: 'Sentry DSN not configured',
         configured: false,
@@ -43,7 +50,9 @@ export async function GET() {
     // Capture a test message
     const eventId = Sentry.captureMessage('Sentry test message from API', 'info');
 
-    return NextResponse.json({
+    logger.info({ eventId }, 'Sentry test message captured');
+
+    return NextApiResponse.success({
       status: 'success',
       message: 'Sentry is properly configured and working',
       configured: true,
@@ -61,28 +70,33 @@ export async function GET() {
   } catch (error) {
     // This error will be captured by Sentry
     Sentry.captureException(error);
+    logger.error({ 
+      error,
+      pathname: '/api/sentry/test' 
+    }, 'Error testing Sentry integration');
     
-    return NextResponse.json({
-      status: 'error',
-      message: 'Error testing Sentry integration',
-      error: error instanceof Error ? error.message : 'Unknown error',
-      timestamp: new Date().toISOString()
-    }, { status: 500 });
+    return NextApiResponse.error('Error testing Sentry integration', 500);
   }
 }
 
-export async function POST(request: NextRequest) {
+async function handlePost(request: NextRequest) {
   // Only allow in non-production environments
   if (process.env.NODE_ENV === 'production') {
-    return NextResponse.json(
-      { error: 'Test endpoint not available in production' },
-      { status: 403 }
-    );
+    logger.warn({ 
+      pathname: '/api/sentry/test' 
+    }, 'Attempt to access test endpoint in production');
+    return NextApiResponse.error('Test endpoint not available in production', 403);
   }
 
   try {
     const body = await request.json();
     const { testType = 'error', message = 'Test error from API', level = 'error', tags, extra } = body;
+
+    logger.info({ 
+      testType,
+      level,
+      pathname: '/api/sentry/test' 
+    }, 'Sentry test POST requested');
 
     // Set user context for this test
     Sentry.setUser({
@@ -136,8 +150,9 @@ export async function POST(request: NextRequest) {
         throw new Error(message);
     }
 
-    return NextResponse.json({
-      status: 'success',
+    logger.info({ eventId, testType }, 'Sentry test completed');
+
+    return NextApiResponse.success({
       message: `Sentry ${testType} test completed`,
       eventId,
       testType,
@@ -154,8 +169,13 @@ export async function POST(request: NextRequest) {
     // This error will also be captured by Sentry
     const eventId = Sentry.captureException(error);
     
-    return NextResponse.json({
-      status: 'success', // This is expected for testing error capture
+    logger.info({ 
+      eventId,
+      error: error instanceof Error ? error.message : 'Unknown error',
+      pathname: '/api/sentry/test' 
+    }, 'Error successfully captured by Sentry');
+    
+    return NextApiResponse.success({
       message: 'Error successfully captured by Sentry',
       eventId,
       error: error instanceof Error ? error.message : 'Unknown error',
@@ -163,3 +183,8 @@ export async function POST(request: NextRequest) {
     });
   }
 }
+
+export default createMethodHandler({
+  GET: handleGet,
+  POST: handlePost,
+});

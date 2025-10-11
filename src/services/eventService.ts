@@ -565,7 +565,7 @@ export class EventService extends BaseService<EventWithRelations> {
   /**
    * Get event statistics (private method used by getEventStatistics)
    */
-  private async getStatistics(eventId: string): Promise<EventStatistics> {
+  async getStatistics(eventId: string): Promise<EventStatistics> {
     const event = await prisma.event.findUnique({
       where: { id: eventId },
       include: {

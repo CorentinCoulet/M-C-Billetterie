@@ -1,8 +1,18 @@
-import { NextResponse } from 'next/server';
+import { logger } from '@/lib/logger';
+import { createMethodHandler, NextApiResponse } from '@/src/lib/next-api-helpers';
+import { NextRequest } from 'next/server';
 
-export async function GET() {
-  return NextResponse.json({ 
+async function handleGet(request: NextRequest) {
+  logger.info({ 
+    pathname: '/api/test' 
+  }, 'Test endpoint accessed');
+  
+  return NextApiResponse.success({ 
     message: 'Test endpoint works',
     timestamp: new Date().toISOString() 
   });
 }
+
+export default createMethodHandler({
+  GET: handleGet,
+});

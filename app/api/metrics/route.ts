@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { NextRequest, NextResponse } from 'next/server';
 import { Counter, Gauge, Histogram, collectDefaultMetrics, register } from 'prom-client';
 
@@ -393,8 +394,13 @@ export function stopMetricsCollection() {
 /**
  * API endpoint for Prometheus scraping
  */
-export async function GET() {
+async function handleGet(request: NextRequest) {
   try {
+    logger.info({ 
+      pathname: '/api/metrics',
+      method: 'GET' 
+    }, 'Metrics requested');
+
     const metrics = await MetricsCollector.getMetrics();
     return new NextResponse(metrics, {
       headers: {
@@ -405,8 +411,10 @@ export async function GET() {
       },
     });
   } catch (error) {
-    const { logger } = await import('../../../lib/logger');
-    logger.error({ error }, 'Error generating metrics');
+    logger.error({ 
+      error,
+      pathname: '/api/metrics' 
+    }, 'Error generating metrics');
     return NextResponse.json(
       { error: 'Failed to collect metrics' },
       { status: 500 }
@@ -418,6 +426,8 @@ export async function GET() {
 if (typeof window === 'undefined' && process.env.NODE_ENV === 'production') {
   startMetricsCollection();
 }
+
+export const GET = handleGet;
 
 export { register };
 export default MetricsCollector;

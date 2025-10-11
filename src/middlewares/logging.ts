@@ -151,7 +151,7 @@ export function createRequestLogger(options: LoggingOptions = {}) {
       const formattedEntry = formatter(responseEntry);
       writer(responseEntry, formattedEntry);
       
-      return originalEnd.apply(this, args);
+      return originalEnd.apply(this, args as any);
     };
 
     res.json = function(this: NextApiResponse, body: any) {

@@ -3,6 +3,8 @@
  * Comprehensive health monitoring for all security systems
  */
 
+import { logger } from '@/lib/logger';
+import { createMethodHandler, NextApiResponse } from '@/src/lib/next-api-helpers';
 import { NextRequest, NextResponse } from 'next/server';
 
 // Simple health check function for production build
@@ -13,20 +15,25 @@ const productionHealthCheck = async () => {
     environment: process.env.NODE_ENV,
     database: 'connected',
     redis: 'connected',
-    version: '1.2.0'
+    version: process.env.VERSION || process.env.NEXT_PUBLIC_APP_VERSION || '1.2.0'
   };
 };
 
-export async function GET(request: NextRequest) {
+async function handleGet(request: NextRequest) {
   try {
+    logger.info('Production health check');
+    
     const health = await productionHealthCheck();
     
-    const statusCode = health.status === 'healthy' ? 200 : 
-                      health.status === 'warning' ? 200 : 503;
+    if (health.status !== 'healthy') {
+      return NextResponse.json(health, { status: 503 });
+    }
     
-    return NextResponse.json(health, { status: statusCode });
+    return NextApiResponse.success(health);
     
   } catch (error) {
+    logger.error({ error }, 'Production health check failed');
+    
     return NextResponse.json({
       status: 'critical',
       timestamp: new Date().toISOString(),
@@ -35,3 +42,7 @@ export async function GET(request: NextRequest) {
     }, { status: 503 });
   }
 }
+
+export default createMethodHandler({
+  GET: handleGet,
+});

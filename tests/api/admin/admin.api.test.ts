@@ -1,4 +1,3 @@
-// Mock complet de Prisma qui évite les problèmes de hoisting
 import { createMockPrisma } from '../../mocks/prisma.mock';
 
 // Mock global Prisma
@@ -42,7 +41,7 @@ function adaptUserForAuth(prismaUser: any): Partial<User> {
     email: prismaUser.email,
     name: prismaUser.name,
     role: prismaUser.role as Role,
-    isVerified: prismaUser.isVerified,
+    isEmailVerified: prismaUser.isVerified, // Map isVerified to isEmailVerified
     createdAt: prismaUser.createdAt,
     updatedAt: prismaUser.updatedAt
   };

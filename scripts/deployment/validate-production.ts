@@ -5,8 +5,8 @@
  * Validates all critical configurations before deployment
  */
 
-import { getSecretsProviderInfo, validateCriticalSecrets } from '../src/config/secrets.js';
-import { getRateLimiterStatus } from '../src/middlewares/productionRateLimit.js';
+import { getSecretsProviderInfo, validateCriticalSecrets } from '../../src/config/secrets';
+import { getRateLimiterStatus } from '../../src/middlewares/productionRateLimit';
 
 const colors = {
   reset: '\x1b[0m',
@@ -61,7 +61,7 @@ async function validateSecrets() {
       addResult('Secrets', false, `Missing secrets: ${secretsValidation.missing.join(', ')}`, true);
       
       // Log detailed errors
-      secretsValidation.errors.forEach(error => {
+      secretsValidation.errors.forEach((error: any) => {
         log.error(`  ${error}`);
       });
     }
@@ -105,7 +105,7 @@ async function validateDatabase() {
     }
     
     // Test actual connection
-    const { default: prisma } = await import('../src/lib/prisma.js');
+    const { default: prisma } = await import('../../src/lib/prisma');
     await prisma.$queryRaw`SELECT 1`;
     addResult('Database Connection', true, 'Database connection successful');
     

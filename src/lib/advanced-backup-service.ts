@@ -1,11 +1,12 @@
-import { PrismaClient } from '../generated/prisma';
+import { PrismaClient } from '@prisma/client';
 import { execSync } from 'child_process';
 import { createCipheriv, createHash, randomBytes } from 'crypto';
 import { createReadStream, createWriteStream, promises as fs } from 'fs';
+import cron from 'node-cron';
 import path from 'path';
 import { pipeline } from 'stream/promises';
-import { E2EEncryptionService } from '../lib/e2e-encryption-service';
-import logger from '../lib/logger';
+import { E2EEncryptionService } from './e2e-encryption-service';
+import { safeLogger } from './logger';
 
 interface BackupConfig {
   schedule: {
@@ -34,9 +35,28 @@ interface BackupConfig {
   };
 }
 
+interface S3Config {
+  bucket: string;
+  region: string;
+}
+
+interface AzureConfig {
+  container: string;
+}
+
+interface GCPConfig {
+  bucket: string;
+}
+
+interface LocalConfig {
+  path: string;
+}
+
+type DestinationConfig = S3Config | AzureConfig | GCPConfig | LocalConfig;
+
 interface BackupDestination {
   type: 'local' | 's3' | 'azure' | 'gcp' | 'ftp';
-  config: any;
+  config: DestinationConfig;
   priority: number;
   enabled: boolean;
 }
@@ -131,7 +151,7 @@ export class AdvancedBackupService {
       // Upload to destinations
       for (const destination of this.config.destinations.filter(d => d.enabled)) {
         try {
-          await this.uploadBackup(finalPath, destination, backupId);
+          await this.uploadBackup(finalPath, destination);
           metadata.destinations.push(destination.type);
         } catch (error) {
           safeLogger.error(`Failed to upload to ${destination.type}:`, error);
@@ -213,7 +233,7 @@ export class AdvancedBackupService {
       // Upload to destinations
       for (const destination of this.config.destinations.filter(d => d.enabled)) {
         try {
-          await this.uploadBackup(finalPath, destination, backupId);
+          await this.uploadBackup(finalPath, destination);
           metadata.destinations.push(destination.type);
         } catch (error) {
           safeLogger.error(`Failed to upload incremental backup to ${destination.type}:`, error);
@@ -348,12 +368,21 @@ export class AdvancedBackupService {
         take: 100
       });
 
-      return backups.map(b => ({
+      return backups.map((b: { 
+        id: string; 
+        type: string; 
+        startedAt: Date; 
+        completedAt: Date | null; 
+        status: string; 
+        fileSize: bigint | null; 
+        checksumSha256: string | null; 
+        error: string | null;
+      }): BackupMetadata => ({
         id: b.id,
-        type: b.type as any,
+        type: b.type as 'full' | 'incremental' | 'logs' | 'gdpr_export',
         startTime: b.startedAt,
         endTime: b.completedAt || undefined,
-        status: b.status as any,
+        status: b.status as 'pending' | 'running' | 'completed' | 'failed',
         size: Number(b.fileSize || 0),
         checksum: b.checksumSha256 || '',
         destinations: [], // Would be loaded from backup log
@@ -590,22 +619,22 @@ export class AdvancedBackupService {
   /**
    * Upload backup to destination
    */
-  private async uploadBackup(filePath: string, destination: BackupDestination, backupId: string): Promise<void> {
+  private async uploadBackup(filePath: string, destination: BackupDestination): Promise<void> {
     switch (destination.type) {
       case 'local':
         // Already local, just verify
         break;
         
       case 's3':
-        await this.uploadToS3(filePath, destination.config, backupId);
+        await this.uploadToS3(filePath, destination.config as S3Config);
         break;
         
       case 'azure':
-        await this.uploadToAzure(filePath, destination.config, backupId);
+        await this.uploadToAzure(filePath, destination.config as AzureConfig);
         break;
         
       case 'gcp':
-        await this.uploadToGCP(filePath, destination.config, backupId);
+        await this.uploadToGCP(filePath, destination.config as GCPConfig);
         break;
         
       default:
@@ -616,7 +645,7 @@ export class AdvancedBackupService {
   /**
    * Upload to AWS S3
    */
-  private async uploadToS3(filePath: string, config: any, backupId: string): Promise<void> {
+  private async uploadToS3(filePath: string, config: S3Config): Promise<void> {
     // Implementation would use AWS SDK
     safeLogger.info(`Would upload ${filePath} to S3 bucket ${config.bucket}`);
   }
@@ -624,7 +653,7 @@ export class AdvancedBackupService {
   /**
    * Upload to Azure Blob Storage
    */
-  private async uploadToAzure(filePath: string, config: any, backupId: string): Promise<void> {
+  private async uploadToAzure(filePath: string, config: AzureConfig): Promise<void> {
     // Implementation would use Azure SDK
     safeLogger.info(`Would upload ${filePath} to Azure container ${config.container}`);
   }
@@ -632,7 +661,7 @@ export class AdvancedBackupService {
   /**
    * Upload to Google Cloud Storage
    */
-  private async uploadToGCP(filePath: string, config: any, backupId: string): Promise<void> {
+  private async uploadToGCP(filePath: string, config: GCPConfig): Promise<void> {
     // Implementation would use Google Cloud SDK
     safeLogger.info(`Would upload ${filePath} to GCP bucket ${config.bucket}`);
   }
@@ -716,10 +745,10 @@ export class AdvancedBackupService {
       
       return {
         id: backup.id,
-        type: backup.type as any,
+        type: backup.type as 'full' | 'incremental' | 'logs' | 'gdpr_export',
         startTime: backup.startedAt,
         endTime: backup.completedAt || undefined,
-        status: backup.status as any,
+        status: backup.status as 'pending' | 'running' | 'completed' | 'failed',
         size: Number(backup.fileSize || 0),
         checksum: backup.checksumSha256 || '',
         encryptionKeyId: backup.encryptionKey || undefined,
@@ -757,14 +786,14 @@ export class AdvancedBackupService {
    */
   private async exportIncrementalChanges(since: Date): Promise<{ recordCount: number; filePath: string }> {
     // Implementation would export changed records since timestamp
-    safeLogger.info(`Would export changes since ${since}`);
+    safeLogger.info(`Would export changes since ${since.toISOString()}`);
     return { recordCount: 0, filePath: '' };
   }
 
   /**
    * Create incremental backup archive
    */
-  private async createIncrementalArchive(backupId: string, changes: any): Promise<string> {
+  private async createIncrementalArchive(backupId: string, _changes: { recordCount: number; filePath: string }): Promise<string> {
     const archivePath = path.join(this.BACKUP_BASE_DIR, 'incremental', `${backupId}.tar.gz`);
     // Implementation would create archive with incremental changes
     return archivePath;
@@ -773,7 +802,7 @@ export class AdvancedBackupService {
   /**
    * Export user data for GDPR compliance
    */
-  private async exportUserData(userId: string): Promise<any> {
+  private async exportUserData(userId: string): Promise<Record<string, unknown>> {
     try {
       // Get all user data
       const userData = await this.prisma.user.findUnique({
@@ -808,7 +837,7 @@ export class AdvancedBackupService {
   /**
    * Create GDPR export file
    */
-  private async createGDPRExportFile(backupId: string, userData: any): Promise<string> {
+  private async createGDPRExportFile(backupId: string, userData: Record<string, unknown>): Promise<string> {
     const exportPath = path.join(this.BACKUP_BASE_DIR, 'gdpr', `${backupId}_gdpr_export.json`);
     
     const exportData = {
@@ -833,8 +862,6 @@ export class AdvancedBackupService {
    * Schedule automated backups
    */
   private async scheduleBackups(): Promise<void> {
-    const cron = require('node-cron');
-    
     // Schedule full backups
     cron.schedule(this.config.schedule.full, () => {
       this.createFullBackup().catch(error => {
@@ -911,8 +938,9 @@ export class AdvancedBackupService {
   /**
    * Decrypt backup file
    */
-  private async decryptBackup(filePath: string, keyId: string): Promise<string> {
+  private async decryptBackup(filePath: string, _keyId: string): Promise<string> {
     // Implementation would decrypt using stored key
+    // keyId would be used to retrieve the encryption key from storage
     return filePath.replace('.enc', '');
   }
 

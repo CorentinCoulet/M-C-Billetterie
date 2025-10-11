@@ -1,3 +1,5 @@
+import { logger } from '@/lib/logger';
+import { createMethodHandler, NextApiResponse } from '@/src/lib/next-api-helpers';
 import { NextRequest, NextResponse } from 'next/server';
 import { getHealthStatus } from '../../../../src/lib/health';
 
@@ -6,8 +8,10 @@ import { getHealthStatus } from '../../../../src/lib/health';
  * Checks if the application is ready to serve traffic
  */
 
-export async function GET(request: NextRequest) {
+async function handleGet(request: NextRequest) {
   try {
+    logger.info('Readiness probe check');
+    
     const health = await getHealthStatus();
     
     // Ready only if critical services are operational
@@ -18,9 +22,8 @@ export async function GET(request: NextRequest) {
     };
     
     const ready = Object.values(criticalServices).every(Boolean);
-    const status = ready ? 200 : 503;
     
-    return NextResponse.json({
+    const result = {
       status: ready ? 'ready' : 'not_ready',
       timestamp: health.timestamp,
       uptime: health.uptime,
@@ -33,10 +36,17 @@ export async function GET(request: NextRequest) {
         memory_usage: health.checks.memory.details,
         disk_status: health.checks.disk.message
       }
-    }, { status });
+    };
+    
+    if (!ready) {
+      logger.warn({ criticalServices }, 'Application not ready');
+      return NextResponse.json(result, { status: 503 });
+    }
+    
+    return NextApiResponse.success(result);
     
   } catch (error) {
-    console.error('Readiness probe error:', error);
+    logger.error({ error }, 'Readiness probe error');
     
     return NextResponse.json(
       { 
@@ -49,3 +59,7 @@ export async function GET(request: NextRequest) {
     );
   }
 }
+
+export default createMethodHandler({
+  GET: handleGet,
+});

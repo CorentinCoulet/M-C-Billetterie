@@ -1,8 +1,8 @@
-import { PrismaClient } from '../generated/prisma';
 import crypto from 'crypto';
 import express from 'express';
 import jwt from 'jsonwebtoken';
 import { z } from 'zod';
+import { PrismaClient } from '../generated/prisma';
 
 const prisma = new PrismaClient();
 
@@ -239,7 +239,11 @@ export class OAuthService {
       } else if (params.grant_type === GrantType.REFRESH_TOKEN) {
         return await this.handleRefreshTokenGrant(params, req, res);
       } else if (params.grant_type === GrantType.CLIENT_CREDENTIALS) {
-        return await this.handleClientCredentialsGrant(params, req, res);
+        // TODO: Implement handleClientCredentialsGrant method
+        return res.status(400).json({
+          error: 'unsupported_grant_type',
+          error_description: 'Client credentials grant not yet implemented'
+        });
       }
 
       return res.status(400).json({
@@ -332,14 +336,17 @@ export class OAuthService {
     `;
 
     // Log token issuance
+    const forwarded = req.headers['x-forwarded-for'];
+    const ipAddress = (typeof forwarded === 'string' ? forwarded.split(',')[0] : req.socket?.remoteAddress) || 'unknown';
+    
     await prisma.auditLog.create({
       data: {
         action: 'oauth.token_issued',
         resourceType: 'oauth_token',
         resourceId: tokens.jti,
         userId: authCode.user_id,
-        ipAddress: req.ip,
-        userAgent: req.get('User-Agent') || '',
+        ipAddress,
+        userAgent: req.headers['user-agent'] || 'unknown',
         details: JSON.stringify({ 
           client_id: params.client_id,
           scopes: scopes,

@@ -6,10 +6,10 @@
 import { spawn } from 'child_process';
 import { Command, program } from 'commander';
 import * as path from 'path';
-import { alertingService } from '../src/lib/alerting-service';
-import { mfaService } from '../src/lib/mfa-service';
-import prisma from '../src/lib/prisma';
-import { secretsManager } from '../src/lib/secrets-manager';
+import { alertingService } from '../../src/lib/alerting-service';
+import { mfaService } from '../../src/lib/mfa-service';
+import prisma from '../../src/lib/prisma';
+import { secretsManager } from '../../src/lib/secrets-manager';
 
 program
   .name('security')

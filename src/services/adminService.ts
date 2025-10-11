@@ -4,15 +4,7 @@ import { analyticsService } from './analyticsService';
 import { eventManagementService } from './eventManagementService';
 import { systemLogsService } from './systemLogsService';
 
-/**
- * Refactored Admin Service
- * Now focused on core admin operations, delegating complex analytics to specialized services
- */
 export class AdminService {
-  // ================================
-  // DELEGATED METHODS (using new services)
-  // ================================
-  
   /**
    * Get dashboard statistics (delegated to AnalyticsService)
    */
@@ -189,7 +181,7 @@ export class AdminService {
       
       const updatedUser = await prisma.user.update({
         where: { id: userId },
-        data: { role: newRole }
+        data: { role: newRole as any }
       });
 
       // Log admin action

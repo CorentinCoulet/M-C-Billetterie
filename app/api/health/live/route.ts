@@ -1,3 +1,5 @@
+import { logger } from '@/lib/logger';
+import { createMethodHandler, NextApiResponse } from '@/src/lib/next-api-helpers';
 import { NextRequest, NextResponse } from 'next/server';
 import { getHealthStatus } from '../../../../src/lib/health';
 
@@ -6,14 +8,16 @@ import { getHealthStatus } from '../../../../src/lib/health';
  * Kubernetes-compatible liveness and readiness probes
  */
 
-export async function GET(request: NextRequest) {
+async function handleGet(request: NextRequest) {
   try {
     const { pathname } = new URL(request.url);
+    
+    logger.info({ pathname }, 'Health check requested');
     
     // Kubernetes liveness probe - simple check to verify the process is running
     // Returns 200 if the process is alive, regardless of dependencies
     if (pathname.endsWith('/live')) {
-      return NextResponse.json({ 
+      return NextApiResponse.success({ 
         status: 'alive', 
         timestamp: new Date().toISOString(),
         pid: process.pid,
@@ -24,7 +28,7 @@ export async function GET(request: NextRequest) {
           external: Math.round(process.memoryUsage().external / 1024 / 1024)
         },
         version: process.env.VERSION || process.env.NEXT_PUBLIC_APP_VERSION || '1.0.0'
-      }, { status: 200 });
+      });
     }
     
     // Kubernetes readiness probe - check if ready to serve requests
@@ -36,9 +40,7 @@ export async function GET(request: NextRequest) {
       const ready = health.checks.database.status === 'up' && 
                    health.checks.memory.status !== 'down';
       
-      const status = ready ? 200 : 503;
-      
-      return NextResponse.json({
+      const result = {
         status: ready ? 'ready' : 'not_ready',
         timestamp: health.timestamp,
         uptime: health.uptime,
@@ -48,18 +50,26 @@ export async function GET(request: NextRequest) {
           memory: health.checks.memory.status
         },
         ready
-      }, { status });
+      };
+      
+      if (!ready) {
+        return NextResponse.json(result, { status: 503 });
+      }
+      
+      return NextApiResponse.success(result);
     }
     
     // Default comprehensive health check
     const health = await getHealthStatus();
-    const httpStatus = health.status === 'unhealthy' ? 503 : 
-                      health.status === 'degraded' ? 200 : 200;
     
-    return NextResponse.json(health, { status: httpStatus });
+    if (health.status === 'unhealthy') {
+      return NextResponse.json(health, { status: 503 });
+    }
+    
+    return NextApiResponse.success(health);
     
   } catch (error) {
-    console.error('Health check error:', error);
+    logger.error({ error }, 'Health check error');
     
     return NextResponse.json(
       { 
@@ -72,3 +82,7 @@ export async function GET(request: NextRequest) {
     );
   }
 }
+
+export default createMethodHandler({
+  GET: handleGet,
+});

@@ -3,7 +3,7 @@
  * Displays template information and test instructions
  */
 
-import { EMAIL_SUBJECTS, EMAIL_TEMPLATE_CONFIG, SAMPLE_DATA } from '../src/config/emailTemplates';
+import { EMAIL_SUBJECTS, EMAIL_TEMPLATE_CONFIG, SAMPLE_DATA } from '../../src/config/emailTemplates';
 
 function displaySystemInfo() {
   console.log('🚀 Email Template System - Billetterie');
@@ -11,7 +11,7 @@ function displaySystemInfo() {
 
   console.log('📁 Templates disponibles :');
   Object.entries(EMAIL_TEMPLATE_CONFIG.TEMPLATES).forEach(([key, template]) => {
-    console.log(`   • ${template}.hbs - ${getTemplateDescription(template)}`);
+    console.log(`   • ${template}.hbs - ${getTemplateDescription(template as string)}`);
   });
 
   console.log('\n🔧 Handlebars Helpers configurés :');

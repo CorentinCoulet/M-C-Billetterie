@@ -72,13 +72,13 @@ export class OrchestrationService {
       // 3. Generate tickets with QR codes
       const tickets = await generateOrderTickets({
         orderId: order.id,
-        eventId: order.tickets[0]?.ticket.eventId || '',
+        eventId: order.tickets[0]?.eventId || '',
         userId: order.userId,
-        eventTitle: order.tickets[0]?.ticket.event.title || 'Unknown Event',
-        eventDate: order.tickets[0]?.ticket.event.date.toISOString() || new Date().toISOString(),
-        venue: order.tickets[0]?.ticket.event.location || 'Unknown Venue',
-        quantity: order.tickets.reduce((sum, t) => sum + t.quantity, 0),
-        validUntil: order.tickets[0]?.ticket.event.date.toISOString() || new Date().toISOString(),
+        eventTitle: order.tickets[0]?.event.title || 'Unknown Event',
+        eventDate: order.tickets[0]?.event.date.toISOString() || new Date().toISOString(),
+        venue: order.tickets[0]?.event.location || 'Unknown Venue',
+        quantity: order.tickets.length,
+        validUntil: order.tickets[0]?.event.date.toISOString() || new Date().toISOString(),
       });
 
       // 4. Send confirmation email
@@ -88,15 +88,15 @@ export class OrchestrationService {
           order.user.name,
           order.id,
           {
-            totalAmount: order.totalAmount,
+            totalAmount: order.totalPrice,
             orderDate: order.createdAt || new Date(),
             tickets: order.tickets.map(t => ({
-              name: t.ticket.name || 'Ticket',
-              quantity: t.quantity,
-              price: t.unitPrice,
-              eventName: t.ticket.event.title,
-              eventDate: t.ticket.event.date,
-              eventLocation: t.ticket.event.location || 'Unknown Location',
+              name: t.code || 'Ticket',
+              quantity: 1,
+              price: order.totalPrice / order.tickets.length,
+              eventName: t.event.title,
+              eventDate: t.event.date,
+              eventLocation: t.event.location || 'Unknown Location',
             }))
           }
         );
@@ -133,7 +133,7 @@ export class OrchestrationService {
       }
 
       // 2. If a payment exists, handle refund if necessary
-      if (order.payment && order.payment.status === 'SUCCEEDED') {
+      if (order.payment && order.payment.paymentStatus === 'SUCCEEDED') {
         // TODO: Implement refund logic if necessary
         // Currently, the schema does not support refunds
         console.log(`Refund needed for payment ${order.payment.id} but not implemented`);

@@ -1,3 +1,5 @@
+import { logger } from '@/lib/logger';
+import { createMethodHandler, NextApiResponse } from '@/src/lib/next-api-helpers';
 import { NextRequest, NextResponse } from 'next/server';
 
 interface HealthCheckResult {
@@ -202,13 +204,15 @@ class HealthChecker {
 const healthChecker = new HealthChecker();
 
 // Liveness probe - simple check to verify the process is running
-export async function GET(request: NextRequest) {
+async function handleGet(request: NextRequest) {
   try {
     const { pathname } = new URL(request.url);
     
+    logger.info({ pathname }, 'Health check requested');
+    
     // Kubernetes liveness probe - just check if process is alive
     if (pathname.endsWith('/live')) {
-      return NextResponse.json({ 
+      return NextApiResponse.success({ 
         status: 'alive', 
         timestamp: new Date().toISOString(),
         pid: process.pid,
@@ -219,16 +223,17 @@ export async function GET(request: NextRequest) {
     // Kubernetes readiness probe - check if ready to serve requests
     if (pathname.endsWith('/ready')) {
       const health = await healthChecker.getFullHealthStatus();
-      const status = health.status === 'unhealthy' ? 503 : 200;
-      return NextResponse.json(health, { status });
+      if (health.status === 'unhealthy') {
+        return NextResponse.json(health, { status: 503 });
+      }
+      return NextApiResponse.success(health);
     }
     
     // Default health check - comprehensive status
     const health = await healthChecker.getFullHealthStatus();
-    return NextResponse.json(health);
+    return NextApiResponse.success(health);
     
   } catch (error) {
-    const { logger } = await import('../../../lib/logger');
     logger.error({ error }, 'Health check error');
     return NextResponse.json(
       { 
@@ -240,3 +245,7 @@ export async function GET(request: NextRequest) {
     );
   }
 }
+
+export default createMethodHandler({
+  GET: handleGet,
+});

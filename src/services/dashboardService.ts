@@ -8,7 +8,7 @@ export class DashboardService {
   /**
    * Get main dashboard statistics
    */
-  async getMainDashboardStats(): Promise<any> {
+  async getMainDashboardStats(): Promise<Record<string, unknown>> {
     return adminService.getDashboardStatistics();
   }
 
@@ -23,7 +23,6 @@ export class DashboardService {
     }[];
   }> {
     let dateFormat: string;
-    let groupBy: any;
     let daysToLookBack: number;
     let dateLabels: string[];
 
@@ -31,20 +30,17 @@ export class DashboardService {
     switch (period) {
       case 'week':
         dateFormat = '%Y-%m-%d'; // Daily format
-        groupBy = { by: ['date'] };
         daysToLookBack = 7;
         dateLabels = this.getLastNDaysLabels(daysToLookBack);
         break;
       case 'year':
         dateFormat = '%Y-%m'; // Monthly format
-        groupBy = { by: ['month'] };
         daysToLookBack = 365;
         dateLabels = this.getLastNMonthsLabels(12);
         break;
       case 'month':
       default:
         dateFormat = '%Y-%m-%d'; // Daily format
-        groupBy = { by: ['date'] };
         daysToLookBack = 30;
         dateLabels = this.getLastNDaysLabels(daysToLookBack);
         break;
@@ -74,7 +70,7 @@ export class DashboardService {
     });
 
     // Fill in actual data
-    (paymentData as any[]).forEach(item => {
+    (paymentData as Array<{ date: string; revenue: number | string }>).forEach(item => {
       if (revenueByDate[item.date] !== undefined) {
         revenueByDate[item.date] = Number(item.revenue);
       }
@@ -150,7 +146,7 @@ export class DashboardService {
     });
 
     // Fill in actual data
-    (orderData as any[]).forEach(item => {
+    (orderData as Array<{ date: string; ticketsSold: number | string }>).forEach(item => {
       if (ticketsByDate[item.date] !== undefined) {
         ticketsByDate[item.date] = Number(item.ticketsSold);
       }
@@ -224,7 +220,7 @@ export class DashboardService {
     });
 
     // Fill in actual data
-    (userData as any[]).forEach(item => {
+    (userData as Array<{ date: string; userCount: number | string }>).forEach(item => {
       if (usersByDate[item.date] !== undefined) {
         usersByDate[item.date] = Number(item.userCount);
       }
@@ -255,22 +251,16 @@ export class DashboardService {
     const eventData = await prisma.event.findMany({
       select: {
         id: true,
-        name: true,
+        title: true,
         tickets: {
           select: {
-            orders: {
-              select: {
-                quantity: true
-              }
-            }
+            id: true
           }
         }
       },
       orderBy: {
         tickets: {
-          _count: {
-            orders: 'desc'
-          }
+          _count: 'desc'
         }
       },
       take: limit
@@ -278,12 +268,10 @@ export class DashboardService {
 
     // Calculate ticket sales for each event
     const eventsWithSales = eventData.map(event => {
-      const ticketsSold = event.tickets.reduce((total, ticket) => {
-        return total + ticket.orders.reduce((sum, order) => sum + order.quantity, 0);
-      }, 0);
+      const ticketsSold = event.tickets.length;
 
       return {
-        name: event.name,
+        name: event.title,
         ticketsSold
       };
     });
@@ -336,33 +324,24 @@ export class DashboardService {
   /**
    * Get upcoming events
    */
-  async getUpcomingEvents(limit: number = 5): Promise<any[]> {
+  async getUpcomingEvents(limit: number = 5): Promise<unknown[]> {
     return prisma.event.findMany({
       where: {
         date: {
           gte: new Date()
         },
-        published: true
+        isPublished: true
       },
       orderBy: {
         date: 'asc'
       },
       take: limit,
       include: {
-        tickets: {
-          include: {
-            _count: {
-              select: {
-                orders: true
-              }
-            }
-          }
-        },
+        tickets: true,
         organizer: {
           select: {
             id: true,
-            name: true,
-            email: true
+            name: true
           }
         }
       }
@@ -372,7 +351,7 @@ export class DashboardService {
   /**
    * Get recent orders
    */
-  async getRecentOrders(limit: number = 5): Promise<any[]> {
+  async getRecentOrders(limit: number = 5): Promise<unknown[]> {
     return prisma.order.findMany({
       orderBy: {
         createdAt: 'desc'
@@ -388,15 +367,11 @@ export class DashboardService {
         },
         tickets: {
           include: {
-            ticket: {
-              include: {
-                event: {
-                  select: {
-                    id: true,
-                    name: true,
-                    date: true
-                  }
-                }
+            event: {
+              select: {
+                id: true,
+                title: true,
+                date: true
               }
             }
           }
@@ -404,9 +379,8 @@ export class DashboardService {
         payment: {
           select: {
             id: true,
-            amount: true,
-            status: true,
-            paidAt: true
+            paymentStatus: true,
+            paymentDate: true
           }
         }
       }
@@ -437,7 +411,7 @@ export class DashboardService {
     `;
 
     // Handle null category
-    const processedData = (categoryData as any[]).map(item => ({
+    const processedData = (categoryData as Array<{ category: string | null; revenue: number | string }>).map(item => ({
       category: item.category || 'Non catégorisé',
       revenue: Number(item.revenue)
     }));

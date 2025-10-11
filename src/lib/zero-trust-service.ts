@@ -3,8 +3,8 @@
  * Never trust, always verify - comprehensive zero trust security model
  */
 
-import { PrismaClient } from '../generated/prisma';
 import { EventEmitter } from 'events';
+import { PrismaClient } from '../generated/prisma';
 import { AuditService } from './audit-service';
 import { safeLogger } from './logger';
 
@@ -206,7 +206,11 @@ export class ZeroTrustService extends EventEmitter {
 
     const user = await this.prisma.user.findUnique({ 
       where: { id: userId },
-      include: { mfaDevices: true }
+      select: { 
+        id: true, 
+        passwordChangedAt: true,
+        metadata: true 
+      }
     });
 
     if (!user) return 0;
@@ -214,8 +218,9 @@ export class ZeroTrustService extends EventEmitter {
     // Base authentication (password) = 40 points
     score += 40;
 
-    // Multi-factor authentication
-    if (user.mfaDevices && user.mfaDevices.length > 0) {
+    // Multi-factor authentication (check in metadata)
+    const metadata = (user.metadata as any) || {};
+    if (metadata.mfa && metadata.mfa.enabled) {
       score += 30; // MFA adds significant trust
     }
 
@@ -226,8 +231,8 @@ export class ZeroTrustService extends EventEmitter {
       score += 10;
     }
 
-    // Strong password policy compliance
-    if (user.hasStrongPassword) {
+    // Strong password policy compliance (check in metadata)
+    if (metadata.hasStrongPassword) {
       score += 10;
     }
 
@@ -514,13 +519,22 @@ export class ZeroTrustService extends EventEmitter {
 
   // Placeholder implementations for complex methods
   private async logAccessDecision(request: AccessRequest): Promise<void> {
-    await auditService.log({
+    await AuditService.logEvent({
       action: 'access_decision',
+      resourceType: 'access_request',
+      resourceId: request.resource,
       userId: request.userId,
-      resource: request.resource,
-      decision: request.decision,
-      trustScore: request.trustScore.score,
-      reason: request.reason
+      userEmail: '', // Would need to fetch user email
+      ipAddress: '',
+      userAgent: '',
+      details: {
+        resource: request.resource,
+        decision: request.decision,
+        trustScore: request.trustScore.score,
+        reason: request.reason
+      },
+      result: request.decision === 'allow' ? 'success' : 'failure',
+      riskLevel: request.trustScore.score > 70 ? 'low' : 'high'
     });
   }
 

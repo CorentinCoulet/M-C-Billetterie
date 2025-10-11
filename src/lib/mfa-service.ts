@@ -444,12 +444,21 @@ class MFAService {
   }
 
   private async storeMFAConfig(userId: string, config: MFAConfig): Promise<void> {
+    // Get existing metadata first
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { metadata: true }
+    });
+
+    const existingMetadata = (user?.metadata as any) || {};
+    
     await prisma.user.update({
       where: { id: userId },
       data: {
         metadata: {
+          ...existingMetadata,
           mfa: config
-        }
+        } as any
       }
     });
   }
