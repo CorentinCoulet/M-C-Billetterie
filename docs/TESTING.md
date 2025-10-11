@@ -29,6 +29,33 @@ Lance tous les tests avec coverage et configuration CI.
 
 ---
 
+## 📖 Guide de Sélection des Commandes de Test
+
+### Quand utiliser quelle commande ?
+
+| Commande | Quand l'utiliser | Durée | Utilisation |
+|----------|------------------|-------|-------------|
+| `yarn test` | Tests rapides pendant le développement | ~30s | Développement quotidien |
+| `yarn test:watch` | Développement avec auto-reload | Continue | Développement actif |
+| `yarn test:coverage` | Vérifier la couverture de code | ~1min | Avant commit important |
+| `yarn test:ci` | Intégration continue | ~1min | Pipeline CI/CD |
+| `yarn test:all` | Suite complète (Jest + E2E) | ~5min | Avant merge/release |
+| `yarn test:all:ci` | Suite complète en CI | ~5min | Pipeline CI/CD complet |
+
+### Par type de test
+
+| Commande | Description | Quand l'utiliser |
+|----------|-------------|------------------|
+| `yarn test:unit` | Tests unitaires uniquement | Test de fonctions isolées |
+| `yarn test:integration` | Tests d'intégration | Test d'interactions entre modules |
+| `yarn test:api` | Tests des routes API | Test des endpoints REST |
+| `yarn test:property` | Tests property-based | Test de propriétés avec données aléatoires |
+| `yarn test:e2e` | Tests end-to-end | Test du parcours utilisateur complet |
+| `yarn test:e2e:ui` | Tests E2E avec interface | Debug des tests E2E |
+| `yarn test:mutation` | Tests de mutation | Vérifier la qualité des tests |
+
+---
+
 ## 🧩 Tests Jest
 
 Jest est utilisé pour les tests unitaires, d'intégration, API, et de sécurité.

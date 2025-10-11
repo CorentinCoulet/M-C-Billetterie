@@ -1,0 +1,12 @@
+# Exemple de fichier de configuration Terraform
+# Copier ce fichier en terraform.tfvars et adapter les valeurs
+
+cluster_name = "billetterie-local"
+namespace    = "billetterie"
+domain_name  = "localhost"
+environment  = "development"
+
+# Pour la production :
+# cluster_name = "billetterie-prod"
+# domain_name  = "tickets.votredomaine.com"
+# environment  = "production"

@@ -23,9 +23,9 @@
     "paths": {
       "@/*": ["./src/*", "./*"],
       "@/components/*": ["./src/components/*"],
-      "@/lib/*": ["./src/lib/*", "./lib/*"],
+      "@/lib/*": ["./src/lib/*"],
       "@/types/*": ["./src/types/*"],
-      "@/hooks/*": ["./src/hooks/*", "./hooks/*"],
+      "@/hooks/*": ["./src/hooks/*"],
       "@/utils/*": ["./src/utils/*"],
       "@/services/*": ["./src/services/*"],
       "@/config/*": ["./src/config/*"],

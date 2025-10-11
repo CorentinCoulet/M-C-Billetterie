@@ -1,13 +1,15 @@
-version: '3.8'
+# ===================================================================
+# MONITORING STACK - UNIVERSAL
+# Prometheus, Grafana, and exporters for metrics collection
+# Can be combined with dev or prod environments
+# Uses environment variables to adapt to the target environment
+# ===================================================================
 
 services:
-  # Application et services existants (database, redis, web)
-  # Ajout des services de monitoring
-
-  # Prometheus - Collecte des métriques
+  # Prometheus - Metrics collection and storage
   prometheus:
     image: prom/prometheus:v2.47.0
-    container_name: prometheus
+    container_name: prometheus-${COMPOSE_ENV:-dev}
     restart: unless-stopped
     ports:
       - "${PROMETHEUS_PORT:-9090}:9090"
@@ -21,22 +23,22 @@ services:
     volumes:
       - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
       - ./monitoring/alert_rules.yml:/etc/prometheus/alert_rules.yml
-      - prometheus_data:/prometheus
+      - prometheus_data_${COMPOSE_ENV:-dev}:/prometheus
     networks:
-      - billetterie-network
+      - ${COMPOSE_NETWORK:-billetterie-network-dev}
     healthcheck:
       test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:9090/-/healthy"]
       interval: 30s
       timeout: 10s
       retries: 3
 
-  # Grafana - Visualisation des métriques
+  # Grafana - Metrics visualization and dashboards
   grafana:
     image: grafana/grafana:10.1.0
-    container_name: grafana
+    container_name: grafana-${COMPOSE_ENV:-dev}
     restart: unless-stopped
     ports:
-      - "${GRAFANA_PORT:-3001}:3000"
+      - "${GRAFANA_PORT:-3002}:3000"
     environment:
       - GF_SECURITY_ADMIN_USER=${GRAFANA_ADMIN_USER:-admin}
       - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_ADMIN_PASSWORD:-admin}
@@ -45,93 +47,108 @@ services:
       - GF_AUTH_ANONYMOUS_ENABLED=false
       - GF_INSTALL_PLUGINS=grafana-piechart-panel,grafana-worldmap-panel
     volumes:
-      - grafana_data:/var/lib/grafana
+      - grafana_data_${COMPOSE_ENV:-dev}:/var/lib/grafana
       - ./monitoring/grafana/provisioning:/etc/grafana/provisioning
       - ./monitoring/grafana/dashboards:/var/lib/grafana/dashboards
     depends_on:
       - prometheus
     networks:
-      - billetterie-network
+      - ${COMPOSE_NETWORK:-billetterie-network-dev}
     healthcheck:
       test: ["CMD-SHELL", "curl -f http://localhost:3000/api/health || exit 1"]
       interval: 30s
       timeout: 10s
       retries: 3
 
-  # PostgreSQL Exporter - Métriques base de données
+  # PostgreSQL Exporter - Database metrics
   postgres-exporter:
     image: prometheuscommunity/postgres-exporter:v0.13.2
-    container_name: postgres-exporter
+    container_name: postgres-exporter-${COMPOSE_ENV:-dev}
     restart: unless-stopped
     ports:
-      - "9187:9187"
+      - "${POSTGRES_EXPORTER_PORT:-9187}:9187"
     environment:
-      DATA_SOURCE_NAME: "postgresql://${DB_USER:-postgres}:${DB_PASSWORD}@db:5432/${DB_NAME:-billetterie}?sslmode=disable"
-    depends_on:
-      - db
+      DATA_SOURCE_NAME: "postgresql://${DB_USER:-postgres}:${DB_PASSWORD}@${DB_HOST:-db-dev}:5432/${DB_NAME:-billetterie}?sslmode=disable"
     networks:
-      - billetterie-network
+      - ${COMPOSE_NETWORK:-billetterie-network-dev}
     healthcheck:
       test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:9187/metrics"]
       interval: 30s
       timeout: 10s
       retries: 3
 
-  # Redis Exporter - Métriques cache
+  # Redis Exporter - Cache metrics
   redis-exporter:
     image: oliver006/redis_exporter:v1.52.0
-    container_name: redis-exporter
+    container_name: redis-exporter-${COMPOSE_ENV:-dev}
     restart: unless-stopped
     ports:
-      - "9121:9121"
+      - "${REDIS_EXPORTER_PORT:-9121}:9121"
     environment:
-      REDIS_ADDR: "redis://redis:6379"
+      REDIS_ADDR: "${REDIS_HOST:-redis-dev}:6379"
       REDIS_PASSWORD: "${REDIS_PASSWORD:-password}"
-    depends_on:
-      - redis
     networks:
-      - billetterie-network
+      - ${COMPOSE_NETWORK:-billetterie-network-dev}
     healthcheck:
       test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:9121/metrics"]
       interval: 30s
       timeout: 10s
       retries: 3
 
-  # Node Exporter - Métriques système
+  # Node Exporter - Universal mode (works on Windows + Linux)
+  # Monitors container metrics without host mount
+  # On Windows: monitors Docker Desktop VM
+  # On Linux: monitors container-level metrics (not full host)
   node-exporter:
     image: prom/node-exporter:v1.6.1
-    container_name: node-exporter
+    container_name: node-exporter-${COMPOSE_ENV:-dev}
     restart: unless-stopped
     ports:
-      - "9100:9100"
+      - "${NODE_EXPORTER_PORT:-9100}:9100"
     command:
-      - '--path.rootfs=/host'
-    volumes:
-      - '/:/host:ro,rslave'
+      - '--path.procfs=/proc'
+      - '--path.sysfs=/sys'
+      - '--collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)'
     networks:
-      - billetterie-network
+      - ${COMPOSE_NETWORK:-billetterie-network-dev}
     healthcheck:
       test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:9100/metrics"]
       interval: 30s
       timeout: 10s
       retries: 3
+  
+  # Note: For full Linux host metrics in production, use this configuration instead:
+  # Uncomment and replace the above service with:
+  #
+  # node-exporter-full:
+  #   image: prom/node-exporter:v1.6.1
+  #   container_name: node-exporter-${COMPOSE_ENV:-dev}
+  #   restart: unless-stopped
+  #   ports:
+  #     - "${NODE_EXPORTER_PORT:-9100}:9100"
+  #   command:
+  #     - '--path.rootfs=/host'
+  #   volumes:
+  #     - '/:/host:ro,rslave'  # Only works on Linux!
+  #   networks:
+  #     - ${COMPOSE_NETWORK:-billetterie-network-dev}
 
-  # AlertManager - Gestion des alertes (optionnel)
+  # AlertManager - Alert management
   alertmanager:
     image: prom/alertmanager:v0.25.0
-    container_name: alertmanager
+    container_name: alertmanager-${COMPOSE_ENV:-dev}
     restart: unless-stopped
     ports:
-      - "9093:9093"
+      - "${ALERTMANAGER_PORT:-9093}:9093"
     volumes:
       - ./monitoring/alertmanager.yml:/etc/alertmanager/alertmanager.yml
-      - alertmanager_data:/alertmanager
+      - alertmanager_data_${COMPOSE_ENV:-dev}:/alertmanager
     command:
       - '--config.file=/etc/alertmanager/alertmanager.yml'
       - '--storage.path=/alertmanager'
       - '--web.external-url=http://localhost:9093'
     networks:
-      - billetterie-network
+      - ${COMPOSE_NETWORK:-billetterie-network-dev}
     healthcheck:
       test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:9093/-/healthy"]
       interval: 30s
@@ -139,13 +156,17 @@ services:
       retries: 3
 
 volumes:
-  postgres_data:
-  redis_data:
-  uploads:
-  prometheus_data:
-  grafana_data:
-  alertmanager_data:
+  prometheus_data_dev:
+  prometheus_data_prod:
+  grafana_data_dev:
+  grafana_data_prod:
+  alertmanager_data_dev:
+  alertmanager_data_prod:
 
 networks:
+  billetterie-network-dev:
+    external: true
+    name: billetterie-dev-network
   billetterie-network:
-    driver: bridge
+    external: true
+    name: billetterie-network

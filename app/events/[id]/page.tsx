@@ -5,9 +5,6 @@ import { motion } from 'framer-motion'
 import { useParams, useRouter } from 'next/navigation'
 import { useState } from 'react'
 import { toast } from 'sonner'
-import { Background } from '../../../src/components/common/Background'
-import { Footer } from '../../../src/components/common/Footer'
-import { Header } from '../../../src/components/common/Header'
 import { Badge } from '../../../src/components/ui/badge'
 import { Button } from '../../../src/components/ui/button'
 import { Label } from '../../../src/components/ui/label'
@@ -152,16 +149,7 @@ export default function EventDetailPage() {
 
   if (!event) {
     return (
-      <div className="min-h-screen pt-24 pb-12 flex items-center justify-center">
-        <Background />
-        <Header 
-          navigate={navigate}
-          currentPage="event-detail"
-          currentUser={currentUser}
-          favorites={favorites}
-          cart={cart}
-          logout={logout}
-        />
+      <div className="flex items-center justify-center py-12">
         <div className="glass-card rounded-2xl p-12 text-center">
           <h1 className="text-2xl font-bold text-foreground mb-4">Événement non trouvé</h1>
           <Button onClick={() => navigate('events')} className="glass-button text-white font-semibold">
@@ -173,18 +161,7 @@ export default function EventDetailPage() {
   }
 
   return (
-    <div className="min-h-screen pt-24 pb-12">
-      <Background />
-      <Header 
-        navigate={navigate}
-        currentPage="event-detail"
-        currentUser={currentUser}
-        favorites={favorites}
-        cart={cart}
-        logout={logout}
-      />
-      
-      <div className="max-w-6xl mx-auto px-6">
+    <div className="max-w-6xl mx-auto px-6">
         {/* Back Button */}
         <motion.div
           initial={{ opacity: 0, x: -20 }}
@@ -376,7 +353,5 @@ export default function EventDetailPage() {
           </div>
         </div>
       </div>
-      <Footer navigate={navigate} />
-    </div>
   )
 }

@@ -38,20 +38,12 @@ tsconfig.tsbuildinfo
 # ENVIRONMENT VARIABLES (CRITICAL SECURITY)
 # =================================
 # NEVER COMMIT REAL CREDENTIALS!
-.env
-.env.local
-.env.development
-.env.development.*
-.env.test
-.env.test.*
-.env.production
-.env.production.*
-.env.*.local
-.env.d.ts
+# Each environment has its own file: .env.dev and .env.prod
+.env.dev
+.env.prod
 
-# Keep ONLY example files for documentation
+# Keep ONLY example file for documentation
 !.env.example
-!.env.production.example
 
 # =================================
 # DATABASES & CACHE
@@ -69,6 +61,7 @@ redis.conf
 # LOGS & MONITORING
 # =================================
 logs/
+!logs/.gitkeep
 *.log
 *.log.*
 npm-debug.log*
@@ -80,9 +73,11 @@ lerna-debug.log*
 reports/
 security-test-report.json
 performance-report.json
+api-routes-report.json
 coverage/
 .nyc_output/
 test-results/
+playwright-report/
 
 # =================================
 # DOCKER & INFRASTRUCTURE
@@ -95,10 +90,21 @@ docker-volume-data/
 k8s/secrets/
 k8s/configmaps/
 
+# Terraform
+infrastructure/terraform/.terraform/
+infrastructure/terraform/.terraform.lock.hcl
+infrastructure/terraform/terraform.tfstate
+infrastructure/terraform/terraform.tfstate.backup
+infrastructure/terraform/terraform.tfvars
+infrastructure/terraform/.terraform.tfstate.lock.info
+infrastructure/terraform/tfplan
+infrastructure/terraform/*.tfplan
+
 # =================================
 # UPLOADS & USER CONTENT
 # =================================
 uploads/
+!uploads/.gitkeep
 public/uploads/
 temp/
 *.tmp
@@ -108,6 +114,7 @@ temp/
 # BACKUPS & ARCHIVES
 # =================================
 backups/
+!backups/.gitkeep
 *.backup
 *.dump
 *.sql.gz

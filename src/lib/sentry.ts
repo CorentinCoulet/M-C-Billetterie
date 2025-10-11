@@ -1,339 +1,128 @@
 /**
- * Sentry Error Tracking Configuration
- * Production-ready error monitoring and performance tracking
+ * Sentry Service for monitoring endpoints
  */
 
 import * as Sentry from '@sentry/nextjs';
-import { safeLogger } from '../lib/logger';
 
-// Sentry configuration
-export const SENTRY_CONFIG = {
-  dsn: process.env.SENTRY_DSN,
-  environment: process.env.NODE_ENV || 'development',
-  release: process.env.APP_VERSION || process.env.VERSION || '1.0.0',
-  
-  // Performance Monitoring
-  tracesSampleRate: process.env.NODE_ENV === 'production' ? 0.1 : 1.0,
-  
-  // Error filtering
-  ignoreErrors: [
-    // Browser errors
-    'Script error',
-    'Network request failed',
-    'Non-Error promise rejection captured',
-    
-    // Next.js specific
-    'ChunkLoadError',
-    'Loading chunk',
-    'Loading CSS chunk',
-    
-    // Common bot errors
-    'ResizeObserver loop limit exceeded',
-    'Permission denied to access property',
-    
-    // Rate limiting (these are expected)
-    'Too many requests',
-    'Rate limit exceeded'
-  ],
-  
-  // Data sanitization
-  beforeSend: (event: Sentry.ErrorEvent) => {
-    // Remove sensitive data
-    if (event.request) {
-      if (event.request.headers) {
-        delete event.request.headers['Authorization'];
-        delete event.request.headers['Cookie'];
-        delete event.request.headers['X-API-Key'];
+interface SentryHealthCheck {
+  status: 'healthy' | 'unhealthy';
+  enabled: boolean;
+  dsn?: string;
+  environment?: string;
+  release?: string;
+}
+
+interface CaptureOptions {
+  tags?: Record<string, string>;
+  extra?: Record<string, any>;
+  user?: {
+    id: string;
+    email?: string;
+    username?: string;
+  };
+}
+
+class SentryService {
+  private get isEnabled(): boolean {
+    return !!process.env.SENTRY_DSN;
+  }
+
+  healthCheck(): SentryHealthCheck {
+    return {
+      status: this.isEnabled ? 'healthy' : 'unhealthy',
+      enabled: this.isEnabled,
+      dsn: this.isEnabled ? process.env.SENTRY_DSN?.substring(0, 20) + '...' : undefined,
+      environment: process.env.NODE_ENV || 'development',
+      release: process.env.VERSION || process.env.NEXT_PUBLIC_APP_VERSION || '1.0.0'
+    };
+  }
+
+  captureException(error: Error, options: CaptureOptions = {}): string | null {
+    if (!this.isEnabled) {
+      return null;
+    }
+
+    return Sentry.withScope(scope => {
+      if (options.tags) {
+        Object.keys(options.tags).forEach(key => {
+          scope.setTag(key, options.tags![key]);
+        });
       }
+
+      if (options.extra) {
+        Object.keys(options.extra).forEach(key => {
+          scope.setExtra(key, options.extra![key]);
+        });
+      }
+
+      if (options.user) {
+        scope.setUser(options.user);
+      }
+
+      return Sentry.captureException(error);
+    });
+  }
+
+  captureMessage(
+    message: string, 
+    level: 'fatal' | 'error' | 'warning' | 'info' | 'debug' = 'info',
+    options: CaptureOptions = {}
+  ): string | null {
+    if (!this.isEnabled) {
+      return null;
+    }
+
+    return Sentry.withScope(scope => {
+      if (options.tags) {
+        Object.keys(options.tags).forEach(key => {
+          scope.setTag(key, options.tags![key]);
+        });
+      }
+
+      if (options.extra) {
+        Object.keys(options.extra).forEach(key => {
+          scope.setExtra(key, options.extra![key]);
+        });
+      }
+
+      if (options.user) {
+        scope.setUser(options.user);
+      }
+
+      scope.setLevel(level);
+      return Sentry.captureMessage(message);
+    });
+  }
+
+  trackBusinessMetric(
+    metric: string,
+    value: number,
+    tags?: Record<string, string>,
+    userId?: string
+  ): void {
+    if (!this.isEnabled) {
+      return;
+    }
+
+    Sentry.withScope(scope => {
+      scope.setTag('metric_type', 'business');
+      scope.setTag('metric_name', metric);
       
-      if (event.request.data) {
-        // Remove password fields
-        if (typeof event.request.data === 'object') {
-          const sanitized = { ...event.request.data };
-          delete sanitized.password;
-          delete sanitized.token;
-          delete sanitized.secret;
-          event.request.data = sanitized;
-        }
+      if (tags) {
+        Object.keys(tags).forEach(key => {
+          scope.setTag(key, tags[key]);
+        });
       }
-    }
-    
-    // Remove exception values that contain sensitive data
-    if (event.exception?.values) {
-      event.exception.values.forEach((exception: any) => {
-        if (exception.value?.includes('password') || 
-            exception.value?.includes('token') || 
-            exception.value?.includes('secret')) {
-          exception.value = exception.value.replace(
-            /\b\w*(?:password|token|secret|key)\w*\s*[:=]\s*\S+/gi, 
-            '[REDACTED]'
-          );
-        }
-      });
-    }
-    
-    return event;
-  },
-  
-  // Additional integrations
-  integrations: [
-    Sentry.httpIntegration(),
-    Sentry.onUncaughtExceptionIntegration({
-      onFatalError: (error: Error) => {
-        safeLogger.error('Fatal uncaught exception', { error: error.message });
-        process.exit(1);
+
+      if (userId) {
+        scope.setUser({ id: userId });
       }
-    }),
-    Sentry.onUnhandledRejectionIntegration({
-      mode: 'warn'
-    })
-  ]
-};
 
-/**
- * Initialize Sentry
- */
-export function initSentry() {
-  if (!SENTRY_CONFIG.dsn) {
-    safeLogger.warn('Sentry DSN not configured, error tracking disabled');
-    return;
-  }
-
-  try {
-    Sentry.init(SENTRY_CONFIG);
-    safeLogger.info('Sentry error tracking initialized');
-  } catch (error) {
-    safeLogger.error('Failed to initialize Sentry', { error: (error as Error).message });
-  }
-}
-
-/**
- * Custom error handler with Sentry integration
- */
-export class ErrorHandler {
-  static captureException(error: Error, context?: Record<string, any>) {
-    safeLogger.error('Exception captured', { error: error.message, context });
-    
-    if (SENTRY_CONFIG.dsn) {
-      Sentry.withScope(scope => {
-        if (context) {
-          Object.keys(context).forEach(key => {
-            scope.setExtra(key, context[key]);
-          });
-        }
-        
-        scope.setLevel('error');
-        Sentry.captureException(error);
-      });
-    }
-  }
-
-  static captureMessage(message: string, level: 'info' | 'warning' | 'error' = 'info', context?: Record<string, any>) {
-    const logFn = level === 'warning' ? safeLogger.warn : level === 'error' ? safeLogger.error : safeLogger.info;
-    logFn(message, context || {});
-    
-    if (SENTRY_CONFIG.dsn) {
-      Sentry.withScope(scope => {
-        if (context) {
-          Object.keys(context).forEach(key => {
-            scope.setExtra(key, context[key]);
-          });
-        }
-        
-        scope.setLevel(level);
-        Sentry.captureMessage(message);
-      });
-    }
-  }
-
-  static setUser(user: { id: string; email?: string; username?: string }) {
-    if (SENTRY_CONFIG.dsn) {
-      Sentry.setUser(user);
-    }
-  }
-
-  static clearUser() {
-    if (SENTRY_CONFIG.dsn) {
-      Sentry.setUser(null);
-    }
-  }
-
-  static addBreadcrumb(breadcrumb: {
-    message: string;
-    category?: string;
-    level?: 'info' | 'warning' | 'error';
-    data?: Record<string, any>;
-  }) {
-    if (SENTRY_CONFIG.dsn) {
-      Sentry.addBreadcrumb({
-        message: breadcrumb.message,
-        category: breadcrumb.category || 'custom',
-        level: breadcrumb.level || 'info',
-        data: breadcrumb.data,
-        timestamp: Date.now() / 1000
-      });
-    }
-  }
-
-  static startTransaction(name: string, operation: string) {
-    if (SENTRY_CONFIG.dsn) {
-      return Sentry.startInactiveSpan({
-        name,
-        op: operation
-      });
-    }
-    return null;
-  }
-}
-
-/**
- * Next.js API error handler middleware
- */
-export function withSentryErrorHandler<T extends (...args: any[]) => any>(handler: T): T {
-  return (async (...args) => {
-    try {
-      return await handler(...args);
-    } catch (error) {
-      ErrorHandler.captureException(error as Error, {
-        handler: handler.name,
-        args: args.map(arg => typeof arg === 'object' ? '[Object]' : arg)
-      });
-      throw error;
-    }
-  }) as T;
-}
-
-/**
- * Database error handler
- */
-export function handleDatabaseError(error: any, context?: Record<string, any>) {
-  const isDatabaseError = error.code?.startsWith('P') || // Prisma errors
-                         error.message?.includes('database') ||
-                         error.message?.includes('connection');
-
-  if (isDatabaseError) {
-    ErrorHandler.captureException(error, {
-      type: 'database_error',
-      ...context
-    });
-  } else {
-    ErrorHandler.captureException(error, context);
-  }
-}
-
-/**
- * API route error handler
- */
-export function handleAPIError(error: any, endpoint: string, method: string) {
-  ErrorHandler.captureException(error, {
-    type: 'api_error',
-    endpoint,
-    method,
-    status: error.status || error.statusCode || 500
-  });
-}
-
-/**
- * Authentication error handler
- */
-export function handleAuthError(error: any, context?: Record<string, any>) {
-  ErrorHandler.captureMessage('Authentication error occurred', 'warning', {
-    type: 'auth_error',
-    error: error.message,
-    ...context
-  });
-}
-
-/**
- * Payment error handler
- */
-export function handlePaymentError(error: any, paymentId?: string, amount?: number) {
-  ErrorHandler.captureException(error, {
-    type: 'payment_error',
-    paymentId,
-    amount,
-    critical: true
-  });
-}
-
-/**
- * Performance monitoring
- */
-export class PerformanceMonitor {
-  static measureOperation<T>(
-    operationName: string,
-    operation: () => Promise<T>,
-    context?: Record<string, any>
-  ): Promise<T> {
-    return new Promise(async (resolve, reject) => {
-      const transaction = ErrorHandler.startTransaction(operationName, 'operation');
-      const startTime = Date.now();
-
-      try {
-        ErrorHandler.addBreadcrumb({
-          message: `Starting operation: ${operationName}`,
-          category: 'performance',
-          level: 'info',
-          data: context
-        });
-
-        const result = await operation();
-        
-        const duration = Date.now() - startTime;
-        
-        ErrorHandler.addBreadcrumb({
-          message: `Operation completed: ${operationName}`,
-          category: 'performance',
-          level: 'info',
-          data: { duration, ...context }
-        });
-
-        if (transaction) {
-          transaction.setAttribute('duration', duration);
-          transaction.setAttribute('success', true);
-          if (context) {
-            Object.keys(context).forEach(key => {
-              transaction.setAttribute(key, context[key]);
-            });
-          }
-          transaction.end();
-        }
-
-        resolve(result);
-      } catch (error) {
-        const duration = Date.now() - startTime;
-        
-        ErrorHandler.addBreadcrumb({
-          message: `Operation failed: ${operationName}`,
-          category: 'performance',
-          level: 'error',
-          data: { duration, error: (error as Error).message, ...context }
-        });
-
-        if (transaction) {
-          transaction.setAttribute('duration', duration);
-          transaction.setAttribute('success', false);
-          transaction.setAttribute('error', (error as Error).message);
-          transaction.end();
-        }
-
-        ErrorHandler.captureException(error as Error, {
-          operation: operationName,
-          duration,
-          ...context
-        });
-
-        reject(error);
-      }
+      scope.setExtra('metric_value', value);
+      
+      Sentry.captureMessage(`Business Metric: ${metric} = ${value}`, 'info');
     });
   }
 }
 
-// Initialize Sentry if DSN is available
-if (typeof window === 'undefined') {
-  // Server-side initialization
-  initSentry();
-}
-
-export { Sentry };
-export default ErrorHandler;
+export const sentryService = new SentryService();

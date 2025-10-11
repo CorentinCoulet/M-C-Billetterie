@@ -1,0 +1,202 @@
+# Simplified version for local development
+# Without complex persistent volumes
+
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: billetterie
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: billetterie-config
+  namespace: billetterie
+data:
+  NODE_ENV: production
+  PORT: "3000"
+  LOG_LEVEL: warn
+
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: billetterie-secrets
+  namespace: billetterie
+type: Opaque
+stringData:
+  DATABASE_URL: "postgresql://postgres:postgres@postgres:5432/billetterie"
+  JWT_SECRET: "your-super-secret-jwt-key-change-in-production"
+  REDIS_PASSWORD: "redis-password-123"
+  ENCRYPTION_KEY: "encryption-key-32-characters!"
+  SESSION_SECRET: "session-secret-key-64-characters-long"
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: postgres
+  namespace: billetterie
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: postgres
+  template:
+    metadata:
+      labels:
+        app: postgres
+    spec:
+      containers:
+      - name: postgres
+        image: postgres:16-alpine
+        ports:
+        - containerPort: 5432
+        env:
+        - name: POSTGRES_DB
+          value: billetterie
+        - name: POSTGRES_USER
+          value: postgres
+        - name: POSTGRES_PASSWORD
+          value: postgres
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "250m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres
+  namespace: billetterie
+spec:
+  selector:
+    app: postgres
+  ports:
+  - port: 5432
+    targetPort: 5432
+  type: ClusterIP
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: redis
+  namespace: billetterie
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: redis
+  template:
+    metadata:
+      labels:
+        app: redis
+    spec:
+      containers:
+      - name: redis
+        image: redis:7-alpine
+        command: ["redis-server", "--requirepass", "redis-password-123"]
+        ports:
+        - containerPort: 6379
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "100m"
+          limits:
+            memory: "256Mi"
+            cpu: "200m"
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: redis
+  namespace: billetterie
+spec:
+  selector:
+    app: redis
+  ports:
+  - port: 6379
+    targetPort: 6379
+  type: ClusterIP
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: billetterie-app
+  namespace: billetterie
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: billetterie
+  template:
+    metadata:
+      labels:
+        app: billetterie
+    spec:
+      containers:
+      - name: app
+        image: node:20-alpine
+        command: ["/bin/sh", "-c", "echo 'App container ready'; sleep infinity"]
+        ports:
+        - containerPort: 3000
+        envFrom:
+        - configMapRef:
+            name: billetterie-config
+        - secretRef:
+            name: billetterie-secrets
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "250m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: billetterie-app
+  namespace: billetterie
+spec:
+  selector:
+    app: billetterie
+  ports:
+  - port: 3000
+    targetPort: 3000
+  type: ClusterIP
+
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: billetterie-hpa
+  namespace: billetterie
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: billetterie-app
+  minReplicas: 3
+  maxReplicas: 10
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 70
+  - type: Resource
+    resource:
+      name: memory
+      target:
+        type: Utilization
+        averageUtilization: 80

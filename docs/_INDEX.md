@@ -32,7 +32,7 @@ Guide principal avec architecture, quick start, et liens vers toute la documenta
 
 ### [📝 Historique (CHANGELOG.md)](./CHANGELOG.md)
 - Toutes les versions et changements
-- Roadmap des futures versions
+- Historique détaillé v1.2.0
 - Notes de migration entre versions
 - Breaking changes documentés
 
@@ -42,6 +42,25 @@ Guide principal avec architecture, quick start, et liens vers toute la documenta
 - Configuration environnement dev
 - Conventions de commit et PR
 - Tests et validation
+
+### [🛠️ Guide des Outils (TOOLS_GUIDE.md)](./TOOLS_GUIDE.md)
+- Outils de développement (VS Code, Yarn)
+- Outils de base de données (Adminer, pgAdmin, Prisma Studio)
+- Outils de monitoring (Prometheus, Grafana, Sentry)
+- Outils Docker (Portainer)
+- Scripts utilitaires
+
+### [🗺️ Roadmap (ROADMAP.md)](./ROADMAP.md)
+- Versions futures planifiées
+- Fonctionnalités en développement
+- Timeline de sortie
+- Feedback et priorisation
+
+### [🔒 Politique de Sécurité (../SECURITY.md)](../SECURITY.md)
+- Versions supportées
+- Signalement de vulnérabilités
+- Divulgation responsable
+- Contact sécurité
 
 ## 📚 Documentation par thème
 
@@ -107,6 +126,11 @@ Guide principal avec architecture, quick start, et liens vers toute la documenta
 
 | Date | Document | Changement |
 |------|----------|------------|
+| 11/10/2025 | [CHANGELOG.md](./CHANGELOG.md) | Création historique complet v1.2.0 |
+| 11/10/2025 | [CONTRIBUTING.md](./CONTRIBUTING.md) | Guide de contribution complet |
+| 11/10/2025 | [TOOLS_GUIDE.md](./TOOLS_GUIDE.md) | Documentation des outils |
+| 11/10/2025 | [ROADMAP.md](./ROADMAP.md) | Feuille de route versions futures |
+| 11/10/2025 | [SECURITY.md](../SECURITY.md) | Politique de sécurité |
 | 30/08/2025 | [EMAIL_SYSTEM.md](./EMAIL_SYSTEM.md) | Création système email complet |
 | 29/08/2025 | [QR_SYSTEM.md](./QR_SYSTEM.md) | Documentation système QR |
 | 23/08/2025 | [SECURITY.md](./SECURITY.md) | Guide sécurité initial |

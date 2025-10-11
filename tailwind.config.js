@@ -2,10 +2,38 @@
 module.exports = {
   darkMode: ['class'],
   content: [
+    './pages/**/*.{js,ts,jsx,tsx,mdx}',
+    './components/**/*.{js,ts,jsx,tsx,mdx}',
     './app/**/*.{js,ts,jsx,tsx,mdx}',
     './src/**/*.{js,ts,jsx,tsx,mdx}',
+    './lib/**/*.{js,ts,jsx,tsx,mdx}',
+    './hooks/**/*.{js,ts,jsx,tsx,mdx}',
+  ],
+  safelist: [
+    'animate-pulse',
+    'animate-spin',
+    'animate-bounce',
+    'data-[state=open]',
+    'data-[state=closed]',
+    'data-[state=checked]',
+    'data-[state=unchecked]',
+    {
+      pattern: /(bg|text|border)-(primary|secondary|destructive|muted|accent)(-foreground)?/,
+    },
+    'glass-card',
+    'glass-button',
+    {
+      pattern: /(from|to)-(blue|purple|primary|accent)-(600|700)/,
+    },
   ],
   theme: {
+    container: {
+      center: true,
+      padding: '2rem',
+      screens: {
+        '2xl': '1400px',
+      },
+    },
     extend: {
       colors: {
         border: 'hsl(var(--border))',
@@ -47,7 +75,48 @@ module.exports = {
         md: 'calc(var(--radius) - 2px)',
         sm: 'calc(var(--radius) - 4px)',
       },
+      keyframes: {
+        'accordion-down': {
+          from: { height: '0' },
+          to: { height: 'var(--radix-accordion-content-height)' },
+        },
+        'accordion-up': {
+          from: { height: 'var(--radix-accordion-content-height)' },
+          to: { height: '0' },
+        },
+      },
+      animation: {
+        'accordion-down': 'accordion-down 0.2s ease-out',
+        'accordion-up': 'accordion-up 0.2s ease-out',
+      },
     },
   },
   plugins: [require('tailwindcss-animate')],
+  
+  // Désactiver les modules inutilisés pour réduire drastiquement la taille
+  corePlugins: {
+    // Garder les essentiels
+    preflight: true,
+    container: true,
+    accessibility: true,
+    pointerEvents: true,
+    
+    // Désactiver les modules rarement utilisés (réduction ~40% supplémentaire)
+    resize: false,
+    userSelect: false, 
+    textRendering: false,
+    scrollBehavior: false,
+    scrollMargin: false,
+    scrollPadding: false,
+    fontVariantNumeric: false,
+    listStyleType: false,
+    listStylePosition: false,
+    caretColor: false,
+    accentColor: false,
+  },
+  
+  // Remove experimental optimization that causes issues
+  // experimental: {
+  //   optimizeUniversalDefaults: true,
+  // },
 }

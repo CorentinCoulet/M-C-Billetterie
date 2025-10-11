@@ -2,9 +2,6 @@
 
 import { useRouter } from 'next/navigation'
 import { useState } from 'react'
-import { Background } from '../../src/components/common/Background'
-import { Footer } from '../../src/components/common/Footer'
-import { Header } from '../../src/components/common/Header'
 import { EventsPage as FrontendEventsPage } from '../../src/components/EventsPage'
 
 // Types imported from frontend
@@ -147,30 +144,18 @@ export default function EventsPage() {
   }
 
   return (
-    <div className="min-h-screen">
-      <Background />
-      <Header 
-        navigate={navigate}
-        currentPage="events"
-        currentUser={currentUser}
-        favorites={favorites}
-        cart={cart}
-        logout={logout}
-      />
-      <FrontendEventsPage 
-        navigate={navigate}
-        searchQuery={searchQuery}
-        setSearchQuery={setSearchQuery}
-        selectedCategory={selectedCategory}
-        setSelectedCategory={setSelectedCategory}
-        priceRange={priceRange}
-        setPriceRange={setPriceRange}
-        events={events}
-        favorites={favorites}
-        toggleFavorite={toggleFavorite}
-        addToCart={addToCart}
-      />
-      <Footer navigate={navigate} />
-    </div>
+    <FrontendEventsPage 
+      navigate={navigate}
+      searchQuery={searchQuery}
+      setSearchQuery={setSearchQuery}
+      selectedCategory={selectedCategory}
+      setSelectedCategory={setSelectedCategory}
+      priceRange={priceRange}
+      setPriceRange={setPriceRange}
+      events={events}
+      favorites={favorites}
+      toggleFavorite={toggleFavorite}
+      addToCart={addToCart}
+    />
   )
 }

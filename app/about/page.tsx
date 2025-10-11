@@ -1,16 +1,15 @@
 'use client'
 
+import { Button } from '@/components/ui/button'
+import { ArrowLeft, Heart, Shield, Ticket } from '@phosphor-icons/react'
 import { motion } from 'framer-motion'
 import { useRouter } from 'next/navigation'
-import { Button } from '@/components/ui/button'
-import { ArrowLeft, Ticket, Heart, Shield } from '@phosphor-icons/react'
 
 export default function AboutPage() {
   const router = useRouter()
 
   return (
-    <div className="min-h-screen pt-24 pb-12">
-      <div className="max-w-4xl mx-auto px-6">
+    <div className="max-w-4xl mx-auto px-6">
         {/* Header */}
         <motion.div 
           initial={{ opacity: 0, y: 30 }}
@@ -104,6 +103,5 @@ export default function AboutPage() {
           </div>
         </motion.div>
       </div>
-    </div>
   )
 }

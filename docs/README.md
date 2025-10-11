@@ -1,17 +1,11 @@
-# 📚 Documentation - Billetterie Platform
+# 📚 Documentation - Bil| **🔧 Configuration** | [ENVIRONMENT_SETUP.md](./ENVIRONMENT_SETUP.md) - Configuration environnement et modes dev |
+| **🐳 Docker** | [DOCKER_ENVIRONMENTS.md](./DOCKER_ENVIRONMENTS.md) - Environnements Docker |
+| **☸️ Kubernetes** | [KUBERNETES_DEPLOYMENT.md](./KUBERNETES_DEPLOYMENT.md) - Déploiement K8s<br>[TERRAFORM_GUIDE.md](./TERRAFORM_GUIDE.md) - Infrastructure as Code |
+| **🗄️ Base de données** | [DATABASE_PRODUCTION.md](./DATABASE_PRODUCTION.md) - Configuration production |terie Platform
 
-## Vue d'ensemble
+## 📖 Vue d'ensemble
 
-Cet   ```bash
-   yarn dev
-   ```
-
-2. Tests :
-   ```bash
-   yarn test
-   yarn test:qr
-   yarn email:info
-   ```tation couvre tous les aspects techniques de la plateforme de billetterie Next.js.
+Cette documentation couvre tous les aspects techniques de la plateforme de billetterie Next.js.
 
 ## 📋 Documents disponibles
 
@@ -23,172 +17,56 @@ Cet   ```bash
 | [**EMAIL_SYSTEM.md**](./EMAIL_SYSTEM.md) | Templates emails Handlebars et service SMTP | ✅ Complet |
 | [**SECURITY.md**](./SECURITY.md) | Sécurité, authentification et protection | ✅ Complet |
 
-### 🏗️ Architecture
+### 🚀 Démarrage Rapide
 
-- **Framework** : Next.js 15 avec App Router
-- **Base de données** : PostgreSQL avec Prisma ORM
-- **Authentification** : JWT avec sessions sécurisées
-- **Paiements** : Intégration Stripe
-- **Conteneurisation** : Docker + Docker Compose
-- **Monitoring** : Prometheus + Grafana
+Consultez le [Guide de Démarrage Rapide](./QUICK_START_GUIDE.md) pour une installation complète.
 
-### 🔧 Fonctionnalités implémentées
+### 📑 Documentation Technique Complète
 
-#### ✅ Système de billetterie
-- Gestion des événements et billets
-- Système de commandes avec Stripe
-- QR codes sécurisés avec rotation automatique
-- Validation d'entrée temps réel
+| Catégorie | Documents |
+|-----------|-----------|
+| **🔧 Configuration** | [ENVIRONMENT_SETUP.md](./ENVIRONMENT_SETUP.md) - Configuration environnement |
+| **🐳 Docker** | [DOCKER_ENVIRONMENTS.md](./DOCKER_ENVIRONMENTS.md) - Environnements Docker |
+| **�️ Base de données** | [DATABASE_PRODUCTION.md](./DATABASE_PRODUCTION.md) - Configuration production |
+| **🎯 Systèmes** | [QR_SYSTEM.md](./QR_SYSTEM.md) - Codes QR sécurisés<br>[EMAIL_SYSTEM.md](./EMAIL_SYSTEM.md) - Système d'emails |
+| **💳 Paiements** | [STRIPE_CONFIGURATION.md](./STRIPE_CONFIGURATION.md) - Configuration Stripe |
+| **🧪 Tests** | [TESTING.md](./TESTING.md) - Guide de tests |
+| **🔐 Sécurité** | [SECURITY.md](../SECURITY.md) - Politique de sécurité<br>[GDPR_COMPLIANCE.md](./GDPR_COMPLIANCE.md) - Conformité RGPD |
+| **📊 Monitoring** | [METRICS.md](./METRICS.md) - Métriques et monitoring<br>[CACHE_PERFORMANCE.md](./CACHE_PERFORMANCE.md) - Performance cache |
+| **🚀 Déploiement** | [PRODUCTION_DEPLOYMENT.md](./PRODUCTION_DEPLOYMENT.md) - Déploiement production |
+| **🛠️ Outils** | [TOOLS_GUIDE.md](./TOOLS_GUIDE.md) - Guide des outils |
+| **📖 API** | [API_DOCUMENTATION.md](./API_DOCUMENTATION.md) - Documentation API<br>[swagger/](./swagger/) - Spécifications OpenAPI |
+| **📝 Projet** | [CHANGELOG.md](./CHANGELOG.md) - Historique des versions<br>[ROADMAP.md](./ROADMAP.md) - Feuille de route<br>[CONTRIBUTING.md](./CONTRIBUTING.md) - Guide du contributeur |
 
-#### ✅ Système d'emails
-- Templates Handlebars professionnels
-- 7 types d'emails automatisés
-- Design responsive mobile/desktop
-- Intégration QR codes dans emails
+### � Documents par Cas d'Usage
 
-#### ✅ Sécurité
-- Authentification JWT sécurisée
-- Protection CSRF et XSS
-- Rate limiting par IP
-- WAF (Web Application Firewall)
-- Chiffrement des données sensibles
+#### Pour Démarrer
+1. [QUICK_START_GUIDE.md](./QUICK_START_GUIDE.md) - Installation et premier lancement
+2. [ENVIRONMENT_SETUP.md](./ENVIRONMENT_SETUP.md) - Configuration de l'environnement
 
-#### ✅ Infrastructure
-- Déploiement Docker multi-environnement
-- Pipeline CI/CD avec GitHub Actions
-- Monitoring avec alertes automatiques
-- Sauvegarde automatisée des données
+#### Pour Développer
+1. [TESTING.md](./TESTING.md) - Écrire et exécuter des tests
+2. [API_DOCUMENTATION.md](./API_DOCUMENTATION.md) - Utiliser l'API
+3. [TOOLS_GUIDE.md](./TOOLS_GUIDE.md) - Outils de développement
 
-### 🚀 Quick Start
+#### Pour Déployer
+1. [DOCKER_ENVIRONMENTS.md](./DOCKER_ENVIRONMENTS.md) - Environnements Docker
+2. [PRODUCTION_DEPLOYMENT.md](./PRODUCTION_DEPLOYMENT.md) - Déploiement production
+3. [DATABASE_PRODUCTION.md](./DATABASE_PRODUCTION.md) - Base de données en production
 
-> **⚠️ IMPORTANT : Utiliser YARN uniquement - npm n'est pas supporté**
-
-1. **Installation**
-   ```bash
-   git clone <repo>
-   cd billetterie
-   yarn install  # Utiliser UNIQUEMENT yarn
-   cp .env.example .env
-   ```
-
-2. **Base de données**
-   ```bash
-   yarn db:migrate
-   yarn db:generate
-   ```
-
-3. **Développement**
-   ```bash
-   yarn dev
-   ```
-
-4. **Tests**
-   ```bash
-   yarn test
-   yarn test:qr
-   yarn email:info
-   ```
-
-### 🔍 Scripts utiles
-
-| Script | Description |
-|--------|-------------|
-| `yarn test:qr` | Test du système QR codes |
-| `yarn qr:rotate` | Rotation manuelle QR codes |
-| `yarn email:info` | Information système email |
-| `yarn test:emails` | Test des templates email |
-
-### 🌐 API Endpoints
-
-#### Publiques
-- `GET /api/events` - Liste des événements
-- `POST /api/orders` - Création commande
-- `POST /api/payments/stripe` - Paiement Stripe
-
-#### QR Codes
-- `POST /api/qr/validate` - Validation QR code
-- `GET /api/qr/stats` - Statistiques QR
-- `POST /api/qr/rotate` - Rotation manuelle
-
-#### Tests (dev only)
-- `GET /api/test/emails` - Tests emails
-- `POST /api/test/emails/welcome` - Test email bienvenue
-
-### 📊 Monitoring
-
-- **Prometheus** : Métriques système et application
-- **Grafana** : Dashboards et visualisations
-- **Logs** : Pino avec rotation automatique
-- **Alertes** : Email et webhooks Discord/Slack
-
-### 🔐 Variables d'environnement
-
-Les variables critiques à configurer :
-
-```env
-# Base de données
-DATABASE_URL=postgresql://...
-
-# JWT & Sessions
-JWT_SECRET=...
-SESSION_SECRET=...
-
-# Stripe
-STRIPE_PUBLIC_KEY=pk_...
-STRIPE_SECRET_KEY=sk_...
-
-# Email (SMTP)
-EMAIL_HOST=smtp.gmail.com
-EMAIL_USER=...
-EMAIL_PASSWORD=...
-
-# QR Codes
-QR_ROTATION_SECRET=...
-```
-
-### 🏃‍♂️ Déploiement
-
-#### Production avec Docker
-```bash
-docker-compose -f docker-compose.prod.yml up -d
-```
-
-#### Kubernetes
-```bash
-kubectl apply -f k8s/production.yaml
-```
-
-### 🆘 Support et maintenance
-
-- **Logs** : `./monitoring/` pour tous les logs système
-- **Backups** : Automatiques quotidiens PostgreSQL
-- **Updates** : Patches sécurité appliqués automatiquement
-- **Monitoring** : Alertes 24/7 pour les incidents
-
-### 📈 Roadmap
-
-#### 🔄 En cours
-- [ ] Système de notifications push
-- [ ] API mobile React Native
-- [ ] Multi-langue (i18n)
-
-#### 🎯 Planifié
-- [ ] Programme de fidélité
-- [ ] Analytics avancés
-- [ ] IA pour recommandations événements
-- [ ] Intégration réseaux sociaux
+#### Pour Monitorer
+1. [METRICS.md](./METRICS.md) - Métriques et dashboards
+2. [CACHE_PERFORMANCE.md](./CACHE_PERFORMANCE.md) - Performance et cache
 
 ---
 
-## 📞 Contact et contribution
+## 📞 Support
 
-Pour toute question technique ou contribution :
-
-1. **Issues** : GitHub Issues pour bugs et features
-2. **Discussions** : GitHub Discussions pour questions
-3. **Security** : `security@billetterie.com` pour vulnérabilités
-4. **Support** : `support@billetterie.com` pour assistance
+- **📚 Documentation** : Consultez les guides dans ce dossier
+- **🐛 Bugs** : [GitHub Issues](https://github.com/CorentinCoulet/M-C-Billetterie/issues)
+- **💬 Questions** : [GitHub Discussions](https://github.com/CorentinCoulet/M-C-Billetterie/discussions)
+- **🔐 Sécurité** : Voir [SECURITY.md](../SECURITY.md)
 
 ---
 
-**🎊 Plateforme de billetterie complète et prête pour la production !**
+**Version** : 1.2.0 | **Dernière mise à jour** : 11 Octobre 2025

@@ -15,6 +15,11 @@
     "plugins": ["@stryker-mutator/typescript-checker"],
     "excludedMutations": []
   },
+  "jest": {
+    "projectType": "custom",
+    "configFile": "jest.config.js",
+    "enableFindRelatedTests": true
+  },
   "thresholds": {
     "high": 80,
     "low": 60,
@@ -37,5 +42,8 @@
     "dist",
     ".next",
     "tests"
-  ]
+  ],
+  "ignoreStatic": true,
+  "disableTypeChecks": false,
+  "_comment_property_based": "Pour tester les tests property-based, utilisez: yarn test:mutation --mutate='tests/property-based/**/*.test.ts' --concurrency=2 --htmlReporter.fileName='coverage/mutation-property-based/index.html'"
 }

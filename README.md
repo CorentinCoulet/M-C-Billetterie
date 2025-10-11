@@ -1,50 +1,53 @@
-# 🎫 Billetterie Platform
+# 🎫 Plateforme de Billetterie
 
-**Modern ticketing platform built with Next.js 15, TypeScript, Prisma and PostgreSQL**
+**Plateforme de billetterie moderne construite avec Next.js 15, TypeScript, Prisma et PostgreSQL**
 
-![Version](https://img.shields.io/badge/version-1.2.0-blue)
-![Node.js](https://img.shields.io/badge/Node.js-18+-green)
-![TypeScript](https://img.shields.io/badge/TypeScript-5.8.3-blue)
-![Next.js](https://img.shields.io/badge/Next.js-15-black)
-![Prisma](https://img.shields.io/badge/Prisma-6.10.1-2D3748)
+[![Version](https://img.shields.io/badge/version-1.2.0-blue)](./docs/CHANGELOG.md)
+[![License](https://img.shields.io/badge/license-MIT-green)](./LICENSE)
+[![Node.js](https://img.shields.io/badge/Node.js-18+-green)](https://nodejs.org)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.8.3-blue)](https://www.typescriptlang.org/)
+[![Next.js](https://img.shields.io/badge/Next.js-15-black)](https://nextjs.org/)
+[![Prisma](https://img.shields.io/badge/Prisma-6.15-2D3748)](https://www.prisma.io/)
+[![Tests](https://img.shields.io/badge/tests-1277%20passing-success)](./docs/TESTING.md)
+[![Coverage](https://img.shields.io/badge/coverage-80%25-success)](./coverage)
+[![Security](https://img.shields.io/badge/security-A%2B-success)](./SECURITY.md)
 
-## 📚 Complete Documentation
+## 📚 Documentation Complète
 
-> **📖 All technical documentation is now organized in the [`/docs`](./docs/) folder**
+> **📖 Toute la documentation technique est organisée dans [`/docs`](./docs/)**
 
 | Document | Description |
 |----------|-------------|
-| [**📋 Overview**](./docs/README.md) | Main guide and documentation index |
-| [**🔐 QR System**](./docs/QR_SYSTEM.md) | Secure QR code system with rotation |
-| [**📧 Email System**](./docs/EMAIL_SYSTEM.md) | Email templates and SMTP service |
-| [**🛡️ Security**](./docs/SECURITY.md) | Complete security guide |
-| [**📝 Changelog**](./docs/CHANGELOG.md) | Version history and changes |
-| [**🤝 Contributing**](./docs/CONTRIBUTING.md) | Contributor guide |
+| [**📋 Index Documentation**](./docs/README.md) | Index complet de toute la documentation |
+| [**� Démarrage Rapide**](./docs/QUICK_START_GUIDE.md) | Guide de démarrage complet |
+| [**🛠️ Guide des Outils**](./docs/TOOLS_GUIDE.md) | Outils de développement et monitoring |
+| [**� Tests**](./docs/TESTING.md) | Guide complet des tests |
+| [**🔒 Sécurité**](./SECURITY.md) | Politique de sécurité et reporting |
 
-## ⚡ Quick Start
+## ⚡ Démarrage Rapide
 
-> **⚠️ IMPORTANT: This project uses YARN exclusively!**  
+> **⚠️ IMPORTANT : Ce projet utilise YARN exclusivement !**  
 > Ne pas utiliser `npm` - cela peut causer des conflits de dépendances.
 
 ```bash
-# Clone and install
+# Cloner et installer
 git clone <repo>
 cd billetterie
 yarn install
 
 # Configuration
 cp .env.example .env
-# Edit .env with your settings
+# Modifiez .env avec vos paramètres
 
-# Database
+# Base de données
 yarn db:migrate
 yarn db:generate
 
-# Start development
+# Démarrer le développement
 yarn dev
 ```
 
-## 📦 Package Manager
+## 📦 Gestionnaire de Paquets
 
 **YARN UNIQUEMENT** - Ce projet est optimisé pour yarn.
 
@@ -59,194 +62,175 @@ yarn add <pkg>   # Ajouter une dépendance
 # Ce projet utilise YARN exclusivement
 ```
 
-## ✨ Main Features
+## ✨ Fonctionnalités Principales
 
-### 🔐 **Authentication & Security**
-- **Secure JWT** with HTTPOnly sessions
-- **Rate limiting** anti-bruteforce protection
-- **CSRF/XSS protection** built-in
+### 🔐 **Authentification & Sécurité**
+- **JWT sécurisé** avec sessions HTTPOnly
+- **Rate limiting** protection anti-bruteforce
+- **Protection CSRF/XSS** intégrée
 - **WAF** (Web Application Firewall)
 
-### 🎫 **Ticketing System**
-- **Secure QR codes** with automatic 12h rotation
-- **Real-time validation** at event entrances
-- **Automated emails** with professional templates
-- **Stripe payments** integrated
+### 🎫 **Système de Billetterie**
+- **Codes QR sécurisés** avec rotation automatique toutes les 12h
+- **Validation en temps réel** aux entrées d'événements
+- **Emails automatisés** avec templates professionnels
+- **Paiements Stripe** intégrés
 
-### 📧 **Email System**
-- **7 Handlebars templates** responsive
-- **Professional design** mobile/desktop
-- **Dynamic variables** and formatting helpers
-- **Performance cache** for templates
+### 📧 **Système d'Email**
+- **7 templates Handlebars** responsives
+- **Design professionnel** mobile/desktop
+- **Variables dynamiques** et helpers de formatage
+- **Cache de performance** pour les templates
 
 ### 🏗️ **Infrastructure**
-- **Next.js 15** with App Router
+- **Next.js 15** avec App Router
 - **PostgreSQL** + Prisma ORM
-- **Docker** multi-environment
+- **Docker** multi-environnements
 - **Monitoring** Prometheus + Grafana
 
-## 🧪 Tests and Development
+## 🛠️ Outils d'Analyse & de Gestion
+
+Accédez à des outils puissants pour la gestion de la base de données et du projet :
 
 ```bash
-# System tests
-yarn test:qr             # Test QR codes
-yarn email:info          # Email system info
+# Démarrage rapide - Lancer tous les outils
+.\scripts-tools.ps1
 
-# Development tests  
-yarn test                # Unit tests
-yarn type-check          # TypeScript verification
+# Outils disponibles :
+# 🗄️  Adminer (Interface PostgreSQL)      → http://localhost:8080 (prod) / 8081 (dev)
+# 🐘 pgAdmin (PostgreSQL Avancé)          → http://localhost:8082
+# 🔴 Redis Commander                      → http://localhost:8083 (prod) / 8084 (dev)
+# 🐳 Portainer (Interface Docker)         → http://localhost:9000
+# 📧 Mailhog (Test d'emails)              → http://localhost:8025
+# 📈 Grafana (Monitoring)                 → http://localhost:3001
+# 🔍 Prometheus (Métriques)               → http://localhost:9090
 
-# Test API (dev only)
+# Commandes manuelles avec profiles
+docker-compose --profile tools up -d
+```
+
+📖 **Documentation complète** : [TOOLS_GUIDE.md](./docs/TOOLS_GUIDE.md)
+
+## 🧪 Tests et Développement
+
+```bash
+# Tests système
+yarn test:qr             # Test des codes QR
+yarn email:info          # Infos système email
+
+# Tests de développement  
+yarn test                # Tests unitaires
+yarn type-check          # Vérification TypeScript
+
+# Test API (dev uniquement)
 curl http://localhost:3000/api/test/emails
 ```
 
-## 🔧 Available Scripts
+## 🔧 Scripts Disponibles
 
-#### **Users**
+#### **Utilisateurs**
 ```
-GET    /api/users              # User list (admin)
-GET    /api/users/:id          # User details
-PUT    /api/users/:id          # Modify user
-DELETE /api/users/:id          # Delete user
-```
-
-### **Health Check**
-```
-GET    /health                 # API status
+GET    /api/users              # Liste des utilisateurs (admin)
+GET    /api/users/:id          # Détails d'un utilisateur
+PUT    /api/users/:id          # Modifier un utilisateur
+DELETE /api/users/:id          # Supprimer un utilisateur
 ```
 
-## 🛠️ Technologies
-
-### **Backend Core**
-- **Express.js** - Fast web framework
-- **TypeScript** - Static typing
-- **Prisma** - Modern and type-safe ORM
-- **PostgreSQL** - Relational database
-- **Zod** - Schema validation
-
-### **Authentication & Security**
-- **JWT** - Authentication tokens
-- **bcryptjs** - Password hashing
-- **cookie-parser** - Cookie management
-- **CORS** - Cross-origin management
-
-### **External Services**
-- **Stripe** - Secure payments
-- **Nodemailer** - Email sending
-- **QRCode** - QR code generation
-- **Multer** - File upload
-
-### **Infrastructure**
-- **Docker** - Containerization
-- **Docker Compose** - Orchestration
-
-## 🏗️ Architecture
-
+### **Vérification de Santé**
 ```
-src/
-├── modules/                   # Business modules
-│   ├── auth/                  # Authentication
-│   ├── user/                  # User management
-│   ├── event/                 # Event management
-│   ├── ticket/                # Ticketing system
-│   ├── order/                 # Order management
-│   └── payment/               # Payment system
+GET    /health                 # Statut de l'API
+```
+
+## 🛠️ Stack Technique
+
+- **Framework** : Next.js 15 + TypeScript + React 18
+- **Base de données** : PostgreSQL 16 + Prisma ORM
+- **Cache** : Redis 7
+- **Authentification** : JWT + Better Auth
+- **Paiements** : Stripe
+- **Infrastructure** : Docker + Docker Compose
+- **Monitoring** : Prometheus + Grafana
+- **Tests** : Jest + Playwright + Stryker
 | Script | Description |
 |--------|-------------|
-| `yarn dev` | Development startup |
-| `yarn build` | Production build |
-| `yarn test` | Unit tests |
-| `yarn test:qr` | QR code system tests |
-| `yarn email:info` | Email system information |
-| `yarn db:migrate` | Database migrations |
-| `docker-compose up -d` | Standard mode (3 containers) |
-| `docker-compose -f docker-compose.yml -f docker-compose.dev.yml up -d` | Development mode |
-| `docker-compose -f docker-compose.yml -f docker-compose.prod.yml up -d` | Production mode |
-| `docker-compose -f docker-compose.yml -f docker-compose.monitoring.yml up -d` | Complete monitoring mode |
+| `yarn dev` | Démarrage en développement |
+| `yarn build` | Build de production |
+| `yarn test` | Tests unitaires |
+| `yarn test:qr` | Tests du système QR |
+| `yarn email:info` | Informations système email |
+| `yarn db:migrate` | Migrations de base de données |
+| `docker-compose up -d` | Mode standard (3 conteneurs) |
+| `docker-compose -f docker-compose.yml -f docker-compose.dev.yml up -d` | Mode développement |
+| `docker-compose -f docker-compose.yml -f docker-compose.prod.yml up -d` | Mode production |
+| `docker-compose -f docker-compose.yml -f docker-compose.monitoring.yml up -d` | Mode monitoring complet |
 
-## 🏗️ Technical Architecture
 
-```
-src/
-├── app/                      # Next.js App Router
-│   ├── api/                  # API Routes
-│   ├── events/               # Event pages  
-│   └── tickets/              # Ticket pages
-├── services/                 # Business services
-│   ├── emailService.ts       # Handlebars email service
-│   ├── ticketQRService.ts    # QR code service
-│   └── qrRotationService.ts  # Automatic QR rotation
-├── templates/emails/         # Handlebars templates
-├── types/                    # TypeScript types
-├── config/                   # Configuration
-└── lib/                      # Utilities
-```
 
-## 🛡️ Security and Monitoring
+## 🛡️ Sécurité et Monitoring
 
-- ✅ **WAF** with Nginx and ModSecurity
-- ✅ **Rate limiting** by IP and user  
-- ✅ **Rotating QR codes** every 12h
-- ✅ **AES-256 encryption** for sensitive data
+- ✅ **WAF** avec Nginx et ModSecurity
+- ✅ **Rate limiting** par IP et utilisateur  
+- ✅ **Codes QR rotatifs** toutes les 12h
+- ✅ **Chiffrement AES-256** pour les données sensibles
 - ✅ **Monitoring** Prometheus + Grafana
-- ✅ **Audit logs** for all critical actions
-- ✅ **Automated backup** PostgreSQL
+- ✅ **Logs d'audit** pour toutes les actions critiques
+- ✅ **Sauvegarde automatisée** PostgreSQL
 
-## 🚀 Deployment
+## 🚀 Déploiement
 
-### 🐳 Docker Environments
+### 🐳 Environnements Docker
 
-#### **Development Mode** (3 containers)
+#### **Mode Développement** (3 conteneurs)
 ```bash
-# Start with hot reload and debug
+# Démarrer avec hot reload et debug
 docker-compose -f docker-compose.yml -f docker-compose.dev.yml up -d
 
-# Real-time logs
+# Logs en temps réel
 docker-compose -f docker-compose.yml -f docker-compose.dev.yml logs -f web
 
-# Stop
+# Arrêter
 docker-compose -f docker-compose.yml -f docker-compose.dev.yml down
 ```
 
-#### **Production Mode** (6-8 containers)
+#### **Mode Production** (6-8 conteneurs)
 ```bash
-# Start with SSL, monitoring and security
+# Démarrer avec SSL, monitoring et sécurité
 docker-compose -f docker-compose.yml -f docker-compose.prod.yml up -d
 
-# With automatic SSL certificates
+# Avec certificats SSL automatiques
 docker-compose -f docker-compose.yml -f docker-compose.prod.yml --profile ssl up -d
 
-# With automated backup
+# Avec sauvegarde automatisée
 docker-compose -f docker-compose.yml -f docker-compose.prod.yml --profile backup up -d
 
-# Stop
+# Arrêter
 docker-compose -f docker-compose.yml -f docker-compose.prod.yml down
 ```
 
-#### **Complete Monitoring Mode** (9 containers)
+#### **Mode Monitoring Complet** (9 conteneurs)
 ```bash
-# Start with extended monitoring (Prometheus, Grafana, Exporters)
+# Démarrer avec monitoring étendu (Prometheus, Grafana, Exporters)
 docker-compose -f docker-compose.yml -f docker-compose.monitoring.yml up -d
 
-# Access monitoring services
+# Accéder aux services de monitoring
 # - Grafana: http://localhost:3001
 # - Prometheus: http://localhost:9090
 # - AlertManager: http://localhost:9093
 
-# Stop
+# Arrêter
 docker-compose -f docker-compose.yml -f docker-compose.monitoring.yml down
 ```
 
-#### **Standard Mode** (3 containers - basic configuration)
+#### **Mode Standard** (3 conteneurs - configuration de base)
 ```bash
-# Simple startup for testing
+# Démarrage simple pour tester
 docker-compose up -d
 
-# Stop
+# Arrêter
 docker-compose down
 ```
 
-### Critical Environment Variables
+### Variables d'Environnement Critiques
 ```env
 DATABASE_URL=postgresql://...
 JWT_SECRET=...
@@ -255,40 +239,51 @@ EMAIL_HOST=smtp.gmail.com
 QR_ROTATION_SECRET=...
 ```
 
-## ✨ Current Status
+## ✨ État Actuel
 
-### ✅ **Operational Systems (v1.2.0)**
-- **Secure JWT authentication** with sessions
-- **Rotating QR codes** with real-time validation
-- **Automated emails** with 7 professional templates
-- **Integrated Stripe payments** secure
-- **Multi-environment Docker infrastructure**
-- **Monitoring & alerts** Prometheus + Grafana
-- **WAF and security** production-ready
+### ✅ **Systèmes Opérationnels (v1.2.0)**
+- **Authentification JWT sécurisée** avec sessions
+- **Codes QR rotatifs** avec validation en temps réel
+- **Emails automatisés** avec 7 templates professionnels
+- **Paiements Stripe intégrés** sécurisés
+- **Infrastructure Docker multi-environnements**
+- **Monitoring & alertes** Prometheus + Grafana
+- **WAF et sécurité** prêts pour la production
 
-### 🎯 **Roadmap**
-- 📱 **Mobile app** React Native (Q3 2025)
-- 🔔 **Push notifications** real-time (Q3 2025)  
-- 🌍 **Multi-language** i18n (Q4 2025)
-- 🤖 **AI recommendations** events (2026)
+### 🎯 **Feuille de Route**
+- 📱 **Application mobile** React Native (T3 2025)
+- 🔔 **Notifications push** en temps réel (T3 2025)  
+- 🌍 **Multi-langue** i18n (T4 2025)
+- 🤖 **Recommandations IA** événements (2026)
 
-## 🎊 Production-Ready Platform!
+## 🎊 Plateforme Prête pour la Production !
 
-This platform is **complete** and **operational** for immediate deployment:
+Cette plateforme est **complète** et **opérationnelle** pour un déploiement immédiat :
 
-- ✅ **Security**: WAF, rate limiting, encryption, audits
-- ✅ **Performance**: Cache, optimizations, monitoring
-- ✅ **Scalability**: Microservices ready architecture
-- ✅ **Maintenance**: Structured logs, automated backups
-- ✅ **Documentation**: Complete and up-to-date in `/docs`
+- ✅ **Sécurité** : WAF, rate limiting, chiffrement, audits
+- ✅ **Performance** : Cache, optimisations, monitoring
+- ✅ **Scalabilité** : Architecture prête pour les microservices
+- ✅ **Maintenance** : Logs structurés, sauvegardes automatisées
+- ✅ **Documentation** : Complète et à jour dans `/docs`
 
 ## 📞 Support
 
-- **📚 Documentation**: [`/docs`](./docs/) for technical guides
-- **🐛 Issues**: GitHub Issues for bugs and features  
-- **💬 Questions**: GitHub Discussions for help
-- **🔐 Security**: `security@billetterie.com` for vulnerabilities
+- **📚 Documentation** : [`/docs`](./docs/README.md) - Index complet
+- **🐛 Bugs** : [GitHub Issues](https://github.com/CorentinCoulet/M-C-Billetterie/issues)
+- **💬 Questions** : [GitHub Discussions](https://github.com/CorentinCoulet/M-C-Billetterie/discussions)
+- **🔐 Sécurité** : [SECURITY.md](./SECURITY.md)
+- **🤝 Contribution** : [CONTRIBUTING.md](./docs/CONTRIBUTING.md)
+
+## 🗺️ Roadmap
+
+Voir [ROADMAP.md](./docs/ROADMAP.md) pour la feuille de route complète.
+
+## 📜 Licence
+
+Ce projet est sous licence MIT. Voir le fichier [LICENSE](./LICENSE) pour plus de détails.
 
 ---
 
-**🚀 Developed with ❤️ - Modern and secure ticketing platform**
+**🚀 Développé avec ❤️ - Plateforme de billetterie moderne et sécurisée**
+
+**Version actuelle** : 1.2.0 | **Dernière mise à jour** : 11 Octobre 2025

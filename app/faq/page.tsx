@@ -67,8 +67,7 @@ export default function FAQPage() {
   }
 
   return (
-    <div className="min-h-screen pt-24 pb-12">
-      <div className="max-w-4xl mx-auto px-6">
+    <div className="max-w-4xl mx-auto px-6">
         {/* Header */}
         <motion.div 
           initial={{ opacity: 0, y: 30 }}
@@ -202,6 +201,5 @@ export default function FAQPage() {
           </div>
         </motion.div>
       </div>
-    </div>
   )
 }

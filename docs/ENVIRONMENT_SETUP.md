@@ -112,9 +112,183 @@ console.log('AES_SECRET=' + crypto.randomBytes(32).toString('hex'));
 
 4. Tester la validation :
 ```bash
-npm run build
+yarn build
 # Si tout est OK : ✅ Environment variables validated successfully
 # Si erreur : ❌ Invalid environment variables: ...
+```
+
+---
+
+## 🚀 Modes de Développement
+
+Le projet offre plusieurs modes de développement adaptés à différents besoins :
+
+### 1. Mode Standard (`yarn dev`)
+
+**Quand l'utiliser** : Développement local standard
+
+```bash
+yarn dev
+```
+
+- ✅ Démarre Next.js sur `http://localhost:3000`
+- ✅ Hot reload activé
+- ✅ Fast Refresh React
+- ✅ TypeScript watch mode
+- ✅ ESLint désactivé pour plus de rapidité
+
+**Configuration** : Utilise `.env` local
+
+---
+
+### 2. Mode Docker (`yarn dev:docker`)
+
+**Quand l'utiliser** : Développement en environnement conteneurisé
+
+```bash
+yarn dev:docker
+```
+
+- ✅ Démarre Next.js sur `0.0.0.0:3001` (accessible depuis Docker)
+- ✅ Compatible avec `docker-compose.dev.yml`
+- ✅ Hot reload activé avec polling pour Docker
+- ✅ Accès depuis l'hôte et d'autres containers
+
+**Configuration** : 
+- Port : `3001` (pour ne pas conflictuer avec le mode standard)
+- Host : `0.0.0.0` (écoute sur toutes les interfaces)
+
+**Démarrage complet avec Docker** :
+```bash
+# Démarrer tous les services (app + PostgreSQL + Redis + Mailhog)
+docker-compose -f docker-compose.yml -f docker-compose.dev.yml up -d
+
+# Voir les logs en temps réel
+docker-compose -f docker-compose.yml -f docker-compose.dev.yml logs -f web-dev
+```
+
+---
+
+### 3. Mode Turbo (`yarn dev:turbo`)
+
+**Quand l'utiliser** : Développement ultra-rapide (expérimental)
+
+```bash
+yarn dev:turbo
+```
+
+- ⚡ Utilise Turbopack (remplaçant de Webpack)
+- ⚡ Compilation jusqu'à 10x plus rapide
+- ⚡ Hot reload quasi-instantané
+- ⚠️ Expérimental (peut avoir des bugs)
+
+**Note** : Certaines fonctionnalités peuvent ne pas être compatibles avec Turbopack.
+
+---
+
+### 4. Mode Debug (`yarn dev:debug`)
+
+**Quand l'utiliser** : Débugger avec Chrome DevTools ou VS Code
+
+```bash
+yarn dev:debug
+```
+
+- 🔍 Active l'inspecteur Node.js
+- 🔍 Accessible via `chrome://inspect` dans Chrome
+- 🔍 Breakpoints, profiling, heap snapshots
+- 🔍 Port de debug : `9229`
+
+**Utilisation avec VS Code** :
+
+Créez `.vscode/launch.json` :
+```json
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "type": "node",
+      "request": "attach",
+      "name": "Debug Next.js",
+      "port": 9229,
+      "skipFiles": ["<node_internals>/**"]
+    }
+  ]
+}
+```
+
+Puis :
+1. Lancez `yarn dev:debug`
+2. Appuyez sur `F5` dans VS Code
+3. Placez des breakpoints dans votre code
+
+---
+
+### Comparaison des Modes
+
+| Mode | Port | Vitesse | Stabilité | Usage |
+|------|------|---------|-----------|-------|
+| **Standard** | 3000 | ⚡⚡⚡ | ✅✅✅ | Développement quotidien |
+| **Docker** | 3001 | ⚡⚡ | ✅✅✅ | Tests d'intégration, environnement isolé |
+| **Turbo** | 3000 | ⚡⚡⚡⚡⚡ | ⚠️⚠️ | Développement rapide (expérimental) |
+| **Debug** | 3000 (+ 9229) | ⚡⚡ | ✅✅✅ | Débogage approfondi |
+
+---
+
+### Recommandations par Scénario
+
+#### 🎯 Développement Frontend
+```bash
+yarn dev  # Mode standard, rapide et stable
+```
+
+#### 🎯 Tests d'Intégration
+```bash
+docker-compose -f docker-compose.yml -f docker-compose.dev.yml up -d
+# Tous les services (DB, Redis, Email) sont disponibles
+```
+
+#### 🎯 Débogage d'un Bug Complexe
+```bash
+yarn dev:debug  # Avec Chrome DevTools ou VS Code
+```
+
+#### 🎯 Performance Maximale
+```bash
+yarn dev:turbo  # Compilation ultra-rapide (attention : expérimental)
+```
+
+---
+
+### Ports Utilisés
+
+| Service | Mode Standard | Mode Docker |
+|---------|---------------|-------------|
+| Application | 3000 | 3001 |
+| PostgreSQL | 5432 | 5433 |
+| Redis | 6379 | 6380 |
+| Mailhog Web UI | - | 8025 |
+| Mailhog SMTP | - | 1025 |
+| Debug Port | 9229 | 9229 |
+
+---
+
+### Variables d'Environnement par Mode
+
+Toutes les modes utilisent le fichier `.env`, mais certains comportements changent :
+
+```env
+# Pour le mode Docker
+NODE_ENV=development
+HOSTNAME=0.0.0.0
+
+# Pour le mode standard
+NODE_ENV=development
+HOSTNAME=localhost
+
+# Pour tous les modes
+DATABASE_URL=postgresql://...
+REDIS_URL=redis://...
 ```
 
 ## ⚠️ Sécurité
