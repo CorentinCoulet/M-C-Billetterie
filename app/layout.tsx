@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import { LayoutWithNavigation } from '../src/components/layout/LayoutWithNavigation'
 import { Toaster } from '../src/components/ui/sonner'
 import { AppProvider } from '../src/context/AppContext'
 import './globals.css'
@@ -19,7 +20,9 @@ export default function RootLayout({
     <html lang="fr" suppressHydrationWarning>
       <body suppressHydrationWarning>
         <AppProvider>
-          {children}
+          <LayoutWithNavigation>
+            {children}
+          </LayoutWithNavigation>
           <Toaster />
         </AppProvider>
       </body>

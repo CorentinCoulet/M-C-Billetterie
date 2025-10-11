@@ -1,6 +1,7 @@
 import { logger } from '@/lib/logger';
 import { NextRequest } from 'next/server';
 import { z } from 'zod';
+import { invalidateDashboardStatsCache } from '../../../src/lib/cache-helpers';
 import {
     createMethodHandler,
     NextApiResponse,
@@ -55,6 +56,10 @@ async function handleCreateOrder(request: NextRequest) {
       };
 
       const order = await orderServiceModule.createOrder(orderData);
+
+      // Invalidate dashboard cache after order creation
+      await invalidateDashboardStatsCache(user.id); // User-specific stats
+      await invalidateDashboardStatsCache(); // Global stats
 
       return NextApiResponse.success(order, 'Commande créée avec succès', 201);
     } catch (error: any) {

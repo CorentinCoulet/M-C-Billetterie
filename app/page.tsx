@@ -14,8 +14,7 @@ export default function HomePage() {
   }, [router])
 
   return (
-    <main className="min-h-screen pt-24 pb-12">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6">
+    <div className="max-w-6xl mx-auto px-4 sm:px-6">
         {/* Hero Section */}
         <motion.section 
           initial={{ opacity: 0, y: 30 }}
@@ -119,6 +118,5 @@ export default function HomePage() {
           </Button>
         </motion.section>
       </div>
-    </main>
   )
 }

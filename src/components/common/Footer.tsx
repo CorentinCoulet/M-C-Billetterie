@@ -1,5 +1,6 @@
 'use client'
 
+import { PrivacyModal, TermsModal } from '../LegalModal'
 import { Button } from '../ui/button'
 
 interface FooterProps {
@@ -19,38 +20,79 @@ export function Footer({ navigate }: FooterProps) {
           </div>
           <div>
             <h4 className="font-semibold mb-4">Navigation</h4>
-            <div className="space-y-2">
-              <Button variant="ghost" size="sm" onClick={() => navigate('events')} className="p-0 h-auto">
+            <div className="flex flex-col space-y-2">
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={() => navigate('events')} 
+                className="p-0 h-auto justify-start text-muted-foreground hover:text-primary hover:translate-x-1 transition-all duration-200 cursor-pointer"
+              >
                 Événements
               </Button>
-              <Button variant="ghost" size="sm" onClick={() => navigate('about')} className="p-0 h-auto">
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={() => navigate('about')} 
+                className="p-0 h-auto justify-start text-muted-foreground hover:text-primary hover:translate-x-1 transition-all duration-200 cursor-pointer"
+              >
                 À propos
               </Button>
-              <Button variant="ghost" size="sm" onClick={() => navigate('contact')} className="p-0 h-auto">
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={() => navigate('contact')} 
+                className="p-0 h-auto justify-start text-muted-foreground hover:text-primary hover:translate-x-1 transition-all duration-200 cursor-pointer"
+              >
                 Contact
               </Button>
             </div>
           </div>
           <div>
             <h4 className="font-semibold mb-4">Support</h4>
-            <div className="space-y-2">
-              <Button variant="ghost" size="sm" onClick={() => navigate('faq')} className="p-0 h-auto">
-                FAQ
+            <div className="flex flex-col space-y-2">
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={() => navigate('faq')} 
+                className="p-0 h-auto justify-start text-muted-foreground hover:text-primary hover:translate-x-1 transition-all duration-200 cursor-pointer"
+              >
+                FAQ 
               </Button>
-              <Button variant="ghost" size="sm" onClick={() => navigate('help')} className="p-0 h-auto">
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={() => navigate('help')} 
+                className="p-0 h-auto justify-start text-muted-foreground hover:text-primary hover:translate-x-1 transition-all duration-200 cursor-pointer"
+              >
                 Aide
               </Button>
             </div>
           </div>
           <div>
             <h4 className="font-semibold mb-4">Légal</h4>
-            <div className="space-y-2">
-              <Button variant="ghost" size="sm" className="p-0 h-auto">
-                Conditions d'utilisation
-              </Button>
-              <Button variant="ghost" size="sm" className="p-0 h-auto">
-                Politique de confidentialité
-              </Button>
+            <div className="flex flex-col space-y-2">
+              <TermsModal 
+                trigger={
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    className="p-0 h-auto justify-start text-muted-foreground hover:text-primary hover:translate-x-1 transition-all duration-200 cursor-pointer"
+                  >
+                    Conditions d'utilisation
+                  </Button>
+                }
+              />
+              <PrivacyModal 
+                trigger={
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    className="p-0 h-auto justify-start text-muted-foreground hover:text-primary hover:translate-x-1 transition-all duration-200 cursor-pointer"
+                  >
+                    Politique de confidentialité
+                  </Button>
+                }
+              />
             </div>
           </div>
         </div>

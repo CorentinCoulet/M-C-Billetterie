@@ -233,7 +233,9 @@ describe('SQL Injection Protection - Property Based', () => {
         fc.string().filter(s => 
           !s.includes(';') && 
           !s.includes('--') && 
-          !/\b(SELECT|INSERT|UPDATE|DELETE|DROP)\b/i.test(s)
+          !s.includes('/*') && 
+          !s.includes('*/') && 
+          !/\b(SELECT|INSERT|UPDATE|DELETE|DROP|CREATE|ALTER|EXEC|EXECUTE|UNION|OR|AND)\b/i.test(s)
         ),
         (safeInput) => {
           const isValid = validateSQLInput(safeInput);

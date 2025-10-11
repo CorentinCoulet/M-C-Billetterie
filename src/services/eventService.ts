@@ -24,22 +24,6 @@ type TicketBasic = {
   metadata: JsonValue | null;
 }
 
-type TicketWithOrder = TicketBasic & {
-  order: {
-    id: string;
-    userId: string;
-    totalPrice: number;
-    status: 'draft' | 'pending_payment' | 'paid' | 'cancelled';
-    promoCode: string | null;
-    discountAmount: number | null;
-    currency: string;
-    metadata: JsonValue | null;
-    createdAt: Date;
-    updatedAt: Date;
-    tickets: { id: string }[];
-  } | null;
-}
-
 type ReviewBasic = {
   id: string;
   userId: string;
@@ -479,7 +463,7 @@ export class EventService extends BaseService<EventWithRelations> {
       
       safeLogger.info('Event caches invalidated');
     } catch (error) {
-      safeLogger.error('Error invalidating event caches:', error);
+      safeLogger.error('Error invalidating event caches', error);
     }
   }
 
@@ -504,7 +488,7 @@ export class EventService extends BaseService<EventWithRelations> {
       
       safeLogger.info('Event cache warmed up successfully');
     } catch (error) {
-      safeLogger.error('Error warming up event cache:', error);
+      safeLogger.error('Error warming up event cache', error);
     }
   }
 

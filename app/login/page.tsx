@@ -30,7 +30,7 @@ export default function LoginPage() {
   }, [router])
 
   return (
-    <div className="min-h-screen">
+    <>
       <Background />
       <AuthPage 
         navigate={navigate}
@@ -40,6 +40,6 @@ export default function LoginPage() {
         setCurrentUser={setCurrentUser}
         logout={logout}
       />
-    </div>
+    </>
   )
 }

@@ -1,6 +1,6 @@
+import { getCachedDashboardStats } from '@/lib/cache-helpers';
 import { logger } from '@/lib/logger';
 import { createMethodHandler, NextApiResponse, withAuth } from '@/lib/next-api-helpers';
-import { DashboardService } from '@/services/dashboard.service';
 import { UserRole } from '@/types/enums/user.enum';
 import { NextRequest } from 'next/server';
 
@@ -22,14 +22,17 @@ async function handleGet(request: NextRequest) {
 
       // Check if user has permission for this role
       if (user.role !== role && user.role !== UserRole.ADMIN) {
-        logger.warn({ userId: user.id, userRole: user.role, requestedRole: role }, 'Insufficient permissions for dashboard stats');
+        logger.warn({ userId: user.role, requestedRole: role }, 'Insufficient permissions for dashboard stats');
         return NextApiResponse.forbidden('Insufficient permissions');
       }
 
-      // Get dashboard stats
-      const stats = await DashboardService.getDashboardStats(user.id, role);
+      // Get dashboard stats with cache
+      // Use cached stats for better performance (2 min cache)
+      const stats = role === UserRole.ADMIN 
+        ? await getCachedDashboardStats() // Global stats for admin
+        : await getCachedDashboardStats(user.id); // User-specific stats
 
-      logger.info({ userId: user.id, role }, 'Dashboard stats retrieved successfully');
+      logger.info({ userId: user.id, role }, 'Dashboard stats retrieved successfully from cache');
 
       return NextApiResponse.success(stats);
 

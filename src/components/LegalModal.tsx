@@ -346,11 +346,11 @@ export function LegalModal({ type, trigger }: LegalModalProps) {
       <DialogTrigger asChild>
         {trigger}
       </DialogTrigger>
-      <DialogContent className="max-w-4xl w-full h-[80vh] max-h-[600px] p-0 overflow-hidden">
-        <DialogHeader className="px-6 py-4 border-b">
-          <DialogTitle>{title}</DialogTitle>
+      <DialogContent className="max-w-4xl w-full h-[85vh] max-h-[700px] p-0 overflow-hidden flex flex-col">
+        <DialogHeader className="px-6 py-5 border-b bg-gradient-to-r from-primary/5 to-accent/5">
+          <DialogTitle className="text-xl font-bold">{title}</DialogTitle>
         </DialogHeader>
-        <div className="flex-1 overflow-y-auto px-6 py-4">
+        <div className="flex-1 overflow-y-auto px-6 py-6 scrollbar-thin scrollbar-thumb-gray-300 hover:scrollbar-thumb-gray-400 dark:scrollbar-thumb-gray-700 dark:hover:scrollbar-thumb-gray-600">
           {content}
         </div>
       </DialogContent>

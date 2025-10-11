@@ -2,11 +2,11 @@ import { NextRequest } from 'next/server';
 import { z } from 'zod';
 import { logger } from '../../../../lib/logger';
 import {
-  createMethodHandler,
-  NextApiResponse,
-  validateBody,
+    createMethodHandler,
+    NextApiResponse,
+    validateBody,
 } from '../../../../src/lib/next-api-helpers';
-import ticketService from '../../../../src/services/ticketQRService';
+import ticketService from '../../../../src/services/ticketService';
 
 const validateQRSchema = z.object({
   qrContent: z.string().min(1, 'QR content is required'),

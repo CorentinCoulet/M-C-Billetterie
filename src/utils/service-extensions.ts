@@ -3,10 +3,10 @@
  */
 
 import { Prisma } from '../generated/prisma';
-import { TicketService } from '../services/ticketQRService';
+import { TicketService } from '../services/ticketService';
 
 // TicketService extensions
-declare module '../services/ticketQRService' {
+declare module '../services/ticketService' {
   interface TicketService {
     checkAvailability(eventId: string, quantity: number): Promise<boolean>;
     reserveTickets(eventId: string, userId: string, quantity: number): Promise<any>;

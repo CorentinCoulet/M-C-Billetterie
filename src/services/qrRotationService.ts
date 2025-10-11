@@ -1,6 +1,6 @@
 import { logger } from '@/lib/logger';
 import prisma from '../lib/prisma';
-import { TicketService } from './ticketQRService';
+import { TicketService } from './ticketService';
 
 /**
  * QR Code Rotation Service

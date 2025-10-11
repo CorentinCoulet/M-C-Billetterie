@@ -44,6 +44,12 @@ jest.mock('@/lib/logger', () => ({
     error: jest.fn(),
     warn: jest.fn(),
   },
+  safeLogger: {
+    info: jest.fn(),
+    error: jest.fn(),
+    warn: jest.fn(),
+    debug: jest.fn(),
+  },
 }));
 
 describe('EventService', () => {

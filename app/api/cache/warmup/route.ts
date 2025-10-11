@@ -1,8 +1,7 @@
 import { logger } from '@/lib/logger';
 import { cache } from '@/src/lib/cache';
+import cacheHelpers from '@/src/lib/cache-helpers';
 import { createMethodHandler, NextApiResponse } from '@/src/lib/next-api-helpers';
-import { EventService } from '@/src/services/eventService';
-import { TicketService } from '@/src/services/ticketService';
 import { NextRequest } from 'next/server';
 
 async function handlePost(request: NextRequest) {
@@ -12,75 +11,28 @@ async function handlePost(request: NextRequest) {
       method: 'POST'
     }, 'Starting cache warm-up process');
     const startTime = Date.now();
-    let warmedKeys = 0;
-    const errors = [];
 
-    // Warm up events cache
-    try {
-      const eventService = new EventService();
-      
-      // Warm up popular events
-      await eventService.getPopularEvents(20);
-      warmedKeys++;
-      
-      // Warm up recent events
-      await eventService.getEvents({ take: 50, orderBy: { createdAt: 'desc' } });
-      warmedKeys++;
-      
-      // Warm up upcoming events
-      await eventService.getUpcomingEvents(30);
-      warmedKeys++;
-      
-      logger.info('Events cache warmed up successfully');
-    } catch (error) {
-      const errorMsg = `Events cache warm-up failed: ${error}`;
-      errors.push(errorMsg);
-      logger.error(errorMsg);
-    }
-
-    // Warm up tickets cache
-    try {
-      const ticketService = new TicketService();
-      
-      // Warm up ticket statistics (assuming these methods exist)
-      // This will be implemented when TicketService is updated with cache
-      logger.info('Tickets cache preparation completed');
-    } catch (error) {
-      const errorMsg = `Tickets cache warm-up failed: ${error}`;
-      errors.push(errorMsg);
-      logger.error(errorMsg);
-    }
-
-    // Warm up application configuration cache
-    try {
-      await cache.set('billetterie:config:warmup-timestamp', Date.now().toString(), 3600);
-      await cache.set('billetterie:config:version', '1.0.0', 3600);
-      warmedKeys++;
-      
-      logger.info('Configuration cache warmed up');
-    } catch (error) {
-      const errorMsg = `Configuration cache warm-up failed: ${error}`;
-      errors.push(errorMsg);
-      logger.error(errorMsg);
-    }
-
+    // Use the new cache warmup helper
+    const result = await cacheHelpers.warmupCache();
+    
+    // Set warmup timestamp
+    await cache.set('billetterie:config:warmup-timestamp', Date.now().toString(), 3600);
+    
     const duration = Date.now() - startTime;
     
     logger.info({ 
       duration, 
-      warmedKeys, 
-      errorsCount: errors.length 
+      success: result.success 
     }, `Cache warm-up completed in ${duration}ms`);
 
     return NextApiResponse.success({
-      message: 'Cache warm-up completed successfully',
+      message: result.success ? 'Cache warm-up completed successfully' : 'Cache warm-up completed with errors',
       stats: {
         duration: `${duration}ms`,
-        warmedKeys,
-        errors: errors.length,
+        success: result.success,
         timestamp: new Date().toISOString()
       },
-      errors: errors.length > 0 ? errors : undefined
+      error: result.error ? String(result.error) : undefined
     });
 
   } catch (error) {

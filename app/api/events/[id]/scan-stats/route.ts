@@ -4,7 +4,7 @@ import {
     NextApiResponse,
     createMethodHandler,
 } from '../../../../../src/lib/next-api-helpers';
-import ticketService from '../../../../../src/services/ticketQRService';
+import ticketService from '../../../../../src/services/ticketService';
 
 /**
  * GET /api/events/[id]/scan-stats

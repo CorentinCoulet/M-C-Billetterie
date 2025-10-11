@@ -8,7 +8,7 @@
 
 import { PrismaClient } from '../../src/generated/prisma';
 import qrRotationService from '../../src/services/qrRotationService';
-import ticketService from '../../src/services/ticketQRService';
+import ticketService from '../../src/services/ticketService';
 
 const prisma = new PrismaClient();
 
@@ -57,6 +57,7 @@ async function testQRSystem() {
     console.log('2️⃣ Creating test ticket...');
     
     const ticket = await ticketService.createTicket({
+      code: '', // Will be auto-generated
       eventId: testEvent.id,
       userId: testUser.id,
       seatNumber: 'A1',

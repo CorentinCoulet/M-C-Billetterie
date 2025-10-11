@@ -1,8 +1,8 @@
 'use client'
 
-import { motion } from 'framer-motion'
+import { AnimatePresence, motion } from 'framer-motion'
+import { ArrowLeft, Minus, Plus, HelpCircle as Question } from 'lucide-react'
 import { useState } from 'react'
-import { ArrowLeft, Plus, Minus, HelpCircle as Question } from 'lucide-react'
 
 const faqs = [
   {
@@ -110,39 +110,71 @@ export default function FAQPage() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: index * 0.1 }}
-              className="glass-card rounded-xl overflow-hidden"
+              className="glass-card rounded-xl overflow-hidden group relative"
+              whileHover={{ 
+                scale: 1.02,
+                y: -4,
+                transition: { duration: 0.3 }
+              }}
             >
+              {/* Effet de brillance au hover */}
+              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+              
               <button
                 onClick={() => toggleFAQ(faq.id)}
-                className="w-full p-6 text-left flex items-center justify-between hover:bg-card/20 transition-colors"
+                className="w-full p-6 text-left flex items-center justify-between relative z-10 transition-all duration-300 group-hover:bg-card/30"
               >
-                <h3 className="text-lg font-semibold text-foreground pr-4">
+                <h3 className="text-lg font-semibold text-foreground pr-4 transition-colors duration-300 group-hover:text-primary">
                   {faq.question}
                 </h3>
-                <div className="flex-shrink-0">
+                <motion.div 
+                  className="flex-shrink-0"
+                  animate={{ rotate: openFAQ === faq.id ? 180 : 0 }}
+                  transition={{ duration: 0.3, ease: "easeInOut" }}
+                >
                   {openFAQ === faq.id ? (
                     <Minus size={20} className="text-primary" />
                   ) : (
-                    <Plus size={20} className="text-primary" />
+                    <Plus size={20} className="text-primary transition-transform duration-300 group-hover:scale-110" />
                   )}
-                </div>
+                </motion.div>
               </button>
               
-              {openFAQ === faq.id && (
-                <motion.div
-                  initial={{ opacity: 0, height: 0 }}
-                  animate={{ opacity: 1, height: 'auto' }}
-                  exit={{ opacity: 0, height: 0 }}
-                  transition={{ duration: 0.3 }}
-                  className="px-6 pb-6"
-                >
-                  <div className="border-t border-border pt-4">
-                    <p className="text-muted-foreground leading-relaxed">
-                      {faq.answer}
-                    </p>
-                  </div>
-                </motion.div>
-              )}
+              <AnimatePresence initial={false}>
+                {openFAQ === faq.id && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ 
+                      opacity: 1, 
+                      height: 'auto',
+                      transition: {
+                        height: { duration: 0.4, ease: "easeInOut" },
+                        opacity: { duration: 0.3, delay: 0.1 }
+                      }
+                    }}
+                    exit={{ 
+                      opacity: 0, 
+                      height: 0,
+                      transition: {
+                        height: { duration: 0.3, ease: "easeInOut" },
+                        opacity: { duration: 0.2 }
+                      }
+                    }}
+                    className="px-6 pb-6 overflow-hidden"
+                  >
+                    <div className="border-t border-border pt-4">
+                      <motion.p 
+                        initial={{ y: -10 }}
+                        animate={{ y: 0 }}
+                        exit={{ y: -10 }}
+                        className="text-muted-foreground leading-relaxed"
+                      >
+                        {faq.answer}
+                      </motion.p>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </motion.div>
           ))}
         </motion.div>
@@ -163,7 +195,7 @@ export default function FAQPage() {
             </p>
             <button 
               onClick={goToContact}
-              className="glass-button text-white font-semibold px-8 py-3 bg-gradient-to-r from-primary to-accent rounded-md transition-all hover:opacity-90"
+              className="glass-button text-white font-semibold px-8 py-3 bg-gradient-to-r from-blue-700 to-blue-600 rounded-md transition-all hover:from-blue-800 hover:to-blue-700"
             >
               Nous contacter
             </button>

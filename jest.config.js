@@ -36,7 +36,8 @@ module.exports = {
   ],
   testMatch: [
     "**/__tests__/**/*.(ts|tsx|js|jsx)",
-    "**/*.(test|spec).(ts|tsx|js|jsx)"
+    "**/*.(test|spec).(ts|tsx|js|jsx)",
+    "!**/tests/e2e/**"  // Exclude E2E tests from Jest (they use Playwright)
   ],
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'json', 'node'],
   verbose: true,

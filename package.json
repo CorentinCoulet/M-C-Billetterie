@@ -40,6 +40,8 @@
     "db:seed:dashboard": "tsx scripts/seed-dashboard-test.ts",
     "_comment_test": "=== Tests ===",
     "test": "jest",
+    "test:all": "node scripts/run-all-tests.js",
+    "test:all:ci": "jest --ci --coverage --watchAll=false && playwright test",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
     "test:ci": "jest --ci --coverage --watchAll=false",

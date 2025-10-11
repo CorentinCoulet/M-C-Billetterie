@@ -1,11 +1,12 @@
 import { NextRequest } from 'next/server';
 import { z } from 'zod';
 import { logger } from '../../../lib/logger';
+import { getCachedPublishedEvents, invalidateCategoriesCache } from '../../../src/lib/cache-helpers';
 import {
-  createMethodHandler,
-  NextApiResponse,
-  validateBody,
-  withAuth
+    createMethodHandler,
+    NextApiResponse,
+    validateBody,
+    withAuth
 } from '../../../src/lib/next-api-helpers';
 
 const createEventSchema = z.object({
@@ -22,13 +23,20 @@ const createEventSchema = z.object({
 
 async function handleGet(request: NextRequest) {
   try {
-    logger.info('Fetching events list');
+    // Extract query parameters for filtering
+    const { searchParams } = new URL(request.url);
+    const category = searchParams.get('category') || undefined;
+    const orderBy = searchParams.get('orderBy') as 'date' | 'createdAt' | 'title' | undefined;
+    const limit = searchParams.get('limit') ? parseInt(searchParams.get('limit')!) : undefined;
 
-    // Import event service
-    const eventServiceModule = await import('../../../src/modules/event/event.service');
+    logger.info({ category, orderBy, limit }, 'Fetching events list from cache');
 
-    // Get events with filters - use the exported functions
-    const events = await eventServiceModule.list();
+    // Use cached events for published events list
+    const events = await getCachedPublishedEvents({
+      category,
+      orderBy,
+      limit
+    });
 
     logger.info({ count: events?.length || 0 }, 'Events retrieved successfully');
 
@@ -52,6 +60,9 @@ async function handlePost(request: NextRequest) {
 
       // Create event
       const event = await eventServiceModule.create(data);
+
+      // Invalidate categories cache since a new event might affect category counts
+      await invalidateCategoriesCache();
 
       logger.info({ eventId: event.id, userId: user.id }, 'Event created successfully');
 

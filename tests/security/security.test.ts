@@ -256,9 +256,9 @@ describe('Security Tests', () => {
 
       const response = await adminModule.POST(mockRequest);
       
-      // This endpoint currently doesn't check authentication, so it attempts to run the service
-      // and fails due to our mocked database error - this reveals a security issue
-      expect(response.status).toBe(500);
+      // This endpoint should check authentication and return 401 for non-admin users
+      // 401 is the correct response (improved from previous 500 error)
+      expect(response.status).toBe(401);
     });
 
     test('should prevent users from accessing other users data', async () => {      

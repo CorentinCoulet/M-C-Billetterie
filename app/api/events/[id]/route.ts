@@ -1,6 +1,7 @@
 import { logger } from '@/lib/logger';
 import { NextRequest } from 'next/server';
 import { z } from 'zod';
+import { getCachedEvent, invalidateCategoriesCache, invalidateEventCache } from '../../../../src/lib/cache-helpers';
 import {
     createMethodHandler,
     NextApiResponse,
@@ -23,11 +24,10 @@ async function handleGetEvent(request: NextRequest, context: { params: { id: str
   try {
     const { id } = context.params;
     
-    // Import event service
-    const eventServiceModule = await import('../../../../src/modules/event/event.service');
+    logger.info({ eventId: id }, 'Fetching event from cache');
     
-    // Get event by ID
-    const event = await eventServiceModule.getById(id);
+    // Use cached event
+    const event = await getCachedEvent(id);
 
     if (!event) {
       return NextApiResponse.notFound('Événement non trouvé');
@@ -54,6 +54,14 @@ async function handleUpdateEvent(request: NextRequest, context: { params: { id: 
       // Update event
       const event = await eventServiceModule.updateById(id, data);
 
+      // Invalidate event cache after update
+      await invalidateEventCache(id);
+      
+      // If category or publication status changed, invalidate categories cache
+      if (data.categoryId !== undefined || data.isPublished !== undefined) {
+        await invalidateCategoriesCache();
+      }
+
       return NextApiResponse.success(event, 'Événement mis à jour avec succès');
     } catch (error: any) {
       logger.error({ error, userId: user.id }, 'Update event error');
@@ -75,6 +83,10 @@ async function handleDeleteEvent(request: NextRequest, context: { params: { id: 
       
       // Delete event
       await eventServiceModule.deleteById(id);
+
+      // Invalidate event cache after deletion
+      await invalidateEventCache(id);
+      await invalidateCategoriesCache();
 
       return NextApiResponse.success(null, 'Événement supprimé avec succès');
     } catch (error: any) {

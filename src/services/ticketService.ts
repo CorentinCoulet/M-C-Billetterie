@@ -73,12 +73,15 @@ const ticketIncludes = {
 };
 
 /**
- * Service for ticket management operations
+ * Unified Ticket Service with QR Code functionality
+ * Combines ticket management, QR code generation/validation, and scan statistics
  */
 export class TicketService extends BaseService<TicketWithRelations> {
   constructor() {
     super(prisma.ticket, ticketIncludes);
   }
+
+  // ===== BASIC TICKET OPERATIONS =====
 
   /**
    * Get a ticket by ID
@@ -109,11 +112,30 @@ export class TicketService extends BaseService<TicketWithRelations> {
   }
 
   /**
+   * List tickets with filters
+   */
+  async listTickets(filters?: any): Promise<TicketWithRelations[]> {
+    return prisma.ticket.findMany({
+      where: filters,
+      include: ticketIncludes,
+      orderBy: {
+        purchasedAt: 'desc'
+      }
+    });
+  }
+
+  /**
    * Create a new ticket
    */
   async createTicket(data: TicketCreateInput): Promise<TicketWithRelations> {
+    // Generate unique ticket code if not provided
+    const ticketCode = data.code || this.generateTicketCode();
+    
     return this.create({
       ...data,
+      code: ticketCode,
+      purchasedAt: new Date(),
+      isScanned: false,
       event: {
         connect: { id: data.eventId }
       }
@@ -167,11 +189,7 @@ export class TicketService extends BaseService<TicketWithRelations> {
         userId,
         status: 'paid'
       },
-      include: {
-        event: true,
-        user: true,
-        order: true
-      }
+      include: ticketIncludes
     });
 
     const userTickets: UserTicket[] = tickets.map(ticket => ({
@@ -183,6 +201,53 @@ export class TicketService extends BaseService<TicketWithRelations> {
     return userTickets;
   }
 
+  // ===== TICKET RESERVATION & STATUS =====
+
+  /**
+   * Reserve a ticket for a user
+   */
+  async reserveTicket(ticketId: string, userId: string): Promise<TicketWithRelations> {
+    return prisma.ticket.update({
+      where: { id: ticketId },
+      data: {
+        userId: userId,
+        status: 'pending'
+      },
+      include: ticketIncludes
+    });
+  }
+
+  /**
+   * Validate a ticket (mark as used)
+   */
+  async validateTicket(ticketId: string): Promise<TicketWithRelations> {
+    return prisma.ticket.update({
+      where: { id: ticketId },
+      data: {
+        isScanned: true,
+        scannedAt: new Date(),
+        usedAt: new Date(),
+        status: 'used'
+      },
+      include: ticketIncludes
+    });
+  }
+
+  /**
+   * Cancel a ticket
+   */
+  async cancelTicket(ticketId: string): Promise<TicketWithRelations> {
+    return prisma.ticket.update({
+      where: { id: ticketId },
+      data: {
+        status: 'cancelled'
+      },
+      include: ticketIncludes
+    });
+  }
+
+  // ===== QR CODE GENERATION & VALIDATION =====
+
   /**
    * Generate QR code for a ticket
    */
@@ -191,14 +256,7 @@ export class TicketService extends BaseService<TicketWithRelations> {
     qrCodeToken: string;
   }> {
     // Get ticket with event details
-    const ticket = await prisma.ticket.findUnique({
-      where: { id: ticketId },
-      include: {
-        event: true,
-        user: true,
-        order: true
-      }
-    });
+    const ticket = await this.getTicketById(ticketId);
 
     if (!ticket) {
       throw new Error('Ticket not found');
@@ -213,6 +271,7 @@ export class TicketService extends BaseService<TicketWithRelations> {
       eventId: ticket.eventId,
       userId: ticket.userId,
       orderId: ticket.orderId,
+      ticketCode: ticket.code,
       eventTitle: ticket.event?.title || 'Event',
       eventDate: ticket.event?.date?.toISOString() || '',
       issuedAt: new Date().toISOString(),
@@ -251,7 +310,7 @@ export class TicketService extends BaseService<TicketWithRelations> {
    */
   async validateTicketQRCode(qrContent: string, markAsUsed: boolean = false): Promise<{
     valid: boolean;
-    ticket?: any;
+    ticket?: TicketWithRelations;
     error?: string;
     isAlreadyScanned?: boolean;
     canBeScanned?: boolean;
@@ -268,14 +327,7 @@ export class TicketService extends BaseService<TicketWithRelations> {
       }
 
       // Get ticket from database
-      const ticket = await prisma.ticket.findUnique({
-        where: { id: qrData.ticketId },
-        include: {
-          event: true,
-          user: true,
-          order: true
-        }
-      });
+      const ticket = await this.getTicketById(qrData.ticketId);
 
       if (!ticket) {
         return { 
@@ -320,16 +372,22 @@ export class TicketService extends BaseService<TicketWithRelations> {
 
       // Mark as used if requested
       if (markAsUsed && !ticket.isScanned) {
-        await prisma.ticket.update({
+        const updatedTicket = await prisma.ticket.update({
           where: { id: ticket.id },
           data: {
             isScanned: true,
-            scannedAt: new Date()
-          }
+            scannedAt: new Date(),
+            usedAt: new Date()
+          },
+          include: ticketIncludes
         });
         
-        ticket.isScanned = true;
-        ticket.scannedAt = new Date();
+        return {
+          valid: true,
+          ticket: updatedTicket,
+          isAlreadyScanned: false,
+          canBeScanned: true
+        };
       }
 
       return {
@@ -346,6 +404,82 @@ export class TicketService extends BaseService<TicketWithRelations> {
         error: 'Failed to parse QR code' 
       };
     }
+  }
+
+  // ===== SCAN STATISTICS =====
+
+  /**
+   * Get scan statistics for an event
+   */
+  async getEventScanStats(eventId: string): Promise<{
+    totalTickets: number;
+    scannedTickets: number;
+    scanPercentage: number;
+  }> {
+    const [totalTickets, scannedTickets] = await Promise.all([
+      prisma.ticket.count({ where: { eventId } }),
+      prisma.ticket.count({ where: { eventId, isScanned: true } })
+    ]);
+
+    const scanPercentage = totalTickets > 0 ? (scannedTickets / totalTickets) * 100 : 0;
+
+    return {
+      totalTickets,
+      scannedTickets,
+      scanPercentage: Math.round(scanPercentage * 100) / 100
+    };
+  }
+
+  /**
+   * Get scanned tickets for an event
+   */
+  async getScannedTicketsForEvent(eventId: string): Promise<TicketWithRelations[]> {
+    return prisma.ticket.findMany({
+      where: {
+        eventId,
+        isScanned: true
+      },
+      include: ticketIncludes,
+      orderBy: {
+        scannedAt: 'desc'
+      }
+    });
+  }
+
+  // ===== FILE GENERATION =====
+
+  /**
+   * Generate ticket file (PDF or other format)
+   */
+  async generateTicketFile(ticketId: string): Promise<Buffer> {
+    const ticket = await this.getTicketById(ticketId);
+    if (!ticket) {
+      throw new Error('Ticket not found');
+    }
+
+    // Placeholder pour génération de PDF
+    // Vous pouvez utiliser une bibliothèque comme jsPDF ou pdfkit
+    const ticketContent = JSON.stringify({
+      ticketId: ticket.id,
+      code: ticket.code,
+      event: ticket.event?.title,
+      date: ticket.event?.date,
+      user: ticket.user?.name || ticket.user?.email
+    }, null, 2);
+
+    return Buffer.from(ticketContent, 'utf8');
+  }
+
+  // ===== PRIVATE HELPER METHODS =====
+
+  /**
+   * Generate a unique ticket code
+   */
+  private generateTicketCode(): string {
+    const prefix = 'TK';
+    const timestamp = Date.now().toString(36).toUpperCase();
+    const random = Math.random().toString(36).substring(2, 8).toUpperCase();
+    return `${prefix}${timestamp}${random}`;
   }
 
   /**
