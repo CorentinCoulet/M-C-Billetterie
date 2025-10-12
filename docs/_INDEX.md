@@ -50,6 +50,12 @@ Guide principal avec architecture, quick start, et liens vers toute la documenta
 - Outils Docker (Portainer)
 - Scripts utilitaires
 
+### [👤 Comptes de Test (COMPTES_TEST.md)](./COMPTES_TEST.md)
+- Liste complete des comptes seed
+- 1 Admin, 4 Organisateurs, 5 Utilisateurs
+- Statistiques des donnees de test
+- Instructions de demarrage rapide
+
 ### [🗺️ Roadmap (ROADMAP.md)](./ROADMAP.md)
 - Versions futures planifiées
 - Fonctionnalités en développement

@@ -11,7 +11,7 @@ param(
         'status', 'logs', 'stop-dev', 'stop-prod', 'stop-all', 'restart',
         'down', 'down-v', 'down-full',
         'ports', 'test-pg', 'test-redis', 'test-all', 'health', 'metrics',
-        'backup', 'restore', 'clean-volumes', 'prune',
+        'backup', 'restore', 'clean-volumes', 'prune', 'seed',
         'k8s-deploy', 'k8s-status', 'k8s-clean',
         'help'
     )]
@@ -32,6 +32,9 @@ param(
     
     [Parameter(Mandatory=$false)]
     [switch]$WithMonitoring,
+    
+    [Parameter(Mandatory=$false)]
+    [switch]$SkipSeed,
     
     [Parameter(Mandatory=$false)]
     [string]$BackupFile
@@ -352,6 +355,7 @@ function Show-Help {
     Write-Host ""
     Write-Host "UTILITAIRES:" -ForegroundColor Green
     Write-Host "  -Action ports                  Afficher les ports" -ForegroundColor White
+    Write-Host "  -Action seed                   Exécuter le seed (données de test)" -ForegroundColor White
     Write-Host "  -Action backup                 Backup DB" -ForegroundColor White
     Write-Host "  -Action restore                  Restaurer DB" -ForegroundColor White
     Write-Host "  -Action clean-volumes          Nettoyer volumes" -ForegroundColor White
@@ -368,11 +372,14 @@ function Show-Help {
     Write-Host "  -Verbose                     Mode verbeux avec détails" -ForegroundColor White
     Write-Host "  -Environment <dev|prod|all>  Spécifier l'environnement" -ForegroundColor White
     Write-Host "  -WithMonitoring              Inclure le monitoring (avec down/down-v)" -ForegroundColor White
+    Write-Host "  -SkipSeed                    Ne pas exécuter le seed au démarrage de DEV" -ForegroundColor White
     Write-Host "  -BackupFile <fichier>        Fichier pour restauration" -ForegroundColor White
     Write-Host ""
     Write-Host "EXEMPLES:" -ForegroundColor Cyan
     Write-Host "  .\docker-manager.ps1 -Action dev" -ForegroundColor Gray
     Write-Host "  .\docker-manager.ps1 -Action dev -Build -Verbose" -ForegroundColor Gray
+    Write-Host "  .\docker-manager.ps1 -Action dev -SkipSeed" -ForegroundColor Gray
+    Write-Host "  .\docker-manager.ps1 -Action seed -Environment dev" -ForegroundColor Gray
     Write-Host "  .\docker-manager.ps1 -Action logs -Environment dev -Follow" -ForegroundColor Gray
     Write-Host "  .\docker-manager.ps1 -Action down -Environment dev" -ForegroundColor Gray
     Write-Host "  .\docker-manager.ps1 -Action down -Environment dev -WithMonitoring" -ForegroundColor Gray
@@ -449,6 +456,47 @@ function Start-DevEnvironment {
     
     if ($allReady) {
         Write-Log "Environnement DEV démarré avec succès!" -Level Success
+        
+        if (-not $SkipSeed) {
+            # Exécuter les migrations Prisma
+            Write-Host ""
+            Write-Log "Exécution des migrations Prisma..." -Level Info
+            try {
+                $migrationResult = docker exec $($Script:Config.Containers.DevApp) yarn prisma migrate deploy 2>&1
+                if ($LASTEXITCODE -eq 0) {
+                    Write-Log "Migrations Prisma appliquées avec succès" -Level Success
+                } else {
+                    Write-Log "Avertissement lors des migrations Prisma (peut-être déjà appliquées)" -Level Warning
+                }
+            } catch {
+                Write-Log "Erreur lors des migrations Prisma: $_" -Level Warning
+            }
+            
+            # Executer le seed
+            Write-Host ""
+            Write-Log "Execution du seed pour creer les donnees de test..." -Level Info
+            try {
+                $seedResult = docker exec $($Script:Config.Containers.DevApp) yarn db:seed 2>&1
+                if ($LASTEXITCODE -eq 0) {
+                    Write-Log "Seed execute avec succes - Donnees de test creees!" -Level Success
+                    Write-Host ""
+                    Write-Host "  Jeu de donnees complet cree:" -ForegroundColor Cyan
+                    Write-Host "     1 Admin, 4 Organisateurs, 5 Utilisateurs" -ForegroundColor White
+                    Write-Host "     11 Evenements, 8 Commandes" -ForegroundColor White
+                    Write-Host ""
+                    Write-Host "  Connexion rapide:" -ForegroundColor Yellow
+                    Write-Host "     Admin:  admin@demo.com / admin123" -ForegroundColor White
+                } else {
+                    Write-Log "Avertissement lors du seed (peut-etre deja execute)" -Level Warning
+                }
+            } catch {
+                Write-Log "Erreur lors du seed: $_" -Level Warning
+                Write-Log "Vous pouvez executer manuellement: docker exec $($Script:Config.Containers.DevApp) yarn db:seed" -Level Info
+            }
+        } else {
+            Write-Log "Seed ignore (option -SkipSeed activee)" -Level Info
+        }
+        
         Write-Host ""
         Write-Host "  Services disponibles:" -ForegroundColor Cyan
         Write-Host "   Application:      http://localhost:$($Script:Config.Ports.DevApp)" -ForegroundColor White
@@ -457,8 +505,8 @@ function Start-DevEnvironment {
         Write-Host "   Mailhog:          http://localhost:$($Script:Config.Ports.Mailhog)" -ForegroundColor White
         Write-Host ""
     } else {
-        Write-Log "Certains services n'ont pas démarré correctement" -Level Warning
-        Write-Log "Vérifiez les logs avec: .\docker-manager.ps1 -Action logs -Environment dev" -Level Info
+        Write-Log "Certains services n'ont pas demarre correctement" -Level Warning
+        Write-Log "Verifiez les logs avec: .\docker-manager.ps1 -Action logs -Environment dev" -Level Info
     }
 }
 
@@ -481,6 +529,24 @@ function Start-DevMonitoring {
     Write-Log "Démarrage des conteneurs..." -Level Info
     if (Invoke-DockerCompose -ComposeFiles $composeFiles -Command "up -d") {
         Write-Log "DEV + Monitoring démarré avec succès!" -Level Success
+        
+        if (-not $SkipSeed) {
+            # Exécuter les migrations et le seed
+            Write-Host ""
+            Write-Log "Exécution des migrations et du seed..." -Level Info
+            try {
+                npm run prisma:migrate:dev 2>&1 | Out-Null
+                Write-Log "Migrations appliquées" -Level Success
+                
+                $seedResult = npm run db:seed 2>&1
+                if ($LASTEXITCODE -eq 0) {
+                    Write-Log "Seed exécuté avec succès" -Level Success
+                }
+            } catch {
+                Write-Log "Avertissement lors du seed: $_" -Level Warning
+            }
+        }
+        
         Write-Host ""
         Write-Host "  Services disponibles:" -ForegroundColor Cyan
         Write-Host "   Application:      http://localhost:$($Script:Config.Ports.DevApp)" -ForegroundColor White
@@ -1279,6 +1345,81 @@ function Clean-Kubernetes {
     }
 }
 
+function Invoke-Seed {
+    Write-Log "Execution du seed de la base de donnees..." -Level Info
+    Write-Host ""
+    
+    # Verifier que la base de donnees est accessible
+    Write-Log "Verification de la connexion a la base de donnees..." -Level Info
+    $dbContainer = if ($Environment -eq "dev") { 
+        $Script:Config.Containers.PostgresqlDev 
+    } else { 
+        $Script:Config.Containers.PostgresqlProd 
+    }
+    
+    $isRunning = docker ps --filter "name=$dbContainer" --filter "status=running" -q 2>$null
+    if (-not $isRunning) {
+        Write-Log "Le conteneur PostgreSQL ($dbContainer) n'est pas actif" -Level Error
+        Write-Log "Demarrez l'environnement d'abord avec: .\docker-manager.ps1 -Action dev" -Level Info
+        return
+    }
+    
+    Write-Log "Base de donnees accessible" -Level Success
+    Write-Host ""
+    
+    # Determiner le conteneur applicatif
+    $appContainer = if ($Environment -eq "dev") {
+        $Script:Config.Containers.DevApp
+    } else {
+        $Script:Config.Containers.ProdApp
+    }
+    
+    # Executer les migrations
+    Write-Log "Application des migrations Prisma..." -Level Info
+    try {
+        docker exec $appContainer yarn prisma migrate deploy 2>&1 | Out-Null
+        if ($LASTEXITCODE -eq 0) {
+            Write-Log "Migrations appliquees avec succes" -Level Success
+        }
+    } catch {
+        Write-Log "Erreur lors des migrations: $_" -Level Warning
+    }
+    
+    Write-Host ""
+    
+    # Executer le seed
+    Write-Log "Execution du seed..." -Level Info
+    try {
+        $seedOutput = docker exec $appContainer yarn db:seed 2>&1
+        
+        if ($LASTEXITCODE -eq 0) {
+            Write-Log "Seed execute avec succes!" -Level Success
+            Write-Host ""
+            Write-Host "  Jeu de donnees complet cree:" -ForegroundColor Green
+            Write-Host ""
+            Write-Host "  Statistiques:" -ForegroundColor Cyan
+            Write-Host "     1 Admin" -ForegroundColor White
+            Write-Host "     4 Organisateurs" -ForegroundColor White
+            Write-Host "     5 Utilisateurs" -ForegroundColor White
+            Write-Host "     11 Evenements" -ForegroundColor White
+            Write-Host "     8 Commandes" -ForegroundColor White
+            Write-Host ""
+            Write-Host "  Compte admin:" -ForegroundColor Yellow
+            Write-Host "     admin@demo.com / admin123" -ForegroundColor White
+            Write-Host ""
+            Write-Host "  Tous les mots de passe:" -ForegroundColor Yellow
+            Write-Host "     Organisateurs: organizer123" -ForegroundColor White
+            Write-Host "     Utilisateurs:  user123" -ForegroundColor White
+            Write-Host ""
+        } else {
+            Write-Log "Erreur lors du seed" -Level Error
+            Write-Host $seedOutput
+        }
+    } catch {
+        Write-Log "Erreur lors du seed: $_" -Level Error
+    }
+}
+
 # ====================================================================================
 # MAIN
 # ====================================================================================
@@ -1328,6 +1469,7 @@ try {
         
         # Utilities
         'ports'              { Show-Ports }
+        'seed'               { Invoke-Seed }
         'backup'             { Backup-Database }
         'restore'            { Restore-Database }
         'clean-volumes'      { Clean-Volumes }
