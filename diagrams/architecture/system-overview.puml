@@ -12,7 +12,6 @@ System_Boundary(billetterie, "Système Billetterie") {
     Container(api, "API REST", "Next.js API Routes", "Logique métier et endpoints")
     Container(auth, "Service d'authentification", "Better Auth", "Gestion des utilisateurs et sessions")
     Container(payment, "Service de paiement", "Stripe", "Traitement des paiements")
-    Container(qr, "Service QR", "Node.js", "Génération et validation des QR codes")
     Container(email, "Service Email", "Nodemailer", "Notifications et confirmations")
     
     ContainerDb(db, "Base de données", "PostgreSQL", "Stockage des données")
@@ -35,12 +34,13 @@ Rel(api, db, "Lit/Écrit", "SQL")
 Rel(api, cache, "Cache", "Redis Protocol")
 Rel(auth, cache, "Sessions", "Redis Protocol")
 Rel(api, payment, "Traite paiements")
-Rel(api, qr, "Génère QR codes")
+' QR Code géré en module interne de l'API (pas de conteneur séparé)
 Rel(api, email, "Envoie emails")
 Rel(api, files, "Stocke fichiers")
 
 ' Relations externes
 Rel(payment, stripe_api, "Traite paiements", "HTTPS")
+Rel(stripe_api, api, "Webhooks paiement", "HTTPS")
 Rel(email, email_provider, "Envoie emails", "SMTP")
 
 SHOW_LEGEND()

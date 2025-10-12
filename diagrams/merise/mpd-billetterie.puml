@@ -12,7 +12,7 @@ package "Base de Données PostgreSQL - Système de Billetterie" {
         email_verified_at : TIMESTAMPTZ
         last_login : TIMESTAMPTZ
         password_changed_at : TIMESTAMPTZ := NOW()
-        * role : user_role := 'USER'
+    * role : ROLE := 'USER'
         metadata : JSONB
         * created_at : TIMESTAMPTZ := NOW()
         * updated_at : TIMESTAMPTZ := NOW()
@@ -25,8 +25,8 @@ package "Base de Données PostgreSQL - Système de Billetterie" {
         email UNIQUE
         password NOT NULL
         --
-        <<triggers>>
-        update_updated_at
+    <<triggers>>
+    update_updated_at (optionnel)
     }
 
     class "organizers" as organizers <<table>> {
@@ -36,8 +36,8 @@ package "Base de Données PostgreSQL - Système de Billetterie" {
         * created_at : TIMESTAMPTZ := NOW()
         * updated_at : TIMESTAMPTZ := NOW()
         --
-        <<triggers>>
-        update_updated_at
+    <<triggers>>
+    update_updated_at (optionnel)
     }
 
     class "events" as events <<table>> {
@@ -67,13 +67,15 @@ package "Base de Données PostgreSQL - Système de Billetterie" {
         idx_events_date
         idx_events_is_published
         idx_events_date_published (composite)
-        --
-        <<constraints>>
-        chk_event_date_future
-        chk_event_not_published_if_cancelled
-        --
-        <<triggers>>
-        update_updated_at
+    --
+    <<constraints>>
+    ' À implémenter en SQL si souhaité:
+    ' chk_event_date_future
+    ' chk_event_not_published_if_cancelled
+    --
+    <<triggers>>
+    ' À implémenter en SQL:
+    ' update_updated_at
     }
 
     class "orders" as orders <<table>> {
@@ -81,7 +83,7 @@ package "Base de Données PostgreSQL - Système de Billetterie" {
         --
         * user_id : UUID <<FK>>
         * total_price : DECIMAL(10,2)
-        * status : order_status
+        * status : ORDER_STATUS
         promo_code : VARCHAR(50)
         discount_amount : DECIMAL(10,2)
         * currency : VARCHAR(3) := 'EUR'
@@ -109,7 +111,7 @@ package "Base de Données PostgreSQL - Système de Billetterie" {
         * event_id : UUID <<FK>>
         order_id : UUID <<FK>>
         * code : VARCHAR(255) <<UNIQUE>>
-        * status : ticket_status := 'paid'
+        * status : TICKET_STATUS := 'paid'
         seat_number : VARCHAR(50)
         current_qr_code : TEXT
         qr_code_generated_at : TIMESTAMPTZ
@@ -129,13 +131,15 @@ package "Base de Données PostgreSQL - Système de Billetterie" {
         idx_tickets_event_status (composite)
         idx_tickets_active (partial)
         --
-        <<constraints>>
-        code UNIQUE
-        chk_ticket_used_date
-        chk_ticket_scanned_date
-        --
-        <<triggers>>
-        generate_ticket_code
+    <<constraints>>
+    code UNIQUE
+    ' À implémenter en SQL si souhaité:
+    ' chk_ticket_used_date
+    ' chk_ticket_scanned_date
+    --
+    <<triggers>>
+    ' À implémenter en SQL:
+    ' generate_ticket_code
     }
 
     class "payments" as payments <<table>> {
@@ -150,9 +154,9 @@ package "Base de Données PostgreSQL - Système de Billetterie" {
         --
         <<indexes>>
         idx_payments_order_id
-        --
-        <<constraints>>
-        order_id UNIQUE
+    --
+    <<constraints>>
+    order_id UNIQUE
     }
 
     class "categories" as categories <<table>> {
@@ -189,11 +193,13 @@ package "Base de Données PostgreSQL - Système de Billetterie" {
         * created_at : TIMESTAMPTZ := NOW()
         * updated_at : TIMESTAMPTZ := NOW()
         --
-        <<constraints>>
-        color ~ '^#[0-9A-Fa-f]{6}$'
-        --
-        <<triggers>>
-        update_updated_at
+    <<constraints>>
+    ' À implémenter en SQL:
+    ' color ~ '^#[0-9A-Fa-f]{6}$'
+    --
+    <<triggers>>
+    ' À implémenter en SQL:
+    ' update_updated_at
     }
 
     class "reviews" as reviews <<table>> {
@@ -209,9 +215,10 @@ package "Base de Données PostgreSQL - Système de Billetterie" {
         idx_reviews_user_id
         idx_reviews_event_id
         --
-        <<constraints>>
-        rating BETWEEN 1 AND 5
-        UNIQUE(user_id, event_id)
+    <<constraints>>
+    ' À implémenter en SQL:
+    ' rating BETWEEN 1 AND 5
+    UNIQUE(user_id, event_id)
     }
 
     class "team_members" as team_members <<table>> {
@@ -229,10 +236,142 @@ package "Base de Données PostgreSQL - Système de Billetterie" {
         <<constraints>>
         UNIQUE(organizer_id, user_id)
     }
+
+    ' === Tables sécurité / système (depuis Prisma) ===
+    class "user_sessions" as user_sessions <<table>> {
+        + id : UUID <<PK>>
+        user_id : UUID <<FK>>
+        token : VARCHAR(255) <<UNIQUE>>
+        ip_address : VARCHAR(255)
+        user_agent : TEXT
+        device_info : TEXT
+        created_at : TIMESTAMPTZ
+        last_activity_at : TIMESTAMPTZ
+        expires_at : TIMESTAMPTZ
+        is_active : BOOLEAN
+        destroyed_at : TIMESTAMPTZ
+        destroy_reason : TEXT
+    }
+
+    class "activity_logs" as activity_logs <<table>> {
+        + id : UUID <<PK>>
+        user_id : UUID <<FK>>
+        action : VARCHAR(255)
+        target_type : VARCHAR(100)
+        target_id : VARCHAR(255)
+        timestamp : TIMESTAMPTZ
+    }
+
+    class "event_logs" as event_logs <<table>> {
+        + id : UUID <<PK>>
+        user_id : UUID <<FK>>
+        type : VARCHAR(100)
+        context : TEXT
+        created_at : TIMESTAMPTZ
+    }
+
+    class "notifications" as notifications <<table>> {
+        + id : UUID <<PK>>
+        user_id : UUID <<FK>>
+        type : VARCHAR(100)
+        message : TEXT
+        is_read : TIMESTAMPTZ
+        sent_at : TIMESTAMPTZ
+    }
+
+    class "blocked_users" as blocked_users <<table>> {
+        + id : UUID <<PK>>
+        user_id : UUID <<FK,UNIQUE>>
+        reason : TEXT
+        blocked_at : TIMESTAMPTZ
+    }
+
+    class "translations" as translations <<table>> {
+        + id : UUID <<PK>>
+        entity_type : VARCHAR(100)
+        entity_id : VARCHAR(255)
+        locale : VARCHAR(10)
+        field : VARCHAR(100)
+        value : TEXT
+    }
+
+    class "security_logs" as security_logs <<table>> {
+        + id : UUID <<PK>>
+        type : VARCHAR(100)
+        ip : VARCHAR(64)
+        user_agent : TEXT
+        url : TEXT
+        user_id : UUID
+        data : TEXT
+        timestamp : TIMESTAMPTZ
+    }
+
+    class "password_history" as password_history <<table>> {
+        + id : UUID <<PK>>
+        user_id : UUID <<FK>>
+        password_hash : TEXT
+        created_at : TIMESTAMPTZ
+    }
+
+    class "login_attempts" as login_attempts <<table>> {
+        + id : UUID <<PK>>
+        user_id : UUID <<FK>>
+        email : VARCHAR(255)
+        ip_address : VARCHAR(64)
+        user_agent : TEXT
+        success : BOOLEAN
+        timestamp : TIMESTAMPTZ
+        reason : TEXT
+        session_id : VARCHAR(255)
+        risk_score : INTEGER
+    }
+
+    class "system_backups" as system_backups <<table>> {
+        + id : UUID <<PK>>
+        type : VARCHAR(50)
+        status : VARCHAR(50)
+        file_path : TEXT
+        encryption_key : TEXT
+        file_size : BIGINT
+        checksum_sha256 : VARCHAR(64)
+        started_at : TIMESTAMPTZ
+        completed_at : TIMESTAMPTZ
+        error : TEXT
+        retention_days : INTEGER
+    }
+
+    class "audit_logs" as audit_logs <<table>> {
+        + id : UUID <<PK>>
+        action : VARCHAR(100)
+        resource_type : VARCHAR(50)
+        resource_id : VARCHAR(255)
+        user_id : UUID
+        user_email : VARCHAR(255)
+        ip_address : VARCHAR(64)
+        user_agent : TEXT
+        details : TEXT
+        timestamp : TIMESTAMPTZ
+        session_id : VARCHAR(255)
+        result : VARCHAR(20)
+        risk_level : VARCHAR(20)
+        event_hash : VARCHAR(64)
+        is_sensitive : BOOLEAN
+    }
+
+    class "blocked_ip" as blocked_ip <<table>> {
+        + id : UUID <<PK>>
+        ip_address : VARCHAR(64) <<UNIQUE>>
+        reason : TEXT
+        blocked_at : TIMESTAMPTZ
+        expires_at : TIMESTAMPTZ
+        block_count : INTEGER
+        unblocked_by : VARCHAR(255)
+        unblocked_at : TIMESTAMPTZ
+    }
 }
 
 ' Relations avec contraintes référentielles
-events ||--|| organizers : "organizer_id"
+events }o--|| organizers : "organizer_id"
 events }o--|| categories : "category_id"
 events }o--|| venues : "venue_id"
 events }o--|| themes : "theme_id"
@@ -249,6 +388,14 @@ reviews }o--|| events : "event_id"
 
 team_members }o--|| organizers : "organizer_id"
 team_members }o--|| users : "user_id"
+
+user_sessions }o--|| users : "user_id"
+activity_logs }o--|| users : "user_id"
+event_logs }o--|| users : "user_id"
+notifications }o--|| users : "user_id"
+blocked_users }o--|| users : "user_id"
+password_history }o--|| users : "user_id"
+login_attempts }o--|| users : "user_id"
 
 ' Notes techniques
 note right of events : Contraintes métier :\n- Date future\n- Pas publié si annulé\n- Capacité > 0

@@ -1,3 +1,10 @@
+const { buildSecurityHeaders } = require('./config/security-headers');
+
+const securityHeaders = buildSecurityHeaders({
+  env: process.env.NODE_ENV,
+  additionalHeaders: [{ key: 'X-DNS-Prefetch-Control', value: 'on' }],
+});
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   env: {
@@ -42,24 +49,12 @@ const nextConfig = {
   
   serverExternalPackages: ['jsonwebtoken', 'ioredis', 'redis', 'bcryptjs', 'nodemailer'],
   
-  // Headers sécurisés (uniquement en production)
-  ...(process.env.NODE_ENV === 'production' && {
-    headers: async () => [
-      {
-        source: '/(.*)',
-        headers: [
-          {
-            key: 'X-DNS-Prefetch-Control',
-            value: 'on'
-          },
-          {
-            key: 'X-Frame-Options',
-            value: 'DENY'
-          },
-        ]
-      }
-    ],
-  }),
+  headers: async () => [
+    {
+      source: '/(.*)',
+      headers: securityHeaders,
+    },
+  ],
   
   // Redirects
   redirects: async () => [

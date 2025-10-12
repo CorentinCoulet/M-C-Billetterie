@@ -1,116 +1,92 @@
 @startuml MCD-Billetterie
 
-' === ENTITÉS ===
+' === ENTITÉS (conceptuel, sans détails techniques) ===
 entity UTILISATEUR {
-  * id : UUID <<PK>>
-  email : String <<UNIQUE>>
-  nom : String
-  mot_de_passe : String
-  est_verifie : Boolean
-  cree_le : DateTime
-  modifie_le : DateTime
+  email
+  nom
+  role
 }
 
 entity ORGANISATEUR {
-  * id : UUID <<PK>>
-  nom : String
-  cree_le : DateTime
-  modifie_le : DateTime
+  nom
 }
 
 entity EVENEMENT {
-  * id : UUID <<PK>>
-  titre : String
-  date : DateTime
-  lieu : String
-  capacite_max : Integer
-  est_publie : Boolean
-  cree_le : DateTime
-  modifie_le : DateTime
+  titre
+  date
+  capacite_max
+  est_publie
+  est_annule
 }
 
 entity COMMANDE {
-  * id : UUID <<PK>>
-  prix_total : Float
-  statut : Enum
-  devise : String
-  cree_le : DateTime
+  prix_total
+  statut
+  devise
 }
 
 entity BILLET {
-  * id : UUID <<PK>>
-  code : String <<UNIQUE>>
-  statut : Enum
-  numero_siege : String
-  achete_le : DateTime
+  code
+  statut
+  numero_siege
+  achete_le
 }
 
 entity PAIEMENT {
-  * id : UUID <<PK>>
-  methode : String
-  statut : String
-  date_paiement : DateTime
-  montant : Float
+  methode
+  statut
+  date_paiement
+  montant
 }
 
 entity CATEGORIE {
-  * id : UUID <<PK>>
-  nom : String <<UNIQUE>>
+  nom
 }
 
 entity LIEU {
-  * id : UUID <<PK>>
-  nom : String
-  adresse : String
-  capacite : Integer
+  nom
+  adresse
+  capacite
 }
 
 entity AVIS {
-  * id : UUID <<PK>>
-  note : Integer
-  commentaire : String
-  cree_le : DateTime
+  note
+  commentaire
 }
 
 entity THEME {
-  * id : UUID <<PK>>
-  nom : String
-  chemin_image : String
-  cree_le : DateTime
+  nom
+  chemin_image
 }
 
-' === RELATIONS AVEC CARDINALITÉS ===
-UTILISATEUR ||--o{ COMMANDER
-COMMANDER }o--|| COMMANDE
+' Association porteuse d'attributs (conceptuelle)
+entity FAIRE_PARTIE_EQUIPE {
+  role
+  rejoint_le
+}
 
-COMMANDE ||--|| CONTENIR
-CONTENIR ||--o{ BILLET
-
-BILLET ||--|| CONCERNER
-CONCERNER }o--|| EVENEMENT
-
-UTILISATEUR ||--o{ POSSEDER
-POSSEDER }o--|| BILLET
-
-ORGANISATEUR ||--|| ORGANISER
-ORGANISER ||--o{ EVENEMENT
-
-CATEGORIE ||--o{ CATEGORISER
-CATEGORISER }o--|| EVENEMENT
-
-LIEU ||--o{ SE_DEROULER
-SE_DEROULER }o--|| EVENEMENT
-
-UTILISATEUR ||--o{ EVALUER
-EVALUER }o--|| EVENEMENT
-EVALUER ||--|| AVIS
-
-THEME ||--o{ APPLIQUER_THEME
-APPLIQUER_THEME }o--|| EVENEMENT
-
+' === RELATIONS ET CARDINALITÉS (conceptuel) ===
+UTILISATEUR ||--o{ COMMANDE : passe
+COMMANDE ||--o{ BILLET : contient
+BILLET }o--|| EVENEMENT : concerne
+UTILISATEUR ||--o{ BILLET : possède
+ORGANISATEUR ||--o{ EVENEMENT : organise
+CATEGORIE ||--o{ EVENEMENT : catégorise
+LIEU ||--o{ EVENEMENT : accueille
+UTILISATEUR ||--o{ AVIS : rédige
+EVENEMENT ||--o{ AVIS : reçoit
+THEME ||--o{ EVENEMENT : stylise
 UTILISATEUR ||--o{ FAIRE_PARTIE_EQUIPE
 FAIRE_PARTIE_EQUIPE }o--|| ORGANISATEUR
+COMMANDE ||--o| PAIEMENT : règle
 
-COMMANDE ||--|| PAYER
-PAYER ||--o| PAIEMENT
+note right of EVENEMENT
+  Catégorie, Lieu et Thème sont facultatifs
+end note
+
+note right of BILLET
+  Un billet peut ne pas être rattaché à un utilisateur
+  (achat invité)
+end note
+
 @enduml

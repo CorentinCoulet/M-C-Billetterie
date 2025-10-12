@@ -1,6 +1,10 @@
 /**
- * Application constants - Unified file
- * Replaces src/lib/constants.ts and part of src/config/app.ts
+ * 🎯 Application Constants - Configuration unifiée
+ * 
+ * Point central pour toutes les constantes de configuration de l'application.
+ * Remplace les anciens fichiers éparpillés (src/lib/constants.ts, src/config/app.ts)
+ * 
+ * @module config/constants
  */
 
 // ==================== Application Information ====================

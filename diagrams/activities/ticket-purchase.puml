@@ -29,10 +29,14 @@ else (oui)
         :Met à jour panier;
         :Affiche notification changements;
       else (oui)
-        :Réserve temporairement les billets;
-        note right
-          Réservation de 15 minutes
-        end note
+        if (Réservation active ?) then (oui)
+          :Réserve temporairement les billets;
+          note right
+            Réservation de 15 minutes (TTL)
+          end note
+        else (non)
+          :Vérifie stock juste avant paiement;
+        endif
         
         :Saisit informations personnelles;
         :Choisit mode de paiement;

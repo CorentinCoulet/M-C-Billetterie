@@ -1,9 +1,20 @@
 /**
- * Configuration index file - Point d'entrée unifié
- * Exporte toutes les configurations de manière centralisée
+ * 🎯 Configuration Index - Point d'entrée unifié
+ * 
+ * Exporte toutes les configurations de manière centralisée et cohérente.
+ * Fournit des exports compatibles avec l'ancien code tout en favorisant
+ * l'utilisation de la nouvelle structure.
+ * 
+ * @example
+ * // Import recommandé (nouvelle structure)
+ * import { APP_CONFIG, AUTH_CONFIG } from '@/config';
+ * 
+ * // Import compatible (ancien code)
+ * import { APP_NAME, AUTH } from '@/config';
+ * 
+ * @module config
  */
 
-// Import des configurations unifiées
 import {
     APP_CONFIG,
     AUTH_CONFIG,
@@ -25,91 +36,115 @@ import {
     UserRole
 } from './constants';
 
-// Import des configurations spécialisées existantes (si disponibles)
-// import { EMAIL_CONFIG as OLD_EMAIL_CONFIG } from './email';
-// import { STRIPE_CONFIG } from './stripe';
+// ==================== Exports principaux ====================
 
-// ==================== Exports unifiés ====================
-
-// Configuration principale
 export {
     APP_CONFIG,
-    AUTH_CONFIG, CACHE_CONFIG, ENV_CONFIG, FEATURES, FORMAT_CONFIG, MONITORING_CONFIG, PAGINATION_CONFIG, ROUTES, SECURITY_CONFIG, UPLOAD_CONFIG
+    AUTH_CONFIG,
+    CACHE_CONFIG,
+    EMAIL_CONFIG,
+    ENV_CONFIG,
+    FEATURES,
+    FORMAT_CONFIG,
+    MONITORING_CONFIG,
+    PAGINATION_CONFIG,
+    ROUTES,
+    SECURITY_CONFIG,
+    UPLOAD_CONFIG
 };
 
-// Types et enums
+// ==================== Types et Enums ====================
+
     export {
-        OrderStatus, PaymentProvider, PaymentStatus, UserRole
+        OrderStatus,
+        PaymentProvider,
+        PaymentStatus,
+        UserRole
     };
 
-// Données métier
+// ==================== Données métier ====================
+
     export {
         EVENT_CATEGORIES,
         TICKET_TYPES
     };
 
-// Configurations spécialisées (pour compatibilité descendante)
-// export { STRIPE_CONFIG }; // À décommenter quand le fichier sera créé
+// ==================== Exports de compatibilité (ancienne structure) ====================
 
-// Configuration email unifiée (temporaire - sera mergée plus tard)
-export const UNIFIED_EMAIL_CONFIG = EMAIL_CONFIG;
+/**
+ * @deprecated Utilisez APP_CONFIG.NAME à la place
+ */
+export const APP_NAME = APP_CONFIG.NAME;
 
-// ==================== Exports de compatibilité ====================
+/**
+ * @deprecated Utilisez APP_CONFIG.URL à la place
+ */
+export const APP_URL = APP_CONFIG.URL;
 
-// Pour les imports existants de type: import { constante } from 'config'
-export const {
-  // App config
-  NAME: APP_NAME,
-  URL: APP_URL,
-  VERSION: APP_VERSION,
-} = APP_CONFIG;
+/**
+ * @deprecated Utilisez APP_CONFIG.VERSION à la place
+ */
+export const APP_VERSION = APP_CONFIG.VERSION;
 
-// Auth constants pour compatibilité
+/**
+ * @deprecated Utilisez AUTH_CONFIG à la place
+ */
 export const AUTH = AUTH_CONFIG;
 
-// Routes pour compatibilité (éviter duplication)
-// export { ROUTES }; // Déjà exporté plus haut
-
-// Pagination pour compatibilité
+/**
+ * @deprecated Utilisez PAGINATION_CONFIG à la place
+ */
 export const PAGINATION = PAGINATION_CONFIG;
 
-// Date formats pour compatibilité
+/**
+ * @deprecated Utilisez FORMAT_CONFIG.DATE_FORMATS à la place
+ */
 export const DATE_FORMATS = FORMAT_CONFIG.DATE_FORMATS;
+
+/**
+ * @deprecated Utilisez FORMAT_CONFIG.CURRENCY à la place
+ */
 export const CURRENCY = FORMAT_CONFIG.CURRENCY;
 
-// Upload pour compatibilité
+/**
+ * @deprecated Utilisez UPLOAD_CONFIG à la place
+ */
 export const UPLOAD = UPLOAD_CONFIG;
 
-// Email pour compatibilité
-export const EMAIL = {
-  ...EMAIL_CONFIG,
-  ...UNIFIED_EMAIL_CONFIG
-};
+/**
+ * @deprecated Utilisez EMAIL_CONFIG à la place
+ */
+export const EMAIL = EMAIL_CONFIG;
 
-// Security pour compatibilité
+/**
+ * @deprecated Utilisez SECURITY_CONFIG.RATE_LIMIT à la place
+ */
 export const RATE_LIMIT = SECURITY_CONFIG.RATE_LIMIT;
 
-// Cache pour compatibilité
+/**
+ * @deprecated Utilisez CACHE_CONFIG à la place
+ */
 export const CACHE = CACHE_CONFIG;
 
 // ==================== Export par défaut ====================
+
+/**
+ * Export par défaut pour compatibilité avec l'ancien code.
+ * @deprecated Préférez les imports nommés directs
+ */
 export default {
-  // Configurations principales
   app: APP_CONFIG,
   auth: AUTH_CONFIG,
-  pagination: PAGINATION_CONFIG,
-  format: FORMAT_CONFIG,
-  upload: UPLOAD_CONFIG,
-  email: UNIFIED_EMAIL_CONFIG,
-  security: SECURITY_CONFIG,
-  // Configuration spécialisées (temporaire)
-  // stripe: STRIPE_CONFIG, // À décommenter quand disponible
-  
-  // Data
-  routes: ROUTES,
-  features: FEATURES,
+  cache: CACHE_CONFIG,
+  email: EMAIL_CONFIG,
   env: ENV_CONFIG,
+  features: FEATURES,
+  format: FORMAT_CONFIG,
   monitoring: MONITORING_CONFIG,
+  pagination: PAGINATION_CONFIG,
+  routes: ROUTES,
+  security: SECURITY_CONFIG,
+  upload: UPLOAD_CONFIG,
   
   // Business constants
   eventCategories: EVENT_CATEGORIES,

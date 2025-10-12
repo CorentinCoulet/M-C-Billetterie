@@ -1,8 +1,14 @@
 import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
+import { buildSecurityHeaders } from './config/security-headers';
 import { verifyToken } from './src/lib/jwt';
 import prisma from './src/lib/prisma';
 import { instrumentedRateLimit } from './src/middlewares/production-rate-limit-integration';
+
+const sharedSecurityHeaders = buildSecurityHeaders({
+  env: process.env.NODE_ENV,
+  additionalHeaders: [{ key: 'X-DNS-Prefetch-Control', value: 'on' }],
+});
 
 export async function middleware(request: NextRequest) {
   try {
@@ -109,32 +115,10 @@ export async function middleware(request: NextRequest) {
     // Create response with headers
     const response = NextResponse.next();
 
-    // Add security headers
-    response.headers.set('X-Content-Type-Options', 'nosniff');
-    response.headers.set('X-Frame-Options', 'DENY');
-    response.headers.set('X-XSS-Protection', '1; mode=block');
-    response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
+    sharedSecurityHeaders.forEach(({ key, value }) => {
+      response.headers.set(key, value);
+    });
     response.headers.set('Server', 'MC-Billetterie/1.0');
-    
-    // CSP Header
-    const csp = [
-      "default-src 'self'",
-      "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
-      "style-src 'self' 'unsafe-inline'",
-      "img-src 'self' data: https:",
-      "font-src 'self' data:",
-      "connect-src 'self'",
-      "frame-ancestors 'none'"
-    ].join('; ');
-    response.headers.set('Content-Security-Policy', csp);
-    
-    // HSTS in production
-    if (process.env.NODE_ENV === 'production') {
-      response.headers.set(
-        'Strict-Transport-Security',
-        'max-age=31536000; includeSubDomains; preload'
-      );
-    }
     
     // Cache control
     if (pathname.startsWith('/api/') || isProtectedRoute) {
@@ -154,8 +138,10 @@ export async function middleware(request: NextRequest) {
     // In case of any error, return a minimal safe response
     console.error('Middleware error:', error);
     const response = NextResponse.next();
-    response.headers.set('X-Content-Type-Options', 'nosniff');
-    response.headers.set('X-Frame-Options', 'DENY');
+    sharedSecurityHeaders.forEach(({ key, value }) => {
+      response.headers.set(key, value);
+    });
+    response.headers.set('Server', 'MC-Billetterie/1.0');
     return response;
   }
 }

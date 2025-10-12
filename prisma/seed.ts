@@ -1,412 +1,291 @@
-﻿// prisma/seed.ts
-import bcrypt from 'bcryptjs'
-import { PrismaClient } from '../src/generated/prisma'
+import bcrypt from 'bcryptjs';
+import crypto from 'crypto';
+import {
+  ADMIN_FIXTURE,
+  CATEGORY_FIXTURES,
+  ORDER_FIXTURES,
+  ORGANIZER_FIXTURES,
+  SEED_SUMMARY,
+  USER_FIXTURES,
+} from '../src/data/fixtures/seed';
+import { PrismaClient } from '../src/generated/prisma';
 
-const prisma = new PrismaClient()
+type SeedPasswordSource = 'env' | 'generated';
 
-async function main() {
-  console.log('Debut du seeding...')
+interface SeedPassword {
+  envKey: string;
+  label: string;
+  plain: string;
+  source: SeedPasswordSource;
+}
 
-  // Nettoyer les donnees existantes
-  await prisma.ticket.deleteMany()
-  await prisma.order.deleteMany()
-  await prisma.event.deleteMany()
-  await prisma.organizer.deleteMany()
-  await prisma.category.deleteMany()
-  await prisma.user.deleteMany()
+const prisma = new PrismaClient();
+const SEED_SALT_ROUNDS = Number(process.env.SEED_BCRYPT_ROUNDS || 12);
 
-  // ====================================================================================
-  // CATEGORIES
-  // ====================================================================================
-  
-  const categories = await Promise.all([
-    prisma.category.create({ data: { name: 'MUSIC' } }),
-    prisma.category.create({ data: { name: 'SPORTS' } }),
-    prisma.category.create({ data: { name: 'CONFERENCE' } }),
-    prisma.category.create({ data: { name: 'FOOD' } }),
-    prisma.category.create({ data: { name: 'THEATER' } }),
-    prisma.category.create({ data: { name: 'EXHIBITION' } }),
-  ])
+function resolveSeedPassword(envKey: string, label: string): SeedPassword {
+  const rawValue = process.env[envKey]?.trim();
 
-  console.log('Categories creees')
+  if (rawValue && rawValue.length >= 8) {
+    return { envKey, label, plain: rawValue, source: 'env' };
+  }
 
-  // ====================================================================================
-  // ADMINISTRATEUR
-  // ====================================================================================
-  
-  const adminPassword = await bcrypt.hash('admin123', 10)
+  const generated = crypto.randomBytes(12).toString('hex');
+  console.warn(
+    `ℹ️  ${envKey} manquant ou trop court. Un mot de passe éphémère a été généré pour ${label}.`
+  );
+
+  return { envKey, label, plain: generated, source: 'generated' };
+}
+
+async function hashPassword(password: string) {
+  return bcrypt.hash(password, SEED_SALT_ROUNDS);
+}
+
+async function resetDatabase() {
+  await prisma.$transaction([
+    prisma.ticket.deleteMany(),
+    prisma.order.deleteMany(),
+    prisma.event.deleteMany(),
+    prisma.organizer.deleteMany(),
+    prisma.category.deleteMany(),
+    prisma.user.deleteMany(),
+  ]);
+}
+
+async function createCategories() {
+  const categories = await prisma.$transaction(
+    CATEGORY_FIXTURES.map((category) =>
+      prisma.category.create({ data: { name: category.name } })
+    )
+  );
+
+  const categoryByName = new Map<string, string>();
+  categories.forEach((category) => {
+    categoryByName.set(category.name, category.id);
+  });
+
+  return categoryByName;
+}
+
+async function createAdmin(passwordHash: string, userMap: Map<string, string>) {
   const admin = await prisma.user.create({
     data: {
-      email: 'admin@demo.com',
-      password: adminPassword,
-      name: 'Admin Demo',
-      role: 'ADMIN',
-      isVerified: true,
+      email: ADMIN_FIXTURE.email,
+      name: ADMIN_FIXTURE.name,
+      password: passwordHash,
+      role: ADMIN_FIXTURE.role,
+      isVerified: ADMIN_FIXTURE.isVerified ?? true,
     },
-  })
+  });
 
-  console.log('Administrateur cree')
+  userMap.set(admin.email, admin.id);
+  return admin;
+}
 
-  // ====================================================================================
-  // ORGANISATEURS
-  // ====================================================================================
-  
-  const organizerPassword = await bcrypt.hash('organizer123', 10)
-  
-  const organizerUsers = await Promise.all([
-    prisma.user.create({
-      data: {
-        email: 'music.events@demo.com',
-        password: organizerPassword,
-        name: 'Music Events Pro',
-        role: 'ORGANIZER',
-        isVerified: true,
-      },
-    }),
-    prisma.user.create({
-      data: {
-        email: 'sports.manager@demo.com',
-        password: organizerPassword,
-        name: 'Sports Manager',
-        role: 'ORGANIZER',
-        isVerified: true,
-      },
-    }),
-    prisma.user.create({
-      data: {
-        email: 'tech.conferences@demo.com',
-        password: organizerPassword,
-        name: 'Tech Conferences Inc',
-        role: 'ORGANIZER',
-        isVerified: true,
-      },
-    }),
-    prisma.user.create({
-      data: {
-        email: 'culture.events@demo.com',
-        password: organizerPassword,
-        name: 'Culture Events',
-        role: 'ORGANIZER',
-        isVerified: true,
-      },
-    }),
-  ])
+async function createOrganizers(
+  organizerPasswordHash: string,
+  categoryByName: Map<string, string>,
+  userMap: Map<string, string>
+) {
+  const eventByTitle = new Map<string, string>();
 
-  // Creer les organisateurs (entites distinctes)
-  const organizers = await Promise.all([
-    prisma.organizer.create({
-      data: { name: 'Music Events Pro' },
-    }),
-    prisma.organizer.create({
-      data: { name: 'Sports Manager' },
-    }),
-    prisma.organizer.create({
-      data: { name: 'Tech Conferences Inc' },
-    }),
-    prisma.organizer.create({
-      data: { name: 'Culture Events' },
-    }),
-  ])
+  await prisma.$transaction(async (tx) => {
+    for (const organizerFixture of ORGANIZER_FIXTURES) {
+      const organizerUser = await tx.user.create({
+        data: {
+          email: organizerFixture.email,
+          name: organizerFixture.name,
+          password: organizerPasswordHash,
+          role: organizerFixture.role,
+          isVerified: organizerFixture.isVerified ?? true,
+        },
+      });
 
-  console.log('4 organisateurs crees')
+      userMap.set(organizerUser.email, organizerUser.id);
 
-  // ====================================================================================
-  // UTILISATEURS
-  // ====================================================================================
-  
-  const userPassword = await bcrypt.hash('user123', 10)
-  
-  const users = await Promise.all([
-    prisma.user.create({
-      data: {
-        email: 'alice.martin@demo.com',
-        password: userPassword,
-        name: 'Alice Martin',
-        role: 'USER',
-        isVerified: true,
-      },
-    }),
-    prisma.user.create({
-      data: {
-        email: 'bob.dubois@demo.com',
-        password: userPassword,
-        name: 'Bob Dubois',
-        role: 'USER',
-        isVerified: true,
-      },
-    }),
-    prisma.user.create({
-      data: {
-        email: 'claire.bernard@demo.com',
-        password: userPassword,
-        name: 'Claire Bernard',
-        role: 'USER',
-        isVerified: true,
-      },
-    }),
-    prisma.user.create({
-      data: {
-        email: 'david.petit@demo.com',
-        password: userPassword,
-        name: 'David Petit',
-        role: 'USER',
-        isVerified: true,
-      },
-    }),
-    prisma.user.create({
-      data: {
-        email: 'emma.durand@demo.com',
-        password: userPassword,
-        name: 'Emma Durand',
-        role: 'USER',
-        isVerified: true,
-      },
-    }),
-  ])
+      const organizerEntity = await tx.organizer.create({
+        data: { name: organizerFixture.name },
+      });
 
-  console.log('5 utilisateurs crees')
+      for (const eventFixture of organizerFixture.events) {
+        const categoryId = categoryByName.get(eventFixture.category);
 
-  // ====================================================================================
-  // EVENEMENTS - Music Events Pro
-  // ====================================================================================
-  
-  const musicEvents = await Promise.all([
-    prisma.event.create({
-      data: {
-        title: 'Concert Rock - Les Legendes',
-        description: 'Une soiree inoubliable avec les plus grands hits du rock',
-        date: new Date('2025-11-15T20:00:00Z'),
-        location: 'Zenith de Paris',
-        maxCapacity: 5000,
-        isPublished: true,
-        categoryId: categories[0].id,
-        organizerId: organizers[0].id,
-      },
-    }),
-    prisma.event.create({
-      data: {
-        title: 'Festival Jazz sous les etoiles',
-        description: 'Trois jours de jazz avec les plus grands artistes internationaux',
-        date: new Date('2025-11-20T18:00:00Z'),
-        location: 'Parc de la Villette',
-        maxCapacity: 3000,
-        isPublished: true,
-        categoryId: categories[0].id,
-        organizerId: organizers[0].id,
-      },
-    }),
-    prisma.event.create({
-      data: {
-        title: 'Soiree Electro Night',
-        description: 'La meilleure soiree electro de Paris avec DJ internationaux',
-        date: new Date('2025-11-25T22:00:00Z'),
-        location: 'Accor Arena',
-        maxCapacity: 8000,
-        isPublished: true,
-        categoryId: categories[0].id,
-        organizerId: organizers[0].id,
-      },
-    }),
-  ])
+        if (!categoryId) {
+          throw new Error(`Categorie introuvable pour ${eventFixture.category}`);
+        }
 
-  console.log('3 evenements musicaux crees')
+        const event = await tx.event.create({
+          data: {
+            title: eventFixture.title,
+            description: eventFixture.description,
+            date: new Date(eventFixture.date),
+            location: eventFixture.location,
+            maxCapacity: eventFixture.maxCapacity,
+            isPublished: eventFixture.isPublished ?? true,
+            categoryId,
+            organizerId: organizerEntity.id,
+          },
+        });
 
-  // ====================================================================================
-  // EVENEMENTS - Sports Manager
-  // ====================================================================================
-  
-  const sportsEvents = await Promise.all([
-    prisma.event.create({
-      data: {
-        title: 'Match de Football - PSG vs OM',
-        description: 'Le classique du championnat de France',
-        date: new Date('2025-11-18T21:00:00Z'),
-        location: 'Parc des Princes',
-        maxCapacity: 47929,
-        isPublished: true,
-        categoryId: categories[1].id,
-        organizerId: organizers[1].id,
-      },
-    }),
-    prisma.event.create({
-      data: {
-        title: 'Tournoi de Tennis - Masters Paris',
-        description: 'Les meilleurs joueurs mondiaux a Paris Bercy',
-        date: new Date('2025-11-22T14:00:00Z'),
-        location: 'AccorHotels Arena',
-        maxCapacity: 15000,
-        isPublished: true,
-        categoryId: categories[1].id,
-        organizerId: organizers[1].id,
-      },
-    }),
-    prisma.event.create({
-      data: {
-        title: 'Marathon de Paris',
-        description: 'Course mythique dans les rues de Paris',
-        date: new Date('2025-12-05T08:00:00Z'),
-        location: 'Champs-Elysees',
-        maxCapacity: 50000,
-        isPublished: true,
-        categoryId: categories[1].id,
-        organizerId: organizers[1].id,
-      },
-    }),
-  ])
+        eventByTitle.set(event.title, event.id);
+      }
+    }
+  });
 
-  console.log('3 evenements sportifs crees')
+  return eventByTitle;
+}
 
-  // ====================================================================================
-  // EVENEMENTS - Tech Conferences Inc
-  // ====================================================================================
-  
-  const techEvents = await Promise.all([
-    prisma.event.create({
-      data: {
-        title: 'Conference Tech Innovation 2025',
-        description: 'Les dernieres tendances en IA, Cloud et Cybersecurite',
-        date: new Date('2025-11-28T09:00:00Z'),
-        location: 'Centre de congres Porte Maillot',
-        maxCapacity: 800,
-        isPublished: true,
-        categoryId: categories[2].id,
-        organizerId: organizers[2].id,
-      },
-    }),
-    prisma.event.create({
-      data: {
-        title: 'DevOps Summit Paris',
-        description: 'Deux jours dedies aux pratiques DevOps et Cloud Native',
-        date: new Date('2025-12-10T09:00:00Z'),
-        location: 'Paris Convention Centre',
-        maxCapacity: 1200,
-        isPublished: true,
-        categoryId: categories[2].id,
-        organizerId: organizers[2].id,
-      },
-    }),
-  ])
+async function createUsers(userPasswordHash: string, userMap: Map<string, string>) {
+  const users = await prisma.$transaction(
+    USER_FIXTURES.map((fixture) =>
+      prisma.user.create({
+        data: {
+          email: fixture.email,
+          name: fixture.name,
+          password: userPasswordHash,
+          role: fixture.role,
+          isVerified: fixture.isVerified ?? true,
+        },
+      })
+    )
+  );
 
-  console.log('2 conferences tech creees')
+  users.forEach((user) => userMap.set(user.email, user.id));
+  return users;
+}
 
-  // ====================================================================================
-  // EVENEMENTS - Culture Events
-  // ====================================================================================
-  
-  const cultureEvents = await Promise.all([
-    prisma.event.create({
-      data: {
-        title: 'Festival Gastronomique',
-        description: 'Decouvrez les saveurs du monde avec nos chefs etoiles',
-        date: new Date('2025-11-30T12:00:00Z'),
-        location: 'Esplanade des Invalides',
-        maxCapacity: 2000,
-        isPublished: true,
-        categoryId: categories[3].id,
-        organizerId: organizers[3].id,
-      },
-    }),
-    prisma.event.create({
-      data: {
-        title: 'Theatre - Le Malade Imaginaire',
-        description: 'La celebre piece de Moliere revisitee',
-        date: new Date('2025-12-08T20:00:00Z'),
-        location: 'Comedie Francaise',
-        maxCapacity: 860,
-        isPublished: true,
-        categoryId: categories[4].id,
-        organizerId: organizers[3].id,
-      },
-    }),
-    prisma.event.create({
-      data: {
-        title: 'Exposition Art Moderne',
-        description: 'Collection exceptionnelle dart contemporain',
-        date: new Date('2025-12-01T10:00:00Z'),
-        location: 'Grand Palais',
-        maxCapacity: 500,
-        isPublished: true,
-        categoryId: categories[5].id,
-        organizerId: organizers[3].id,
-      },
-    }),
-  ])
+async function createOrders(
+  userMap: Map<string, string>,
+  eventMap: Map<string, string>
+) {
+  return prisma.$transaction(async (tx) => {
+    const createdOrders = [];
 
-  console.log('3 evenements culturels crees')
+    for (const orderFixture of ORDER_FIXTURES) {
+      const userId = userMap.get(orderFixture.userEmail);
 
-  // ====================================================================================
-  // COMMANDES
-  // ====================================================================================
-  
-  const orders = await Promise.all([
-    prisma.order.create({ data: { userId: users[0].id, status: 'paid', totalPrice: 90.00 } }),
-    prisma.order.create({ data: { userId: users[0].id, status: 'paid', totalPrice: 40.00 } }),
-    prisma.order.create({ data: { userId: users[1].id, status: 'paid', totalPrice: 135.00 } }),
-    prisma.order.create({ data: { userId: users[2].id, status: 'paid', totalPrice: 120.00 } }),
-    prisma.order.create({ data: { userId: users[2].id, status: 'pending_payment', totalPrice: 70.00 } }),
-    prisma.order.create({ data: { userId: users[3].id, status: 'paid', totalPrice: 85.00 } }),
-    prisma.order.create({ data: { userId: users[4].id, status: 'paid', totalPrice: 150.00 } }),
-    prisma.order.create({ data: { userId: users[4].id, status: 'paid', totalPrice: 35.00 } }),
-  ])
+      if (!userId) {
+        throw new Error(`Utilisateur introuvable pour l'ordre ${orderFixture.userEmail}`);
+      }
 
-  // Creer les tickets
-  await Promise.all([
-    prisma.ticket.create({ data: { userId: users[0].id, eventId: musicEvents[0].id, orderId: orders[0].id, code: 'TICKET-ALICE-001', status: 'paid' } }),
-    prisma.ticket.create({ data: { userId: users[0].id, eventId: musicEvents[0].id, orderId: orders[0].id, code: 'TICKET-ALICE-002', status: 'paid' } }),
-    prisma.ticket.create({ data: { userId: users[0].id, eventId: cultureEvents[0].id, orderId: orders[1].id, code: 'TICKET-ALICE-003', status: 'paid' } }),
-    prisma.ticket.create({ data: { userId: users[1].id, eventId: sportsEvents[0].id, orderId: orders[2].id, code: 'TICKET-BOB-001', status: 'paid' } }),
-    prisma.ticket.create({ data: { userId: users[1].id, eventId: sportsEvents[0].id, orderId: orders[2].id, code: 'TICKET-BOB-002', status: 'paid' } }),
-    prisma.ticket.create({ data: { userId: users[1].id, eventId: sportsEvents[0].id, orderId: orders[2].id, code: 'TICKET-BOB-003', status: 'paid' } }),
-    prisma.ticket.create({ data: { userId: users[2].id, eventId: techEvents[0].id, orderId: orders[3].id, code: 'TICKET-CLAIRE-001', status: 'paid' } }),
-    prisma.ticket.create({ data: { userId: users[2].id, eventId: cultureEvents[1].id, orderId: orders[4].id, code: 'TICKET-CLAIRE-002', status: 'pending' } }),
-    prisma.ticket.create({ data: { userId: users[2].id, eventId: cultureEvents[1].id, orderId: orders[4].id, code: 'TICKET-CLAIRE-003', status: 'pending' } }),
-    prisma.ticket.create({ data: { userId: users[3].id, eventId: musicEvents[1].id, orderId: orders[5].id, code: 'TICKET-DAVID-001', status: 'paid' } }),
-    prisma.ticket.create({ data: { userId: users[4].id, eventId: sportsEvents[1].id, orderId: orders[6].id, code: 'TICKET-EMMA-001', status: 'paid' } }),
-    prisma.ticket.create({ data: { userId: users[4].id, eventId: sportsEvents[1].id, orderId: orders[6].id, code: 'TICKET-EMMA-002', status: 'paid' } }),
-    prisma.ticket.create({ data: { userId: users[4].id, eventId: musicEvents[2].id, orderId: orders[7].id, code: 'TICKET-EMMA-003', status: 'paid' } }),
-  ])
+      const order = await tx.order.create({
+        data: {
+          userId,
+          totalPrice: orderFixture.totalPrice,
+          status: orderFixture.status,
+          tickets: {
+            create: orderFixture.tickets.map((ticket) => {
+              const eventId = eventMap.get(ticket.eventTitle);
 
-  console.log('8 commandes creees avec leurs tickets')
-  console.log('')
-  console.log('Seeding termine avec succes!')
-  console.log('')
-  console.log('==============================================')
-  console.log('COMPTES DISPONIBLES:')
-  console.log('==============================================')
-  console.log('')
-  console.log('Admin:')
-  console.log('  - admin@demo.com / admin123')
-  console.log('')
-  console.log('Organisateurs (organizer123 pour tous):')
-  console.log('  - music.events@demo.com')
-  console.log('  - sports.manager@demo.com')
-  console.log('  - tech.conferences@demo.com')
-  console.log('  - culture.events@demo.com')
-  console.log('')
-  console.log('Utilisateurs (user123 pour tous):')
-  console.log('  - alice.martin@demo.com')
-  console.log('  - bob.dubois@demo.com')
-  console.log('  - claire.bernard@demo.com')
-  console.log('  - david.petit@demo.com')
-  console.log('  - emma.durand@demo.com')
-  console.log('')
-  console.log('==============================================')
-  console.log('STATISTIQUES:')
-  console.log('==============================================')
-  console.log('  1 Admin')
-  console.log('  4 Organisateurs')
-  console.log('  5 Utilisateurs')
-  console.log('  11 Evenements')
-  console.log('  8 Commandes')
-  console.log('  13 Tickets')
-  console.log('==============================================')
+              if (!eventId) {
+                throw new Error(`Événement introuvable pour le billet ${ticket.code}`);
+              }
+
+              return {
+                code: ticket.code,
+                status: ticket.status,
+                eventId,
+                userId,
+              };
+            }),
+          },
+        },
+        include: { tickets: true },
+      });
+
+      createdOrders.push(order);
+    }
+
+    return createdOrders;
+  });
+}
+
+function logSummary(passwords: SeedPassword[]) {
+  console.log('');
+  console.log('Seeding terminé avec succès!');
+  console.log('');
+  console.log('==============================================');
+  console.log('COMPTES DISPONIBLES:');
+  console.log('==============================================');
+  console.log('');
+  console.log('Admin:');
+  const adminPassword = passwords.find((pwd) => pwd.envKey === 'SEED_ADMIN_PASSWORD');
+  console.log(`  - ${ADMIN_FIXTURE.email} / ${adminPassword?.plain ?? 'mot de passe indisponible'}`);
+  console.log('');
+  console.log('Organisateurs:');
+  ORGANIZER_FIXTURES.forEach((organizer) => {
+    console.log(`  - ${organizer.email}`);
+  });
+  const organizerPassword = passwords.find((pwd) => pwd.envKey === 'SEED_ORGANIZER_PASSWORD');
+  console.log(`    Mot de passe partagé: ${organizerPassword?.plain ?? 'mot de passe indisponible'}`);
+  console.log('');
+  console.log('Utilisateurs:');
+  USER_FIXTURES.forEach((user) => {
+    console.log(`  - ${user.email}`);
+  });
+  const userPassword = passwords.find((pwd) => pwd.envKey === 'SEED_USER_PASSWORD');
+  console.log(`    Mot de passe partagé: ${userPassword?.plain ?? 'mot de passe indisponible'}`);
+  console.log('');
+  console.log('==============================================');
+  console.log('STATISTIQUES:');
+  console.log('==============================================');
+  console.log(`  ${SEED_SUMMARY.admins} Admin`);
+  console.log(`  ${SEED_SUMMARY.organizers} Organisateurs`);
+  console.log(`  ${SEED_SUMMARY.users} Utilisateurs`);
+  console.log(`  ${SEED_SUMMARY.events} Événements`);
+  console.log(`  ${SEED_SUMMARY.orders} Commandes`);
+  console.log('');
+  console.log('Sources des mots de passe:');
+  passwords.forEach((pwd) => {
+    const sourceLabel =
+      pwd.source === 'env'
+        ? 'provenant des variables d\'environnement'
+        : 'généré pour cette exécution';
+    console.log(`  - ${pwd.label}: ${sourceLabel}`);
+  });
+  console.log('==============================================');
+}
+
+async function main() {
+  console.log('Début du seeding...');
+
+  const passwords: SeedPassword[] = [
+    resolveSeedPassword('SEED_ADMIN_PASSWORD', 'Compte administrateur'),
+    resolveSeedPassword('SEED_ORGANIZER_PASSWORD', 'Comptes organisateurs'),
+    resolveSeedPassword('SEED_USER_PASSWORD', 'Comptes utilisateurs'),
+  ];
+
+  const [adminPasswordHash, organizerPasswordHash, userPasswordHash] = await Promise.all(
+    passwords.map((pwd) => hashPassword(pwd.plain))
+  );
+
+  await resetDatabase();
+  console.log('Base de données nettoyée');
+
+  const categoryByName = await createCategories();
+  console.log(`${categoryByName.size} catégories créées`);
+
+  const userMap = new Map<string, string>();
+  await createAdmin(adminPasswordHash, userMap);
+  console.log('Administrateur créé');
+
+  const eventMap = await createOrganizers(organizerPasswordHash, categoryByName, userMap);
+  console.log(`${eventMap.size} événements créés via ${ORGANIZER_FIXTURES.length} organisateurs`);
+
+  await createUsers(userPasswordHash, userMap);
+  console.log(`${USER_FIXTURES.length} utilisateurs finaux créés`);
+
+  await createOrders(userMap, eventMap);
+  console.log(`${ORDER_FIXTURES.length} commandes générées`);
+
+  logSummary(passwords);
 }
 
 main()
   .catch((e) => {
-    console.error('Erreur lors du seeding:', e)
-    process.exit(1)
+    console.error('Erreur lors du seeding:', e);
+    process.exit(1);
   })
   .finally(async () => {
-    await prisma.$disconnect()
-  })
+    await prisma.$disconnect();
+  });
