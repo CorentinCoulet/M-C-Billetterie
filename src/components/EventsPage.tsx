@@ -77,10 +77,12 @@ export function EventsPage({
           animate={{ opacity: 1, y: 0 }}
           className="text-center mb-12"
         >
-          <h1 className="text-4xl font-bold text-foreground mb-4">Découvrez nos événements</h1>
-          <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
-            Trouvez l'événement parfait parmi notre sélection de concerts, festivals et spectacles
-          </p>
+          <div className="glass-card rounded-3xl p-8 sm:p-12">
+            <h1 className="text-3xl sm:text-4xl font-bold text-foreground mb-4">Découvrez nos événements</h1>
+            <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
+              Trouvez l'événement parfait parmi notre sélection de concerts, festivals et spectacles
+            </p>
+          </div>
         </motion.div>
 
         {/* Filters */}
@@ -88,7 +90,7 @@ export function EventsPage({
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
-          className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 mb-8 shadow-lg"
+          className="glass-card rounded-2xl p-6 mb-8"
         >
           <div className="grid md:grid-cols-4 gap-4">
             <div className="relative">
@@ -152,7 +154,7 @@ export function EventsPage({
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: index * 0.1 }}
             >
-              <Card className="group hover:shadow-xl transition-all duration-300 cursor-pointer bg-white/80 backdrop-blur-sm border-0 shadow-lg">
+              <Card className="glass-card group hover:shadow-xl transition-all duration-300 cursor-pointer border-2 border-white/40">
                 <CardContent className="p-0">
                   <div className="relative">
                     <div className="aspect-video bg-gradient-to-br from-blue-100 to-purple-100 flex items-center justify-center text-6xl rounded-t-lg">
@@ -210,7 +212,7 @@ export function EventsPage({
                           }}
                           variant="outline"
                           size="sm"
-                          className="bg-white/50 backdrop-blur-sm"
+                          className="border-white/40 hover:bg-white/20"
                         >
                           <Plus size={16} className="mr-1" />
                           Panier
@@ -218,6 +220,7 @@ export function EventsPage({
                         <Button
                           onClick={() => navigate('event-detail', event.id)}
                           size="sm"
+                          className="glass-button"
                         >
                           Détails
                         </Button>

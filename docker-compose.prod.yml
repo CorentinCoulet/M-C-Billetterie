@@ -39,6 +39,8 @@ services:
 
   # Override web service for production
   web:
+    env_file:
+      - .env.prod
     environment:
       NODE_ENV: production
       SSL_CERT_PATH: /app/ssl/server.crt

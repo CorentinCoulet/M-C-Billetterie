@@ -9,17 +9,19 @@ interface FooterProps {
 
 export function Footer({ navigate }: FooterProps) {
   return (
-    <footer className="bg-slate-100 dark:bg-slate-800 mt-20">
+    <footer className="glass-card border-t-2 border-white/40 mt-20">
       <div className="max-w-7xl mx-auto px-4 py-12">
         <div className="grid md:grid-cols-4 gap-8">
           <div>
-            <h3 className="text-lg font-semibold mb-4">Billetterie</h3>
+            <h3 className="text-lg font-semibold mb-4 bg-gradient-to-r from-primary to-blue-600 bg-clip-text text-transparent">
+              Billetterie
+            </h3>
             <p className="text-muted-foreground">
               Votre plateforme de réservation d'événements
             </p>
           </div>
           <div>
-            <h4 className="font-semibold mb-4">Navigation</h4>
+            <h4 className="font-semibold mb-4 text-foreground">Navigation</h4>
             <div className="flex flex-col space-y-2">
               <Button 
                 variant="ghost" 
@@ -48,7 +50,7 @@ export function Footer({ navigate }: FooterProps) {
             </div>
           </div>
           <div>
-            <h4 className="font-semibold mb-4">Support</h4>
+            <h4 className="font-semibold mb-4 text-foreground">Support</h4>
             <div className="flex flex-col space-y-2">
               <Button 
                 variant="ghost" 
@@ -69,7 +71,7 @@ export function Footer({ navigate }: FooterProps) {
             </div>
           </div>
           <div>
-            <h4 className="font-semibold mb-4">Légal</h4>
+            <h4 className="font-semibold mb-4 text-foreground">Légal</h4>
             <div className="flex flex-col space-y-2">
               <TermsModal 
                 trigger={
@@ -96,7 +98,7 @@ export function Footer({ navigate }: FooterProps) {
             </div>
           </div>
         </div>
-        <div className="border-t mt-8 pt-8 text-center text-muted-foreground">
+        <div className="border-t border-white/40 mt-8 pt-8 text-center text-muted-foreground">
           <p>&copy; 2025 Billetterie. Tous droits réservés.</p>
         </div>
       </div>

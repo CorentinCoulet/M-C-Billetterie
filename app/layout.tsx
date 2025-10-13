@@ -9,6 +9,11 @@ export const metadata: Metadata = {
   description: 'Application de billetterie avec sécurité avancée',
   keywords: 'billetterie, tickets, events, sécurité',
   authors: [{ name: 'Billetterie Team' }],
+  icons: {
+    icon: '/logo4.webp',
+    shortcut: '/logo4.webp',
+    apple: '/logo4.webp',
+  },
 }
 
 export default function RootLayout({

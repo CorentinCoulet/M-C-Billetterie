@@ -39,7 +39,7 @@ RUN rm -rf .next && \
 # Switch to non-root user
 USER nextjs
 
-EXPOSE 3000
+EXPOSE 3001
 
 # Use a shell to run multiple commands
-CMD ["sh", "-c", "yarn prisma migrate deploy && yarn dev"]
+CMD ["sh", "-c", "yarn prisma migrate deploy && yarn dev:docker"]

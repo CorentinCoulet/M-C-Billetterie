@@ -13,7 +13,7 @@
     "preinstall": "node -e \"if(process.env.npm_execpath && process.env.npm_execpath.indexOf('yarn') === -1) throw new Error('Use Yarn for this project: yarn install')\"",
     "_comment_dev": "=== Développement ===",
     "dev": "next dev",
-    "dev:docker": "next dev --hostname 0.0.0.0",
+    "dev:docker": "next dev --hostname 0.0.0.0 --port 3001",
     "dev:turbo": "next dev --turbo",
     "dev:debug": "NODE_OPTIONS='--inspect' next dev",
     "_comment_build": "=== Build et Production ===",

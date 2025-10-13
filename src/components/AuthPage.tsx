@@ -16,6 +16,7 @@ const BuildingIcon = () => (
 )
 
 // Imports optimisés - un seul par composant
+import { ArrowLeft } from '@phosphor-icons/react'
 import { Button } from '../components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card'
 import { Input } from '../components/ui/input'
@@ -121,30 +122,55 @@ export function AuthPage({ navigate, currentUser, users, setUsers, setCurrentUse
 
   if (currentUser) {
     return (
-      <div className="min-h-screen pt-24 pb-12 flex items-center justify-center">
-        <Card className="w-full max-w-md">
-          <CardHeader>
-            <CardTitle className="text-center">Bienvenue {currentUser.name}</CardTitle>
-          </CardHeader>
+      <div className="min-h-screen pt-24 pb-12 flex items-center justify-center px-4">
+        <div className="w-full max-w-md">
+          <Button 
+            onClick={() => navigate('home')}
+            variant="outline" 
+            className="mb-6 border-white/40 hover:bg-white/20"
+          >
+            <ArrowLeft size={16} className="mr-2" />
+            Retour à l'accueil
+          </Button>
+          
+          <Card className="glass-card w-full border-2 border-white/40">
+            <CardHeader>
+              <CardTitle className="text-center bg-gradient-to-r from-primary to-blue-600 bg-clip-text text-transparent">
+                Bienvenue {currentUser.name}
+              </CardTitle>
+            </CardHeader>
           <CardContent className="space-y-4">
-            <Button onClick={() => navigate('events')} className="w-full">
+            <Button onClick={() => navigate('events')} className="w-full glass-button">
               Voir les événements
             </Button>
-            <Button onClick={logout} variant="outline" className="w-full">
+            <Button onClick={logout} variant="outline" className="w-full border-white/40 hover:bg-white/20">
               Se déconnecter
             </Button>
           </CardContent>
         </Card>
+        </div>
       </div>
     )
   }
 
   return (
     <div className="min-h-screen pt-24 pb-12 flex items-center justify-center px-4">
-      <Card className="w-full max-w-2xl">
-        <CardHeader>
-          <CardTitle className="text-center">Authentification</CardTitle>
-        </CardHeader>
+      <div className="w-full max-w-2xl">
+        <Button 
+          onClick={() => navigate('home')}
+          variant="outline" 
+          className="mb-6 border-white/40 hover:bg-white/20"
+        >
+          <ArrowLeft size={16} className="mr-2" />
+          Retour à l'accueil
+        </Button>
+        
+        <Card className="glass-card w-full border-2 border-white/40">
+          <CardHeader>
+            <CardTitle className="text-center bg-gradient-to-r from-primary to-blue-600 bg-clip-text text-transparent">
+              Authentification
+            </CardTitle>
+          </CardHeader>
         <CardContent>
           <Tabs defaultValue="login" className="space-y-4">
             <TabsList className="grid w-full grid-cols-2">
@@ -178,7 +204,7 @@ export function AuthPage({ navigate, currentUser, users, setUsers, setCurrentUse
                     required
                   />
                 </div>
-                <Button type="submit" className="w-full" disabled={loading}>
+                <Button type="submit" className="w-full glass-button" disabled={loading}>
                   {loading ? 'Connexion...' : 'Se connecter'}
                 </Button>
               </form>
@@ -461,7 +487,7 @@ export function AuthPage({ navigate, currentUser, users, setUsers, setCurrentUse
                     </div>
                   </div>
 
-                  <Button type="submit" className="w-full h-12 mt-6" disabled={loading}>
+                  <Button type="submit" className="w-full h-12 mt-6 glass-button" disabled={loading}>
                     {loading ? 'Inscription...' : `S'inscrire comme ${userType === 'user' ? 'particulier' : 'organisateur'}`}
                   </Button>
                 </form>
@@ -470,6 +496,7 @@ export function AuthPage({ navigate, currentUser, users, setUsers, setCurrentUse
           </Tabs>
         </CardContent>
       </Card>
+      </div>
     </div>
   )
 }

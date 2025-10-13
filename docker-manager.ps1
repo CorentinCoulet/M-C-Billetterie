@@ -7,19 +7,14 @@
 param(
     [Parameter(Mandatory=$false)]
     [ValidateSet(
-        'dev', 'dev-monitoring', 'prod', 'prod-monitoring', 'prod-full',
-        'status', 'logs', 'stop-dev', 'stop-prod', 'stop-all', 'restart',
+        'dev', 'dev-full', 'dev-monitoring',
+        'status', 'logs', 'restart',
         'down', 'down-v', 'down-full',
         'ports', 'test-pg', 'test-redis', 'test-all', 'health', 'metrics',
         'backup', 'restore', 'clean-volumes', 'prune', 'seed',
-        'k8s-deploy', 'k8s-status', 'k8s-clean',
         'help'
     )]
     [string]$Action = 'help',
-    
-    [Parameter(Mandatory=$false)]
-    [ValidateSet('dev', 'prod', 'all')]
-    [string]$Environment = 'dev',
     
     [Parameter(Mandatory=$false)]
     [switch]$Build,
@@ -48,6 +43,7 @@ $ErrorActionPreference = "Continue"
 
 $Script:Config = @{
     NetworkName = "billetterie-network"
+    NetworkNameDev = "billetterie-dev-network"
     LogDir = ".\logs"
     BackupDir = ".\backups"
     MaxLogSize = 10MB
@@ -65,7 +61,7 @@ $Script:Config = @{
         RedisCommander = 8084
         Mailhog = 8025
         MailhogSMTP = 1025
-        Grafana = 3001
+        Grafana = 3002
         Prometheus = 9090
     }
     
@@ -327,11 +323,11 @@ function Show-Help {
     Write-Host "  .\docker-manager.ps1 -Action <action> [options]" -ForegroundColor White
     Write-Host ""
     Write-Host "ENVIRONNEMENTS:" -ForegroundColor Green
-    Write-Host "  -Action dev                    DEV - Développement complet" -ForegroundColor White
-    Write-Host "  -Action dev-monitoring         DEV + Monitoring" -ForegroundColor White
-    Write-Host "  -Action prod                   PROD - Production" -ForegroundColor White
-    Write-Host "  -Action prod-monitoring        PROD + Monitoring" -ForegroundColor White
-    Write-Host "  -Action prod-full              PROD + Monitoring + Outils" -ForegroundColor White
+    Write-Host "  -Action dev                    ⚡ DEV Optimisé - Services Docker + Next.js LOCAL (RECOMMANDÉ)" -ForegroundColor White
+    Write-Host "  -Action dev-full               🐳 DEV Complet - Tout dans Docker (plus lent, pour tests)" -ForegroundColor White
+    Write-Host "  -Action dev-monitoring         📊 DEV + Monitoring" -ForegroundColor White
+    Write-Host ""
+    Write-Host "💡 Pour la PRODUCTION sur Linux, utilisez : ./docker-manager.sh" -ForegroundColor Yellow
     Write-Host ""
     Write-Host "GESTION:" -ForegroundColor Green
     Write-Host "  -Action status                 Voir le statut" -ForegroundColor White
@@ -340,13 +336,10 @@ function Show-Help {
     Write-Host "  -Action logs [-Follow]         Voir les logs" -ForegroundColor White
     Write-Host "  -Action restart                Redémarrer" -ForegroundColor White
     Write-Host ""
-    Write-Host "ARRÊT (DOWN):" -ForegroundColor Red
-    Write-Host "  -Action stop-dev                 Arrêter DEV (ancien)" -ForegroundColor DarkGray
-    Write-Host "  -Action stop-prod                Arrêter PROD (ancien)" -ForegroundColor DarkGray
-    Write-Host "  -Action stop-all                 Arrêter TOUT (ancien)" -ForegroundColor DarkGray
-    Write-Host "  -Action down                   Down simple (env + monitoring optionnel)" -ForegroundColor White
-    Write-Host "  -Action down-v                 Down + Volumes + Orphelins" -ForegroundColor Yellow
-    Write-Host "  -Action down-full              Down + Volumes + Prune complet" -ForegroundColor Red
+    Write-Host "ARRÊT:" -ForegroundColor Red
+    Write-Host "  -Action down                   Arrêter l'environnement DEV" -ForegroundColor White
+    Write-Host "  -Action down-v                 Down + Supprimer les volumes" -ForegroundColor Yellow
+    Write-Host "  -Action down-full              Down + Volumes + Nettoyage complet Docker" -ForegroundColor Red
     Write-Host ""
     Write-Host "TESTS:" -ForegroundColor Green
     Write-Host "  -Action test-pg                Tester PostgreSQL" -ForegroundColor White
@@ -376,26 +369,31 @@ function Show-Help {
     Write-Host "  -BackupFile <fichier>        Fichier pour restauration" -ForegroundColor White
     Write-Host ""
     Write-Host "EXEMPLES:" -ForegroundColor Cyan
+    Write-Host "  # DEV rapide (recommandé pour le développement quotidien)" -ForegroundColor DarkGray
     Write-Host "  .\docker-manager.ps1 -Action dev" -ForegroundColor Gray
-    Write-Host "  .\docker-manager.ps1 -Action dev -Build -Verbose" -ForegroundColor Gray
-    Write-Host "  .\docker-manager.ps1 -Action dev -SkipSeed" -ForegroundColor Gray
-    Write-Host "  .\docker-manager.ps1 -Action seed -Environment dev" -ForegroundColor Gray
-    Write-Host "  .\docker-manager.ps1 -Action logs -Environment dev -Follow" -ForegroundColor Gray
-    Write-Host "  .\docker-manager.ps1 -Action down -Environment dev" -ForegroundColor Gray
-    Write-Host "  .\docker-manager.ps1 -Action down -Environment dev -WithMonitoring" -ForegroundColor Gray
-    Write-Host "  .\docker-manager.ps1 -Action down-v -Environment prod" -ForegroundColor Gray
-    Write-Host "  .\docker-manager.ps1 -Action down-full" -ForegroundColor Gray
-    Write-Host "  .\docker-manager.ps1 -Action backup -Environment prod" -ForegroundColor Gray
+    Write-Host "  # Puis dans un autre terminal : yarn dev" -ForegroundColor DarkGray
+    Write-Host ""
+    Write-Host "  # DEV complet dans Docker (tests d'intégration)" -ForegroundColor DarkGray
+    Write-Host "  .\docker-manager.ps1 -Action dev-full" -ForegroundColor Gray
+    Write-Host ""
+    Write-Host "  # Autres commandes utiles" -ForegroundColor DarkGray
+    Write-Host "  .\docker-manager.ps1 -Action seed" -ForegroundColor Gray
+    Write-Host "  .\docker-manager.ps1 -Action logs -Follow" -ForegroundColor Gray
+    Write-Host "  .\docker-manager.ps1 -Action down" -ForegroundColor Gray
+    Write-Host "  .\docker-manager.ps1 -Action backup" -ForegroundColor Gray
     Write-Host ""
 }
 
 function Ensure-DockerNetwork {
-    $networkName = $Script:Config.NetworkName
-    $networkExists = docker network ls --format '{{.Name}}' | Select-String -Pattern "^$networkName$"
+    param(
+        [string]$NetworkName = $Script:Config.NetworkName
+    )
+    
+    $networkExists = docker network ls --format '{{.Name}}' | Select-String -Pattern "^$NetworkName$"
     
     if (-not $networkExists) {
-        Write-Log "Création du réseau Docker: $networkName" -Level Info
-        docker network create $networkName 2>&1 | Out-Null
+        Write-Log "Création du réseau Docker: $NetworkName" -Level Info
+        docker network create $NetworkName 2>&1 | Out-Null
         if ($LASTEXITCODE -eq 0) {
             Write-Log "Réseau créé avec succès" -Level Success
             return $true
@@ -404,17 +402,108 @@ function Ensure-DockerNetwork {
             return $false
         }
     }
-    Write-Log "Réseau $networkName déjà existant" -Level Debug
+    Write-Log "Réseau $NetworkName déjà existant" -Level Debug
     return $true
 }
 
 function Start-DevEnvironment {
-    Write-Log "Démarrage de l'environnement DEV..." -Level Info
+    Write-Log "🚀 Mode DEV Optimisé - Services uniquement (Next.js en LOCAL)" -Level Info
+    Write-Host ""
+    Write-Host "  ⚡ PERFORMANCES OPTIMALES : Next.js tournera en local (10x plus rapide !)" -ForegroundColor Green
+    Write-Host "  📦 Docker : Uniquement les services (PostgreSQL, Redis, Mailhog, etc.)" -ForegroundColor Cyan
+    Write-Host ""
     
     if (!(Test-Prerequisites)) { return }
-    if (!(Ensure-DockerNetwork)) { return }
+    if (!(Ensure-DockerNetwork -NetworkName $Script:Config.NetworkNameDev)) { return }
     
-    # Vérifier les ports critiques
+    # Vérifier les ports des SERVICES uniquement (pas l'app Next.js)
+    $portsToCheck = @(
+        $Script:Config.Ports.PostgresqlDev,
+        $Script:Config.Ports.RedisDev,
+        $Script:Config.Ports.Mailhog,
+        $Script:Config.Ports.Adminer,
+        $Script:Config.Ports.RedisCommander
+    )
+    
+    if (!(Test-PortsAvailability $portsToCheck)) {
+        Write-Log "Annulation du démarrage" -Level Warning
+        return
+    }
+    
+    Write-Log "Démarrage des SERVICES uniquement (DB, Redis, outils)..." -Level Info
+    
+    # Démarrer UNIQUEMENT les services, PAS l'application Next.js
+    $servicesCommand = "up -d db-dev redis-dev mailhog adminer redis-commander"
+    if (!(Invoke-DockerCompose -ComposeFiles @($Script:Config.ComposeFiles.Dev) -Command $servicesCommand)) {
+        Write-Log "Erreur lors du démarrage des services" -Level Error
+        return
+    }
+    
+    # Attendre que les services soient prêts
+    Write-Log "Vérification de l'état des services..." -Level Info
+    $containers = @(
+        $Script:Config.Containers.PostgresqlDev,
+        $Script:Config.Containers.RedisDev
+    )
+    
+    $allReady = $true
+    foreach ($container in $containers) {
+        if (!(Wait-ForContainer -ContainerName $container -TimeoutSeconds $Script:Config.HealthCheckTimeout)) {
+            $allReady = $false
+        }
+    }
+    
+    if ($allReady) {
+        Write-Log "✅ Services Docker démarrés avec succès!" -Level Success
+        Write-Host ""
+        Write-Host "═══════════════════════════════════════════════════════════" -ForegroundColor Green
+        Write-Host "  🎯 SERVICES PRÊTS - Lancez maintenant Next.js en LOCAL" -ForegroundColor Green
+        Write-Host "═══════════════════════════════════════════════════════════" -ForegroundColor Green
+        Write-Host ""
+        Write-Host "📦 Services Docker actifs :" -ForegroundColor Cyan
+        Write-Host "   ✓ PostgreSQL       localhost:$($Script:Config.Ports.PostgresqlDev)" -ForegroundColor White
+        Write-Host "   ✓ Redis            localhost:$($Script:Config.Ports.RedisDev)" -ForegroundColor White
+        Write-Host "   ✓ Mailhog UI       http://localhost:$($Script:Config.Ports.Mailhog)" -ForegroundColor White
+        Write-Host "   ✓ Adminer (DB)     http://localhost:$($Script:Config.Ports.Adminer)" -ForegroundColor White
+        Write-Host "   ✓ Redis Commander  http://localhost:$($Script:Config.Ports.RedisCommander)" -ForegroundColor White
+        Write-Host ""
+        Write-Host "🔥 PROCHAINE ÉTAPE - Lancez Next.js en LOCAL :" -ForegroundColor Yellow
+        Write-Host ""
+        Write-Host "   yarn dev" -ForegroundColor Cyan
+        Write-Host ""
+        Write-Host "   → Votre app sera sur http://localhost:3000" -ForegroundColor Gray
+        Write-Host "   → Changements de page instantanés ⚡" -ForegroundColor Gray
+        Write-Host "   → Hot reload < 1s 🚀" -ForegroundColor Gray
+        Write-Host ""
+        
+        if (-not $SkipSeed) {
+            Write-Host "📝 Note : Pensez à exécuter les migrations et le seed si besoin :" -ForegroundColor Yellow
+            Write-Host "   yarn db:migrate" -ForegroundColor White
+            Write-Host "   yarn db:seed" -ForegroundColor White
+            Write-Host ""
+        }
+        
+        Write-Host "💡 Astuce : Gardez ce terminal ouvert pour les services Docker" -ForegroundColor DarkGray
+        Write-Host "             et ouvrez un nouveau terminal pour 'yarn dev'" -ForegroundColor DarkGray
+        Write-Host ""
+    } else {
+        Write-Log "Certains services n'ont pas demarre correctement" -Level Warning
+        Write-Log "Verifiez les logs avec: .\docker-manager.ps1 -Action logs -Environment dev" -Level Info
+    }
+}
+
+function Start-DevFull {
+    Write-Log "🐳 Mode DEV Complet - Tout dans Docker (plus lent, pour tests d'intégration)" -Level Info
+    Write-Host ""
+    Write-Host "  ⚠️  ATTENTION : Ce mode est plus lent (normal sur Windows)" -ForegroundColor Yellow
+    Write-Host "  📦 Docker : TOUS les services + Application Next.js" -ForegroundColor Cyan
+    Write-Host "  💡 Pour le développement rapide, utilisez : -Action dev" -ForegroundColor DarkGray
+    Write-Host ""
+    
+    if (!(Test-Prerequisites)) { return }
+    if (!(Ensure-DockerNetwork -NetworkName $Script:Config.NetworkNameDev)) { return }
+    
+    # Vérifier tous les ports
     $portsToCheck = @(
         $Script:Config.Ports.DevApp,
         $Script:Config.Ports.PostgresqlDev,
@@ -434,17 +523,18 @@ function Start-DevEnvironment {
         }
     }
     
-    Write-Log "Démarrage des conteneurs..." -Level Info
+    Write-Log "Démarrage de TOUS les conteneurs (app incluse)..." -Level Info
     if (!(Invoke-DockerCompose -ComposeFiles @($Script:Config.ComposeFiles.Dev) -Command "up -d")) {
         Write-Log "Erreur lors du démarrage" -Level Error
         return
     }
     
-    # Attendre que les services soient prêts
+    # Attendre les services
     Write-Log "Vérification de l'état des services..." -Level Info
     $containers = @(
         $Script:Config.Containers.PostgresqlDev,
-        $Script:Config.Containers.RedisDev
+        $Script:Config.Containers.RedisDev,
+        $Script:Config.Containers.DevApp
     )
     
     $allReady = $true
@@ -455,46 +545,18 @@ function Start-DevEnvironment {
     }
     
     if ($allReady) {
-        Write-Log "Environnement DEV démarré avec succès!" -Level Success
+        Write-Log "✅ Environnement DEV complet démarré!" -Level Success
         
         if (-not $SkipSeed) {
-            # Exécuter les migrations Prisma
             Write-Host ""
-            Write-Log "Exécution des migrations Prisma..." -Level Info
+            Write-Log "Exécution des migrations et du seed..." -Level Info
             try {
-                $migrationResult = docker exec $($Script:Config.Containers.DevApp) yarn prisma migrate deploy 2>&1
-                if ($LASTEXITCODE -eq 0) {
-                    Write-Log "Migrations Prisma appliquées avec succès" -Level Success
-                } else {
-                    Write-Log "Avertissement lors des migrations Prisma (peut-être déjà appliquées)" -Level Warning
-                }
+                docker exec $($Script:Config.Containers.DevApp) yarn prisma migrate deploy 2>&1 | Out-Null
+                docker exec $($Script:Config.Containers.DevApp) yarn db:seed 2>&1 | Out-Null
+                Write-Log "Migrations et seed exécutés" -Level Success
             } catch {
-                Write-Log "Erreur lors des migrations Prisma: $_" -Level Warning
+                Write-Log "Avertissement lors du seed: $_" -Level Warning
             }
-            
-            # Executer le seed
-            Write-Host ""
-            Write-Log "Execution du seed pour creer les donnees de test..." -Level Info
-            try {
-                $seedResult = docker exec $($Script:Config.Containers.DevApp) yarn db:seed 2>&1
-                if ($LASTEXITCODE -eq 0) {
-                    Write-Log "Seed execute avec succes - Donnees de test creees!" -Level Success
-                    Write-Host ""
-                    Write-Host "  Jeu de donnees complet cree:" -ForegroundColor Cyan
-                    Write-Host "     1 Admin, 4 Organisateurs, 5 Utilisateurs" -ForegroundColor White
-                    Write-Host "     11 Evenements, 8 Commandes" -ForegroundColor White
-                    Write-Host ""
-                    Write-Host "  Connexion rapide:" -ForegroundColor Yellow
-                    Write-Host "     Admin:  admin@demo.com / admin123" -ForegroundColor White
-                } else {
-                    Write-Log "Avertissement lors du seed (peut-etre deja execute)" -Level Warning
-                }
-            } catch {
-                Write-Log "Erreur lors du seed: $_" -Level Warning
-                Write-Log "Vous pouvez executer manuellement: docker exec $($Script:Config.Containers.DevApp) yarn db:seed" -Level Info
-            }
-        } else {
-            Write-Log "Seed ignore (option -SkipSeed activee)" -Level Info
         }
         
         Write-Host ""
@@ -506,7 +568,6 @@ function Start-DevEnvironment {
         Write-Host ""
     } else {
         Write-Log "Certains services n'ont pas demarre correctement" -Level Warning
-        Write-Log "Verifiez les logs avec: .\docker-manager.ps1 -Action logs -Environment dev" -Level Info
     }
 }
 
@@ -514,7 +575,7 @@ function Start-DevMonitoring {
     Write-Log "Démarrage de DEV + Monitoring..." -Level Info
     
     if (!(Test-Prerequisites)) { return }
-    if (!(Ensure-DockerNetwork)) { return }
+    if (!(Ensure-DockerNetwork -NetworkName $Script:Config.NetworkNameDev)) { return }
     
     $composeFiles = @($Script:Config.ComposeFiles.Dev, $Script:Config.ComposeFiles.Monitoring)
     
@@ -889,7 +950,7 @@ function Show-Ports {
     Write-Host "    Mailhog:                    http://localhost:8025" -ForegroundColor White
     Write-Host ""
     Write-Host "MONITORING:" -ForegroundColor Yellow
-    Write-Host "    Grafana:                    http://localhost:3001" -ForegroundColor White
+    Write-Host "    Grafana:                    http://localhost:3002" -ForegroundColor White
     Write-Host "    Prometheus:                 http://localhost:9090" -ForegroundColor White
     Write-Host ""
 }
@@ -1442,6 +1503,7 @@ try {
     switch ($Action) {
         # Environments
         'dev'                { Start-DevEnvironment }
+        'dev-full'           { Start-DevFull }
         'dev-monitoring'     { Start-DevMonitoring }
         'prod'               { Start-ProdEnvironment }
         'prod-monitoring'    { Start-ProdMonitoring }
