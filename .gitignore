@@ -40,6 +40,7 @@ tsconfig.tsbuildinfo
 # NEVER COMMIT REAL CREDENTIALS!
 # Each environment has its own file: .env.dev and .env.prod
 .env.dev
+.env.local
 .env.prod
 
 # Keep ONLY example file for documentation

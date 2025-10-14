@@ -1,12 +1,12 @@
 import { NextRequest } from 'next/server';
 import { z } from 'zod';
-import { logger } from '../../../lib/logger';
 import { getCachedPublishedEvents, invalidateCategoriesCache } from '../../../src/lib/cache-helpers';
+import { logger } from '../../../src/lib/logger';
 import {
-    createMethodHandler,
-    NextApiResponse,
-    validateBody,
-    withAuth
+  createMethodHandler,
+  NextApiResponse,
+  validateBody,
+  withAuth
 } from '../../../src/lib/next-api-helpers';
 
 const createEventSchema = z.object({
@@ -29,7 +29,7 @@ async function handleGet(request: NextRequest) {
     const orderBy = searchParams.get('orderBy') as 'date' | 'createdAt' | 'title' | undefined;
     const limit = searchParams.get('limit') ? parseInt(searchParams.get('limit')!) : undefined;
 
-    logger.info({ category, orderBy, limit }, 'Fetching events list from cache');
+    logger.info('Fetching events list from cache', { category, orderBy, limit });
 
     // Use cached events for published events list
     const events = await getCachedPublishedEvents({
@@ -38,11 +38,11 @@ async function handleGet(request: NextRequest) {
       limit
     });
 
-    logger.info({ count: events?.length || 0 }, 'Events retrieved successfully');
+    logger.info('Events retrieved successfully', { count: events?.length || 0 });
 
     return NextApiResponse.success(events, 'Événements récupérés');
   } catch (error: any) {
-    logger.error({ error }, 'Get events error');
+    logger.error('Get events error', { error });
     return NextApiResponse.error('Erreur lors de la récupération des événements', 500);
   }
 }
@@ -53,7 +53,7 @@ async function handlePost(request: NextRequest) {
     if (error) return error;
 
     try {
-      logger.info({ userId: user.id, eventData: data }, 'Creating new event');
+      logger.info('Creating new event', { userId: user.id, eventData: data });
 
       // Import event service
       const eventServiceModule = await import('../../../src/modules/event/event.service');
@@ -64,11 +64,11 @@ async function handlePost(request: NextRequest) {
       // Invalidate categories cache since a new event might affect category counts
       await invalidateCategoriesCache();
 
-      logger.info({ eventId: event.id, userId: user.id }, 'Event created successfully');
+      logger.info('Event created successfully', { eventId: event.id, userId: user.id });
 
       return NextApiResponse.success(event, 'Événement créé avec succès', 201);
     } catch (error: any) {
-      logger.error({ error, userId: user.id }, 'Create event error');
+      logger.error('Create event error', { error, userId: user.id });
       return NextApiResponse.error(
         error.message || 'Erreur lors de la création de l\'événement',
         500

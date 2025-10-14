@@ -54,6 +54,41 @@ export async function getCachedPublishedEvents(options?: {
           name: true
         }
       },
+      category: {
+        select: {
+          id: true,
+          name: true
+        }
+      },
+      venue: {
+        select: {
+          id: true,
+          name: true
+        }
+      },
+      tickets: {
+        select: {
+          id: true,
+          status: true,
+          order: {
+            select: {
+              id: true,
+              totalPrice: true
+            }
+          }
+        },
+        where: {
+          status: {
+            in: ['pending', 'paid', 'used']
+          }
+        }
+      },
+      reviews: {
+        select: {
+          id: true,
+          rating: true
+        }
+      },
       _count: {
         select: {
           tickets: true

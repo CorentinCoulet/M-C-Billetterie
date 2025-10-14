@@ -1,10 +1,9 @@
 'use client'
 
 import { useRouter } from 'next/navigation'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { EventsPage as FrontendEventsPage } from '../../src/components/EventsPage'
 
-// Types imported from frontend
 interface Event {
   id: number
   name: string
@@ -22,6 +21,84 @@ interface Event {
   reviews: number
 }
 
+interface DbEvent {
+  id: string
+  title: string
+  description: string | null
+  date: string
+  location: string
+  maxCapacity: number | null
+  isPublished: boolean
+  category?: {
+    id: string
+    name: string
+  } | null
+  venue?: {
+    id: string
+    name: string
+  } | null
+  tickets?: Array<{
+    id: string
+    status: string
+    order: {
+      id: string
+      totalPrice: number
+    } | null
+  }>
+  reviews?: Array<{
+    id: string
+    rating: number
+  }>
+}
+
+const getCategoryEmoji = (categoryName?: string): string => {
+  if (!categoryName) return '🎫'
+  
+  const categoryMap: Record<string, string> = {
+    'Musique': '🎼',
+    'Concert': '🎸',
+    'Festival': '🎉',
+    'Danse': '💃',
+    'Théâtre': '🎭',
+    'Sport': '⚽',
+    'Conférence': '🎤',
+    'Exposition': '🖼️',
+    'Cinéma': '🎬'
+  }
+
+  return categoryMap[categoryName] || '🎫'
+}
+
+const transformDbEventToFrontend = (dbEvent: DbEvent): Event => {
+  const eventDate = new Date(dbEvent.date)
+  
+  const ticketsWithPrice = dbEvent.tickets?.filter(ticket => ticket.order?.totalPrice) || []
+  const averagePrice = ticketsWithPrice.length > 0
+    ? ticketsWithPrice.reduce((sum, ticket) => sum + (ticket.order?.totalPrice || 0), 0) / ticketsWithPrice.length
+    : 0
+  
+  const averageRating = dbEvent.reviews && dbEvent.reviews.length > 0
+    ? dbEvent.reviews.reduce((sum, review) => sum + review.rating, 0) / dbEvent.reviews.length
+    : 0
+
+  return {
+    id: parseInt(dbEvent.id.slice(-8), 16) || Math.floor(Math.random() * 10000),
+    name: dbEvent.title,
+    date: eventDate.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' }),
+    time: eventDate.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }),
+    location: dbEvent.location,
+    price: averagePrice > 0 ? `${averagePrice.toFixed(0)}€` : 'Gratuit',
+    category: dbEvent.category?.name || 'Non catégorisé',
+    image: getCategoryEmoji(dbEvent.category?.name),
+    available: dbEvent.maxCapacity || 0,
+    description: dbEvent.description || 'Aucune description disponible',
+    venue: dbEvent.venue?.name || dbEvent.location,
+    duration: '2h',
+    rating: Math.round(averageRating * 10) / 10,
+    reviews: dbEvent.reviews?.length || 0
+  }
+}
+
 export default function EventsPage() {
   const router = useRouter()
   const [searchQuery, setSearchQuery] = useState('')
@@ -30,58 +107,35 @@ export default function EventsPage() {
   const [currentUser, setCurrentUser] = useState<any>(null)
   const [favorites, setFavorites] = useState<number[]>([])
   const [cart, setCart] = useState<any[]>([])
+  const [events, setEvents] = useState<Event[]>([])
+  const [loading, setLoading] = useState(true)
 
-  // Event data - to be replaced with API call later
-  const events: Event[] = [
-    {
-      id: 1,
-      name: "Concert de Musique Classique",
-      date: "15 Mars 2024",
-      time: "20:00",
-      location: "Opéra de Paris",
-      price: "45€",
-      category: "Musique",
-      image: "🎼",
-      available: 120,
-      description: "Une soirée exceptionnelle avec l'Orchestre National dirigé par le célèbre chef d'orchestre Alexandre Dumont. Au programme : Beethoven, Mozart et Chopin dans un cadre prestigieux.",
-      venue: "Opéra Bastille, Paris",
-      duration: "2h30 (avec entracte)",
-      rating: 4.8,
-      reviews: 156
-    },
-    {
-      id: 2,
-      name: "Festival Jazz d'été",
-      date: "22 Juin 2024",
-      time: "19:30",
-      location: "Parc de la Villette",
-      price: "35€",
-      category: "Festival",
-      image: "🎷",
-      available: 250,
-      description: "Le plus grand festival de jazz de la capitale revient pour une édition exceptionnelle avec des artistes internationaux et des découvertes françaises.",
-      venue: "Grande Halle, Parc de la Villette",
-      duration: "4h",
-      rating: 4.6,
-      reviews: 89
-    },
-    {
-      id: 3,
-      name: "Spectacle de Danse Contemporaine",
-      date: "8 Avril 2024",
-      time: "21:00",
-      location: "Théâtre du Châtelet",
-      price: "55€",
-      category: "Danse",
-      image: "💃",
-      available: 80,
-      description: "Une création originale mêlant danse contemporaine et nouvelles technologies, par la compagnie renommée 'Mouvements Urbains'.",
-      venue: "Théâtre du Châtelet",
-      duration: "1h45",
-      rating: 4.9,
-      reviews: 203
+  useEffect(() => {
+    const fetchEvents = async () => {
+      try {
+        setLoading(true)
+        const response = await fetch('/api/events?orderBy=date')
+        
+        if (!response.ok) {
+          throw new Error('Erreur lors de la récupération des événements')
+        }
+
+        const result = await response.json()
+        
+        if (result.success && result.data) {
+          const transformedEvents = result.data.map(transformDbEventToFrontend)
+          setEvents(transformedEvents)
+        }
+      } catch (error) {
+        console.error('Erreur lors de la récupération des événements:', error)
+        setEvents([])
+      } finally {
+        setLoading(false)
+      }
     }
-  ]
+
+    fetchEvents()
+  }, [])
 
   const navigate = (page: string, eventId?: number) => {
     switch (page) {
@@ -141,6 +195,36 @@ export default function EventsPage() {
         return [...currentCart, { eventId, quantity, addedAt: new Date().toISOString() }]
       }
     })
+  }
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-indigo-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Chargement des événements...</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (!loading && events.length === 0) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-center p-8 max-w-md mx-auto">
+          <div className="text-6xl mb-4">📅</div>
+          <h2 className="text-2xl font-bold text-gray-800 mb-3">Aucun événement en cours</h2>
+          <p className="text-gray-600 mb-2">Il n'y a actuellement aucun événement programmé.</p>
+          <p className="text-gray-500 text-sm mb-6">Revenez régulièrement pour découvrir nos prochains événements !</p>
+          <button 
+            onClick={() => router.push('/')}
+            className="bg-indigo-600 text-white px-6 py-3 rounded-lg hover:bg-indigo-700 transition-colors duration-200 font-medium"
+          >
+            Retour à l'accueil
+          </button>
+        </div>
+      </div>
+    )
   }
 
   return (
