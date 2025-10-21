@@ -24,14 +24,17 @@ Ces variables sont définies dans `.env.docker` et recopiées depuis `.env.examp
 
 ## Comptes applicatifs
 
-Les adresses e-mail ci-dessous sont injectées par le seed Prisma. Les mots de passe sont générés à partir des variables `SEED_ADMIN_PASSWORD`, `SEED_ORGANIZER_PASSWORD` et `SEED_USER_PASSWORD` définies dans `.env.example`.
+Les adresses e-mail ci-dessous sont injectées par le seed Prisma. Les mots de passe sont définis dans les variables `SEED_ADMIN_PASSWORD`, `SEED_ORGANIZER_PASSWORD` et `SEED_USER_PASSWORD` du fichier `.env.dev`.
 
-### Admin
+### 👨‍💼 Admin
 
-- **Email:** admin@demo.com
+- **Email:** `admin@demo.com`
+- **Mot de passe:** `Admin123!Dev`
 - **Role:** ADMIN
 
-### Organisateurs
+### 🎯 Organisateurs
+
+Tous les organisateurs partagent le même mot de passe : `Organizer123!Dev`
 
 | Nom | Email | Événements |
 | --- | --- | --- |
@@ -40,7 +43,9 @@ Les adresses e-mail ci-dessous sont injectées par le seed Prisma. Les mots de p
 | Tech Conferences Inc | tech.conferences@demo.com | 2 conférences tech |
 | Culture Events | culture.events@demo.com | 3 événements culturels |
 
-### Utilisateurs
+### 👥 Utilisateurs
+
+Tous les utilisateurs partagent le même mot de passe : `User123!Dev`
 
 | Nom | Email |
 | --- | --- |
@@ -50,7 +55,7 @@ Les adresses e-mail ci-dessous sont injectées par le seed Prisma. Les mots de p
 | David Petit | david.petit@demo.com |
 | Emma Durand | emma.durand@demo.com |
 
-Les mots de passe sont affichés dans les logs du seed lors de l'exécution (voir section ci‑dessous) et ne sont jamais commités en clair.
+> **ℹ️ Note :** Ces mots de passe sont définis dans `.env.dev` et sont affichés dans les logs lors de l'exécution du seed. Si les variables ne sont pas définies, le seed générera des mots de passe éphémères aléatoires.
 
 ## Statistiques générées par le seed
 
