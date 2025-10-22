@@ -1,5 +1,8 @@
 @startuml MLD-Billetterie
 
+scale 0.7
+page 2x1
+
 class UTILISATEUR {
     + id : UUID <<PK>>
     --

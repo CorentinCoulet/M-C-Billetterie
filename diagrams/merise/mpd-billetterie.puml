@@ -1,5 +1,7 @@
 @startuml MPD-Billetterie-Schema
 
+scale 0.7
+
 package "Base de Données PostgreSQL - Système de Billetterie" {
     
     class "users" as users <<table>> {
@@ -236,8 +238,82 @@ package "Base de Données PostgreSQL - Système de Billetterie" {
         <<constraints>>
         UNIQUE(organizer_id, user_id)
     }
+}
 
-    ' === Tables sécurité / système (depuis Prisma) ===
+' Relations avec contraintes référentielles - Page 1
+orders }o--|| users : "user_id"
+tickets }o--|| users : "user_id"
+tickets }o--|| orders : "order_id"
+
+payments ||--|| orders : "order_id"
+
+' Notes techniques - Page 1
+note right of tickets : Fonctionnalités :\n- Code auto-généré\n- QR Code rotatif\n- Achat anonyme possible
+
+note right of orders : États de commande :\n- draft\n- pending_payment\n- paid\n- cancelled
+
+note left of payments : Relation 1:1 avec orders\nUne commande = un paiement max
+
+newpage
+
+package "Base de Données PostgreSQL - Événements & Organisateurs" {
+
+    class "events" as events2 <<table>> {
+        + id : UUID <<PK>>
+    }
+
+    class "organizers" as organizers2 <<table>> {
+        + id : UUID <<PK>>
+    }
+
+    class "categories" as categories2 <<table>> {
+        + id : UUID <<PK>>
+    }
+
+    class "venues" as venues2 <<table>> {
+        + id : UUID <<PK>>
+    }
+
+    class "themes" as themes2 <<table>> {
+        + id : UUID <<PK>>
+    }
+
+    class "reviews" as reviews2 <<table>> {
+        + id : UUID <<PK>>
+    }
+
+    class "team_members" as team_members2 <<table>> {
+        + id : UUID <<PK>>
+    }
+
+    class "users" as users_ref1 <<table>> {
+        + id : UUID <<PK>>
+    }
+}
+
+' Relations avec contraintes référentielles - Page 2
+events2 }o--|| organizers2 : "organizer_id"
+events2 }o--|| categories2 : "category_id"
+events2 }o--|| venues2 : "venue_id"
+events2 }o--|| themes2 : "theme_id"
+
+reviews2 }o--|| users_ref1 : "user_id"
+reviews2 }o--|| events2 : "event_id"
+
+team_members2 }o--|| organizers2 : "organizer_id"
+team_members2 }o--|| users_ref1 : "user_id"
+
+' Notes techniques - Page 2
+note right of events2 : Contraintes métier :\n- Date future\n- Pas publié si annulé\n- Capacité > 0
+
+newpage
+
+package "Base de Données PostgreSQL - Sessions & Activités" {
+
+    class "users" as users2 <<table>> {
+        + id : UUID <<PK>>
+    }
+
     class "user_sessions" as user_sessions <<table>> {
         + id : UUID <<PK>>
         user_id : UUID <<FK>>
@@ -251,6 +327,10 @@ package "Base de Données PostgreSQL - Système de Billetterie" {
         is_active : BOOLEAN
         destroyed_at : TIMESTAMPTZ
         destroy_reason : TEXT
+        --
+        <<indexes>>
+        idx_user_sessions_user_id
+        idx_user_sessions_token
     }
 
     class "activity_logs" as activity_logs <<table>> {
@@ -260,6 +340,10 @@ package "Base de Données PostgreSQL - Système de Billetterie" {
         target_type : VARCHAR(100)
         target_id : VARCHAR(255)
         timestamp : TIMESTAMPTZ
+        --
+        <<indexes>>
+        idx_activity_logs_user_id
+        idx_activity_logs_timestamp
     }
 
     class "event_logs" as event_logs <<table>> {
@@ -268,6 +352,10 @@ package "Base de Données PostgreSQL - Système de Billetterie" {
         type : VARCHAR(100)
         context : TEXT
         created_at : TIMESTAMPTZ
+        --
+        <<indexes>>
+        idx_event_logs_user_id
+        idx_event_logs_type
     }
 
     class "notifications" as notifications <<table>> {
@@ -277,6 +365,29 @@ package "Base de Données PostgreSQL - Système de Billetterie" {
         message : TEXT
         is_read : TIMESTAMPTZ
         sent_at : TIMESTAMPTZ
+        --
+        <<indexes>>
+        idx_notifications_user_id
+    }
+}
+
+' Relations - Page 3
+user_sessions }o--|| users2 : "user_id"
+activity_logs }o--|| users2 : "user_id"
+event_logs }o--|| users2 : "user_id"
+notifications }o--|| users2 : "user_id"
+
+' Notes - Page 3
+note right of user_sessions : Gestion des sessions utilisateur\navec tracking IP et device\nExpiration automatique
+
+note bottom of notifications : Système de notifications\navec suivi de lecture
+
+newpage
+
+package "Base de Données PostgreSQL - Sécurité Utilisateurs" {
+
+    class "users" as users3 <<table>> {
+        + id : UUID <<PK>>
     }
 
     class "blocked_users" as blocked_users <<table>> {
@@ -284,26 +395,9 @@ package "Base de Données PostgreSQL - Système de Billetterie" {
         user_id : UUID <<FK,UNIQUE>>
         reason : TEXT
         blocked_at : TIMESTAMPTZ
-    }
-
-    class "translations" as translations <<table>> {
-        + id : UUID <<PK>>
-        entity_type : VARCHAR(100)
-        entity_id : VARCHAR(255)
-        locale : VARCHAR(10)
-        field : VARCHAR(100)
-        value : TEXT
-    }
-
-    class "security_logs" as security_logs <<table>> {
-        + id : UUID <<PK>>
-        type : VARCHAR(100)
-        ip : VARCHAR(64)
-        user_agent : TEXT
-        url : TEXT
-        user_id : UUID
-        data : TEXT
-        timestamp : TIMESTAMPTZ
+        --
+        <<constraints>>
+        user_id UNIQUE
     }
 
     class "password_history" as password_history <<table>> {
@@ -311,6 +405,9 @@ package "Base de Données PostgreSQL - Système de Billetterie" {
         user_id : UUID <<FK>>
         password_hash : TEXT
         created_at : TIMESTAMPTZ
+        --
+        <<indexes>>
+        idx_password_history_user_id
     }
 
     class "login_attempts" as login_attempts <<table>> {
@@ -324,20 +421,58 @@ package "Base de Données PostgreSQL - Système de Billetterie" {
         reason : TEXT
         session_id : VARCHAR(255)
         risk_score : INTEGER
+        --
+        <<indexes>>
+        idx_login_attempts_user_id
+        idx_login_attempts_email
+        idx_login_attempts_timestamp
     }
 
-    class "system_backups" as system_backups <<table>> {
+    class "blocked_ip" as blocked_ip <<table>> {
         + id : UUID <<PK>>
-        type : VARCHAR(50)
-        status : VARCHAR(50)
-        file_path : TEXT
-        encryption_key : TEXT
-        file_size : BIGINT
-        checksum_sha256 : VARCHAR(64)
-        started_at : TIMESTAMPTZ
-        completed_at : TIMESTAMPTZ
-        error : TEXT
-        retention_days : INTEGER
+        ip_address : VARCHAR(64) <<UNIQUE>>
+        reason : TEXT
+        blocked_at : TIMESTAMPTZ
+        expires_at : TIMESTAMPTZ
+        block_count : INTEGER
+        unblocked_by : VARCHAR(255)
+        unblocked_at : TIMESTAMPTZ
+        --
+        <<constraints>>
+        ip_address UNIQUE
+    }
+}
+
+' Relations - Page 4
+blocked_users }o--|| users3 : "user_id"
+password_history }o--|| users3 : "user_id"
+login_attempts }o--|| users3 : "user_id"
+
+' Notes - Page 4
+note right of blocked_users : Utilisateurs bloqués\navec raison
+
+note right of password_history : Historique des mots de passe\npour éviter la réutilisation
+
+note bottom of blocked_ip : Système de blocage IP\navec expiration automatique
+
+newpage
+
+package "Base de Données PostgreSQL - Logs & Audit" {
+
+    class "security_logs" as security_logs <<table>> {
+        + id : UUID <<PK>>
+        type : VARCHAR(100)
+        ip : VARCHAR(64)
+        user_agent : TEXT
+        url : TEXT
+        user_id : UUID
+        data : TEXT
+        timestamp : TIMESTAMPTZ
+        --
+        <<indexes>>
+        idx_security_logs_type
+        idx_security_logs_timestamp
+        idx_security_logs_user_id
     }
 
     class "audit_logs" as audit_logs <<table>> {
@@ -356,54 +491,61 @@ package "Base de Données PostgreSQL - Système de Billetterie" {
         risk_level : VARCHAR(20)
         event_hash : VARCHAR(64)
         is_sensitive : BOOLEAN
-    }
-
-    class "blocked_ip" as blocked_ip <<table>> {
-        + id : UUID <<PK>>
-        ip_address : VARCHAR(64) <<UNIQUE>>
-        reason : TEXT
-        blocked_at : TIMESTAMPTZ
-        expires_at : TIMESTAMPTZ
-        block_count : INTEGER
-        unblocked_by : VARCHAR(255)
-        unblocked_at : TIMESTAMPTZ
+        --
+        <<indexes>>
+        idx_audit_logs_user_id
+        idx_audit_logs_timestamp
+        idx_audit_logs_resource
     }
 }
 
-' Relations avec contraintes référentielles
-events }o--|| organizers : "organizer_id"
-events }o--|| categories : "category_id"
-events }o--|| venues : "venue_id"
-events }o--|| themes : "theme_id"
+' Notes - Page 5
+note right of security_logs : Logs de sécurité détaillés\npour analyse forensique\nTracking complet des actions
 
-orders }o--|| users : "user_id"
-tickets }o--|| users : "user_id"
-tickets }o--|| events : "event_id"
-tickets }o--|| orders : "order_id"
+note bottom of audit_logs : Logs d'audit complets\navec hash pour intégrité\nRisk level pour alertes
 
-payments ||--|| orders : "order_id"
+newpage
 
-reviews }o--|| users : "user_id"
-reviews }o--|| events : "event_id"
+package "Base de Données PostgreSQL - Système & i18n" {
 
-team_members }o--|| organizers : "organizer_id"
-team_members }o--|| users : "user_id"
+    class "system_backups" as system_backups <<table>> {
+        + id : UUID <<PK>>
+        type : VARCHAR(50)
+        status : VARCHAR(50)
+        file_path : TEXT
+        encryption_key : TEXT
+        file_size : BIGINT
+        checksum_sha256 : VARCHAR(64)
+        started_at : TIMESTAMPTZ
+        completed_at : TIMESTAMPTZ
+        error : TEXT
+        retention_days : INTEGER
+        --
+        <<indexes>>
+        idx_system_backups_status
+        idx_system_backups_started_at
+    }
 
-user_sessions }o--|| users : "user_id"
-activity_logs }o--|| users : "user_id"
-event_logs }o--|| users : "user_id"
-notifications }o--|| users : "user_id"
-blocked_users }o--|| users : "user_id"
-password_history }o--|| users : "user_id"
-login_attempts }o--|| users : "user_id"
+    class "translations" as translations <<table>> {
+        + id : UUID <<PK>>
+        entity_type : VARCHAR(100)
+        entity_id : VARCHAR(255)
+        locale : VARCHAR(10)
+        field : VARCHAR(100)
+        value : TEXT
+        --
+        <<indexes>>
+        idx_translations_entity
+        idx_translations_locale
+        --
+        <<constraints>>
+        UNIQUE(entity_type, entity_id, locale, field)
+    }
+}
 
-' Notes techniques
-note right of events : Contraintes métier :\n- Date future\n- Pas publié si annulé\n- Capacité > 0
+' Notes - Page 6
+note right of system_backups : Gestion des sauvegardes\navec chiffrement et checksum\nRétention configurable
 
-note right of tickets : Fonctionnalités :\n- Code auto-généré\n- QR Code rotatif\n- Achat anonyme possible
-
-note right of orders : États de commande :\n- draft\n- pending_payment\n- paid\n- cancelled
-
-note left of payments : Relation 1:1 avec orders\nUne commande = un paiement max
+note bottom of translations : Système i18n\nTraductions par entité\net par locale
 
 @enduml

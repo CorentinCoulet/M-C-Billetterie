@@ -1,18 +1,20 @@
 @startuml MCD-Billetterie
 
-' === ENTITÉS (conceptuel, sans détails techniques) ===
+' === ENTITÉS (conceptuel, avec identifiants métier) ===
 entity UTILISATEUR {
-  email
+  # email <<identifiant>>
+  --
   nom
   role
 }
 
 entity ORGANISATEUR {
-  nom
+  # nom <<identifiant>>
 }
 
 entity EVENEMENT {
-  titre
+  # titre <<identifiant>>
+  --
   date
   capacite_max
   est_publie
@@ -20,19 +22,24 @@ entity EVENEMENT {
 }
 
 entity COMMANDE {
+  # numero_commande <<identifiant>>
+  --
   prix_total
   statut
   devise
 }
 
 entity BILLET {
-  code
+  # code <<identifiant>>
+  --
   statut
   numero_siege
   achete_le
 }
 
 entity PAIEMENT {
+  # id_transaction <<identifiant>>
+  --
   methode
   statut
   date_paiement
@@ -40,27 +47,33 @@ entity PAIEMENT {
 }
 
 entity CATEGORIE {
-  nom
+  # nom <<identifiant>>
 }
 
 entity LIEU {
-  nom
+  # nom <<identifiant>>
+  --
   adresse
   capacite
 }
 
 entity AVIS {
+  # (utilisateur, evenement) <<identifiant>>
+  --
   note
   commentaire
 }
 
 entity THEME {
-  nom
+  # nom <<identifiant>>
+  --
   chemin_image
 }
 
 ' Association porteuse d'attributs (conceptuelle)
 entity FAIRE_PARTIE_EQUIPE {
+  # (utilisateur, organisateur) <<identifiant>>
+  --
   role
   rejoint_le
 }

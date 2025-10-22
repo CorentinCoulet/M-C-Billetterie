@@ -143,13 +143,11 @@ export class OrderService {
   }
 
   /**
-   * Create a new order with transaction (P1 FIX)
+   * Create a new order with transaction
    * 🔒 CRITIQUE: Transaction pour éviter corruption de données
    */
   async createOrder(data: OrderCreateInput): Promise<OrderWithRelations> {
     const { userId, tickets, customerInfo } = data;
-
-    // 🚀 P1 FIX: Utilisation d'une transaction pour atomicité
     return await prisma.$transaction(async (tx) => {
       // Vérifier et réserver les tickets de manière atomique
       let totalAmount = 0;

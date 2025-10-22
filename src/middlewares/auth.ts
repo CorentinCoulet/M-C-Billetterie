@@ -1,7 +1,5 @@
 import prisma from '@/lib/prisma';
 import { NextApiRequest, NextApiResponse } from 'next';
-import { NextRequest, NextResponse } from 'next/server';
-import { logger } from '@/lib/logger';
 import authService from '../services/authService';
 
 // Define NextHandler type since we removed next-connect
