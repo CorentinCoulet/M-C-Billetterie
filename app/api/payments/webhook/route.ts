@@ -1,6 +1,5 @@
 import { logger } from '@/lib/logger';
 import { getStripeApiVersion, STRIPE_CONFIG, validateStripeConfig } from '@/src/config/stripe';
-import { createMethodHandler } from '@/src/lib/next-api-helpers';
 import prisma from '@/src/lib/prisma';
 import { OrderService } from '@/src/services/orderService';
 import { PaymentService } from '@/src/services/paymentService';
@@ -74,9 +73,9 @@ async function handlePost(request: NextRequest) {
   try {
     const stripeInstance = await getStripe();
     event = stripeInstance.webhooks.constructEvent(body, signature, webhookSecret);
-    logger.info({ eventType: event.type, eventId: event.id }, 'Signature verified for event');
+    logger.info('Signature verified for event', { eventType: event.type, eventId: event.id });
   } catch (err) {
-    logger.error({ error: err }, 'Stripe signature verification failed');
+    logger.error('Stripe signature verification failed', { error: err });
     return NextResponse.json({ 
       error: 'Invalid signature' 
     }, { status: 400 });
@@ -84,7 +83,7 @@ async function handlePost(request: NextRequest) {
 
   // 🚀 Avoid processing the same event multiple times
   if (processedEvents.has(event.id)) {
-    logger.warn({ eventId: event.id }, 'Event already processed - ignored');
+    logger.warn('Event already processed - ignored', { eventId: event.id });
     return NextResponse.json({ 
       received: true, 
       status: 'already_processed',
@@ -126,11 +125,11 @@ async function handlePost(request: NextRequest) {
       case 'customer.subscription.created':
       case 'customer.subscription.updated':
       case 'customer.subscription.deleted':
-        logger.info({ eventType: event.type }, 'Subscription event received - processing not implemented');
+        logger.info('Subscription event received - processing not implemented', { eventType: event.type });
         break;
 
       default:
-        logger.info({ eventType: event.type }, 'Unhandled event');
+        logger.info('Unhandled event', { eventType: event.type });
         break;
     }
 
@@ -144,10 +143,10 @@ async function handlePost(request: NextRequest) {
       entries.slice(-CACHE_KEEP_SIZE).forEach(([id, processed]) => {
         processedEvents.set(id, processed);
       });
-      logger.info({ keptEntries: CACHE_KEEP_SIZE }, 'Idempotency cache cleaned');
+      logger.info('Idempotency cache cleaned', { keptEntries: CACHE_KEEP_SIZE });
     }
 
-    logger.info({ eventType: event.type, eventId: event.id }, 'Event processed successfully');
+    logger.info('Event processed successfully', { eventType: event.type, eventId: event.id });
     return NextResponse.json({ 
       received: true, 
       event_type: event.type,
@@ -155,7 +154,7 @@ async function handlePost(request: NextRequest) {
     });
 
   } catch (error) {
-    logger.error({ error, eventType: event.type, eventId: event.id }, 'Error processing webhook');
+    logger.error('Error processing webhook', { error, eventType: event.type, eventId: event.id });
     
     // 📊 Logging for debugging
     await logWebhookError(event, error);
@@ -168,9 +167,9 @@ async function handlePost(request: NextRequest) {
   }
 }
 
-export default createMethodHandler({
-  POST: handlePost,
-});
+export async function POST(request: NextRequest) {
+  return handlePost(request);
+}
 
 /**
  * 🎯 Processing of successful payments
@@ -178,34 +177,34 @@ export default createMethodHandler({
 async function handlePaymentIntentSucceeded(event: any) {
   const paymentIntent = event.data.object;
   
-  logger.info({ 
+  logger.info('Payment Intent succeeded', { 
     paymentIntentId: paymentIntent.id,
     amount: paymentIntent.amount,
     currency: paymentIntent.currency,
     metadata: paymentIntent.metadata
-  }, 'Payment Intent succeeded');
+  });
 
   try {
     // 🚀 Use our service with atomic transaction
     const paymentService = new PaymentService();
     const processedPayment = await paymentService.processSuccessfulPayment(paymentIntent.id);
     
-    logger.info({
+    logger.info('Payment processed successfully', {
       paymentId: processedPayment.id,
       orderId: processedPayment.order?.id,
       userId: processedPayment.order?.user?.id,
       email: processedPayment.order?.user?.email
-    }, 'Payment processed successfully');
+    });
 
     // 📧 Send confirmation email (to be implemented)
     if (processedPayment.order?.user?.email) {
       await sendPaymentConfirmationEmail(processedPayment);
     } else {
-      logger.warn({ paymentId: processedPayment.id }, 'No email found for payment');
+      logger.warn('No email found for payment', { paymentId: processedPayment.id });
     }
     
   } catch (error) {
-    logger.error({ error, paymentIntentId: paymentIntent.id }, 'Error processing payment_intent.succeeded');
+    logger.error('Error processing payment_intent.succeeded', { error, paymentIntentId: paymentIntent.id });
     throw error;
   }
 }
@@ -216,10 +215,10 @@ async function handlePaymentIntentSucceeded(event: any) {
 async function handlePaymentIntentFailed(event: any) {
   const paymentIntent = event.data.object;
   
-  logger.error({ 
+  logger.error('Payment Intent failed', { 
     paymentIntentId: paymentIntent.id,
     error: paymentIntent.last_payment_error?.message
-  }, 'Payment Intent failed');
+  });
 
   try {
     const paymentService = new PaymentService();
@@ -228,21 +227,21 @@ async function handlePaymentIntentFailed(event: any) {
       paymentIntent.last_payment_error?.message
     );
     
-    logger.info({
+    logger.info('Failed payment processed', {
       paymentId: failedPayment.id,
       orderId: failedPayment.order?.id,
       reason: paymentIntent.last_payment_error?.message
-    }, 'Failed payment processed');
+    });
 
     // 📧 Send payment failure email
     if (failedPayment.order?.user?.email) {
       await sendPaymentFailedEmail(failedPayment, paymentIntent.last_payment_error?.message);
     } else {
-      logger.warn({ paymentId: failedPayment.id }, 'No email found for failed payment');
+      logger.warn('No email found for failed payment', { paymentId: failedPayment.id });
     }
     
   } catch (error) {
-    logger.error({ error, paymentIntentId: paymentIntent.id }, 'Error processing payment_intent.failed');
+    logger.error('Error processing payment_intent.failed', { error, paymentIntentId: paymentIntent.id });
     throw error;
   }
 }
@@ -253,10 +252,10 @@ async function handlePaymentIntentFailed(event: any) {
 async function handlePaymentIntentRequiresAction(event: any) {
   const paymentIntent = event.data.object;
   
-  logger.info({ 
+  logger.info('Payment Intent requires action', { 
     paymentIntentId: paymentIntent.id,
     nextAction: paymentIntent.next_action?.type
-  }, 'Payment Intent requires action');
+  });
 
   // Log for tracking - no DB action needed
   await logPaymentRequiresAction(paymentIntent);
@@ -268,16 +267,16 @@ async function handlePaymentIntentRequiresAction(event: any) {
 async function handlePaymentIntentCanceled(event: any) {
   const paymentIntent = event.data.object;
   
-  logger.info({ paymentIntentId: paymentIntent.id }, 'Payment Intent canceled');
+  logger.info('Payment Intent canceled', { paymentIntentId: paymentIntent.id });
 
   try {
     const paymentService = new PaymentService();
     await paymentService.handleFailedPayment(paymentIntent.id, 'Payment cancelled');
     
-    logger.info({ paymentIntentId: paymentIntent.id }, 'Payment cancellation processed');
+    logger.info('Payment cancellation processed', { paymentIntentId: paymentIntent.id });
     
   } catch (error) {
-    logger.error({ error, paymentIntentId: paymentIntent.id }, 'Error processing payment_intent.canceled');
+    logger.error('Error processing payment_intent.canceled', { error, paymentIntentId: paymentIntent.id });
     throw error;
   }
 }
@@ -288,11 +287,11 @@ async function handlePaymentIntentCanceled(event: any) {
 async function handleCheckoutSessionCompleted(event: any) {
   const session = event.data.object;
   
-  logger.info({ 
+  logger.info('Checkout session completed', { 
     sessionId: session.id,
     paymentIntent: session.payment_intent,
     metadata: session.metadata
-  }, 'Checkout session completed');
+  });
 
   // If we have a payment_intent, it will be processed by the payment_intent.succeeded event
   // Otherwise, process here
@@ -300,7 +299,7 @@ async function handleCheckoutSessionCompleted(event: any) {
     try {
       await handleCheckoutDirectPayment(session);
     } catch (error) {
-      logger.error({ error, sessionId: session.id }, 'Error processing checkout.session.completed');
+      logger.error('Error processing checkout.session.completed', { error, sessionId: session.id });
       throw error;
     }
   }
@@ -312,7 +311,7 @@ async function handleCheckoutSessionCompleted(event: any) {
 async function handleCheckoutSessionExpired(event: any) {
   const session = event.data.object;
   
-  logger.info({ sessionId: session.id }, 'Checkout session expired');
+  logger.info('Checkout session expired', { sessionId: session.id });
   
   // Release reserved resources
   if (session.metadata?.orderId) {
@@ -320,9 +319,9 @@ async function handleCheckoutSessionExpired(event: any) {
       const orderService = new OrderService();
       await orderService.cancelOrder(session.metadata.orderId);
       
-      logger.info({ orderId: session.metadata.orderId }, 'Order canceled for expired session');
+      logger.info('Order canceled for expired session', { orderId: session.metadata.orderId });
     } catch (error) {
-      logger.error({ error, orderId: session.metadata.orderId }, 'Error canceling order for expired session');
+      logger.error('Error canceling order for expired session', { error, orderId: session.metadata.orderId });
       throw error;
     }
   }
@@ -334,11 +333,11 @@ async function handleCheckoutSessionExpired(event: any) {
 async function handleInvoicePaymentSucceeded(event: any) {
   const invoice = event.data.object;
   
-  logger.info({ 
+  logger.info('Invoice payment succeeded', { 
     invoiceId: invoice.id,
     customer: invoice.customer,
     amountPaid: invoice.amount_paid
-  }, 'Invoice payment succeeded');
+  });
   
   // Specific processing for subscriptions if applicable
   // Note: subscription info would need to be accessed differently based on your use case
@@ -351,12 +350,12 @@ async function handleCheckoutDirectPayment(session: any) {
   const { orderId } = session.metadata || {};
   
   if (!orderId) {
-    logger.error({ sessionId: session.id }, 'No orderId in checkout session metadata');
+    logger.error('No orderId in checkout session metadata', { sessionId: session.id });
     throw new Error('Missing orderId in session metadata');
   }
 
   if (!session.amount_total) {
-    logger.error({ sessionId: session.id }, 'No amount_total in checkout session');
+    logger.error('No amount_total in checkout session', { sessionId: session.id });
     throw new Error('Missing amount_total in session');
   }
 
@@ -376,7 +375,7 @@ async function handleCheckoutDirectPayment(session: any) {
       }
 
       if (existingOrder.status === 'paid') {
-        logger.warn({ orderId }, 'Order already paid - skipping');
+        logger.warn('Order already paid - skipping', { orderId });
         return;
       }
 
@@ -396,10 +395,10 @@ async function handleCheckoutDirectPayment(session: any) {
       await orderService.completeOrder(orderId, payment.id);
     });
     
-    logger.info({ sessionId: session.id, orderId }, 'Direct checkout payment processed');
+    logger.info('Direct checkout payment processed', { sessionId: session.id, orderId });
     
   } catch (error) {
-    logger.error({ error, sessionId: session.id }, 'Error processing direct checkout payment');
+    logger.error('Error processing direct checkout payment', { error, sessionId: session.id });
     throw error;
   }
 }
@@ -409,7 +408,7 @@ async function handleCheckoutDirectPayment(session: any) {
  */
 async function sendPaymentConfirmationEmail(payment: any) {
   // TODO: Implement email sending with email service
-  logger.info({ email: payment.order?.user?.email }, 'Confirmation email to send');
+  logger.info('Confirmation email to send', { email: payment.order?.user?.email });
 }
 
 /**
@@ -417,7 +416,7 @@ async function sendPaymentConfirmationEmail(payment: any) {
  */
 async function sendPaymentFailedEmail(payment: any, reason?: string) {
   // TODO: Implement failure email sending
-  logger.info({ email: payment.order?.user?.email, reason }, 'Failure email to send');
+  logger.info('Failure email to send', { email: payment.order?.user?.email, reason });
 }
 
 /**
@@ -425,10 +424,10 @@ async function sendPaymentFailedEmail(payment: any, reason?: string) {
  */
 async function logPaymentRequiresAction(paymentIntent: any) {
   // TODO: Store in logs or monitoring system
-  logger.info({
+  logger.info('Payment requires action', {
     id: paymentIntent.id,
     nextAction: paymentIntent.next_action?.type
-  }, 'Payment requires action');
+  });
 }
 
 /**
@@ -437,14 +436,14 @@ async function logPaymentRequiresAction(paymentIntent: any) {
 async function logWebhookError(event: any, error: any) {
   try {
     // TODO: Implement logging to DB or external service
-    logger.error({
+    logger.error('Webhook Error Log', {
       eventId: event.id,
       eventType: event.type,
       error: error instanceof Error ? error.message : String(error),
       eventData: JSON.stringify(event.data, null, 2).substring(0, 1000) // Truncate to avoid long logs
-    }, 'Webhook Error Log');
+    });
   } catch (logError) {
-    logger.error({ error: logError }, 'Error logging webhook error');
+    logger.error('Error logging webhook error', { error: logError });
   }
 }
 
@@ -457,6 +456,6 @@ setInterval(() => {
     entries.slice(-keptEntries).forEach(([id, processed]) => {
       processedEvents.set(id, processed);
     });
-    logger.info({ keptEntries }, 'Scheduled idempotency cache cleanup');
+    logger.info('Scheduled idempotency cache cleanup', { keptEntries });
   }
 }, CACHE_CLEANUP_INTERVAL);

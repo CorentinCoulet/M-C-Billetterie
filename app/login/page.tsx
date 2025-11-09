@@ -1,7 +1,7 @@
 'use client'
 
 import { useRouter } from 'next/navigation'
-import { memo, useCallback, useState } from 'react'
+import { memo, useCallback } from 'react'
 import { AuthPage } from '../../src/components/AuthPage'
 
 const Background = memo(() => (
@@ -12,8 +12,6 @@ const Background = memo(() => (
 
 export default function LoginPage() {
   const router = useRouter()
-  const [users, setUsers] = useState<any[]>([])
-  const [currentUser, setCurrentUser] = useState<any>(null)
 
   const navigate = useCallback((page: string) => {
     const routes: Record<string, string> = {
@@ -24,22 +22,10 @@ export default function LoginPage() {
     router.push(routes[page] || `/${page}`)
   }, [router])
 
-  const logout = useCallback(() => {
-    setCurrentUser(null)
-    router.push('/')
-  }, [router])
-
   return (
     <>
       <Background />
-      <AuthPage 
-        navigate={navigate}
-        currentUser={currentUser}
-        users={users}
-        setUsers={setUsers}
-        setCurrentUser={setCurrentUser}
-        logout={logout}
-      />
+      <AuthPage navigate={navigate} />
     </>
   )
 }

@@ -1,5 +1,5 @@
 import { logger } from '@/lib/logger';
-import { createMethodHandler, NextApiResponse } from '@/src/lib/next-api-helpers';
+import { NextApiResponse } from '@/src/lib/next-api-helpers';
 import { NextRequest, NextResponse } from 'next/server';
 
 interface HealthCheckResult {
@@ -208,7 +208,7 @@ async function handleGet(request: NextRequest) {
   try {
     const { pathname } = new URL(request.url);
     
-    logger.info({ pathname }, 'Health check requested');
+    logger.info('Health check requested', { pathname });
     
     // Kubernetes liveness probe - just check if process is alive
     if (pathname.endsWith('/live')) {
@@ -234,7 +234,7 @@ async function handleGet(request: NextRequest) {
     return NextApiResponse.success(health);
     
   } catch (error) {
-    logger.error({ error }, 'Health check error');
+    logger.error('Health check error', { error });
     return NextResponse.json(
       { 
         status: 'unhealthy', 
@@ -246,6 +246,6 @@ async function handleGet(request: NextRequest) {
   }
 }
 
-export default createMethodHandler({
-  GET: handleGet,
-});
+export async function GET(request: NextRequest) {
+  return handleGet(request);
+}

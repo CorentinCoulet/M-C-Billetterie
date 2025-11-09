@@ -1,6 +1,6 @@
+import { logger } from '@/lib/logger';
 import { NextRequest } from 'next/server';
-import { logger } from '../../../../lib/logger';
-import { createMethodHandler, NextApiResponse, withAuth } from '../../../../src/lib/next-api-helpers';
+import { NextApiResponse, withAuth } from '../../../../src/lib/next-api-helpers';
 
 async function handleGet(request: NextRequest) {
   return withAuth(request, async (req, user) => {
@@ -15,7 +15,7 @@ async function handleGet(request: NextRequest) {
       permissions: [], // Add permissions if needed later
     };
 
-    logger.debug({ userId: user.id }, 'User profile retrieved');
+    logger.debug('User profile retrieved', { userId: user.id });
 
     return NextApiResponse.success(dashboardUser, 'Profil utilisateur récupéré');
   });
@@ -37,7 +37,7 @@ async function handlePost(request: NextRequest) {
         await authService.logout(token);
       }
 
-      logger.info({ userId: user.id }, 'User logged out successfully');
+      logger.info('User logged out successfully', { userId: user.id });
 
       // Create response and clear cookie
       const response = NextApiResponse.success(null, 'Déconnexion réussie');
@@ -48,15 +48,18 @@ async function handlePost(request: NextRequest) {
         maxAge: 0, // Expire immediately
       });
 
-      return response;
+    return response;
     } catch (error: any) {
-      logger.error({ error, userId: user.id }, 'Logout error');
+      logger.error('Logout error', { error, userId: user.id });
       return NextApiResponse.error('Erreur lors de la déconnexion', 500);
     }
   });
 }
 
-export default createMethodHandler({
-  GET: handleGet,
-  POST: handlePost,
-});
+export async function GET(request: NextRequest) {
+  return handleGet(request);
+}
+
+export async function POST(request: NextRequest) {
+  return handlePost(request);
+}

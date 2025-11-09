@@ -1,7 +1,6 @@
+import { logger } from '@/lib/logger';
 import { NextRequest } from 'next/server';
-import { logger } from '../../../../lib/logger';
 import {
-    createMethodHandler,
     NextApiResponse,
     withAuth
 } from '../../../../src/lib/next-api-helpers';
@@ -9,7 +8,7 @@ import {
 async function handleLogout(request: NextRequest) {
   return withAuth(request, async (req, user) => {
     try {
-      logger.info({ userId: user.id }, 'User logging out');
+      logger.info('User logging out', { userId: user.id });
 
       // Pour le moment, le logout côté client suffit 
       // (supprimer le token du localStorage/cookies)
@@ -17,12 +16,12 @@ async function handleLogout(request: NextRequest) {
 
       return NextApiResponse.success(null, 'Déconnexion réussie');
     } catch (error: any) {
-      logger.error({ error, userId: user.id }, 'Logout error');
+      logger.error('Logout error', { error, userId: user.id });
       return NextApiResponse.error('Erreur lors de la déconnexion', 500);
     }
   });
 }
 
-export default createMethodHandler({
-  POST: handleLogout,
-});
+export async function POST(request: NextRequest) {
+  return handleLogout(request);
+}

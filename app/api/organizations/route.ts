@@ -1,10 +1,8 @@
-import { logger } from '@/lib/logger';
 import { prisma } from '@/lib/prisma';
 import {
-  createMethodHandler,
   NextApiResponse,
   validateBody,
-  withAuth,
+  withAuth
 } from '@/src/lib/next-api-helpers';
 import { NextRequest } from 'next/server';
 import { z } from 'zod';
@@ -22,7 +20,6 @@ async function handlePost(request: NextRequest) {
   return withAuth(request, async (req, user) => {
     // Verify role
     if (user.role !== 'ORGANIZER' && user.role !== 'ADMIN') {
-      logger.warn({ userId: user.id, role: user.role }, 'User attempted to create organization without proper role');
       return NextApiResponse.forbidden('Access denied. Only organizers can create an organization.');
     }
 
@@ -32,15 +29,12 @@ async function handlePost(request: NextRequest) {
     try {
       const { name } = data;
 
-      logger.info({ userId: user.id, organizationName: name }, 'Creating new organization');
-
       // Check if an organization with this name already exists
       const existingOrganizer = await prisma.organizer.findFirst({
         where: { name },
       });
 
       if (existingOrganizer) {
-        logger.warn({ userId: user.id, organizationName: name }, 'Organization name already exists');
         return NextApiResponse.error('An organization with this name already exists', 409);
       }
 
@@ -70,11 +64,8 @@ async function handlePost(request: NextRequest) {
         },
       });
 
-      logger.info({ userId: user.id, organizationId: organizer.id }, 'Organization created successfully');
-
       return NextApiResponse.success(organizer, 'Organization created successfully', 201);
     } catch (error) {
-      logger.error({ error, userId: user.id }, 'Error creating organizer');
       return NextApiResponse.error('Server error while creating organization', 500);
     }
   });
@@ -87,8 +78,6 @@ async function handlePost(request: NextRequest) {
 async function handleGet(request: NextRequest) {
   return withAuth(request, async (req, user) => {
     try {
-      logger.info({ userId: user.id }, 'Fetching user organizations');
-
       // Retrieve organizations where the user is a member
       const organizations = await prisma.organizer.findMany({
         where: {
@@ -127,17 +116,17 @@ async function handleGet(request: NextRequest) {
         },
       });
 
-      logger.info({ userId: user.id, count: organizations.length }, 'Organizations retrieved successfully');
-
       return NextApiResponse.success(organizations);
     } catch (error) {
-      logger.error({ error, userId: user.id }, 'Error fetching organizations');
       return NextApiResponse.error('Server error while retrieving organizations', 500);
     }
   });
 }
 
-export default createMethodHandler({
-  GET: handleGet,
-  POST: handlePost,
-});
+export async function GET(request: NextRequest) {
+  return handleGet(request);
+}
+
+export async function POST(request: NextRequest) {
+  return handlePost(request);
+}

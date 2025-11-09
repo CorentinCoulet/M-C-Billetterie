@@ -1,7 +1,9 @@
 'use client'
 
-import { Funnel, Heart, MagnifyingGlass, Plus } from '@phosphor-icons/react'
-import { motion } from 'framer-motion'
+import { Funnel, Heart, MagnifyingGlass, ShoppingCartSimple } from '@phosphor-icons/react'
+import { AnimatePresence, motion } from 'framer-motion'
+import { useState } from 'react'
+import { toast } from 'sonner'
 import { Badge } from '../components/ui/badge'
 import { Button } from '../components/ui/button'
 import { Card, CardContent } from '../components/ui/card'
@@ -10,6 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 
 interface Event {
   id: number
+  uuid: string
   name: string
   date: string
   time: string
@@ -26,7 +29,7 @@ interface Event {
 }
 
 interface EventsPageProps {
-  navigate: (page: string, eventId?: number) => void
+  navigate: (page: string, eventId?: number, eventUuid?: string) => void
   searchQuery: string
   setSearchQuery: (query: string) => void
   selectedCategory: string
@@ -52,20 +55,62 @@ export function EventsPage({
   toggleFavorite,
   addToCart
 }: EventsPageProps) {
-  const categories = ['all', 'Musique', 'Festival', 'Danse', 'Théâtre', 'Sport']
+  const [showMoreFilters, setShowMoreFilters] = useState(false)
+  const [sortBy, setSortBy] = useState('date')
+  const [dateRange, setDateRange] = useState('all')
+  const [addingToCart, setAddingToCart] = useState<number | null>(null)
+  
+  const handleAddToCart = (eventId: number, eventName: string) => {
+    setAddingToCart(eventId)
+    addToCart(eventId)
+    toast.success(`✅ "${eventName}" ajouté au panier !`, {
+      duration: 2500,
+      position: 'top-center',
+    })
+    setTimeout(() => setAddingToCart(null), 800)
+  }
+  
+  // Extract unique categories from events
+  const uniqueCategories = Array.from(new Set(events.map(e => e.category).filter(Boolean)))
+  const categories = ['all', ...uniqueCategories.sort()]
   const priceRanges = ['all', '0-30', '30-60', '60+']
+  const sortOptions = ['date', 'price', 'name', 'popularity']
+  const dateRanges = ['all', 'today', 'week', 'month']
 
   const filteredEvents = events.filter(event => {
     const matchesSearch = event.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         event.description.toLowerCase().includes(searchQuery.toLowerCase())
+                         event.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                         event.category.toLowerCase().includes(searchQuery.toLowerCase())
     const matchesCategory = selectedCategory === 'all' || event.category === selectedCategory
-    const eventPrice = parseFloat(event.price.replace('€', ''))
+    const eventPrice = parseFloat(event.price.replace('€', '').replace('Gratuit', '0'))
     const matchesPrice = priceRange === 'all' || 
                         (priceRange === '0-30' && eventPrice <= 30) ||
                         (priceRange === '30-60' && eventPrice > 30 && eventPrice <= 60) ||
                         (priceRange === '60+' && eventPrice > 60)
     
-    return matchesSearch && matchesCategory && matchesPrice
+    // Date range filter
+    const eventDate = new Date(event.date)
+    const today = new Date()
+    const matchesDate = dateRange === 'all' ||
+                       (dateRange === 'today' && eventDate.toDateString() === today.toDateString()) ||
+                       (dateRange === 'week' && eventDate <= new Date(today.getTime() + 7 * 24 * 60 * 60 * 1000)) ||
+                       (dateRange === 'month' && eventDate <= new Date(today.getTime() + 30 * 24 * 60 * 60 * 1000))
+    
+    return matchesSearch && matchesCategory && matchesPrice && matchesDate
+  }).sort((a, b) => {
+    // Sorting logic
+    if (sortBy === 'date') {
+      return new Date(a.date).getTime() - new Date(b.date).getTime()
+    } else if (sortBy === 'price') {
+      const priceA = parseFloat(a.price.replace('€', '').replace('Gratuit', '0'))
+      const priceB = parseFloat(b.price.replace('€', '').replace('Gratuit', '0'))
+      return priceA - priceB
+    } else if (sortBy === 'name') {
+      return a.name.localeCompare(b.name)
+    } else if (sortBy === 'popularity') {
+      return b.reviews - a.reviews
+    }
+    return 0
   })
 
   return (
@@ -99,12 +144,12 @@ export function EventsPage({
                 placeholder="Rechercher un événement..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10"
+                className="pl-10 bg-white"
               />
             </div>
             
             <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-              <SelectTrigger>
+              <SelectTrigger className="bg-white">
                 <SelectValue placeholder="Catégorie" />
               </SelectTrigger>
               <SelectContent>
@@ -117,7 +162,7 @@ export function EventsPage({
             </Select>
             
             <Select value={priceRange} onValueChange={setPriceRange}>
-              <SelectTrigger>
+              <SelectTrigger className="bg-white">
                 <SelectValue placeholder="Prix" />
               </SelectTrigger>
               <SelectContent>
@@ -131,11 +176,74 @@ export function EventsPage({
               </SelectContent>
             </Select>
             
-            <Button variant="outline" className="flex items-center space-x-2">
+            <Button 
+              variant="outline" 
+              className="flex items-center space-x-2 bg-white"
+              onClick={() => setShowMoreFilters(!showMoreFilters)}
+            >
               <Funnel size={16} />
               <span>Plus de filtres</span>
             </Button>
           </div>
+
+          {/* Additional filters */}
+          <AnimatePresence>
+            {showMoreFilters && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: 'auto' }}
+                exit={{ opacity: 0, height: 0 }}
+                transition={{ duration: 0.3 }}
+                className="overflow-hidden"
+              >
+                <div className="grid md:grid-cols-3 gap-4 mt-4 pt-4 border-t border-white/20">
+                  <Select value={sortBy} onValueChange={setSortBy}>
+                    <SelectTrigger className="bg-white">
+                      <SelectValue placeholder="Trier par" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {sortOptions.map(option => (
+                        <SelectItem key={option} value={option}>
+                          {option === 'date' ? 'Date' :
+                           option === 'price' ? 'Prix' :
+                           option === 'name' ? 'Nom' : 'Popularité'}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+
+                  <Select value={dateRange} onValueChange={setDateRange}>
+                    <SelectTrigger className="bg-white">
+                      <SelectValue placeholder="Période" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {dateRanges.map(range => (
+                        <SelectItem key={range} value={range}>
+                          {range === 'all' ? 'Toutes les dates' :
+                           range === 'today' ? "Aujourd'hui" :
+                           range === 'week' ? 'Cette semaine' : 'Ce mois-ci'}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      setSearchQuery('')
+                      setSelectedCategory('all')
+                      setPriceRange('all')
+                      setSortBy('date')
+                      setDateRange('all')
+                    }}
+                    className="bg-white"
+                  >
+                    Réinitialiser tous les filtres
+                  </Button>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </motion.div>
 
         {/* Results */}
@@ -205,24 +313,38 @@ export function EventsPage({
                         {event.price}
                       </div>
                       <div className="flex space-x-2">
-                        <Button
-                          onClick={(e) => {
-                            e.stopPropagation()
-                            addToCart(event.id)
-                          }}
-                          variant="outline"
-                          size="sm"
-                          className="border-white/40 hover:bg-white/20"
+                        <motion.div
+                          whileHover={{ scale: 1.05 }}
+                          whileTap={{ scale: 0.95 }}
                         >
-                          <Plus size={16} className="mr-1" />
-                          Panier
-                        </Button>
+                          <Button
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              handleAddToCart(event.id, event.name)
+                            }}
+                            variant="outline"
+                            size="sm"
+                            disabled={addingToCart === event.id}
+                            className="border-white/40 hover:bg-gradient-to-r hover:from-green-500 hover:to-emerald-500 hover:text-white hover:border-green-500 transition-all duration-300"
+                          >
+                            <motion.div
+                              animate={addingToCart === event.id ? {
+                                rotate: [0, -10, 10, -10, 0],
+                                scale: [1, 1.2, 1.2, 1.2, 1]
+                              } : {}}
+                              transition={{ duration: 0.5 }}
+                            >
+                              <ShoppingCartSimple size={16} className="mr-1" />
+                            </motion.div>
+                            {addingToCart === event.id ? 'Ajouté!' : 'Panier'}
+                          </Button>
+                        </motion.div>
                         <Button
-                          onClick={() => navigate('event-detail', event.id)}
+                          onClick={() => navigate('event-detail', event.id, event.uuid)}
                           size="sm"
                           className="glass-button"
                         >
-                          Détails
+                          Voir
                         </Button>
                       </div>
                     </div>

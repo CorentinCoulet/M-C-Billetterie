@@ -1,7 +1,5 @@
-import { logger } from '@/lib/logger';
 import { NextRequest } from 'next/server';
 import {
-  createMethodHandler,
   NextApiResponse,
   withAuth
 } from '../../../../../src/lib/next-api-helpers';
@@ -19,12 +17,11 @@ async function handleGetEventTickets(request: NextRequest, { params }: { params:
 
       return NextApiResponse.success(tickets, 'Tickets récupérés');
     } catch (error: any) {
-      logger.error({ error, userId: user.id, eventId: id }, 'Get event tickets error');
       return NextApiResponse.error('Erreur lors de la récupération des tickets', 500);
     }
   });
 }
 
-export default createMethodHandler({
-  GET: handleGetEventTickets,
-});
+export async function GET(request: NextRequest, context: { params: { id: string } }) {
+  return handleGetEventTickets(request, context);
+}

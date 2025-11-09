@@ -1,10 +1,8 @@
-import { logger } from '@/lib/logger';
 import { NextRequest } from 'next/server';
 import {
-    createMethodHandler,
-    NextApiResponse,
-    rateLimit,
-    withAuth
+  NextApiResponse,
+  rateLimit,
+  withAuth
 } from '../../../../src/lib/next-api-helpers';
 
 async function handleGDPRDeletion(request: NextRequest) {
@@ -23,12 +21,11 @@ async function handleGDPRDeletion(request: NextRequest) {
 
       return NextApiResponse.success(deleteResult, 'Demande de suppression des données traitée');
     } catch (error: any) {
-      logger.error({ error, userId: user.id }, 'GDPR deletion error');
       return NextApiResponse.error('Erreur lors de la suppression des données', 500);
     }
   });
 }
 
-export default createMethodHandler({
-  POST: handleGDPRDeletion,
-});
+export async function POST(request: NextRequest) {
+  return handleGDPRDeletion(request);
+}

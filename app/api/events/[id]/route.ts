@@ -1,12 +1,10 @@
-import { logger } from '@/lib/logger';
 import { NextRequest } from 'next/server';
 import { z } from 'zod';
 import { getCachedEvent, invalidateCategoriesCache, invalidateEventCache } from '../../../../src/lib/cache-helpers';
 import {
-    createMethodHandler,
-    NextApiResponse,
-    validateBody,
-    withAuth
+  NextApiResponse,
+  validateBody,
+  withAuth
 } from '../../../../src/lib/next-api-helpers';
 
 const updateEventSchema = z.object({
@@ -23,9 +21,7 @@ const updateEventSchema = z.object({
 async function handleGetEvent(request: NextRequest, context: { params: { id: string } }) {
   try {
     const { id } = context.params;
-    
-    logger.info({ eventId: id }, 'Fetching event from cache');
-    
+        
     // Use cached event
     const event = await getCachedEvent(id);
 
@@ -35,7 +31,6 @@ async function handleGetEvent(request: NextRequest, context: { params: { id: str
 
     return NextApiResponse.success(event, 'Événement récupéré');
   } catch (error: any) {
-    logger.error({ error }, 'Get event error');
     return NextApiResponse.error('Erreur lors de la récupération de l\'événement', 500);
   }
 }
@@ -64,7 +59,6 @@ async function handleUpdateEvent(request: NextRequest, context: { params: { id: 
 
       return NextApiResponse.success(event, 'Événement mis à jour avec succès');
     } catch (error: any) {
-      logger.error({ error, userId: user.id }, 'Update event error');
       return NextApiResponse.error(
         error.message || 'Erreur lors de la mise à jour de l\'événement',
         500
@@ -90,7 +84,6 @@ async function handleDeleteEvent(request: NextRequest, context: { params: { id: 
 
       return NextApiResponse.success(null, 'Événement supprimé avec succès');
     } catch (error: any) {
-      logger.error({ error, userId: user.id }, 'Delete event error');
       return NextApiResponse.error(
         error.message || 'Erreur lors de la suppression de l\'événement',
         500
@@ -99,8 +92,14 @@ async function handleDeleteEvent(request: NextRequest, context: { params: { id: 
   });
 }
 
-export default createMethodHandler({
-  GET: handleGetEvent,
-  PUT: handleUpdateEvent,
-  DELETE: handleDeleteEvent,
-});
+export async function GET(request: NextRequest, context: { params: { id: string } }) {
+  return handleGetEvent(request, context);
+}
+
+export async function PUT(request: NextRequest, context: { params: { id: string } }) {
+  return handleUpdateEvent(request, context);
+}
+
+export async function DELETE(request: NextRequest, context: { params: { id: string } }) {
+  return handleDeleteEvent(request, context);
+}

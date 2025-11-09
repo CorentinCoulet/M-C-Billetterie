@@ -3,9 +3,11 @@
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import { EventsPage as FrontendEventsPage } from '../../src/components/EventsPage'
+import { useApp } from '../../src/context/AppContext'
 
 interface Event {
   id: number
+  uuid: string
   name: string
   date: string
   time: string
@@ -51,8 +53,30 @@ interface DbEvent {
   }>
 }
 
+const getCategoryDisplayName = (categoryName?: string): string => {
+  if (!categoryName) return 'Non catégorisé'
+  
+  const categoryTranslations: Record<string, string> = {
+    'MUSIC': 'Musique',
+    'CONCERT': 'Concert',
+    'FESTIVAL': 'Festival',
+    'DANCE': 'Danse',
+    'THEATER': 'Théâtre',
+    'SPORTS': 'Sport',
+    'CONFERENCE': 'Conférence',
+    'EXHIBITION': 'Exposition',
+    'CINEMA': 'Cinéma',
+    'FOOD': 'Gastronomie'
+  }
+
+  return categoryTranslations[categoryName.toUpperCase()] || categoryName
+}
+
 const getCategoryEmoji = (categoryName?: string): string => {
   if (!categoryName) return '🎫'
+  
+  // Translate to French first for emoji mapping
+  const frenchCategory = getCategoryDisplayName(categoryName)
   
   const categoryMap: Record<string, string> = {
     'Musique': '🎼',
@@ -63,10 +87,11 @@ const getCategoryEmoji = (categoryName?: string): string => {
     'Sport': '⚽',
     'Conférence': '🎤',
     'Exposition': '🖼️',
-    'Cinéma': '🎬'
+    'Cinéma': '🎬',
+    'Gastronomie': '🍽️'
   }
 
-  return categoryMap[categoryName] || '🎫'
+  return categoryMap[frenchCategory] || '🎫'
 }
 
 const transformDbEventToFrontend = (dbEvent: DbEvent): Event => {
@@ -83,12 +108,13 @@ const transformDbEventToFrontend = (dbEvent: DbEvent): Event => {
 
   return {
     id: parseInt(dbEvent.id.slice(-8), 16) || Math.floor(Math.random() * 10000),
+    uuid: dbEvent.id,
     name: dbEvent.title,
     date: eventDate.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' }),
     time: eventDate.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }),
     location: dbEvent.location,
     price: averagePrice > 0 ? `${averagePrice.toFixed(0)}€` : 'Gratuit',
-    category: dbEvent.category?.name || 'Non catégorisé',
+    category: getCategoryDisplayName(dbEvent.category?.name),
     image: getCategoryEmoji(dbEvent.category?.name),
     available: dbEvent.maxCapacity || 0,
     description: dbEvent.description || 'Aucune description disponible',
@@ -101,12 +127,11 @@ const transformDbEventToFrontend = (dbEvent: DbEvent): Event => {
 
 export default function EventsPage() {
   const router = useRouter()
+  const { currentUser, addToCart: addToCartContext } = useApp()
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedCategory, setSelectedCategory] = useState('all')
   const [priceRange, setPriceRange] = useState('all')
-  const [currentUser, setCurrentUser] = useState<any>(null)
   const [favorites, setFavorites] = useState<number[]>([])
-  const [cart, setCart] = useState<any[]>([])
   const [events, setEvents] = useState<Event[]>([])
   const [loading, setLoading] = useState(true)
 
@@ -137,7 +162,7 @@ export default function EventsPage() {
     fetchEvents()
   }, [])
 
-  const navigate = (page: string, eventId?: number) => {
+  const navigate = (page: string, eventId?: number, eventUuid?: string) => {
     switch (page) {
       case 'home':
         router.push('/')
@@ -146,24 +171,19 @@ export default function EventsPage() {
         router.push('/login')
         break
       case 'event-detail':
-        if (eventId) {
-          router.push(`/events/${eventId}`)
+        if (eventUuid) {
+          router.push(`/events/${eventUuid}`)
         }
         break
       case 'cart':
         router.push('/cart')
         break
       case 'profile':
-        router.push('/profile')
+        router.push('/dashboard/profile')
         break
       default:
         router.push(`/${page}`)
     }
-  }
-
-  const logout = () => {
-    setCurrentUser(null)
-    router.push('/')
   }
 
   const toggleFavorite = (eventId: number) => {
@@ -183,17 +203,16 @@ export default function EventsPage() {
       return
     }
     
-    setCart((currentCart: any[]) => {
-      const existingItem = currentCart.find(item => item.eventId === eventId)
-      if (existingItem) {
-        return currentCart.map(item =>
-          item.eventId === eventId
-            ? { ...item, quantity: item.quantity + quantity }
-            : item
-        )
-      } else {
-        return [...currentCart, { eventId, quantity, addedAt: new Date().toISOString() }]
-      }
+    const event = events.find(e => e.id === eventId)
+    if (!event) return
+    
+    const price = parseFloat(event.price.replace('€', '').replace('Gratuit', '0'))
+    
+    addToCartContext({
+      eventId: event.uuid,
+      eventName: event.name,
+      quantity,
+      price
     })
   }
 

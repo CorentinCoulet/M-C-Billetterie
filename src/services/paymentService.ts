@@ -162,10 +162,6 @@ export class PaymentService {
     };
   }
 
-  /**
-   * Process a successful payment with transaction (P1 FIX)
-   * 🔒 CRITIQUE: Transaction pour éviter états incohérents paiement/commande
-   */
   async processSuccessfulPayment(paymentIntentId: string): Promise<PaymentWithRelations> {
     // Retrieve the payment intent from Stripe first
     const paymentIntent = await stripe.paymentIntents.retrieve(paymentIntentId);
@@ -181,7 +177,6 @@ export class PaymentService {
       throw new Error('Missing order or payment information');
     }
 
-    // 🚀 P1 FIX: Transaction atomique pour payment + order + tickets
     return await prisma.$transaction(async (tx) => {
       try {
         // 1. Vérifier l'état actuel

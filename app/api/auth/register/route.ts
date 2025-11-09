@@ -1,10 +1,10 @@
 import { NextRequest } from 'next/server';
 import { z } from 'zod';
-import { createMethodHandler, NextApiResponse, validateBody } from '../../../../src/lib/next-api-helpers';
+import { NextApiResponse, validateBody } from '../../../../src/lib/next-api-helpers';
 
 const registerSchema = z.object({
   email: z.string().email('Email invalide'),
-  password: z.string().min(6, 'Le mot de passe doit contenir au moins 6 caractères'),
+  password: z.string().min(8, 'Le mot de passe doit contenir au moins 8 caractères'),
   name: z.string().min(2, 'Le nom doit contenir au moins 2 caractères').optional(),
   confirmPassword: z.string().optional(),
 }).refine((data) => {
@@ -57,8 +57,6 @@ async function handleRegister(request: NextRequest) {
 
     return response;
   } catch (error: any) {
-    const { logger } = await import('../../../../lib/logger');
-    logger.error({ error, email: data.email }, 'Register error');
     return NextApiResponse.error(
       error.message || 'Erreur lors de l\'inscription',
       500
@@ -66,6 +64,6 @@ async function handleRegister(request: NextRequest) {
   }
 }
 
-export default createMethodHandler({
-  POST: handleRegister,
-});
+export async function POST(request: NextRequest) {
+  return handleRegister(request);
+}

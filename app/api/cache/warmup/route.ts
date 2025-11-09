@@ -1,15 +1,11 @@
-import { logger } from '@/lib/logger';
 import { cache } from '@/src/lib/cache';
 import cacheHelpers from '@/src/lib/cache-helpers';
-import { createMethodHandler, NextApiResponse } from '@/src/lib/next-api-helpers';
+import { NextApiResponse } from '@/src/lib/next-api-helpers';
 import { NextRequest } from 'next/server';
 
 async function handlePost(request: NextRequest) {
   try {
-    logger.info({ 
-      pathname: '/api/cache/warmup',
-      method: 'POST'
-    }, 'Starting cache warm-up process');
+
     const startTime = Date.now();
 
     // Use the new cache warmup helper
@@ -20,11 +16,6 @@ async function handlePost(request: NextRequest) {
     
     const duration = Date.now() - startTime;
     
-    logger.info({ 
-      duration, 
-      success: result.success 
-    }, `Cache warm-up completed in ${duration}ms`);
-
     return NextApiResponse.success({
       message: result.success ? 'Cache warm-up completed successfully' : 'Cache warm-up completed with errors',
       stats: {
@@ -36,11 +27,6 @@ async function handlePost(request: NextRequest) {
     });
 
   } catch (error) {
-    logger.error({ 
-      error,
-      pathname: '/api/cache/warmup' 
-    }, 'Cache warm-up process failed');
-    
     return NextApiResponse.error('Cache warm-up failed', 500);
   }
 }
@@ -64,11 +50,6 @@ async function handleGet(request: NextRequest) {
     // Consider cache "cold" if last warm-up was more than 1 hour ago
     const isCacheWarm = timeSinceWarmup < 3600000; // 1 hour
 
-    logger.info({ 
-      warmed: isCacheWarm, 
-      lastWarmup: lastWarmup.toISOString() 
-    }, 'Cache warmup status checked');
-
     return NextApiResponse.success({
       warmed: isCacheWarm,
       lastWarmup: lastWarmup.toISOString(),
@@ -80,16 +61,14 @@ async function handleGet(request: NextRequest) {
     });
 
   } catch (error) {
-    logger.error({ 
-      error,
-      pathname: '/api/cache/warmup' 
-    }, 'Failed to check cache warm-up status');
-    
     return NextApiResponse.error('Failed to check cache status', 500);
   }
 }
 
-export default createMethodHandler({
-  GET: handleGet,
-  POST: handlePost,
-});
+export async function GET(request: NextRequest) {
+  return handleGet(request);
+}
+
+export async function POST(request: NextRequest) {
+  return handlePost(request);
+}

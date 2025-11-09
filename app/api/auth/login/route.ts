@@ -1,7 +1,6 @@
 import { NextRequest } from 'next/server';
 import { z } from 'zod';
-import { logger } from '../../../../lib/logger';
-import { createMethodHandler, NextApiResponse, validateBody } from '../../../../src/lib/next-api-helpers';
+import { NextApiResponse, validateBody } from '../../../../src/lib/next-api-helpers';
 
 const loginSchema = z.object({
   email: z.string().email('Email invalide'),
@@ -25,11 +24,8 @@ async function handlePost(request: NextRequest) {
     const result = await authService.login(data.email, data.password);
 
     if (!result) {
-      logger.warn({ email: data.email, ipAddress }, 'Failed login attempt');
-      return NextApiResponse.error('Identifiants invalides', 401);
+      return NextApiResponse.error('Identifiant ou mot de passe incorrect', 401);
     }
-
-    logger.info({ userId: result.user.id, ipAddress }, 'User logged in successfully');
 
     // Create response with user data
     const response = NextApiResponse.success(
@@ -52,7 +48,6 @@ async function handlePost(request: NextRequest) {
 
     return response;
   } catch (error: any) {
-    logger.error({ error, email: data.email }, 'Login error');
     return NextApiResponse.error(
       error.message || 'Erreur lors de la connexion',
       500
@@ -60,6 +55,6 @@ async function handlePost(request: NextRequest) {
   }
 }
 
-export default createMethodHandler({
-  POST: handlePost,
-});
+export async function POST(request: NextRequest) {
+  return handlePost(request);
+}

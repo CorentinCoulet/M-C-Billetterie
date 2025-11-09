@@ -118,10 +118,9 @@ model Ticket {
   status     TicketStatus @default(paid)
   seatNumber String?
 
-  // QR Code unified system
-  currentQRCode      String? // Current QR code data URL
-  qrCodeGeneratedAt  DateTime? // When current QR was generated
-  qrRotationInterval Int       @default(12) // Hours between rotations
+  currentQRCode      String?
+  qrCodeGeneratedAt  DateTime?
+  qrRotationInterval Int       @default(12)
   isScanned          Boolean   @default(false)
   scannedAt          DateTime?
 

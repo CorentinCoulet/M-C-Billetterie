@@ -149,7 +149,6 @@ export class OrderService {
   async createOrder(data: OrderCreateInput): Promise<OrderWithRelations> {
     const { userId, tickets, customerInfo } = data;
     return await prisma.$transaction(async (tx) => {
-      // Vérifier et réserver les tickets de manière atomique
       let totalAmount = 0;
       const ticketItems: Array<{
         ticketId: string;
@@ -159,13 +158,12 @@ export class OrderService {
       const reservedTickets: string[] = [];
 
       try {
-        // 1. Vérifier la disponibilité des tickets et calculer le prix total
         for (const item of tickets) {
           const ticket = await tx.ticket.findUnique({
             where: { id: item.ticketId },
             include: { 
               event: true,
-              order: true // Vérifier si déjà réservé
+              order: true 
             }
           });
 
@@ -173,18 +171,15 @@ export class OrderService {
             throw new Error(`Ticket with ID ${item.ticketId} not found`);
           }
 
-          // Vérifier si le ticket est disponible
           if (ticket.orderId) {
             throw new Error(`Ticket ${item.ticketId} is already reserved`);
           }
 
-          // Vérifier la disponibilité de l'événement
           if (ticket.event && new Date(ticket.event.date) < new Date()) {
             throw new Error(`Event ${ticket.event.title} has already passed`);
           }
 
-          // Calcul du prix (implémentation simplifiée)
-          const unitPrice = 50; // À remplacer par la vraie logique de prix
+          const unitPrice = 50;
           
           totalAmount += unitPrice * item.quantity;
           ticketItems.push({
@@ -196,7 +191,6 @@ export class OrderService {
           reservedTickets.push(item.ticketId);
         }
 
-        // 2. Créer la commande de manière atomique
         const order = await tx.order.create({
           data: {
             userId,
@@ -211,18 +205,16 @@ export class OrderService {
           }
         });
 
-        // 3. Réserver les tickets pour cette commande
         for (const ticketId of reservedTickets) {
           await tx.ticket.update({
             where: { id: ticketId },
             data: { 
               orderId: order.id,
-              status: 'pending' // Statut en attente de paiement
+              status: 'pending'
             }
           });
         }
 
-        // 4. Retourner la commande avec toutes les relations
         return await tx.order.findUnique({
           where: { id: order.id },
           include: {
@@ -243,7 +235,6 @@ export class OrderService {
         }) as OrderWithRelations;
 
       } catch (error) {
-        // La transaction sera automatiquement rollback
         throw new Error(`Order creation failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
       }
     });

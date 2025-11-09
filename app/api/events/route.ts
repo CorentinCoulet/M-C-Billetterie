@@ -3,7 +3,6 @@ import { z } from 'zod';
 import { getCachedPublishedEvents, invalidateCategoriesCache } from '../../../src/lib/cache-helpers';
 import { logger } from '../../../src/lib/logger';
 import {
-  createMethodHandler,
   NextApiResponse,
   validateBody,
   withAuth
@@ -77,7 +76,10 @@ async function handlePost(request: NextRequest) {
   });
 }
 
-export default createMethodHandler({
-  GET: handleGet,
-  POST: handlePost,
-});
+export async function GET(request: NextRequest) {
+  return handleGet(request);
+}
+
+export async function POST(request: NextRequest) {
+  return handlePost(request);
+}

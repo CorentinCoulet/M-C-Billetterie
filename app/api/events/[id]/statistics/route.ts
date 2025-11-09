@@ -1,9 +1,7 @@
-import { logger } from '@/lib/logger';
 import { NextRequest } from 'next/server';
 import {
-    createMethodHandler,
-    NextApiResponse,
-    withAdminAuth
+  NextApiResponse,
+  withAdminAuth
 } from '../../../../../src/lib/next-api-helpers';
 
 async function handleGetEventStatistics(request: NextRequest, { params }: { params: { id: string } }) {
@@ -19,12 +17,11 @@ async function handleGetEventStatistics(request: NextRequest, { params }: { para
 
       return NextApiResponse.success(stats, 'Statistiques récupérées');
     } catch (error: any) {
-      logger.error({ error, userId: user.id, eventId: id }, 'Get event statistics error');
       return NextApiResponse.error('Erreur lors de la récupération des statistiques', 500);
     }
   });
 }
 
-export default createMethodHandler({
-  GET: handleGetEventStatistics,
-});
+export async function GET(request: NextRequest, context: { params: { id: string } }) {
+  return handleGetEventStatistics(request, context);
+}

@@ -128,6 +128,18 @@ export async function getCachedEvent(eventId: string) {
           name: true
         }
       },
+      category: {
+        select: {
+          id: true,
+          name: true
+        }
+      },
+      venue: {
+        select: {
+          id: true,
+          name: true
+        }
+      },
       tickets: {
         where: {
           status: {
@@ -138,9 +150,16 @@ export async function getCachedEvent(eventId: string) {
           order: {
             select: {
               id: true,
-              status: true
+              status: true,
+              totalPrice: true
             }
           }
+        }
+      },
+      reviews: {
+        select: {
+          id: true,
+          rating: true
         }
       }
     }

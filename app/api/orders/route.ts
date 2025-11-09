@@ -1,12 +1,10 @@
-import { logger } from '@/lib/logger';
 import { NextRequest } from 'next/server';
 import { z } from 'zod';
 import { invalidateDashboardStatsCache } from '../../../src/lib/cache-helpers';
 import {
-    createMethodHandler,
-    NextApiResponse,
-    validateBody,
-    withAuth
+  NextApiResponse,
+  validateBody,
+  withAuth
 } from '../../../src/lib/next-api-helpers';
 
 const createOrderSchema = z.object({
@@ -34,7 +32,6 @@ async function handleGetOrders(request: NextRequest) {
 
       return NextApiResponse.success(orders, 'Commandes récupérées');
     } catch (error: any) {
-      logger.error({ error, userId: user.id }, 'Get orders error');
       return NextApiResponse.error('Erreur lors de la récupération des commandes', 500);
     }
   });
@@ -63,7 +60,6 @@ async function handleCreateOrder(request: NextRequest) {
 
       return NextApiResponse.success(order, 'Commande créée avec succès', 201);
     } catch (error: any) {
-      logger.error({ error, userId: user.id }, 'Create order error');
       return NextApiResponse.error(
         error.message || 'Erreur lors de la création de la commande',
         500
@@ -72,7 +68,10 @@ async function handleCreateOrder(request: NextRequest) {
   });
 }
 
-export default createMethodHandler({
-  GET: handleGetOrders,
-  POST: handleCreateOrder,
-});
+export async function GET(request: NextRequest) {
+  return handleGetOrders(request);
+}
+
+export async function POST(request: NextRequest) {
+  return handleCreateOrder(request);
+}

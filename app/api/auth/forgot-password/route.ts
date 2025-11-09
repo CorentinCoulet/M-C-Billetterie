@@ -1,7 +1,7 @@
+import { logger } from '@/lib/logger';
 import { NextRequest } from 'next/server';
 import { z } from 'zod';
-import { logger } from '../../../../lib/logger';
-import { createMethodHandler, NextApiResponse, validateBody } from '../../../../src/lib/next-api-helpers';
+import { NextApiResponse, validateBody } from '../../../../src/lib/next-api-helpers';
 
 const forgotPasswordSchema = z.object({
   email: z.string().email('Email invalide'),
@@ -20,14 +20,14 @@ async function handlePost(request: NextRequest) {
 
     // TODO: Implémenter la réinitialisation de mot de passe
     // Pour le moment, on retourne une réponse générique pour des raisons de sécurité
-    logger.info({ email: data.email, ipAddress }, 'Password reset requested');
+    logger.info('Password reset requested', { email: data.email, ipAddress });
 
     return NextApiResponse.success(
       null,
       'Instructions de réinitialisation envoyées par email'
     );
   } catch (error: any) {
-    logger.error({ error, email: data.email, ipAddress }, 'Forgot password error');
+    logger.error('Forgot password error', { error, email: data.email, ipAddress });
     // Don't reveal if email exists or not for security
     return NextApiResponse.success(
       null,
@@ -36,6 +36,6 @@ async function handlePost(request: NextRequest) {
   }
 }
 
-export default createMethodHandler({
-  POST: handlePost,
-});
+export async function POST(request: NextRequest) {
+  return handlePost(request);
+}

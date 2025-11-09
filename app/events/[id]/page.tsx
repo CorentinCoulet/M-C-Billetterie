@@ -3,16 +3,17 @@
 import { ArrowLeft, CalendarBlank, Clock, Heart, MapPin, Minus, Plus, Star, Users } from '@phosphor-icons/react'
 import { motion } from 'framer-motion'
 import { useParams, useRouter } from 'next/navigation'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { toast } from 'sonner'
 import { Badge } from '../../../src/components/ui/badge'
 import { Button } from '../../../src/components/ui/button'
 import { Label } from '../../../src/components/ui/label'
 import { Separator } from '../../../src/components/ui/separator'
+import { useApp } from '../../../src/context/AppContext'
 
 // Event types and data
 interface Event {
-  id: number
+  id: string
   name: string
   date: string
   time: string
@@ -28,70 +29,149 @@ interface Event {
   reviews: number
 }
 
-// Event data (to be replaced by API call later)
-const events: Event[] = [
-  {
-    id: 1,
-    name: "Concert de Musique Classique",
-    date: "15 Mars 2024",
-    time: "20:00",
-    location: "Opéra de Paris",
-    price: "45€",
-    category: "Musique",
-    image: "🎼",
-    available: 120,
-    description: "Une soirée exceptionnelle avec l'Orchestre National dirigé par le célèbre chef d'orchestre Alexandre Dumont. Au programme : Beethoven, Mozart et Chopin dans un cadre prestigieux.",
-    venue: "Opéra Bastille, Paris",
-    duration: "2h30 (avec entracte)",
-    rating: 4.8,
-    reviews: 156
-  },
-  {
-    id: 2,
-    name: "Festival Jazz d'été",
-    date: "22 Juin 2024",
-    time: "19:30",
-    location: "Parc de la Villette",
-    price: "35€",
-    category: "Festival",
-    image: "🎷",
-    available: 250,
-    description: "Le plus grand festival de jazz de la capitale revient pour une édition exceptionnelle avec des artistes internationaux et des découvertes françaises.",
-    venue: "Grande Halle, Parc de la Villette",
-    duration: "4h",
-    rating: 4.6,
-    reviews: 89
-  },
-  {
-    id: 3,
-    name: "Spectacle de Danse Contemporaine",
-    date: "8 Avril 2024",
-    time: "21:00",
-    location: "Théâtre du Châtelet",
-    price: "55€",
-    category: "Danse",
-    image: "💃",
-    available: 80,
-    description: "Une création originale mêlant danse contemporaine et nouvelles technologies, par la compagnie renommée 'Mouvements Urbains'.",
-    venue: "Théâtre du Châtelet",
-    duration: "1h45",
-    rating: 4.9,
-    reviews: 203
+interface DbEvent {
+  id: string
+  title: string
+  description: string | null
+  date: string
+  location: string
+  maxCapacity: number | null
+  isPublished: boolean
+  category?: {
+    id: string
+    name: string
+  } | null
+  venue?: {
+    id: string
+    name: string
+  } | null
+  tickets?: Array<{
+    id: string
+    status: string
+    order: {
+      id: string
+      totalPrice: number
+    } | null
+  }>
+  reviews?: Array<{
+    id: string
+    rating: number
+  }>
+}
+
+const getCategoryDisplayName = (categoryName?: string): string => {
+  if (!categoryName) return 'Non catégorisé'
+  
+  const categoryTranslations: Record<string, string> = {
+    'MUSIC': 'Musique',
+    'CONCERT': 'Concert',
+    'FESTIVAL': 'Festival',
+    'DANCE': 'Danse',
+    'THEATER': 'Théâtre',
+    'SPORTS': 'Sport',
+    'CONFERENCE': 'Conférence',
+    'EXHIBITION': 'Exposition',
+    'CINEMA': 'Cinéma',
+    'FOOD': 'Gastronomie'
   }
-]
+
+  return categoryTranslations[categoryName.toUpperCase()] || categoryName
+}
+
+const getCategoryEmoji = (categoryName?: string): string => {
+  if (!categoryName) return '🎫'
+  
+  const frenchCategory = getCategoryDisplayName(categoryName)
+  
+  const categoryMap: Record<string, string> = {
+    'Musique': '🎼',
+    'Concert': '🎸',
+    'Festival': '🎉',
+    'Danse': '💃',
+    'Théâtre': '🎭',
+    'Sport': '⚽',
+    'Conférence': '🎤',
+    'Exposition': '🖼️',
+    'Cinéma': '�',
+    'Gastronomie': '🍽️'
+  }
+
+  return categoryMap[frenchCategory] || '🎫'
+}
+
+const transformDbEventToFrontend = (dbEvent: DbEvent): Event => {
+  const eventDate = new Date(dbEvent.date)
+  
+  const ticketsWithPrice = dbEvent.tickets?.filter(ticket => ticket.order?.totalPrice) || []
+  const averagePrice = ticketsWithPrice.length > 0
+    ? ticketsWithPrice.reduce((sum, ticket) => sum + (ticket.order?.totalPrice || 0), 0) / ticketsWithPrice.length
+    : 0
+  
+  const averageRating = dbEvent.reviews && dbEvent.reviews.length > 0
+    ? dbEvent.reviews.reduce((sum, review) => sum + review.rating, 0) / dbEvent.reviews.length
+    : 0
+
+  return {
+    id: dbEvent.id,
+    name: dbEvent.title,
+    date: eventDate.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' }),
+    time: eventDate.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }),
+    location: dbEvent.location,
+    price: averagePrice > 0 ? `${averagePrice.toFixed(0)}€` : 'Gratuit',
+    category: getCategoryDisplayName(dbEvent.category?.name),
+    image: getCategoryEmoji(dbEvent.category?.name),
+    available: dbEvent.maxCapacity || 0,
+    description: dbEvent.description || 'Aucune description disponible',
+    venue: dbEvent.venue?.name || dbEvent.location,
+    duration: '2h',
+    rating: Math.round(averageRating * 10) / 10,
+    reviews: dbEvent.reviews?.length || 0
+  }
+}
 
 export default function EventDetailPage() {
   const params = useParams()
   const router = useRouter()
-  const eventId = parseInt(params.id as string)
-  const event = events.find(e => e.id === eventId)
+  const { currentUser } = useApp()
+  const eventId = params.id as string
+  const [event, setEvent] = useState<Event | null>(null)
+  const [loading, setLoading] = useState(true)
   
   const [selectedQuantity, setSelectedQuantity] = useState(1)
-  const [currentUser, setCurrentUser] = useState<any>(null)
-  const [favorites, setFavorites] = useState<number[]>([])
+  const [favorites, setFavorites] = useState<string[]>([])
   const [cart, setCart] = useState<any[]>([])
 
-  const navigate = (page: string, eventId?: number) => {
+  useEffect(() => {
+    const fetchEvent = async () => {
+      try {
+        setLoading(true)
+        const response = await fetch(`/api/events/${eventId}`)
+        
+        if (!response.ok) {
+          throw new Error('Erreur lors de la récupération de l\'événement')
+        }
+
+        const result = await response.json()
+        
+        if (result.success && result.data) {
+          const transformedEvent = transformDbEventToFrontend(result.data)
+          setEvent(transformedEvent)
+        }
+      } catch (error) {
+        console.error('Erreur lors de la récupération de l\'événement:', error)
+        toast.error('Événement non trouvé')
+        router.push('/events')
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    if (eventId) {
+      fetchEvent()
+    }
+  }, [eventId, router])
+
+  const navigate = (page: string, eventId?: string) => {
     switch (page) {
       case 'events':
         router.push('/events')
@@ -107,13 +187,8 @@ export default function EventDetailPage() {
     }
   }
 
-  const logout = () => {
-    setCurrentUser(null)
-    router.push('/')
-  }
-
-  const toggleFavorite = (eventId: number) => {
-    setFavorites((currentFavorites: number[]) => {
+  const toggleFavorite = (eventId: string) => {
+    setFavorites((currentFavorites: string[]) => {
       const isFavorite = currentFavorites.includes(eventId)
       if (isFavorite) {
         toast.success('Retiré des favoris')
@@ -125,7 +200,7 @@ export default function EventDetailPage() {
     })
   }
 
-  const addToCart = (eventId: number, quantity = 1) => {
+  const addToCart = (eventId: string, quantity = 1) => {
     if (!currentUser) {
       toast.error('Veuillez vous connecter pour ajouter au panier')
       router.push('/login')
@@ -147,11 +222,24 @@ export default function EventDetailPage() {
     toast.success(`${quantity > 1 ? `${quantity} billets ajoutés` : 'Billet ajouté'} au panier`)
   }
 
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-indigo-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Chargement de l'événement...</p>
+        </div>
+      </div>
+    )
+  }
+
   if (!event) {
     return (
-      <div className="flex items-center justify-center py-12">
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="glass-card rounded-2xl p-12 text-center">
+          <div className="text-6xl mb-4">❌</div>
           <h1 className="text-2xl font-bold text-foreground mb-4">Événement non trouvé</h1>
+          <p className="text-muted-foreground mb-6">L'événement que vous recherchez n'existe pas ou n'est plus disponible.</p>
           <Button onClick={() => navigate('events')} className="glass-button text-white font-semibold">
             Retour aux événements
           </Button>
@@ -333,6 +421,11 @@ export default function EventDetailPage() {
                 </Button>
                 <Button
                   onClick={() => {
+                    if (!currentUser) {
+                      toast.error('Veuillez vous connecter pour réserver')
+                      router.push('/login')
+                      return
+                    }
                     addToCart(event.id, selectedQuantity)
                     navigate('cart')
                   }}

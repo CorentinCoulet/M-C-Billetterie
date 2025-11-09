@@ -1,7 +1,5 @@
-import { logger } from '@/lib/logger';
 import { prisma } from '@/lib/prisma';
 import {
-  createMethodHandler,
   NextApiResponse,
   validateBody,
   withAuth
@@ -46,9 +44,6 @@ async function handleGet(
   return withAuth(request, async (req, user) => {
     try {
       const { id } = await params;
-
-      logger.info({ userId: user.id, organizationId: id }, 'Fetching organization details');
-
       // Check if organization exists
       const organizer = await prisma.organizer.findUnique({
         where: { id },
@@ -82,7 +77,6 @@ async function handleGet(
       });
 
       if (!organizer) {
-        logger.warn({ userId: user.id, organizationId: id }, 'Organization not found');
         return NextApiResponse.notFound('Organization not found');
       }
 
@@ -92,15 +86,10 @@ async function handleGet(
       );
 
       if (!isMember) {
-        logger.warn({ userId: user.id, organizationId: id }, 'User not member of organization');
         return NextApiResponse.forbidden('Access denied');
       }
-
-      logger.info({ userId: user.id, organizationId: id }, 'Organization details retrieved');
-
       return NextApiResponse.success(organizer);
     } catch (error) {
-      logger.error({ error, userId: user.id }, 'Error fetching organizer');
       return NextApiResponse.error('Server error', 500);
     }
   });
@@ -118,15 +107,12 @@ async function handlePut(
     try {
       const { id } = await params;
 
-      logger.info({ userId: user.id, organizationId: id }, 'Updating organization');
-
       // Check if organization exists
       const organizer = await prisma.organizer.findUnique({
         where: { id },
       });
 
       if (!organizer) {
-        logger.warn({ userId: user.id, organizationId: id }, 'Organization not found');
         return NextApiResponse.notFound('Organization not found');
       }
 
@@ -138,7 +124,6 @@ async function handlePut(
       );
 
       if (!hasPermission) {
-        logger.warn({ userId: user.id, organizationId: id }, 'User lacks permission to update organization');
         return NextApiResponse.forbidden('Access denied. Only owners and administrators can modify the organization.');
       }
 
@@ -158,7 +143,6 @@ async function handlePut(
         });
 
         if (existingOrganizer) {
-          logger.warn({ userId: user.id, organizationName: name }, 'Organization name already exists');
           return NextApiResponse.error('An organization with this name already exists', 409);
         }
       }
@@ -182,11 +166,8 @@ async function handlePut(
         },
       });
 
-      logger.info({ userId: user.id, organizationId: id }, 'Organization updated successfully');
-
       return NextApiResponse.success(updatedOrganizer, 'Organization updated successfully');
     } catch (error) {
-      logger.error({ error, userId: user.id }, 'Error updating organizer');
       return NextApiResponse.error('Server error', 500);
     }
   });
@@ -203,9 +184,6 @@ async function handleDelete(
   return withAuth(request, async (req, user) => {
     try {
       const { id } = await params;
-
-      logger.info({ userId: user.id, organizationId: id }, 'Deleting organization');
-
       // Check if organization exists
       const organizer = await prisma.organizer.findUnique({
         where: { id },
@@ -215,7 +193,6 @@ async function handleDelete(
       });
 
       if (!organizer) {
-        logger.warn({ userId: user.id, organizationId: id }, 'Organization not found');
         return NextApiResponse.notFound('Organization not found');
       }
 
@@ -227,7 +204,6 @@ async function handleDelete(
       );
 
       if (!hasPermission) {
-        logger.warn({ userId: user.id, organizationId: id }, 'User lacks permission to delete organization');
         return NextApiResponse.forbidden('Access denied. Only the owner can delete the organization.');
       }
 
@@ -237,7 +213,6 @@ async function handleDelete(
       );
 
       if (activeEvents.length > 0) {
-        logger.warn({ userId: user.id, organizationId: id, activeEventsCount: activeEvents.length }, 'Cannot delete organization with active events');
         return NextApiResponse.error('Cannot delete an organization with active events', 400);
       }
 
@@ -246,18 +221,21 @@ async function handleDelete(
         where: { id },
       });
 
-      logger.info({ userId: user.id, organizationId: id }, 'Organization deleted successfully');
-
       return NextApiResponse.success({ message: 'Organization deleted successfully' });
     } catch (error) {
-      logger.error({ error, userId: user.id }, 'Error deleting organizer');
       return NextApiResponse.error('Server error', 500);
     }
   });
 }
 
-export default createMethodHandler({
-  GET: handleGet,
-  PUT: handlePut,
-  DELETE: handleDelete,
-});
+export async function GET(request: NextRequest, context: { params: Promise<{ id: string }> }) {
+  return handleGet(request, context);
+}
+
+export async function PUT(request: NextRequest, context: { params: Promise<{ id: string }> }) {
+  return handlePut(request, context);
+}
+
+export async function DELETE(request: NextRequest, context: { params: Promise<{ id: string }> }) {
+  return handleDelete(request, context);
+}

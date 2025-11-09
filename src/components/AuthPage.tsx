@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useApp } from '../context/AppContext'
 
 // Icones inline pour éviter l'import de lucide-react
 const UserIcon = () => (
@@ -25,14 +26,15 @@ import { PrivacyModal, TermsModal } from './LegalModal'
 
 interface AuthPageProps {
   navigate: (page: string) => void
-  currentUser: any
-  users: any[]
-  setUsers: (users: any[]) => void
-  setCurrentUser: (user: any) => void
-  logout: () => void
+  currentUser?: any
+  users?: any[]
+  setUsers?: (users: any[]) => void
+  setCurrentUser?: (user: any) => void
+  logout?: () => void
 }
 
-export function AuthPage({ navigate, currentUser, users, setUsers, setCurrentUser, logout }: AuthPageProps) {
+export function AuthPage({ navigate }: AuthPageProps) {
+  const { currentUser, setCurrentUser, logout, checkAuth } = useApp()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
@@ -61,16 +63,30 @@ export function AuthPage({ navigate, currentUser, users, setUsers, setCurrentUse
     e.preventDefault()
     setLoading(true)
     
-    setTimeout(() => {
-      const user = users.find(u => u.email === email && u.password === password)
-      if (user) {
-        setCurrentUser(user)
+    try {
+      const response = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, password }),
+      })
+
+      const data = await response.json()
+
+      if (data.success && data.data) {
+        setCurrentUser(data.data.user)
+        await checkAuth()
         navigate('events')
       } else {
-        alert('Identifiants incorrects')
+        alert(data.message || 'Identifiant ou mot de passe incorrect')
       }
+    } catch (error) {
+      console.error('Erreur de connexion:', error)
+      alert('Une erreur est survenue lors de la connexion')
+    } finally {
       setLoading(false)
-    }, 1000)
+    }
   }
 
   const handleRegister = async (e: React.FormEvent) => {
@@ -95,25 +111,8 @@ export function AuthPage({ navigate, currentUser, users, setUsers, setCurrentUse
       return
     }
     
-    // Registration simulation
-    setTimeout(() => {
-      const existingUser = users.find(u => u.email === registerData.email)
-      if (existingUser) {
-        alert('Cet email est déjà utilisé')
-      } else {
-        const newUser = { 
-          id: Date.now(), 
-          ...registerData,
-          userType,
-          name: `${registerData.firstName} ${registerData.lastName}`,
-          createdAt: new Date().toISOString()
-        }
-        setUsers([...users, newUser])
-        setCurrentUser(newUser)
-        navigate(userType === 'organizer' ? 'admin' : 'events')
-      }
-      setLoading(false)
-    }, 1000)
+    alert('Inscription à venir')
+    setLoading(false)
   }
 
   const updateRegisterData = (field: string, value: any) => {

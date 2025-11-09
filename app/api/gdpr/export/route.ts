@@ -1,7 +1,6 @@
 import { logger } from '@/lib/logger';
 import { NextRequest } from 'next/server';
 import {
-    createMethodHandler,
     NextApiResponse,
     rateLimit,
     withAuth
@@ -23,12 +22,12 @@ async function handleGDPRExport(request: NextRequest) {
 
       return NextApiResponse.success(exportData, 'Données utilisateur exportées');
     } catch (error: any) {
-      logger.error({ error, userId: user.id }, 'GDPR export error');
+      logger.error('GDPR export error', { error, userId: user.id });
       return NextApiResponse.error('Erreur lors de l\'export des données', 500);
     }
   });
 }
 
-export default createMethodHandler({
-  POST: handleGDPRExport,
-});
+export async function POST(request: NextRequest) {
+  return handleGDPRExport(request);
+}

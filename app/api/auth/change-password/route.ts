@@ -1,11 +1,10 @@
+import { logger } from '@/lib/logger';
 import { NextRequest } from 'next/server';
 import { z } from 'zod';
-import { logger } from '../../../../lib/logger';
 import {
-  createMethodHandler,
-  NextApiResponse,
-  validateBody,
-  withAuth
+    NextApiResponse,
+    validateBody,
+    withAuth
 } from '../../../../src/lib/next-api-helpers';
 
 const changePasswordSchema = z.object({
@@ -29,18 +28,18 @@ async function handlePost(request: NextRequest) {
       // Verify current password
       const isCurrentPasswordValid = await userService.verifyPassword(user.id, data.currentPassword);
       if (!isCurrentPasswordValid) {
-        logger.warn({ userId: user.id }, 'Failed password change attempt - incorrect current password');
+        logger.warn('Failed password change attempt - incorrect current password', { userId: user.id });
         return NextApiResponse.error('Mot de passe actuel incorrect', 400);
       }
 
       // Update password
       await userService.updatePassword(user.id, data.newPassword);
 
-      logger.info({ userId: user.id }, 'Password changed successfully');
+      logger.info('Password changed successfully', { userId: user.id });
 
       return NextApiResponse.success(null, 'Mot de passe modifié avec succès');
     } catch (error: any) {
-      logger.error({ error, userId: user.id }, 'Change password error');
+      logger.error('Change password error', { error, userId: user.id });
       return NextApiResponse.error(
         error.message || 'Erreur lors de la modification du mot de passe',
         500
@@ -49,6 +48,6 @@ async function handlePost(request: NextRequest) {
   });
 }
 
-export default createMethodHandler({
-  POST: handlePost,
-});
+export async function POST(request: NextRequest) {
+  return handlePost(request);
+}

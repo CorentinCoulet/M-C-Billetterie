@@ -1,7 +1,5 @@
-import { logger } from '@/lib/logger';
 import { prisma } from '@/lib/prisma';
 import {
-  createMethodHandler,
   NextApiResponse,
   validateBody,
   withAuth
@@ -49,16 +47,12 @@ async function handleGet(
   return withAuth(request, async (req, user) => {
     try {
       const { id } = params;
-
-      logger.info({ userId: user.id, organizationId: id }, 'Fetching organization members');
-
       // Check if organization exists
       const organizer = await prisma.organizer.findUnique({
         where: { id },
       });
 
       if (!organizer) {
-        logger.warn({ userId: user.id, organizationId: id }, 'Organization not found');
         return NextApiResponse.notFound('Organization not found');
       }
 
@@ -70,7 +64,6 @@ async function handleGet(
       );
 
       if (!hasPermission) {
-        logger.warn({ userId: user.id, organizationId: id }, 'User not member of organization');
         return NextApiResponse.forbidden('Access denied');
       }
 
@@ -92,11 +85,8 @@ async function handleGet(
         },
       });
 
-      logger.info({ userId: user.id, organizationId: id, memberCount: members.length }, 'Members retrieved successfully');
-
       return NextApiResponse.success(members);
     } catch (error) {
-      logger.error({ error, userId: user.id }, 'Error fetching members');
       return NextApiResponse.error('Server error', 500);
     }
   });
@@ -114,15 +104,12 @@ async function handlePost(
     try {
       const { id } = params;
 
-      logger.info({ userId: user.id, organizationId: id }, 'Adding member to organization');
-
       // Check if organization exists
       const organizer = await prisma.organizer.findUnique({
         where: { id },
       });
 
       if (!organizer) {
-        logger.warn({ userId: user.id, organizationId: id }, 'Organization not found');
         return NextApiResponse.notFound('Organization not found');
       }
 
@@ -134,7 +121,6 @@ async function handlePost(
       );
 
       if (!hasPermission) {
-        logger.warn({ userId: user.id, organizationId: id }, 'User lacks permission to add members');
         return NextApiResponse.forbidden('Access denied. Only owners, administrators, and managers can add members.');
       }
 
@@ -150,7 +136,6 @@ async function handlePost(
       });
 
       if (!newUser) {
-        logger.warn({ userId: user.id, newUserId }, 'User to add not found');
         return NextApiResponse.notFound('User not found');
       }
 
@@ -163,7 +148,6 @@ async function handlePost(
       });
 
       if (existingMember) {
-        logger.warn({ userId: user.id, newUserId, organizationId: id }, 'User already member');
         return NextApiResponse.error('This user is already a member of the organization', 409);
       }
 
@@ -186,11 +170,8 @@ async function handlePost(
         },
       });
 
-      logger.info({ userId: user.id, newUserId, organizationId: id, role }, 'Member added successfully');
-
       return NextApiResponse.success(member, 'Member added successfully', 201);
     } catch (error) {
-      logger.error({ error, userId: user.id }, 'Error adding member');
       return NextApiResponse.error('Server error', 500);
     }
   });
@@ -214,11 +195,8 @@ async function handleDelete(
       const userIdToRemove = pathParts[pathParts.length - 1];
 
       if (!userIdToRemove) {
-        logger.warn({ userId: user.id, organizationId: id }, 'Member user ID not provided');
         return NextApiResponse.error('User ID missing', 400);
       }
-
-      logger.info({ userId: user.id, organizationId: id, userIdToRemove }, 'Removing member from organization');
 
       // Check if organization exists
       const organizer = await prisma.organizer.findUnique({
@@ -226,7 +204,6 @@ async function handleDelete(
       });
 
       if (!organizer) {
-        logger.warn({ userId: user.id, organizationId: id }, 'Organization not found');
         return NextApiResponse.notFound('Organization not found');
       }
 
@@ -241,7 +218,6 @@ async function handleDelete(
       const isSelf = user.id === userIdToRemove;
 
       if (!hasPermission && !isSelf) {
-        logger.warn({ userId: user.id, organizationId: id }, 'User lacks permission to remove members');
         return NextApiResponse.forbidden('Access denied');
       }
 
@@ -254,7 +230,6 @@ async function handleDelete(
       });
 
       if (!memberToRemove) {
-        logger.warn({ userId: user.id, userIdToRemove, organizationId: id }, 'Member not found');
         return NextApiResponse.notFound('Member not found');
       }
 
@@ -268,7 +243,6 @@ async function handleDelete(
         });
 
         if (ownerCount === 1) {
-          logger.warn({ userId: user.id, organizationId: id }, 'Cannot remove last owner');
           return NextApiResponse.error('Cannot remove the last owner of the organization', 400);
         }
       }
@@ -278,20 +252,23 @@ async function handleDelete(
         where: { id: memberToRemove.id },
       });
 
-      logger.info({ userId: user.id, userIdToRemove, organizationId: id }, 'Member removed successfully');
-
       return NextApiResponse.success(
         { message: 'Member removed successfully' }
       );
     } catch (error) {
-      logger.error({ error, userId: user.id }, 'Error removing member');
       return NextApiResponse.error('Server error', 500);
     }
   });
 }
 
-export default createMethodHandler({
-  GET: handleGet,
-  POST: handlePost,
-  DELETE: handleDelete,
-});
+export async function GET(request: NextRequest, context: { params: { id: string } }) {
+  return handleGet(request, context);
+}
+
+export async function POST(request: NextRequest, context: { params: { id: string } }) {
+  return handlePost(request, context);
+}
+
+export async function DELETE(request: NextRequest, context: { params: { id: string } }) {
+  return handleDelete(request, context);
+}

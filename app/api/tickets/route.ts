@@ -1,12 +1,10 @@
-import { logger } from '@/lib/logger';
 import { NextRequest } from 'next/server';
 import { z } from 'zod';
 import {
-    createMethodHandler,
-    getQueryParam,
-    NextApiResponse,
-    validateBody,
-    withAuth
+  getQueryParam,
+  NextApiResponse,
+  validateBody,
+  withAuth
 } from '../../../src/lib/next-api-helpers';
 
 const createTicketSchema = z.object({
@@ -29,7 +27,6 @@ async function handleGetTickets(request: NextRequest) {
 
       return NextApiResponse.success(tickets, 'Billets récupérés');
     } catch (error: any) {
-      logger.error({ error, userId: user.id }, 'Get tickets error');
       return NextApiResponse.error('Erreur lors de la récupération des billets', 500);
     }
   });
@@ -54,7 +51,6 @@ async function handleCreateTicket(request: NextRequest) {
 
       return NextApiResponse.success(ticket, 'Billet créé avec succès', 201);
     } catch (error: any) {
-      logger.error({ error, userId: user.id }, 'Create ticket error');
       return NextApiResponse.error(
         error.message || 'Erreur lors de la création du billet',
         500
@@ -63,7 +59,10 @@ async function handleCreateTicket(request: NextRequest) {
   });
 }
 
-export default createMethodHandler({
-  GET: handleGetTickets,
-  POST: handleCreateTicket,
-});
+export async function GET(request: NextRequest) {
+  return handleGetTickets(request);
+}
+
+export async function POST(request: NextRequest) {
+  return handleCreateTicket(request);
+}
