@@ -132,14 +132,13 @@ const transformDbEventToFrontend = (dbEvent: DbEvent): Event => {
 export default function EventDetailPage() {
   const params = useParams()
   const router = useRouter()
-  const { currentUser } = useApp()
+  const { currentUser, addToCart: addToCartContext } = useApp()
   const eventId = params.id as string
   const [event, setEvent] = useState<Event | null>(null)
   const [loading, setLoading] = useState(true)
   
   const [selectedQuantity, setSelectedQuantity] = useState(1)
   const [favorites, setFavorites] = useState<string[]>([])
-  const [cart, setCart] = useState<any[]>([])
 
   useEffect(() => {
     const fetchEvent = async () => {
@@ -182,6 +181,9 @@ export default function EventDetailPage() {
       case 'auth':
         router.push('/login')
         break
+      case 'dashboard':
+        router.push('/dashboard')
+        break
       default:
         router.push(`/${page}`)
     }
@@ -200,25 +202,24 @@ export default function EventDetailPage() {
     })
   }
 
-  const addToCart = (eventId: string, quantity = 1) => {
+  const addToCart = async (eventId: string, quantity = 1) => {
     if (!currentUser) {
       toast.error('Veuillez vous connecter pour ajouter au panier')
       router.push('/login')
       return
     }
     
-    setCart((currentCart: any[]) => {
-      const existingItem = currentCart.find(item => item.eventId === eventId)
-      if (existingItem) {
-        return currentCart.map(item =>
-          item.eventId === eventId
-            ? { ...item, quantity: item.quantity + quantity }
-            : item
-        )
-      } else {
-        return [...currentCart, { eventId, quantity, addedAt: new Date().toISOString() }]
-      }
+    if (!event) return
+    
+    const price = parseFloat(event.price.replace('€', '').replace('Gratuit', '0'))
+    
+    await addToCartContext({
+      eventId,
+      eventName: event.name,
+      quantity,
+      price
     })
+    
     toast.success(`${quantity > 1 ? `${quantity} billets ajoutés` : 'Billet ajouté'} au panier`)
   }
 

@@ -92,7 +92,7 @@ export async function middleware(request: NextRequest) {
     const isProtectedRoute = isAdminRoute || isOrganizerRoute || isDashboardRoute;
 
     if (isProtectedRoute && !payload) {
-      const loginUrl = new URL('/auth/login', request.url);
+      const loginUrl = new URL('/login', request.url);
       loginUrl.searchParams.set('redirect', pathname);
       return NextResponse.redirect(loginUrl);
     }
@@ -108,6 +108,13 @@ export async function middleware(request: NextRequest) {
     if (isOrganizerRoute && payload && payload.role !== 'ORGANIZER' && payload.role !== 'ADMIN') {
       return NextResponse.json(
         { error: 'Access denied. Organizer role required.' },
+        { status: 403 }
+      );
+    }
+
+    if (isDashboardRoute && payload && payload.role !== 'ORGANIZER' && payload.role !== 'ADMIN') {
+      return NextResponse.json(
+        { error: 'Access denied. Organizer or Admin role required.' },
         { status: 403 }
       );
     }

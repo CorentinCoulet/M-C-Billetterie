@@ -17,7 +17,9 @@ export default function LoginPage() {
     const routes: Record<string, string> = {
       home: '/',
       events: '/events',
-      profile: '/profile'
+      profile: '/profile',
+      dashboard: '/dashboard',
+      admin: '/admin'
     }
     router.push(routes[page] || `/${page}`)
   }, [router])

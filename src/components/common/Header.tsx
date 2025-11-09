@@ -80,6 +80,20 @@ export function Header({ navigate, currentPage, currentUser, favorites = [], log
               >
                 Événements
               </Button>
+              {currentUser?.role === 'ORGANIZER' && (
+                <Button 
+                  variant={currentPage === 'dashboard' ? 'default' : 'ghost'}
+                  onClick={() => handleNavigate('dashboard')}
+                  className={
+                    currentPage === 'dashboard' 
+                      ? 'glass-button font-semibold' 
+                      : 'font-semibold hover:bg-gradient-to-r hover:from-purple-500/20 hover:to-pink-600/20 hover:text-purple-600 hover:scale-105 hover:shadow-lg hover:shadow-purple-500/20 focus:bg-gradient-to-r focus:from-purple-500/20 focus:to-pink-600/20 focus:text-purple-600 focus:scale-105 focus:shadow-lg focus:shadow-purple-500/20 focus:ring-2 focus:ring-purple-400/50 transition-all duration-300 ease-in-out'
+                  }
+                  style={{ fontSize: '1.2rem' }}
+                >
+                  🎯 Dashboard
+                </Button>
+              )}
               <Button 
                 variant={currentPage === 'about' ? 'default' : 'ghost'}
                 onClick={() => handleNavigate('about')}
@@ -200,6 +214,20 @@ export function Header({ navigate, currentPage, currentUser, favorites = [], log
             >
               🎉 Événements
             </Button>
+
+            {currentUser?.role === 'ORGANIZER' && (
+              <Button 
+                variant={currentPage === 'dashboard' ? 'default' : 'ghost'}
+                onClick={() => handleNavigate('dashboard')}
+                className={`justify-start text-lg font-semibold ${
+                  currentPage === 'dashboard'
+                    ? 'glass-button'
+                    : 'hover:bg-gradient-to-r hover:from-purple-500/20 hover:to-pink-600/20 hover:text-purple-600'
+                }`}
+              >
+                🎯 Dashboard
+              </Button>
+            )}
 
             <Button 
               variant={currentPage === 'about' ? 'default' : 'ghost'}

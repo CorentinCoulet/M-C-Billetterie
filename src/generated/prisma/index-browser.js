@@ -135,6 +135,16 @@ exports.Prisma.UserScalarFieldEnum = {
   updatedAt: 'updatedAt'
 };
 
+exports.Prisma.CartItemScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  eventId: 'eventId',
+  eventName: 'eventName',
+  quantity: 'quantity',
+  price: 'price',
+  addedAt: 'addedAt'
+};
+
 exports.Prisma.OrganizerScalarFieldEnum = {
   id: 'id',
   name: 'name',
@@ -421,6 +431,7 @@ exports.TicketStatus = exports.$Enums.TicketStatus = {
 
 exports.Prisma.ModelName = {
   User: 'User',
+  CartItem: 'CartItem',
   Organizer: 'Organizer',
   Event: 'Event',
   Order: 'Order',

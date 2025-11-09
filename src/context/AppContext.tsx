@@ -11,6 +11,7 @@ export interface User {
 }
 
 export interface CartItem {
+  id?: string
   eventId: string
   eventName: string
   quantity: number
@@ -25,10 +26,10 @@ interface AppContextType {
   checkAuth: () => Promise<void>
   isLoading: boolean
   cart: CartItem[]
-  addToCart: (item: Omit<CartItem, 'addedAt'>) => void
-  removeFromCart: (eventId: string) => void
-  updateCartQuantity: (eventId: string, quantity: number) => void
-  clearCart: () => void
+  addToCart: (item: Omit<CartItem, 'addedAt' | 'id'>) => Promise<void>
+  removeFromCart: (eventId: string) => Promise<void>
+  updateCartQuantity: (eventId: string, quantity: number) => Promise<void>
+  clearCart: () => Promise<void>
 }
 
 const AppContext = createContext<AppContextType>({
@@ -38,10 +39,10 @@ const AppContext = createContext<AppContextType>({
   checkAuth: async () => {},
   isLoading: true,
   cart: [],
-  addToCart: () => {},
-  removeFromCart: () => {},
-  updateCartQuantity: () => {},
-  clearCart: () => {},
+  addToCart: async () => {},
+  removeFromCart: async () => {},
+  updateCartQuantity: async () => {},
+  clearCart: async () => {},
 })
 
 interface AppProviderProps {
@@ -54,61 +55,115 @@ export function AppProvider({ children }: AppProviderProps) {
   const [isLoading, setIsLoading] = useState(true)
   const [cart, setCart] = useState<CartItem[]>([])
 
-  // Load cart from localStorage
-  useEffect(() => {
-    const savedCart = localStorage.getItem('cart')
-    if (savedCart) {
-      try {
-        setCart(JSON.parse(savedCart))
-      } catch (error) {
-        console.error('Erreur chargement panier:', error)
-      }
-    }
-  }, [])
+  const loadCartFromAPI = useCallback(async () => {
+    if (!currentUser) return
 
-  // Save cart to localStorage
+    try {
+      const response = await fetch('/api/cart', {
+        credentials: 'include',
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        if (data.success && data.data) {
+          setCart(data.data)
+        }
+      }
+    } catch (error) {
+      console.error('Error loading cart:', error)
+    }
+  }, [currentUser])
+
   useEffect(() => {
-    if (cart.length > 0) {
-      localStorage.setItem('cart', JSON.stringify(cart))
+    if (currentUser) {
+      loadCartFromAPI()
     } else {
-      localStorage.removeItem('cart')
+      setCart([])
     }
-  }, [cart])
+  }, [currentUser, loadCartFromAPI])
 
-  const addToCart = useCallback((item: Omit<CartItem, 'addedAt'>) => {
-    setCart((currentCart) => {
-      const existingItem = currentCart.find(i => i.eventId === item.eventId)
-      if (existingItem) {
-        return currentCart.map(i =>
-          i.eventId === item.eventId
-            ? { ...i, quantity: i.quantity + item.quantity }
-            : i
-        )
-      } else {
-        return [...currentCart, { ...item, addedAt: new Date().toISOString() }]
+  const addToCart = useCallback(async (item: Omit<CartItem, 'addedAt' | 'id'>) => {
+    if (!currentUser) return
+
+    try {
+      const response = await fetch('/api/cart', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify(item)
+      })
+
+      if (response.ok) {
+        await loadCartFromAPI()
       }
-    })
-  }, [])
+    } catch (error) {
+      console.error('Error adding to cart:', error)
+    }
+  }, [currentUser, loadCartFromAPI])
 
-  const removeFromCart = useCallback((eventId: string) => {
-    setCart((currentCart) => currentCart.filter(item => item.eventId !== eventId))
-  }, [])
+  const removeFromCart = useCallback(async (eventId: string) => {
+    if (!currentUser) return
 
-  const updateCartQuantity = useCallback((eventId: string, quantity: number) => {
+    const item = cart.find(i => i.eventId === eventId)
+    if (!item?.id) return
+
+    try {
+      const response = await fetch(`/api/cart/${item.id}`, {
+        method: 'DELETE',
+        credentials: 'include',
+      })
+
+      if (response.ok) {
+        await loadCartFromAPI()
+      }
+    } catch (error) {
+      console.error('Error removing from cart:', error)
+    }
+  }, [currentUser, cart, loadCartFromAPI])
+
+  const updateCartQuantity = useCallback(async (eventId: string, quantity: number) => {
+    if (!currentUser) return
+
     if (quantity <= 0) {
-      removeFromCart(eventId)
+      await removeFromCart(eventId)
       return
     }
-    setCart((currentCart) =>
-      currentCart.map(item =>
-        item.eventId === eventId ? { ...item, quantity } : item
-      )
-    )
-  }, [removeFromCart])
 
-  const clearCart = useCallback(() => {
-    setCart([])
-  }, [])
+    const item = cart.find(i => i.eventId === eventId)
+    if (!item?.id) return
+
+    try {
+      const response = await fetch(`/api/cart/${item.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ quantity })
+      })
+
+      if (response.ok) {
+        await loadCartFromAPI()
+      }
+    } catch (error) {
+      console.error('Error updating cart:', error)
+    }
+  }, [currentUser, cart, removeFromCart, loadCartFromAPI])
+
+  const clearCart = useCallback(async () => {
+    if (!currentUser) return
+
+    try {
+      const response = await fetch('/api/cart', {
+        method: 'DELETE',
+        credentials: 'include',
+      })
+
+      if (response.ok) {
+        setCart([])
+      }
+    } catch (error) {
+      console.error('Error clearing cart:', error)
+    }
+  }, [currentUser])
 
   const checkAuth = useCallback(async () => {
     try {
@@ -127,7 +182,7 @@ export function AppProvider({ children }: AppProviderProps) {
         setCurrentUser(null)
       }
     } catch (error) {
-      console.error('Erreur vérification auth:', error)
+      console.error('Error checking auth:', error)
       setCurrentUser(null)
     } finally {
       setIsLoading(false)
@@ -141,14 +196,14 @@ export function AppProvider({ children }: AppProviderProps) {
         credentials: 'include',
       })
     } catch (error) {
-      console.error('Erreur logout:', error)
+      console.error('Error logging out:', error)
     } finally {
       setCurrentUser(null)
+      setCart([])
       router.push('/')
     }
   }, [router])
 
-  // Vérifier l'auth au chargement
   useEffect(() => {
     checkAuth()
   }, [checkAuth])

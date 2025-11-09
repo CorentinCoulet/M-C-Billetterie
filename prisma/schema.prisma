@@ -40,6 +40,7 @@ model User {
   role              Role              @default(USER)
   tickets           Ticket[]
   orders            Order[]
+  cartItems         CartItem[]
   userSessions      UserSession[] // Secure sessions only
   reviews           Review[]
   teamRoles         TeamMember[]
@@ -55,6 +56,22 @@ model User {
   updatedAt         DateTime          @updatedAt
 }
 
+model CartItem {
+  id        String   @id @default(uuid())
+  userId    String
+  eventId   String
+  eventName String
+  quantity  Int      @default(1)
+  price     Float
+  addedAt   DateTime @default(now())
+  
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  event     Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  
+  @@unique([userId, eventId])
+  @@index([userId])
+}
+
 model Organizer {
   id        String       @id @default(uuid())
   name      String
@@ -65,29 +82,30 @@ model Organizer {
 }
 
 model Event {
-  id                     String    @id @default(uuid())
+  id                     String     @id @default(uuid())
   title                  String
   description            String?
   date                   DateTime
   location               String
   maxCapacity            Int?
-  isPublished            Boolean   @default(false)
-  isCancelled            Boolean   @default(false)
-  allowAnonymousPurchase Boolean   @default(false)
-  allowTransfer          Boolean   @default(false)
+  isPublished            Boolean    @default(false)
+  isCancelled            Boolean    @default(false)
+  allowAnonymousPurchase Boolean    @default(false)
+  allowTransfer          Boolean    @default(false)
   tickets                Ticket[]
+  cartItems              CartItem[]
   reviews                Review[]
-  category               Category? @relation(fields: [categoryId], references: [id])
+  category               Category?  @relation(fields: [categoryId], references: [id])
   categoryId             String?
-  venue                  Venue?    @relation(fields: [venueId], references: [id])
+  venue                  Venue?     @relation(fields: [venueId], references: [id])
   venueId                String?
-  organizer              Organizer @relation(fields: [organizerId], references: [id])
+  organizer              Organizer  @relation(fields: [organizerId], references: [id])
   organizerId            String
-  theme                  Theme?    @relation(fields: [themeId], references: [id])
+  theme                  Theme?     @relation(fields: [themeId], references: [id])
   themeId                String?
   metadata               Json?
-  createdAt              DateTime  @default(now())
-  updatedAt              DateTime  @updatedAt
+  createdAt              DateTime   @default(now())
+  updatedAt              DateTime   @updatedAt
 }
 
 model Order {

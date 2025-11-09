@@ -181,6 +181,9 @@ export default function EventsPage() {
       case 'profile':
         router.push('/dashboard/profile')
         break
+      case 'dashboard':
+        router.push('/dashboard')
+        break
       default:
         router.push(`/${page}`)
     }
@@ -197,7 +200,7 @@ export default function EventsPage() {
     })
   }
 
-  const addToCart = (eventId: number, quantity = 1) => {
+  const addToCart = async (eventId: number, quantity = 1) => {
     if (!currentUser) {
       router.push('/login')
       return
@@ -208,7 +211,7 @@ export default function EventsPage() {
     
     const price = parseFloat(event.price.replace('€', '').replace('Gratuit', '0'))
     
-    addToCartContext({
+    await addToCartContext({
       eventId: event.uuid,
       eventName: event.name,
       quantity,

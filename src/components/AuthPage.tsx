@@ -18,6 +18,7 @@ const BuildingIcon = () => (
 
 // Imports optimisés - un seul par composant
 import { ArrowLeft } from '@phosphor-icons/react'
+import { useRouter } from 'next/navigation'
 import { Button } from '../components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card'
 import { Input } from '../components/ui/input'
@@ -35,6 +36,7 @@ interface AuthPageProps {
 
 export function AuthPage({ navigate }: AuthPageProps) {
   const { currentUser, setCurrentUser, logout, checkAuth } = useApp()
+  const router = useRouter()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
@@ -77,7 +79,17 @@ export function AuthPage({ navigate }: AuthPageProps) {
       if (data.success && data.data) {
         setCurrentUser(data.data.user)
         await checkAuth()
-        navigate('events')
+        
+        // Redirection SIMPLE selon le rôle - PERIOD.
+        const role = data.data.user.role
+        
+        if (role === 'ADMIN') {
+          window.location.replace('/admin')
+        } else if (role === 'ORGANIZER') {
+          window.location.replace('/dashboard')
+        } else {
+          window.location.replace('/')
+        }
       } else {
         alert(data.message || 'Identifiant ou mot de passe incorrect')
       }
@@ -117,39 +129,6 @@ export function AuthPage({ navigate }: AuthPageProps) {
 
   const updateRegisterData = (field: string, value: any) => {
     setRegisterData(prev => ({ ...prev, [field]: value }))
-  }
-
-  if (currentUser) {
-    return (
-      <div className="min-h-screen pt-24 pb-12 flex items-center justify-center px-4">
-        <div className="w-full max-w-md">
-          <Button 
-            onClick={() => navigate('home')}
-            variant="outline" 
-            className="mb-6 border-white/40 hover:bg-white/20"
-          >
-            <ArrowLeft size={16} className="mr-2" />
-            Retour à l'accueil
-          </Button>
-          
-          <Card className="glass-card w-full border-2 border-white/40">
-            <CardHeader>
-              <CardTitle className="text-center bg-gradient-to-r from-primary to-blue-600 bg-clip-text text-transparent">
-                Bienvenue {currentUser.name}
-              </CardTitle>
-            </CardHeader>
-          <CardContent className="space-y-4">
-            <Button onClick={() => navigate('events')} className="w-full glass-button">
-              Voir les événements
-            </Button>
-            <Button onClick={logout} variant="outline" className="w-full border-white/40 hover:bg-white/20">
-              Se déconnecter
-            </Button>
-          </CardContent>
-        </Card>
-        </div>
-      </div>
-    )
   }
 
   return (
