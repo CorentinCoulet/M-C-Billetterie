@@ -140,7 +140,7 @@ jobs:
         dockerfile: docker/Dockerfile.prod
         
     - name: Kubernetes Security Check
-      uses: azure/k8s-lint@v1
+      uses: azure/k8s-lint@v3
       with:
         manifests: |
           k8s/production.yaml
