@@ -200,7 +200,7 @@
     "autocannon": "^8.0.0",
     "autoprefixer": "^10.4.20",
     "clinic": "^13.0.0",
-    "dotenv": "^16.5.0",
+    "dotenv": "^17.2.3",
     "eslint": "^9.18.0",
     "eslint-config-next": "15.1.5",
     "fast-check": "^4.3.0",
