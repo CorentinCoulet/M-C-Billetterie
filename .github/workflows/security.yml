@@ -135,7 +135,7 @@ jobs:
     - uses: actions/checkout@v4
     
     - name: Hadolint Docker Linting
-      uses: hadolint/hadolint-action@v3.1.0
+      uses: hadolint/hadolint-action@v3.3.0
       with:
         dockerfile: docker/Dockerfile.prod
         
