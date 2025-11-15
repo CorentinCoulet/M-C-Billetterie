@@ -165,8 +165,6 @@ volumes:
 
 networks:
   billetterie-network-dev:
-    external: true
     name: billetterie-dev-network
   billetterie-network:
-    external: true
     name: billetterie-network

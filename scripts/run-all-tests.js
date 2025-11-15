@@ -1,12 +1,32 @@
 #!/usr/bin/env node
 
 /**
- * Script to run all tests: Jest (unit, integration, etc.) + Playwright (E2E)
- * This ensures both test suites run sequentially
+ * Orchestrateur de tests complet
+ * - Lint
+ * - Type-check
+ * - Jest (unit, integration, API, property, sécurité, etc.)
+ * - Playwright (E2E)
+ * - Performance (suite rapide par défaut, complète avec --full)
+ *
+ * Options CLI:
+ *   --full           Active le mode complet (couverture + perf complète)
+ *   --coverage       Active la couverture Jest
+ *   --skip-lint      Saute l'étape ESLint
+ *   --skip-types     Saute l'étape TypeScript type-check
+ *   --skip-perf      Saute l'étape performance
  */
 
 const { spawn } = require('child_process');
 const path = require('path');
+
+// Parse CLI flags
+const argv = process.argv.slice(2);
+const flags = new Set(argv);
+const isFull = flags.has('--full');
+const withCoverage = isFull || flags.has('--coverage');
+const skipLint = flags.has('--skip-lint');
+const skipTypes = flags.has('--skip-types');
+const skipPerf = flags.has('--skip-perf');
 
 // ANSI color codes
 const colors = {
@@ -56,16 +76,47 @@ async function runAllTests() {
   const startTime = Date.now();
   
   log('\n' + '='.repeat(60), colors.bright + colors.cyan);
-  log('🧪 RUNNING ALL TESTS - JEST + PLAYWRIGHT', colors.bright + colors.cyan);
+  log('🧪 LANCEMENT DES TESTS COMPLETS', colors.bright + colors.cyan);
+  const modeParts = [];
+  if (isFull) modeParts.push('full'); else modeParts.push('quick');
+  if (withCoverage) modeParts.push('coverage');
+  if (skipPerf) modeParts.push('no-perf');
+  if (skipLint) modeParts.push('no-lint');
+  if (skipTypes) modeParts.push('no-types');
+  log(`Mode: ${modeParts.join(', ')}`, colors.bright + colors.cyan);
   log('='.repeat(60) + '\n', colors.bright + colors.cyan);
 
   try {
+    // Step 0: Lint
+    if (!skipLint) {
+      await runCommand(
+        'yarn',
+        ['lint'],
+        'ESLint (qualité de code)'
+      );
+    } else {
+      log('⏭️  Lint sauté (--skip-lint)', colors.yellow);
+    }
+
+    // Step 0b: Type-check
+    if (!skipTypes) {
+      await runCommand(
+        'yarn',
+        ['type-check'],
+        'TypeScript type-check'
+      );
+    } else {
+      log('⏭️  Type-check sauté (--skip-types)', colors.yellow);
+    }
+
     // Step 1: Run Jest tests (unit, integration, API, etc.)
-    await runCommand(
-      'yarn',
-      ['jest', '--no-coverage'],
-      'Jest Tests (Unit, Integration, API, Security, etc.)'
-    );
+    const jestArgs = ['jest'];
+    if (withCoverage) {
+      jestArgs.push('--coverage');
+    } else {
+      jestArgs.push('--no-coverage');
+    }
+    await runCommand('yarn', jestArgs, 'Jest (Unit, Intégration, API, Sécurité, etc.)');
 
     // Step 2: Run Playwright E2E tests
     await runCommand(
@@ -74,11 +125,22 @@ async function runAllTests() {
       'Playwright E2E Tests'
     );
 
+    // Step 3: Performance suite
+    if (!skipPerf) {
+      const perfArgs = ['perf:suite'];
+      if (isFull) {
+        perfArgs[0] = 'perf:suite:full';
+      }
+      await runCommand('yarn', [perfArgs[0]], `Suite de performance (${isFull ? 'complète' : 'rapide'})`);
+    } else {
+      log('⏭️  Performance sauté (--skip-perf)', colors.yellow);
+    }
+
     // Success summary
     const duration = ((Date.now() - startTime) / 1000).toFixed(2);
     
     log('\n' + '='.repeat(60), colors.bright + colors.green);
-    log('✅ ALL TESTS PASSED SUCCESSFULLY! 🎉', colors.bright + colors.green);
+    log('✅ TOUS LES TESTS SONT PASSÉS AVEC SUCCÈS ! 🎉', colors.bright + colors.green);
     log('='.repeat(60), colors.bright + colors.green);
     log(`⏱️  Total time: ${duration}s`, colors.green);
     log('='.repeat(60) + '\n', colors.bright + colors.green);
@@ -88,7 +150,7 @@ async function runAllTests() {
     const duration = ((Date.now() - startTime) / 1000).toFixed(2);
     
     log('\n' + '='.repeat(60), colors.bright + colors.red);
-    log('❌ TESTS FAILED', colors.bright + colors.red);
+    log('❌ DES TESTS ONT ÉCHOUÉ', colors.bright + colors.red);
     log('='.repeat(60), colors.bright + colors.red);
     log(`⏱️  Time elapsed: ${duration}s`, colors.red);
     log(`💡 Error: ${error.message}`, colors.yellow);

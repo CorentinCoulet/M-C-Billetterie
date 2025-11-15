@@ -82,6 +82,38 @@ async function createAdmin(passwordHash: string, userMap: Map<string, string>) {
   return admin;
 }
 
+async function ensureAdminFromEnv() {
+  const email = (process.env.ADMIN_EMAIL || ADMIN_FIXTURE.email).trim();
+  const name = process.env.ADMIN_NAME?.trim() || 'Administrator';
+  const plainPassword = process.env.ADMIN_PASSWORD?.trim();
+
+  if (!plainPassword || plainPassword.length < 12) {
+    throw new Error(
+      'ADMIN_PASSWORD manquant ou trop court (>= 12 caractères exigé en production)'
+    );
+  }
+
+  const password = await hashPassword(plainPassword);
+  const existing = await prisma.user.findUnique({ where: { email } });
+
+  if (existing) {
+    // Ne pas modifier les comptes existants en prod, mais assurer un mot de passe si vide
+    return existing;
+  }
+
+  const created = await prisma.user.create({
+    data: {
+      email,
+      name,
+      password,
+      role: 'ADMIN',
+      isVerified: true,
+    },
+  });
+
+  return created;
+}
+
 async function createOrganizers(
   organizerPasswordHash: string,
   categoryByName: Map<string, string>,
@@ -249,6 +281,17 @@ function logSummary(passwords: SeedPassword[]) {
 async function main() {
   console.log('Début du seeding...');
 
+  const mode = (process.env.SEED_MODE || '').toLowerCase();
+  const isProdLike = process.env.NODE_ENV === 'production' || mode === 'admin' || mode === 'prod';
+
+  if (isProdLike) {
+    console.log('Mode SEED admin (production): création d’un compte administrateur sécurisé');
+    await ensureAdminFromEnv();
+    console.log('Admin vérifié/créé');
+    return; // En prod, on ne seed pas de données de test
+  }
+
+  // Mode développement par défaut
   const passwords: SeedPassword[] = [
     resolveSeedPassword('SEED_ADMIN_PASSWORD', 'Compte administrateur'),
     resolveSeedPassword('SEED_ORGANIZER_PASSWORD', 'Comptes organisateurs'),

@@ -17,6 +17,9 @@ WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
+# Create the directory for Prisma generated client
+RUN mkdir -p /app/src/generated/prisma
+
 # Generate Prisma Client
 RUN yarn prisma generate
 

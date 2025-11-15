@@ -7,7 +7,7 @@
  * Usage: node scripts/qr-rotation-cron.js
  */
 
-import { logger } from '../../lib/logger';
+import { logger } from '@/lib/logger';
 import qrRotationService from '../../src/services/qrRotationService';
 
 async function runQRRotationCron() {

@@ -1,12 +1,12 @@
 import { NextRequest } from 'next/server';
 import { z } from 'zod';
-import { logger } from '../../../../lib/logger';
+import { logger } from '@/lib/logger';
 import {
     createMethodHandler,
     NextApiResponse,
     validateBody,
-} from '../../../../src/lib/next-api-helpers';
-import ticketService from '../../../../src/services/ticketService';
+} from '@/lib/next-api-helpers';
+import ticketService from '@/services/ticketService';
 
 const validateQRSchema = z.object({
   qrContent: z.string().min(1, 'QR content is required'),
@@ -24,14 +24,14 @@ async function handlePost(request: NextRequest) {
   const { qrContent, markAsUsed } = data;
 
   try {
-    logger.info({ qrContent, markAsUsed }, 'Validating ticket QR code');
+    logger.info('Validating ticket QR code', { qrContent, markAsUsed });
 
     const validation = await ticketService.validateTicketQRCode(qrContent, markAsUsed);
     
     // Return appropriate status code based on validation result
     if (!validation.valid) {
-      logger.warn({ qrContent, error: validation.error }, 'Ticket validation failed');
-      
+      logger.warn('Ticket validation failed', { qrContent, error: validation.error });
+
       return NextApiResponse.badRequest(validation.error || 'Validation failed', {
         valid: false,
         canBeScanned: validation.canBeScanned || false,
@@ -39,11 +39,11 @@ async function handlePost(request: NextRequest) {
     }
 
     // Success response
-    logger.info({ 
-      ticketId: validation.ticket?.id, 
+    logger.info('Ticket validated successfully', {
+      ticketId: validation.ticket?.id,
       isAlreadyScanned: validation.isAlreadyScanned,
       markAsUsed 
-    }, 'Ticket validated successfully');
+    });
 
     return NextApiResponse.success({
       valid: true,
@@ -66,8 +66,8 @@ async function handlePost(request: NextRequest) {
     });
 
   } catch (error) {
-    logger.error({ error, qrContent }, 'QR validation error');
-    
+    logger.error('QR validation error', { error, qrContent });
+
     return NextApiResponse.error('Internal validation error', 500);
   }
 }

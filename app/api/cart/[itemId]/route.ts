@@ -1,8 +1,9 @@
-import { PrismaClient } from '@/src/generated/prisma';
 import { verifyToken } from '@/src/lib/jwt';
+import { prisma } from '@/src/lib/prisma';
 import { NextRequest, NextResponse } from 'next/server';
 
-const prisma = new PrismaClient();
+export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
 
 interface JWTPayload {
   userId: string;

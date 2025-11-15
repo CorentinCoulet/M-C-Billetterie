@@ -3,12 +3,12 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { logger } from '../../../../lib/logger';
-import { cache } from '../../../../src/lib/cache';
-import { monitoringService } from '../../../../src/lib/monitoring';
-import { createMethodHandler, NextApiResponse } from '../../../../src/lib/next-api-helpers';
+import { logger } from '@/lib/logger';
+import { cache } from '@/lib/cache';
+import { monitoringService } from '@/lib/monitoring';
+import { createMethodHandler, NextApiResponse } from '@/lib/next-api-helpers';
 
-async function handleGet(request: NextRequest) {
+async function handleGet(_request: NextRequest) {
   try {
     logger.info('Checking cache health');
 
@@ -22,7 +22,7 @@ async function handleGet(request: NextRequest) {
       memory: health.memory ? 'healthy' : 'unhealthy'
     });
 
-    logger.info({ health, stats }, 'Cache health check completed');
+    logger.info('Cache health check completed', { health, stats });
 
     return NextResponse.json({
       status: health.healthy ? 'healthy' : 'unhealthy',
@@ -53,8 +53,8 @@ async function handleGet(request: NextRequest) {
     });
 
   } catch (error) {
-    logger.error({ error }, 'Cache health check failed');
-    
+    logger.error('Cache health check failed', { error });
+
     return NextApiResponse.error('Cache health check failed', 500, {
       details: error instanceof Error ? error.message : 'Unknown error'
     });

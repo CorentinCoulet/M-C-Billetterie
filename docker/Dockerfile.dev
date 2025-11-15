@@ -18,11 +18,11 @@ RUN yarn config set network-timeout 600000 && \
 FROM base AS development
 
 # Copy dependencies from previous stage
-COPY --from=deps --chown=nextjs:nodejs /app/node_modules ./node_modules
+COPY --from=deps /app/node_modules ./node_modules
 
 # Copy only necessary files for Prisma
-COPY --chown=nextjs:nodejs package.json yarn.lock ./
-COPY --chown=nextjs:nodejs prisma ./prisma/
+COPY package.json yarn.lock ./
+COPY prisma ./prisma/
 
 # Generate Prisma client
 RUN yarn prisma generate
@@ -30,16 +30,21 @@ RUN yarn prisma generate
 # Copy source code (minimal files due to .dockerignore)
 COPY . .
 
-# Remove any existing .next directory and recreate with proper permissions
-# Optimized: only chown specific directories, not entire /app (too slow on Windows)
-RUN rm -rf .next && \
-    mkdir -p uploads .next/cache logs && \
-    chown -R nextjs:nodejs uploads .next logs prisma 2>/dev/null || true
+# Create directories with proper permissions
+RUN mkdir -p uploads .next .next/cache logs && \
+    chown -R nextjs:nodejs /app
 
-# Switch to non-root user
-USER nextjs
+# In development, we run as root to avoid permission issues with mounted volumes
+# The volumes will be mounted from the host, so we need root access
+USER root
 
 EXPOSE 3001
 
-# Use a shell to run multiple commands
-CMD ["sh", "-c", "yarn prisma migrate deploy && yarn dev:docker"]
+# Use a shell to run multiple commands and ensure permissions at startup
+# If SEED=true (from .env.dev), run prisma seed once after migrations
+CMD ["sh", "-c", "mkdir -p /app/.next /app/logs /app/uploads \
+  && chmod -R 777 /app/.next /app/logs /app/uploads \
+  && echo '[dev] Running Prisma migrate deploy...' \
+  && yarn prisma migrate deploy \
+  && if [ \"$SEED\" = \"true\" ]; then echo '[dev] Running Prisma seed...'; yarn prisma db seed || true; fi \
+  && yarn dev:docker"]

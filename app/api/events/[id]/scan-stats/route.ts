@@ -1,10 +1,10 @@
 import { NextRequest } from 'next/server';
-import { logger } from '../../../../../lib/logger';
+import { logger } from '@/lib/logger';
 import {
     NextApiResponse,
     createMethodHandler,
-} from '../../../../../src/lib/next-api-helpers';
-import ticketService from '../../../../../src/services/ticketService';
+} from '@/lib/next-api-helpers';
+import ticketService from '@/services/ticketService';
 
 /**
  * GET /api/events/[id]/scan-stats
@@ -18,11 +18,11 @@ async function handleGet(request: NextRequest, { params }: { params: { id: strin
       return NextApiResponse.badRequest('Event ID is required');
     }
 
-    logger.info({ eventId }, 'Fetching scan statistics for event');
+    logger.info('Fetching scan statistics for event', { eventId });
 
     const stats = await ticketService.getEventScanStats(eventId);
     
-    logger.info({ eventId, stats }, 'Scan statistics retrieved successfully');
+    logger.info('Scan statistics retrieved successfully', { eventId, stats });
 
     return NextApiResponse.success({
       eventId,
@@ -30,7 +30,7 @@ async function handleGet(request: NextRequest, { params }: { params: { id: strin
     });
 
   } catch (error) {
-    logger.error({ error, eventId: params.id }, 'Error getting scan stats');
+    logger.error('Error getting scan stats', { error, eventId: params.id });
     return NextApiResponse.error('Failed to get scan statistics', 500);
   }
 }

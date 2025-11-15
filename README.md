@@ -43,7 +43,17 @@ cp .env.example .env
 yarn db:migrate
 yarn db:generate
 
-# Démarrer le développement
+# Démarrer avec Docker (recommandé)
+# Linux/Mac:
+scripts/run-docker.sh dev up --monitoring --build
+# Windows (PowerShell):
+scripts/run-docker.ps1 -Env dev -Action up -Monitoring -Build
+
+# Arrêter
+scripts/run-docker.sh dev down
+scripts/run-docker.ps1 -Env dev -Action down
+
+# Démarrer le développement (sans Docker)
 yarn dev
 ```
 
@@ -109,7 +119,142 @@ Accédez à des outils puissants pour la gestion de la base de données et du pr
 docker-compose --profile tools up -d
 ```
 
+## 🚀 Lancement unifié via Docker
+
+Deux scripts simplifient complètement le lancement en mode développement ou production, avec option de monitoring intégrée.
+
+- Linux/Mac: scripts/run-docker.sh
+- Windows (PowerShell): scripts/run-docker.ps1
+
+Exemples d’usage:
+
+1) Développement avec monitoring
+- Linux/Mac: scripts/run-docker.sh dev up --monitoring --build
+- Windows:   scripts/run-docker.ps1 -Env dev -Action up -Monitoring -Build
+
+2) Production avec monitoring
+- Linux/Mac: scripts/run-docker.sh prod up --monitoring --build
+- Windows:   scripts/run-docker.ps1 -Env prod -Action up -Monitoring -Build
+
+3) Status / Logs / Redémarrage
+- Status: scripts/run-docker.sh dev status | scripts/run-docker.ps1 -Env dev -Action status
+- Logs:   scripts/run-docker.sh dev logs   | scripts/run-docker.ps1 -Env dev -Action logs
+- Restart:scripts/run-docker.sh dev restart| scripts/run-docker.ps1 -Env dev -Action restart
+
+4) Nettoyage / Reconstruction
+- Down + volumes:   scripts/run-docker.sh dev down-v | scripts/run-docker.ps1 -Env dev -Action down-v
+- Clean complet:    scripts/run-docker.sh dev clean  | scripts/run-docker.ps1 -Env dev -Action clean
+- Rebuild complet:  scripts/run-docker.sh dev rebuild| scripts/run-docker.ps1 -Env dev -Action rebuild
+- Pull des images:  scripts/run-docker.sh dev pull   | scripts/run-docker.ps1 -Env dev -Action pull
+- Prune Docker:     scripts/run-docker.sh dev prune  | scripts/run-docker.ps1 -Env dev -Action prune
+
+5) Outils de vérification et opérations
+- Doctor (valider la config): scripts/run-docker.sh dev doctor | scripts/run-docker.ps1 -Env dev -Action doctor
+- Seed manuel (dev):          scripts/run-docker.sh dev seed   | scripts/run-docker.ps1 -Env dev -Action seed
+- Migrations Prisma (prod):   scripts/run-docker.sh prod migrate | scripts/run-docker.ps1 -Env prod -Action migrate
+
+Variables d’environnement:
+- Dev: .env.dev (COMPOSE_ENV=dev, COMPOSE_NETWORK=billetterie-dev-network)
+- Prod: .env.prod (COMPOSE_ENV=prod, COMPOSE_NETWORK=billetterie-network)
+
+Alternatives via Yarn (recommandé):
+```bash
+# Dev
+yarn run-docker:dev         # équiv. à: scripts/run-docker.sh dev up --monitoring --build
+yarn run-docker:dev:up
+yarn run-docker:dev:status
+yarn run-docker:dev:logs
+yarn run-docker:dev:down
+yarn run-docker:dev:clean
+yarn run-docker:dev:doctor
+yarn run-docker:dev:seed
+
+# Prod
+yarn run-docker:prod        # équiv. à: scripts/run-docker.sh prod up --monitoring --build
+yarn run-docker:prod:up
+yarn run-docker:prod:status
+yarn run-docker:prod:logs
+yarn run-docker:prod:down
+yarn run-docker:prod:clean
+yarn run-docker:prod:doctor
+yarn run-docker:prod:migrate
+```
+
+Notes:
+- Assurez-vous d’avoir Docker et Docker Compose v2 installés.
+- Si vous obtenez « Permission denied » en lançant scripts/run-docker.sh, utilisez l’une des options suivantes:
+  - Exécuter via Yarn (recommandé): `yarn run-docker:dev` ou `yarn run-docker:prod`
+  - Exécuter explicitement avec bash: `bash scripts/run-docker.sh dev up`
+  - Rendre les scripts exécutables (Linux/WSL): `yarn fix:perms`
+- Le monitoring (Prometheus, Grafana, Exporters) est activable via l’option --monitoring/-Monitoring.
+
+Scripts historiques dépréciés:
+- docker-manager.sh / docker-manager.ps1 sont obsolètes et arrêtent immédiatement avec un message. Utilisez scripts/run-docker.* ou les commandes Yarn ci-dessus.
+
 📖 **Documentation complète** : [TOOLS_GUIDE.md](./docs/TOOLS_GUIDE.md)
+
+## ⚙️ Installation Docker optimisée (dev / prod)
+
+Objectif: démarrer un environnement de développement ou de production complet (avec monitoring optionnel) en une seule commande, avec bootstrap automatique des fichiers d’environnement si nécessaire.
+
+Commandes recommandées:
+
+```bash
+# Développement — crée .env.dev si absent, build + up + monitoring
+yarn docker:setup:dev
+
+# Production — crée .env.prod si absent, build + up + monitoring
+yarn docker:setup:prod
+
+# Vérifications rapides (valide la configuration Docker Compose)
+yarn docker:doctor:dev
+yarn docker:doctor:prod
+
+# Besoin de (re)lancer sans le setup complet ?
+yarn run-docker:dev        # équivalent: up --monitoring --build
+yarn run-docker:prod       # équivalent: up --monitoring --build
+```
+
+Notes:
+- Les commandes de setup copient .env.example vers .env.dev/.env.prod si le fichier cible n’existe pas encore; pensez à ajuster les variables critiques (DB, EMAIL, DOMAIN, etc.).
+- Le monitoring (Prometheus/Grafana/Exporters) est activé par défaut via les lanceurs unifiés; vous pouvez relancer sans monitoring via `scripts/run-docker.sh dev up` (sans `--monitoring`).
+- Pour exécuter les opérations associées:
+  - Dev: seed manuel → `yarn run-docker:dev:seed`
+  - Prod: migrations Prisma → `yarn run-docker:prod:migrate`
+
+## ☸️ Déploiement Kubernetes
+
+> Kubernetes fait partie du processus de déploiement officiel. Les manifestes sont situés dans `k8s/`.
+
+Prérequis:
+- kubectl installé et contexte configuré vers votre cluster
+- Namespace par défaut: `billetterie` (surchargable via `K8S_NAMESPACE`)
+
+Commandes Yarn utiles:
+```bash
+# Déployer/mettre à jour la stack
+yarn k8s:deploy                    # utilise k8s/production.yaml par défaut
+
+# Vérifier l'état des objets (deployments, services, ingress, pods)
+yarn k8s:status                    # namespace par défaut billetterie
+
+# Suivre les déploiements et logs
+yarn k8s:rollout:status            # attend le déploiement billetterie-web
+yarn k8s:logs                      # suit les logs des pods labelisés app=billetterie
+
+# Redémarrer un déploiement
+yarn k8s:restart
+
+# Vérification rapide (cluster, contexte, manifestes)
+yarn k8s:doctor
+
+# Variables optionnelles
+# K8S_NAMESPACE=billetterie K8S_DEPLOYMENT=billetterie-web K8S_APP_LABEL=billetterie K8S_MANIFEST=k8s/production.yaml
+```
+
+Notes:
+- Ne supprimez pas le dossier `k8s/` ni `k8s-deploy.ps1` — ils sont requis pour le déploiement.
+- Des guides détaillés sont disponibles: [docs/KUBERNETES_DEPLOYMENT.md](./docs/KUBERNETES_DEPLOYMENT.md).
 
 ## 🧪 Tests et Développement
 
@@ -124,6 +269,73 @@ yarn type-check          # Vérification TypeScript
 
 # Test API (dev uniquement)
 curl http://localhost:3000/api/test/emails
+```
+
+## 🔁 Environnement de développement complet
+
+Le mode développement via Docker est optimisé pour être le plus confortable possible:
+
+- Hot Reload immédiat grâce à Next.js (Fast Refresh) et au montage des volumes
+  - Le code source de l’hôte est monté dans le conteneur (`.:/app`)
+  - La commande de dev dans le conteneur est `yarn dev:docker` (port 3001)
+  - Pas de polling lourd: configuration webpack adaptée (voir `next.config.js`)
+- Jeu de données de test automatique (seed) en dev
+  - Au démarrage, le conteneur applique les migrations Prisma puis exécute le seed si `SEED=true`
+  - Contrôle via `.env.dev` → `SEED=true|false`
+  - Vous pouvez relancer manuellement le seed si besoin:
+    - Docker: `docker compose -f docker-compose.dev.yml exec web-dev yarn prisma db seed`
+    - Local (hors Docker): `yarn db:seed`
+- Emails de test redirigés vers Mailhog
+  - `.env.dev` configure `SMTP_HOST=mailhog` et `SMTP_PORT=1025`
+  - Interface Mailhog: http://localhost:8025
+- Outils Dev à portée de main
+  - Adminer (PostgreSQL): http://localhost:8081
+  - Redis Commander: http://localhost:8084
+
+Résumé des ports (dev):
+- App: http://localhost:3001
+- PostgreSQL: 5433 (hôte) → `db-dev:5432` (interne)
+- Redis: 6380 (hôte) → `redis-dev:6379` (interne)
+- Mailhog: 8025 (UI) / 1025 (SMTP)
+- Adminer: 8081
+- Redis Commander: 8084
+
+Astuce: pour désactiver temporairement le seed auto, placez `SEED=false` dans `.env.dev` puis relancez la stack dev.
+
+## 🗄️ Prisma: Dev & Prod
+
+- Développement:
+  - Les migrations Prisma sont appliquées automatiquement au démarrage du conteneur dev (`prisma migrate deploy`).
+  - Le seed est exécuté automatiquement si `SEED=true` dans `.env.dev`.
+
+- Production:
+  - Le client Prisma est généré au build de l’image (Dockerfile.next), ce qui garantit la compatibilité schéma ↔ application.
+  - Les migrations ne sont pas lancées automatiquement au démarrage de l’app pour des raisons d’opérations/contrôle.
+  - Exécutez-les à la demande via le service utilitaire `migrate`:
+    - Linux/Mac: `scripts/run-docker.sh prod migrate`
+    - Windows:   `scripts/run-docker.ps1 -Env prod -Action migrate`
+  - Ce service installe les dépendances nécessaires puis lance `yarn prisma migrate deploy` contre la base `db` du cluster prod.
+
+## ✅ Test rapide (Linux/macOS) du lancement dev
+
+```bash
+# 1) Vérifier la configuration
+scripts/run-docker.sh dev doctor
+
+# 2) Lancer l’environnement complet (avec monitoring)
+scripts/run-docker.sh dev up --monitoring --build
+
+# 3) Vérifier l’état et les logs
+scripts/run-docker.sh dev status
+scripts/run-docker.sh dev logs
+
+# 4) Optionnel: relancer le seed
+scripts/run-docker.sh dev seed
+
+# 5) Arrêt et nettoyage
+scripts/run-docker.sh dev down
+# ou
+scripts/run-docker.sh dev clean
 ```
 
 ## 🔧 Scripts Disponibles

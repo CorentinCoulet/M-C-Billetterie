@@ -1,10 +1,10 @@
 import { NextRequest } from 'next/server';
-import { logger } from '../../../../../lib/logger';
+import { logger } from '@/lib/logger';
 import {
     NextApiResponse,
     createMethodHandler,
-} from '../../../../../src/lib/next-api-helpers';
-import ticketService from '../../../../../src/services/ticketService';
+} from '@/lib/next-api-helpers';
+import ticketService from '@/services/ticketService';
 
 /**
  * GET /api/events/[id]/scanned-tickets
@@ -18,7 +18,7 @@ async function handleGet(request: NextRequest, { params }: { params: { id: strin
       return NextApiResponse.badRequest('Event ID is required');
     }
 
-    logger.info({ eventId }, 'Fetching scanned tickets for event');
+    logger.info('Fetching scanned tickets for event', { eventId });
 
     const scannedTickets = await ticketService.getScannedTicketsForEvent(eventId);
     
@@ -39,7 +39,7 @@ async function handleGet(request: NextRequest, { params }: { params: { id: strin
       } : null
     }));
     
-    logger.info({ eventId, totalScanned: scannedTickets.length }, 'Scanned tickets retrieved successfully');
+    logger.info('Scanned tickets retrieved successfully', { eventId, totalScanned: scannedTickets.length });
 
     return NextApiResponse.success({
       eventId,
@@ -48,7 +48,7 @@ async function handleGet(request: NextRequest, { params }: { params: { id: strin
     });
 
   } catch (error) {
-    logger.error({ error, eventId: params.id }, 'Error getting scanned tickets');
+    logger.error('Error getting scanned tickets', { error, eventId: params.id });
     return NextApiResponse.error('Failed to get scanned tickets', 500);
   }
 }

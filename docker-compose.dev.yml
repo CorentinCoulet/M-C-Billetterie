@@ -18,9 +18,8 @@ services:
     environment:
       NODE_ENV: development
       # Ultra-fast hot reload
-      WATCHPACK_POLLING: true
-      CHOKIDAR_USEPOLLING: true
-      CHOKIDAR_INTERVAL: 100
+      WATCHPACK_POLLING: "false"
+      CHOKIDAR_USEPOLLING: "false"
       FAST_REFRESH: true
       # Disable slow features in dev
       NEXT_TELEMETRY_DISABLED: 1
@@ -31,13 +30,13 @@ services:
       FORCE_COLOR: 0
       CI: false
       # Services
-      DATABASE_URL: postgresql://postgres:postgres123@db-dev:5432/billetterie
-      REDIS_URL: redis://:password@redis-dev:6379
+      DATABASE_URL: ${DATABASE_URL}
+      REDIS_URL: ${REDIS_URL}
       HOSTNAME: 0.0.0.0
     volumes:
       - .:/app
       - node_modules_dev:/app/node_modules
-      - next_cache_dev:/app/.next/cache
+      - next_cache_dev:/app/.next
       - ./logs:/app/logs
       - ./uploads:/app/uploads
     depends_on:
@@ -45,9 +44,52 @@ services:
         condition: service_healthy
       redis-dev:
         condition: service_healthy
+      migrate-dev:
+        condition: service_completed_successfully
     networks:
       - billetterie-network-dev
     command: sh -c "yarn dev:docker"
+
+  # Prisma migrations (DEV) — executed on demand or before web-dev starts
+  migrate-dev:
+    image: node:22-alpine
+    container_name: prisma-migrate-dev
+    working_dir: /app
+    env_file:
+      - .env.dev
+    environment:
+      - DATABASE_URL=${DATABASE_URL}
+      - NODE_ENV=development
+    volumes:
+      - ./:/app
+    depends_on:
+      db-dev:
+        condition: service_healthy
+    command: sh -c "yarn config set network-timeout 600000 && yarn install --frozen-lockfile --production=false --network-timeout 600000 && yarn prisma migrate dev --skip-generate && yarn db:generate"
+    networks:
+      - billetterie-network-dev
+
+  # Prisma seed (DEV) — executed on demand
+  seed-dev:
+    image: node:22-alpine
+    container_name: prisma-seed-dev
+    working_dir: /app
+    env_file:
+      - .env.dev
+    environment:
+      - DATABASE_URL=${DATABASE_URL}
+      - NODE_ENV=development
+      - SEED_MODE=dev
+    volumes:
+      - ./:/app
+    depends_on:
+      db-dev:
+        condition: service_healthy
+    command: sh -c "yarn install --frozen-lockfile --production=false && yarn db:seed"
+    networks:
+      - billetterie-network-dev
+    profiles:
+      - dev-init
 
   # PostgreSQL - DEVELOPMENT
   db-dev:
@@ -58,7 +100,7 @@ services:
       - "5433:5432"
     environment:
       POSTGRES_USER: ${DB_USER:-postgres}
-      POSTGRES_PASSWORD: ${DB_PASSWORD:-postgres123}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-DevPostgres2024!SecureDB}
       POSTGRES_DB: ${DB_NAME:-billetterie}
     volumes:
       - postgres_data_dev:/var/lib/postgresql/data
@@ -78,7 +120,7 @@ services:
     restart: unless-stopped
     ports:
       - "6380:6379"
-    command: redis-server --requirepass ${REDIS_PASSWORD:-password} --appendonly yes
+    command: redis-server --requirepass ${REDIS_PASSWORD:-DevRedis2024!SecureCache} --appendonly yes
     volumes:
       - redis_data_dev:/data
     healthcheck:
@@ -137,7 +179,10 @@ services:
     restart: unless-stopped
     ports:
       - "8084:8081"
+    env_file:
+      - .env.dev
     environment:
+      PORT: 8081
       REDIS_HOSTS: "local:redis-dev:6379:0:${REDIS_PASSWORD:-password}"
       HTTP_USER: ${REDIS_COMMANDER_USER:-admin}
       HTTP_PASSWORD: ${REDIS_COMMANDER_PASSWORD:-admin}

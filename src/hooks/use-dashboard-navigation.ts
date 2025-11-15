@@ -62,25 +62,25 @@ export function useDashboardNavigation() {
         items: [
           { 
             name: "Mes Événements", 
-            href: "/dashboard/organizer/events", 
+            href: "/dashboard/events", 
             icon: CalendarCheckIcon,
             permission: 'events:create'
           },
           { 
             name: "Analytics Organisateur", 
-            href: "/dashboard/organizer/analytics", 
+            href: "/dashboard/stats", 
             icon: ChartBar,
             permission: 'events:analytics'
           },
           { 
             name: "Participants", 
-            href: "/dashboard/organizer/participants", 
+            href: "/dashboard/events", 
             icon: Users,
             permission: 'events:participants'
           },
           { 
             name: "Revenus", 
-            href: "/dashboard/organizer/revenue", 
+            href: "/dashboard/stats", 
             icon: CurrencyCircleDollar,
             permission: 'events:revenue'
           }
@@ -138,7 +138,7 @@ export function useDashboardNavigation() {
     if (isOrganizer) {
       actions.push({
         name: "Créer un événement",
-        href: "/dashboard/organizer/events/new",
+        href: "/dashboard/events/new",
         icon: CalendarCheckIcon,
         permission: 'events:create',
       });

@@ -49,7 +49,7 @@ export function OrganizerDashboardContent() {
         <h3 className="text-lg font-semibold text-gray-900 mb-4">Actions rapides</h3>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <a
-            href="/dashboard/organizer/events/new"
+            href="/dashboard/events/new"
             className="flex items-center space-x-3 p-4 border-2 border-dashed border-blue-300 rounded-lg hover:border-blue-400 hover:bg-blue-50 transition-colors"
           >
             <div className="flex-shrink-0">
@@ -64,7 +64,7 @@ export function OrganizerDashboardContent() {
           </a>
 
           <a
-            href="/dashboard/organizer/events"
+            href="/dashboard/events"
             className="flex items-center space-x-3 p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
           >
             <div className="flex-shrink-0">
@@ -79,7 +79,7 @@ export function OrganizerDashboardContent() {
           </a>
 
           <a
-            href="/dashboard/organizer/analytics"
+            href="/dashboard/stats"
             className="flex items-center space-x-3 p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
           >
             <div className="flex-shrink-0">
@@ -100,7 +100,7 @@ export function OrganizerDashboardContent() {
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-lg font-semibold text-gray-900">Événements actifs</h3>
           <a
-            href="/dashboard/organizer/events"
+            href="/dashboard/events"
             className="text-sm text-blue-600 hover:text-blue-800"
           >
             Voir tous
@@ -118,7 +118,7 @@ export function OrganizerDashboardContent() {
                 </p>
               </div>
               <a
-                href="/dashboard/organizer/events"
+                href="/dashboard/events"
                 className="bg-green-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-green-700 transition-colors"
               >
                 Gérer
@@ -133,7 +133,7 @@ export function OrganizerDashboardContent() {
             <h3 className="text-lg font-medium text-gray-900 mb-2">Aucun événement actif</h3>
             <p className="text-gray-500 mb-4">Créez votre premier événement pour commencer</p>
             <a
-              href="/dashboard/organizer/events/new"
+              href="/dashboard/events/new"
               className="bg-blue-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-blue-700 transition-colors"
             >
               Créer un événement
@@ -207,7 +207,7 @@ export function OrganizerDashboardContent() {
             </div>
             <div>
               <h4 className="font-medium text-gray-900">Engagez votre communauté</h4>
-              <p className="text-sm text-gray-600">Communiquez avec vos participants avant, pendant et après l'événement</p>
+              <p className="text-sm text-gray-600">Communiquez avec vos participants avant, pendant et après l&#39;événement</p>
             </div>
           </div>
         </div>

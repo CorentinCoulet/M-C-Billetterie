@@ -1,8 +1,10 @@
-import { PrismaClient } from '@/src/generated/prisma';
 import { verifyToken } from '@/src/lib/jwt';
+import { prisma } from '@/src/lib/prisma';
 import { NextRequest, NextResponse } from 'next/server';
 
-const prisma = new PrismaClient();
+export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
 
 interface JWTPayload {
   userId: string;
@@ -10,7 +12,17 @@ interface JWTPayload {
   role?: string;
 }
 
+// Fonction pour générer un placeholder pendant le build
+export async function generateStaticParams() {
+  return [];
+}
+
 export async function GET(request: NextRequest) {
+  // Pendant le build, retourner une réponse vide
+  if (process.env.NEXT_PHASE === 'phase-production-build') {
+    return NextResponse.json({ success: true, data: [] });
+  }
+
   try {
     const token = request.cookies.get('auth-token')?.value;
 
@@ -149,6 +161,39 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
+    const url = new URL(request.url);
+    const itemId = url.searchParams.get('itemId');
+
+    // Si itemId est fourni, supprimer un item spécifique
+    if (itemId) {
+      const cartItem = await prisma.cartItem.findUnique({
+        where: { id: itemId }
+      });
+
+      if (!cartItem) {
+        return NextResponse.json(
+          { success: false, message: 'Cart item not found' },
+          { status: 404 }
+        );
+      }
+
+      if (cartItem.userId !== decoded.userId) {
+        return NextResponse.json(
+          { success: false, message: 'Forbidden' },
+          { status: 403 }
+        );
+      }
+
+      await prisma.cartItem.delete({
+        where: { id: itemId }
+      });
+
+      return NextResponse.json({
+        success: true,
+        message: 'Cart item removed'
+      });
+    }
+
     await prisma.cartItem.deleteMany({
       where: { userId: decoded.userId }
     });
@@ -166,3 +211,69 @@ export async function DELETE(request: NextRequest) {
     );
   }
 }
+
+export async function PUT(request: NextRequest) {
+  try {
+    const token = request.cookies.get('auth-token')?.value;
+
+    if (!token) {
+      return NextResponse.json(
+        { success: false, message: 'Unauthorized' },
+        { status: 401 }
+      );
+    }
+
+    const decoded = verifyToken<JWTPayload>(token);
+    if (!decoded?.userId) {
+      return NextResponse.json(
+        { success: false, message: 'Invalid token' },
+        { status: 401 }
+      );
+    }
+
+    const { itemId, quantity } = await request.json();
+
+    if (!itemId || typeof quantity !== 'number' || quantity < 1) {
+      return NextResponse.json(
+        { success: false, message: 'Invalid data' },
+        { status: 400 }
+      );
+    }
+
+    const cartItem = await prisma.cartItem.findUnique({
+      where: { id: itemId }
+    });
+
+    if (!cartItem) {
+      return NextResponse.json(
+        { success: false, message: 'Cart item not found' },
+        { status: 404 }
+      );
+    }
+
+    if (cartItem.userId !== decoded.userId) {
+      return NextResponse.json(
+        { success: false, message: 'Forbidden' },
+        { status: 403 }
+      );
+    }
+
+    const updated = await prisma.cartItem.update({
+      where: { id: itemId },
+      data: { quantity }
+    });
+
+    return NextResponse.json({
+      success: true,
+      data: updated
+    });
+
+  } catch (error) {
+    console.error('Error updating cart item:', error);
+    return NextResponse.json(
+      { success: false, message: 'Server error' },
+      { status: 500 }
+    );
+  }
+}
+

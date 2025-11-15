@@ -438,7 +438,7 @@ const config = {
       "value": "prisma-client-js"
     },
     "output": {
-      "value": "F:\\projets persos\\billetterie project\\billetterie-complete\\src\\generated\\prisma",
+      "value": "/home/corentin/M-C-Billetterie/src/generated/prisma",
       "fromEnvVar": null
     },
     "config": {
@@ -447,12 +447,12 @@ const config = {
     "binaryTargets": [
       {
         "fromEnvVar": null,
-        "value": "windows",
+        "value": "debian-openssl-3.0.x",
         "native": true
       }
     ],
     "previewFeatures": [],
-    "sourceFilePath": "F:\\projets persos\\billetterie project\\billetterie-complete\\prisma\\schema.prisma",
+    "sourceFilePath": "/home/corentin/M-C-Billetterie/prisma/schema.prisma",
     "isCustomOutput": true
   },
   "relativeEnvPaths": {
@@ -465,6 +465,7 @@ const config = {
     "db"
   ],
   "activeProvider": "postgresql",
+  "postinstall": true,
   "inlineDatasources": {
     "db": {
       "url": {

@@ -196,13 +196,14 @@ export const ROUTES = {
   
   // Organizer routes
   ORGANIZER: {
-    DASHBOARD: '/organizer',
-    EVENTS: '/organizer/events',
-    CREATE_EVENT: '/organizer/events/create',
-    EDIT_EVENT: (id: string) => `/organizer/events/${id}/edit`,
-    TICKETS: '/organizer/tickets',
-    ORDERS: '/organizer/orders',
-    STATS: '/organizer/stats',
+    // L'espace organisateur est servi sous /dashboard (rétro-compatibilité avec /organizer via redirections)
+    DASHBOARD: '/dashboard',
+    EVENTS: '/dashboard/events',
+    CREATE_EVENT: '/dashboard/events/new',
+    EDIT_EVENT: (id: string) => `/dashboard/events/${id}/edit`,
+    TICKETS: '/dashboard/tickets',
+    ORDERS: '/dashboard/orders',
+    STATS: '/dashboard/stats',
   },
   
   // API routes

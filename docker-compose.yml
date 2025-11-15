@@ -131,6 +131,7 @@ services:
     ports:
       - "${REDIS_COMMANDER_PORT:-8083}:8081"
     environment:
+      PORT: 8081
       REDIS_HOSTS: "local:redis:6379:0:${REDIS_PASSWORD:-password}"
       HTTP_USER: ${REDIS_COMMANDER_USER:-admin}
       HTTP_PASSWORD: ${REDIS_COMMANDER_PASSWORD:-admin}

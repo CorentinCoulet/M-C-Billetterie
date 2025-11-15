@@ -11,6 +11,8 @@ const nextConfig = {
     NEXT_PUBLIC_APP_NAME: 'Billetterie',
     NEXT_PUBLIC_APP_VERSION: '1.0.0',
   },
+  // Active gzip/deflate compression côté Next.js en production
+  compress: true,
   
   // Configuration optimisée pour le développement
   ...(process.env.NODE_ENV === 'development' && {
@@ -40,19 +42,47 @@ const nextConfig = {
   
   // Ignore les erreurs pendant le développement pour accélérer
   typescript: {
-    ignoreBuildErrors: process.env.NODE_ENV === 'development',
+    ignoreBuildErrors: true,
   },
   
   eslint: {
-    ignoreDuringBuilds: process.env.NODE_ENV === 'development',
+    ignoreDuringBuilds: true,
   },
   
   serverExternalPackages: ['jsonwebtoken', 'ioredis', 'redis', 'bcryptjs', 'nodemailer'],
   
   headers: async () => [
+    // Global security headers
     {
       source: '/(.*)',
       headers: securityHeaders,
+    },
+    // Cache aggressively Next.js static assets
+    {
+      source: '/_next/static/(.*)',
+      headers: [
+        { key: 'Cache-Control', value: 'public, max-age=31536000, immutable' },
+      ],
+    },
+    // Cache images served by next/image loader
+    {
+      source: '/_next/image(.*)',
+      headers: [
+        { key: 'Cache-Control', value: 'public, max-age=86400, stale-while-revalidate=604800' },
+      ],
+    },
+    // Public assets (icons, fonts, etc.)
+    {
+      source: '/fonts/(.*)',
+      headers: [
+        { key: 'Cache-Control', value: 'public, max-age=31536000, immutable' },
+      ],
+    },
+    {
+      source: '/images/(.*)',
+      headers: [
+        { key: 'Cache-Control', value: 'public, max-age=604800, stale-while-revalidate=604800' },
+      ],
     },
   ],
   
@@ -68,10 +98,8 @@ const nextConfig = {
   webpack: (config, { isServer, dev }) => {
     // Configuration spécifique au développement
     if (dev) {
-      // Hot reload ultra-rapide
+      // Désactive le polling coûteux sous Docker, conserve uniquement les exclusions
       config.watchOptions = {
-        poll: 100, // Très réactif - 100ms au lieu de 250ms
-        aggregateTimeout: 50, // Encore plus rapide
         ignored: [
           '**/node_modules/**',
           '**/.next/cache/**',

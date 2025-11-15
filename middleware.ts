@@ -13,13 +13,16 @@ const sharedSecurityHeaders = buildSecurityHeaders({
 export async function middleware(request: NextRequest) {
   try {
     const pathname = request.nextUrl.pathname;
-    
-    // Apply rate limiting
-    try {
-      await instrumentedRateLimit(request);
-    } catch (error) {
-      // Continue even if rate limiting fails
-      console.error('Rate limit error:', error);
+    const isApiRoute = pathname.startsWith('/api/');
+
+    // Apply rate limiting only on API routes to avoid slowing down page navigation
+    if (isApiRoute) {
+      try {
+        await instrumentedRateLimit(request);
+      } catch (error) {
+        // Continue even if rate limiting fails
+        console.error('Rate limit error:', error);
+      }
     }
 
     // Get token from cookie or Authorization header
@@ -40,8 +43,8 @@ export async function middleware(request: NextRequest) {
       try {
         payload = verifyToken(token);
         
-        if (payload) {
-          // Try to validate session and user, but don't fail if DB is down
+        if (payload && isApiRoute) {
+          // For API routes only: validate session and user in database
           try {
             // Validate session if sessionId is present
             if (payload.sessionId) {
@@ -52,19 +55,16 @@ export async function middleware(request: NextRequest) {
                   isActive: true
                 }
               });
-              
               if (!session) {
                 payload = null; // Invalidate payload if session not found or expired
               }
             }
-            
             // Fetch user to verify they're still active
             if (payload) {
               user = await prisma.user.findUnique({
                 where: { id: payload.userId },
                 include: { blocked: true }
               });
-              
               // Check if user is blocked or unverified
               if (!user || user.blocked || !user.isVerified) {
                 payload = null;
@@ -112,12 +112,7 @@ export async function middleware(request: NextRequest) {
       );
     }
 
-    if (isDashboardRoute && payload && payload.role !== 'ORGANIZER' && payload.role !== 'ADMIN') {
-      return NextResponse.json(
-        { error: 'Access denied. Organizer or Admin role required.' },
-        { status: 403 }
-      );
-    }
+    // Dashboard: accessible à tout utilisateur authentifié (les sous-routes spécifiques gèrent leurs propres autorisations)
 
     // Create response with headers
     const response = NextResponse.next();
@@ -128,7 +123,7 @@ export async function middleware(request: NextRequest) {
     response.headers.set('Server', 'MC-Billetterie/1.0');
     
     // Cache control
-    if (pathname.startsWith('/api/') || isProtectedRoute) {
+    if (isApiRoute || isProtectedRoute) {
       response.headers.set('Cache-Control', 'no-store, must-revalidate');
     } else {
       response.headers.set('Cache-Control', 'public, max-age=300, stale-while-revalidate=60');
@@ -155,6 +150,10 @@ export async function middleware(request: NextRequest) {
 
 export const config = {
   matcher: [
-    '/((?!_next/static|_next/image|favicon.ico).*)',
+    // Restrict middleware to protected areas and APIs to reduce overhead on public pages
+    '/api/:path*',
+    '/admin/:path*',
+    '/organizer/:path*',
+    '/dashboard/:path*',
   ],
 };

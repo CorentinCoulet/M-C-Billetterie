@@ -5,7 +5,7 @@
  * Sets up secrets management, SSL certificates, and validates production readiness
  */
 
-import { logger } from '../../lib/logger';
+import { logger } from '@/lib/logger';
 import { initializeProductionSecrets, scheduleSecretRotation } from '../../src/lib/production-secrets-manager';
 import { initializeProductionSSL } from '../../src/lib/production-ssl-manager';
 import { getRateLimiterStatus } from '../../src/middlewares/productionRateLimit';

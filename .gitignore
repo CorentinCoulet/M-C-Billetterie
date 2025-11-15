@@ -42,6 +42,7 @@ tsconfig.tsbuildinfo
 .env.dev
 .env.local
 .env.prod
+.env
 
 # Keep ONLY example file for documentation
 !.env.example

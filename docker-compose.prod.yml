@@ -51,6 +51,58 @@ services:
     expose:
       - "3000"
     ports: []  # Remove direct port exposure
+    depends_on:
+      db:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+      init-admin:
+        condition: service_completed_successfully
+
+  # Prisma migrations runner (execute on demand)
+  migrate:
+    image: node:22-alpine
+    container_name: prisma-migrate
+    working_dir: /app
+    env_file:
+      - .env.prod
+    environment:
+      - DATABASE_URL=${DATABASE_URL}
+    volumes:
+      - ./:/app
+    depends_on:
+      db:
+        condition: service_started
+    command: sh -c "yarn config set network-timeout 600000 && yarn install --frozen-lockfile --production=false --network-timeout 600000 && yarn prisma migrate deploy"
+    networks:
+      - billetterie-network
+    profiles:
+      - ops
+
+  # Initialize admin account securely (PROD)
+  init-admin:
+    image: node:22-alpine
+    container_name: prisma-init-admin
+    working_dir: /app
+    env_file:
+      - .env.prod
+    environment:
+      - DATABASE_URL=${DATABASE_URL}
+      - NODE_ENV=production
+      - SEED_MODE=admin
+      - ADMIN_EMAIL=${ADMIN_EMAIL}
+      - ADMIN_PASSWORD=${ADMIN_PASSWORD}
+      - ADMIN_NAME=${ADMIN_NAME:-Administrator}
+    volumes:
+      - ./:/app
+    depends_on:
+      db:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+    command: sh -c "yarn install --frozen-lockfile --production=false && yarn db:seed"
+    networks:
+      - billetterie-network
 
   # PostgreSQL with SSL and security hardening
   db:
