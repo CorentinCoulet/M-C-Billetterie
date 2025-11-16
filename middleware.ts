@@ -2,8 +2,6 @@ import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
 import { buildSecurityHeaders } from './config/security-headers';
 import { verifyToken } from './src/lib/jwt';
-import prisma from './src/lib/prisma';
-import { instrumentedRateLimit } from './src/middlewares/production-rate-limit-integration';
 
 const sharedSecurityHeaders = buildSecurityHeaders({
   env: process.env.NODE_ENV,
@@ -15,16 +13,6 @@ export async function middleware(request: NextRequest) {
     const pathname = request.nextUrl.pathname;
     const isApiRoute = pathname.startsWith('/api/');
 
-    // Apply rate limiting only on API routes to avoid slowing down page navigation
-    if (isApiRoute) {
-      try {
-        await instrumentedRateLimit(request);
-      } catch (error) {
-        // Continue even if rate limiting fails
-        console.error('Rate limit error:', error);
-      }
-    }
-
     // Get token from cookie or Authorization header
     let token = request.cookies.get('auth-token')?.value;
     
@@ -35,53 +23,14 @@ export async function middleware(request: NextRequest) {
       }
     }
 
-    // Verify token and get payload
+    // Verify token and get payload (DB validation done in API routes)
     let payload: any = null;
-    let user: any = null;
     
     if (token) {
       try {
         payload = verifyToken(token);
-        
-        if (payload && isApiRoute) {
-          // For API routes only: validate session and user in database
-          try {
-            // Validate session if sessionId is present
-            if (payload.sessionId) {
-              const session = await prisma.userSession.findUnique({
-                where: {
-                  id: payload.sessionId,
-                  expiresAt: { gt: new Date() },
-                  isActive: true
-                }
-              });
-              if (!session) {
-                payload = null; // Invalidate payload if session not found or expired
-              }
-            }
-            // Fetch user to verify they're still active
-            if (payload) {
-              user = await prisma.user.findUnique({
-                where: { id: payload.userId },
-                include: { blocked: true }
-              });
-              // Check if user is blocked or unverified
-              if (!user || user.blocked || !user.isVerified) {
-                payload = null;
-                user = null;
-              }
-            }
-          } catch (dbError) {
-            // Database error: continue with token payload as fallback
-            console.error('Database error in middleware, using token payload as fallback:', dbError);
-            // Keep payload from token, set user to null
-            user = null;
-          }
-        }
       } catch (error) {
-        // Token verification failed
         payload = null;
-        user = null;
       }
     }
 
@@ -132,7 +81,7 @@ export async function middleware(request: NextRequest) {
     // Add user info to headers if authenticated
     if (payload) {
       response.headers.set('X-User-ID', payload.userId);
-      response.headers.set('X-User-Role', payload.role || user?.role || '');
+      response.headers.set('X-User-Role', payload.role || '');
     }
 
     return response;

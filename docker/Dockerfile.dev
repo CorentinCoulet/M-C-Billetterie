@@ -30,12 +30,8 @@ RUN yarn prisma generate
 # Copy source code (minimal files due to .dockerignore)
 COPY . .
 
-# Create directories with proper permissions
-RUN mkdir -p uploads .next .next/cache logs && \
-    chown -R nextjs:nodejs /app
-
 # In development, we run as root to avoid permission issues with mounted volumes
-# The volumes will be mounted from the host, so we need root access
+# Directories will be created at runtime with proper permissions in CMD
 USER root
 
 EXPOSE 3001

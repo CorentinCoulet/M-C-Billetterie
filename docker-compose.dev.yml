@@ -61,11 +61,14 @@ services:
       - DATABASE_URL=${DATABASE_URL}
       - NODE_ENV=development
     volumes:
-      - ./:/app
+      - ./prisma:/app/prisma
+      - ./package.json:/app/package.json
+      - ./yarn.lock:/app/yarn.lock
+      - node_modules_dev:/app/node_modules
     depends_on:
       db-dev:
         condition: service_healthy
-    command: sh -c "yarn config set network-timeout 600000 && yarn install --frozen-lockfile --production=false --network-timeout 600000 && yarn prisma migrate dev --skip-generate && yarn db:generate"
+    command: sh -c "if [ ! -d node_modules/@prisma ]; then yarn add -D prisma @prisma/client --network-timeout 60000; fi && npx prisma migrate deploy && npx prisma generate"
     networks:
       - billetterie-network-dev
 
