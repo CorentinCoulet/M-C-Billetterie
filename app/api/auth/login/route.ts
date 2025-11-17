@@ -37,11 +37,13 @@ async function handlePost(request: NextRequest) {
     );
 
     // Set auth cookie
+    // Important: ensure cookie is available on all paths for middleware and API routes
     if (result.token) {
       response.cookies.set('auth-token', result.token, {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
         sameSite: 'strict',
+        path: '/',
         maxAge: 60 * 60 * 24 * 7, // 7 days
       });
     }

@@ -24,7 +24,19 @@ export default function LoginPage() {
       dashboard: '/dashboard',
       admin: '/admin'
     }
-    router.push(routes[page] || `/${page}`)
+
+    const target = routes[page] ?? (page?.startsWith('/') ? page : `/${page}`)
+    try {
+      if (router && typeof router.push === 'function') {
+        router.push(target as any)
+      } else if (typeof window !== 'undefined') {
+        window.location.assign(target)
+      }
+    } catch {
+      if (typeof window !== 'undefined') {
+        window.location.assign(target)
+      }
+    }
   }, [router])
 
   // Si déjà authentifié, rediriger automatiquement

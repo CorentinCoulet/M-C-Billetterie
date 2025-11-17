@@ -10,7 +10,18 @@ export default function HomePage() {
   const router = useRouter()
 
   const navigate = useCallback((page: string) => {
-    router.push(`/${page}`)
+    const target = page?.startsWith('/') ? page : `/${page}`
+    try {
+      if (router && typeof router.push === 'function') {
+        router.push(target as any)
+      } else if (typeof window !== 'undefined') {
+        window.location.assign(target)
+      }
+    } catch {
+      if (typeof window !== 'undefined') {
+        window.location.assign(target)
+      }
+    }
   }, [router])
 
   return (
@@ -90,7 +101,7 @@ export default function HomePage() {
             </div>
             <h3 className="text-xl font-semibold text-foreground mb-4">Communauté</h3>
             <p className="text-muted-foreground leading-relaxed">
-              Rejoignez des milliers d'amateurs d'art et de culture comme vous.
+              Rejoignez des milliers d&#39;amateurs d&#39;art et de culture comme vous.
             </p>
           </article>
         </motion.section>
@@ -107,7 +118,7 @@ export default function HomePage() {
             Prêt à vivre des expériences uniques ?
           </h2>
           <p className="text-lg text-muted-foreground mb-6 sm:mb-8 leading-relaxed">
-            Explorez notre sélection d'événements et trouvez votre prochaine sortie.
+            Explorez notre sélection d&#39;événements et trouvez votre prochaine sortie.
           </p>
           <Button 
             onClick={() => navigate('events')}

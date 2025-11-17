@@ -92,7 +92,7 @@ const getCategoryEmoji = (categoryName?: string): string => {
     'Sport': '⚽',
     'Conférence': '🎤',
     'Exposition': '🖼️',
-    'Cinéma': '�',
+    'Cinéma': '🎬',
     'Gastronomie': '🍽️'
   }
 
@@ -228,7 +228,7 @@ export default function EventDetailPage() {
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-indigo-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Chargement de l'événement...</p>
+          <p className="mt-4 text-gray-600">Chargement de l&#39;événement...</p>
         </div>
       </div>
     )
@@ -240,7 +240,7 @@ export default function EventDetailPage() {
         <div className="glass-card rounded-2xl p-12 text-center">
           <div className="text-6xl mb-4">❌</div>
           <h1 className="text-2xl font-bold text-foreground mb-4">Événement non trouvé</h1>
-          <p className="text-muted-foreground mb-6">L'événement que vous recherchez n'existe pas ou n'est plus disponible.</p>
+          <p className="text-muted-foreground mb-6">L&#39;événement que vous recherchez n&#39;existe pas ou n&#39;est plus disponible.</p>
           <Button onClick={() => navigate('events')} className="glass-button text-white font-semibold">
             Retour aux événements
           </Button>
