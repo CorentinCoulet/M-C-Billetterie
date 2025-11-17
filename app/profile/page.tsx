@@ -83,13 +83,13 @@ export default function ProfilePage() {
       })
       
       if (response.ok) {
-        toast.success('Profile updated successfully')
+        toast.success('Profil mis à jour avec succès')
         setIsEditing(false)
       } else {
-        toast.error('Error updating profile')
+        toast.error('Erreur lors de la mise à jour du profil')
       }
     } catch (error) {
-      toast.error('Error updating profile')
+      toast.error('Erreur lors de la mise à jour du profil')
     }
   }
 
@@ -97,12 +97,12 @@ export default function ProfilePage() {
     e.preventDefault()
     
     if (passwordData.newPassword !== passwordData.confirmPassword) {
-      toast.error('Passwords do not match')
+      toast.error('Les mots de passe ne correspondent pas')
       return
     }
     
     if (passwordData.newPassword.length < 8) {
-      toast.error('Password must contain at least 8 characters')
+      toast.error('Le mot de passe doit contenir au moins 8 caractères')
       return
     }
 
@@ -117,20 +117,20 @@ export default function ProfilePage() {
       })
       
       if (response.ok) {
-        toast.success('Password changed successfully')
+        toast.success('Mot de passe modifié avec succès')
         setPasswordData({ currentPassword: '', newPassword: '', confirmPassword: '' })
       } else {
         const data = await response.json()
-        toast.error(data.message || 'Error changing password')
+        toast.error(data.message || 'Erreur lors du changement de mot de passe')
       }
     } catch (error) {
-      toast.error('Error changing password')
+      toast.error('Erreur lors du changement de mot de passe')
     }
   }
 
   const handleDeleteAccount = async () => {
     if (deleteConfirmation !== 'SUPPRIMER') {
-      toast.error('Please type "SUPPRIMER" to confirm')
+      toast.error('Veuillez saisir "SUPPRIMER" pour confirmer')
       return
     }
 
@@ -140,13 +140,13 @@ export default function ProfilePage() {
       })
       
       if (response.ok) {
-        toast.success('Account deleted successfully')
+        toast.success('Compte supprimé avec succès')
         await logout()
       } else {
-        toast.error('Error deleting account')
+        toast.error('Erreur lors de la suppression du compte')
       }
     } catch (error) {
-      toast.error('Error deleting account')
+      toast.error('Erreur lors de la suppression du compte')
     }
   }
 
@@ -163,12 +163,12 @@ export default function ProfilePage() {
         a.click()
         window.URL.revokeObjectURL(url)
         document.body.removeChild(a)
-        toast.success('Data downloaded')
+        toast.success('Données téléchargées')
       } else {
-        toast.error('Error downloading data')
+        toast.error('Erreur lors du téléchargement des données')
       }
     } catch (error) {
-      toast.error('Error downloading data')
+      toast.error('Erreur lors du téléchargement des données')
     }
   }
 
@@ -177,7 +177,7 @@ export default function ProfilePage() {
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-indigo-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading...</p>
+          <p className="mt-4 text-gray-600">Chargement...</p>
         </div>
       </div>
     )
@@ -202,9 +202,9 @@ export default function ProfilePage() {
             </div>
             <div>
               <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold bg-gradient-to-r from-primary via-blue-600 to-purple-600 bg-clip-text text-transparent mb-1">
-                My Profile
+                Mon profil
               </h1>
-              <p className="text-muted-foreground text-sm sm:text-base md:text-lg">Manage your personal information and account</p>
+              <p className="text-muted-foreground text-sm sm:text-base md:text-lg">Gérez vos informations personnelles et votre compte</p>
             </div>
           </div>
         </motion.div>
@@ -217,7 +217,7 @@ export default function ProfilePage() {
             >
               <User size={20} className="sm:hidden" weight="duotone" />
               <User size={18} className="hidden sm:block" weight="duotone" />
-              <span className="font-medium hidden sm:inline">Information</span>
+              <span className="font-medium hidden sm:inline">Informations</span>
             </TabsTrigger>
             <TabsTrigger 
               value="security" 
@@ -225,7 +225,7 @@ export default function ProfilePage() {
             >
               <Lock size={20} className="sm:hidden" weight="duotone" />
               <Lock size={18} className="hidden sm:block" weight="duotone" />
-              <span className="font-medium hidden sm:inline">Security</span>
+              <span className="font-medium hidden sm:inline">Sécurité</span>
             </TabsTrigger>
             <TabsTrigger 
               value="orders" 
@@ -233,7 +233,7 @@ export default function ProfilePage() {
             >
               <ShoppingBag size={20} className="sm:hidden" weight="duotone" />
               <ShoppingBag size={18} className="hidden sm:block" weight="duotone" />
-              <span className="font-medium hidden sm:inline">Orders</span>
+              <span className="font-medium hidden sm:inline">Commandes</span>
             </TabsTrigger>
             <TabsTrigger 
               value="data" 
@@ -241,7 +241,7 @@ export default function ProfilePage() {
             >
               <FileText size={20} className="sm:hidden" weight="duotone" />
               <FileText size={18} className="hidden sm:block" weight="duotone" />
-              <span className="font-medium hidden sm:inline">My Data</span>
+              <span className="font-medium hidden sm:inline">Mes données</span>
             </TabsTrigger>
           </TabsList>
 
@@ -260,9 +260,9 @@ export default function ProfilePage() {
                       <User size={24} className="hidden sm:block" weight="duotone" />
                     </div>
                     <div>
-                      <CardTitle className="text-lg sm:text-xl md:text-2xl">Personal Information</CardTitle>
+                      <CardTitle className="text-lg sm:text-xl md:text-2xl">Informations personnelles</CardTitle>
                       <CardDescription className="text-xs sm:text-sm md:text-base">
-                        View and edit your personal information
+                        Consultez et modifiez vos informations personnelles
                       </CardDescription>
                     </div>
                   </div>
@@ -279,11 +279,11 @@ export default function ProfilePage() {
                     </div>
                     <div className="flex-1 text-center sm:text-left">
                       <h2 className="text-xl sm:text-2xl font-bold text-foreground mb-1">
-                        {currentUser.name || 'User'}
+                        {currentUser.name || 'Utilisateur'}
                       </h2>
                       <p className="text-muted-foreground text-base sm:text-lg mb-2">{currentUser.email}</p>
                       <div className="inline-flex items-center px-3 py-1.5 rounded-full text-xs sm:text-sm font-semibold bg-gradient-to-r from-primary to-blue-600 text-white shadow-lg shadow-primary/30">
-                        Verified Account
+                        Compte vérifié
                       </div>
                     </div>
                   </div>
@@ -295,7 +295,7 @@ export default function ProfilePage() {
                       <div className="space-y-2">
                         <Label htmlFor="name" className="text-sm font-semibold text-foreground flex items-center space-x-2">
                           <User size={16} />
-                          <span>Full Name</span>
+                          <span>Nom complet</span>
                         </Label>
                         <Input
                           id="name"
@@ -309,7 +309,7 @@ export default function ProfilePage() {
                       <div className="space-y-2">
                         <Label htmlFor="email" className="text-sm font-semibold text-foreground flex items-center space-x-2">
                           <Envelope size={16} />
-                          <span>Email</span>
+                          <span>E-mail</span>
                         </Label>
                         <Input
                           id="email"
@@ -325,7 +325,7 @@ export default function ProfilePage() {
                     <div className="space-y-2">
                       <Label htmlFor="phone" className="text-sm font-semibold text-foreground flex items-center space-x-2">
                         <Phone size={16} />
-                        <span>Phone (optional)</span>
+                        <span>Téléphone (optionnel)</span>
                       </Label>
                       <Input
                         id="phone"
@@ -348,7 +348,7 @@ export default function ProfilePage() {
                         >
                           <User size={16} className="mr-2 sm:hidden" weight="duotone" />
                           <User size={18} className="mr-2 hidden sm:block" weight="duotone" />
-                          Edit my information
+                          Modifier mes informations
                         </Button>
                       ) : (
                         <>
@@ -357,7 +357,7 @@ export default function ProfilePage() {
                             className="glass-button shadow-lg hover:shadow-xl transition-all w-full sm:w-auto"
                             size="lg"
                           >
-                            💾 Save
+                            💾 Enregistrer
                           </Button>
                           <Button
                             type="button"
@@ -366,7 +366,7 @@ export default function ProfilePage() {
                             className="border-2 border-white/50 shadow-lg hover:shadow-xl transition-all w-full sm:w-auto"
                             size="lg"
                           >
-                            ✕ Cancel
+                            ✕ Annuler
                           </Button>
                         </>
                       )}
@@ -392,9 +392,9 @@ export default function ProfilePage() {
                       <Lock size={24} weight="duotone" />
                     </div>
                     <div>
-                      <CardTitle className="text-2xl">Change Password</CardTitle>
+                      <CardTitle className="text-2xl">Changer le mot de passe</CardTitle>
                       <CardDescription className="text-base">
-                        Change your password to secure your account
+                        Modifiez votre mot de passe pour sécuriser votre compte
                       </CardDescription>
                     </div>
                   </div>
@@ -404,7 +404,7 @@ export default function ProfilePage() {
                     <div className="space-y-2">
                       <Label htmlFor="currentPassword" className="text-sm font-semibold text-foreground flex items-center space-x-2">
                         <Lock size={16} />
-                        <span>Current Password</span>
+                        <span>Mot de passe actuel</span>
                       </Label>
                       <Input
                         id="currentPassword"
@@ -419,7 +419,7 @@ export default function ProfilePage() {
                     <div className="space-y-2">
                       <Label htmlFor="newPassword" className="text-sm font-semibold text-foreground flex items-center space-x-2">
                         <Lock size={16} />
-                        <span>New Password</span>
+                        <span>Nouveau mot de passe</span>
                       </Label>
                       <Input
                         id="newPassword"
@@ -432,14 +432,14 @@ export default function ProfilePage() {
                       />
                       <p className="text-xs text-muted-foreground flex items-center space-x-1">
                         <span>🔒</span>
-                        <span>Minimum 8 characters</span>
+                        <span>8 caractères minimum</span>
                       </p>
                     </div>
 
                     <div className="space-y-2">
                       <Label htmlFor="confirmPassword" className="text-sm font-semibold text-foreground flex items-center space-x-2">
                         <Lock size={16} />
-                        <span>Confirm New Password</span>
+                        <span>Confirmer le nouveau mot de passe</span>
                       </Label>
                       <Input
                         id="confirmPassword"
@@ -457,7 +457,7 @@ export default function ProfilePage() {
                       size="lg"
                     >
                       <Lock size={18} className="mr-2" weight="duotone" />
-                      Change Password
+                      Changer le mot de passe
                     </Button>
                   </form>
                 </CardContent>
@@ -472,10 +472,10 @@ export default function ProfilePage() {
                     </div>
                     <div>
                       <CardTitle className="text-2xl text-red-700 flex items-center space-x-2">
-                        <span>Danger Zone</span>
+                        <span>Zone de danger</span>
                       </CardTitle>
                       <CardDescription className="text-base text-red-600">
-                        Irreversible actions on your account
+                        Actions irréversibles sur votre compte
                       </CardDescription>
                     </div>
                   </div>
@@ -489,7 +489,7 @@ export default function ProfilePage() {
                       size="lg"
                     >
                       <Trash size={18} className="mr-2" weight="duotone" />
-                      Delete my account
+                      Supprimer mon compte
                     </Button>
                   ) : (
                     <motion.div
@@ -501,17 +501,17 @@ export default function ProfilePage() {
                         <Warning size={24} className="text-red-700 flex-shrink-0 mt-1" weight="duotone" />
                         <div>
                           <p className="text-sm text-red-800 font-semibold mb-2">
-                            ⚠️ This action is irreversible. All your data will be permanently deleted.
+                            ⚠️ Cette action est irréversible. Toutes vos données seront définitivement supprimées.
                           </p>
                           <p className="text-sm text-red-700">
-                            To confirm deletion, type <strong className="font-bold text-red-900">SUPPRIMER</strong> in the field below:
+                            Pour confirmer la suppression, saisissez <strong className="font-bold text-red-900">SUPPRIMER</strong> dans le champ ci-dessous :
                           </p>
                         </div>
                       </div>
                       <Input
                         value={deleteConfirmation}
                         onChange={(e) => setDeleteConfirmation(e.target.value)}
-                        placeholder="Type SUPPRIMER"
+                        placeholder="Tapez SUPPRIMER"
                         className="bg-white border-2 border-red-400 focus:border-red-600 text-center font-semibold text-lg"
                       />
                       <div className="flex space-x-4">
@@ -523,7 +523,7 @@ export default function ProfilePage() {
                           size="lg"
                         >
                           <Trash size={18} className="mr-2" weight="duotone" />
-                          Confirm Deletion
+                          Confirmer la suppression
                         </Button>
                         <Button
                           variant="outline"
@@ -534,7 +534,7 @@ export default function ProfilePage() {
                           className="border-2 shadow-lg hover:shadow-xl transition-all"
                           size="lg"
                         >
-                          ✕ Cancel
+                          ✕ Annuler
                         </Button>
                       </div>
                     </motion.div>
@@ -558,9 +558,9 @@ export default function ProfilePage() {
                       <ShoppingBag size={24} weight="duotone" />
                     </div>
                     <div>
-                      <CardTitle className="text-2xl">Order History</CardTitle>
+                      <CardTitle className="text-2xl">Historique des commandes</CardTitle>
                       <CardDescription className="text-base">
-                        View your purchase and reservation history
+                        Consultez vos achats et réservations
                       </CardDescription>
                     </div>
                   </div>
@@ -571,14 +571,14 @@ export default function ProfilePage() {
                       <div className="w-24 h-24 mx-auto mb-6 rounded-2xl bg-gradient-to-br from-green-100 to-emerald-100 flex items-center justify-center">
                         <ShoppingBag size={48} className="text-green-600" weight="duotone" />
                       </div>
-                      <h3 className="text-xl font-semibold mb-2">No Orders</h3>
-                      <p className="text-muted-foreground mb-6">You haven't made any purchases yet</p>
+                      <h3 className="text-xl font-semibold mb-2">Aucune commande</h3>
+                      <p className="text-muted-foreground mb-6">Aucun achat effectué pour le moment</p>
                       <Button
                         onClick={() => router.push('/events')}
                         className="glass-button shadow-lg hover:shadow-xl transition-all"
                         size="lg"
                       >
-                        🎉 Discover Events
+                        🎉 Découvrir les événements
                       </Button>
                     </div>
                   ) : (
@@ -595,10 +595,10 @@ export default function ProfilePage() {
                             <div>
                               <p className="font-semibold text-lg flex items-center space-x-2">
                                 <span>📦</span>
-                                <span>Order #{order.id.slice(0, 8)}</span>
+                                <span>Commande n° {order.id.slice(0, 8)}</span>
                               </p>
                               <p className="text-sm text-muted-foreground mt-1">
-                                📅 {new Date(order.createdAt).toLocaleDateString('en-US', { 
+                                📅 {new Date(order.createdAt).toLocaleDateString('fr-FR', { 
                                   day: 'numeric', 
                                   month: 'long', 
                                   year: 'numeric' 
@@ -637,9 +637,9 @@ export default function ProfilePage() {
                       <FileText size={24} weight="duotone" />
                     </div>
                     <div>
-                      <CardTitle className="text-2xl">My Personal Data</CardTitle>
+                      <CardTitle className="text-2xl">Mes données personnelles</CardTitle>
                       <CardDescription className="text-base">
-                        In accordance with GDPR, you can access and manage your data
+                        Conformément au RGPD, vous pouvez accéder à vos données et les gérer
                       </CardDescription>
                     </div>
                   </div>
@@ -654,9 +654,9 @@ export default function ProfilePage() {
                         <FileText size={24} weight="duotone" />
                       </div>
                       <div className="flex-1">
-                        <h3 className="font-bold text-lg mb-2">Download My Data</h3>
+                        <h3 className="font-bold text-lg mb-2">Télécharger mes données</h3>
                         <p className="text-sm text-muted-foreground mb-4">
-                          Download a complete copy of all your personal data in JSON format
+                          Téléchargez une copie complète de vos données personnelles au format JSON
                         </p>
                         <Button 
                           onClick={downloadMyData} 
@@ -664,7 +664,7 @@ export default function ProfilePage() {
                           size="lg"
                         >
                           <FileText size={18} className="mr-2" weight="duotone" />
-                          Download My Data
+                          Télécharger mes données
                         </Button>
                       </div>
                     </motion.div>
@@ -674,24 +674,24 @@ export default function ProfilePage() {
                     <div className="space-y-3 p-6 rounded-2xl bg-gradient-to-br from-blue-50 to-indigo-50 border-2 border-blue-200">
                       <div className="flex items-center space-x-2 mb-3">
                         <span className="text-2xl">📊</span>
-                        <p className="font-bold text-lg">Data Collected</p>
+                        <p className="font-bold text-lg">Données collectées</p>
                       </div>
                       <ul className="space-y-2 ml-8">
                         <li className="flex items-start space-x-2">
                           <span className="text-blue-600 font-bold">•</span>
-                          <span className="text-sm">Identification information (name, email)</span>
+                          <span className="text-sm">Informations d&apos;identification (nom, e-mail)</span>
                         </li>
                         <li className="flex items-start space-x-2">
                           <span className="text-blue-600 font-bold">•</span>
-                          <span className="text-sm">Order and transaction history</span>
+                          <span className="text-sm">Historique des commandes et transactions</span>
                         </li>
                         <li className="flex items-start space-x-2">
                           <span className="text-blue-600 font-bold">•</span>
-                          <span className="text-sm">Preferences and favorites</span>
+                          <span className="text-sm">Préférences et favoris</span>
                         </li>
                         <li className="flex items-start space-x-2">
                           <span className="text-blue-600 font-bold">•</span>
-                          <span className="text-sm">Browsing data (cookies)</span>
+                          <span className="text-sm">Données de navigation (cookies)</span>
                         </li>
                       </ul>
                     </div>
@@ -701,28 +701,28 @@ export default function ProfilePage() {
                     <div className="space-y-3 p-6 rounded-2xl bg-gradient-to-br from-green-50 to-emerald-50 border-2 border-green-200">
                       <div className="flex items-center space-x-2 mb-3">
                         <span className="text-2xl">⚖️</span>
-                        <p className="font-bold text-lg">Your GDPR Rights</p>
+                        <p className="font-bold text-lg">Vos droits RGPD</p>
                       </div>
                       <ul className="space-y-2 ml-8">
                         <li className="flex items-start space-x-2">
                           <span className="text-green-600 font-bold">✓</span>
-                          <span className="text-sm">Right of access to your data</span>
+                          <span className="text-sm">Droit d&apos;accès à vos données</span>
                         </li>
                         <li className="flex items-start space-x-2">
                           <span className="text-green-600 font-bold">✓</span>
-                          <span className="text-sm">Right to rectification</span>
+                          <span className="text-sm">Droit de rectification</span>
                         </li>
                         <li className="flex items-start space-x-2">
                           <span className="text-green-600 font-bold">✓</span>
-                          <span className="text-sm">Right to erasure (account deletion)</span>
+                          <span className="text-sm">Droit à l&apos;effacement (suppression du compte)</span>
                         </li>
                         <li className="flex items-start space-x-2">
                           <span className="text-green-600 font-bold">✓</span>
-                          <span className="text-sm">Right to data portability</span>
+                          <span className="text-sm">Droit à la portabilité des données</span>
                         </li>
                         <li className="flex items-start space-x-2">
                           <span className="text-green-600 font-bold">✓</span>
-                          <span className="text-sm">Right to object to processing</span>
+                          <span className="text-sm">Droit d&apos;opposition au traitement</span>
                         </li>
                       </ul>
                     </div>
@@ -748,9 +748,9 @@ export default function ProfilePage() {
                     💬
                   </div>
                   <div>
-                    <h3 className="font-bold text-lg">Need Help?</h3>
+                    <h3 className="font-bold text-lg">Besoin d&apos;aide&nbsp;?</h3>
                     <p className="text-sm text-muted-foreground">
-                      Our support team is here to help you
+                      Notre équipe d&apos;assistance est là pour vous aider
                     </p>
                   </div>
                 </div>
@@ -760,7 +760,7 @@ export default function ProfilePage() {
                   className="border-2 border-white/50 shadow-lg hover:shadow-xl transition-all hover:scale-105"
                   size="lg"
                 >
-                  📧 Contact Us
+                  📧 Nous contacter
                 </Button>
               </div>
             </CardContent>
