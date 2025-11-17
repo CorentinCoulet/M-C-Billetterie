@@ -80,9 +80,19 @@ export function AuthPage({ navigate }: AuthPageProps) {
         setCurrentUser(data.data.user)
         await checkAuth()
         
-        // Redirection SIMPLE selon le rôle - PERIOD.
+        // Si un paramètre redirect est présent et sûr, on le privilégie
+        try {
+          const params = new URLSearchParams(window.location.search)
+          const redirect = params.get('redirect') || ''
+          const safeRedirect = redirect.startsWith('/') && !redirect.startsWith('/api')
+          if (safeRedirect) {
+            window.location.replace(redirect)
+            return
+          }
+        } catch {}
+
+        // Sinon, redirection selon le rôle
         const role = data.data.user.role
-        
         if (role === 'ADMIN') {
           window.location.replace('/admin')
         } else if (role === 'ORGANIZER') {

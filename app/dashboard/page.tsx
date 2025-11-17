@@ -29,6 +29,14 @@ export default function DashboardPage() {
     return null
   }
 
+  // Si l'utilisateur est connecté mais n'est pas ORGANIZER ni ADMIN, on le renvoie à l'accueil
+  if (currentUser && currentUser.role !== 'ORGANIZER' && currentUser.role !== 'ADMIN') {
+    if (typeof window !== 'undefined') {
+      router.replace('/')
+    }
+    return null
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-slate-900 dark:to-slate-800 py-12">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">

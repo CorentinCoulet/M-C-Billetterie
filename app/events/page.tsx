@@ -236,13 +236,13 @@ export default function EventsPage() {
         <div className="text-center p-8 max-w-md mx-auto">
           <div className="text-6xl mb-4">📅</div>
           <h2 className="text-2xl font-bold text-gray-800 mb-3">Aucun événement en cours</h2>
-          <p className="text-gray-600 mb-2">Il n'y a actuellement aucun événement programmé.</p>
+          <p className="text-gray-600 mb-2">Il n&apos;y a actuellement aucun événement programmé.</p>
           <p className="text-gray-500 text-sm mb-6">Revenez régulièrement pour découvrir nos prochains événements !</p>
           <button 
             onClick={() => router.push('/')}
             className="bg-indigo-600 text-white px-6 py-3 rounded-lg hover:bg-indigo-700 transition-colors duration-200 font-medium"
           >
-            Retour à l'accueil
+            Retour à l&apos;accueil
           </button>
         </div>
       </div>
