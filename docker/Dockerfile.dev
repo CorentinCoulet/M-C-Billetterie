@@ -1,3 +1,4 @@
+
 FROM node:22-alpine AS base
 
 # Add user first to avoid permission issues
@@ -6,40 +7,30 @@ RUN addgroup --system --gid 1001 nodejs && \
 
 WORKDIR /app
 
-# Dependencies stage
-FROM base AS deps
-# Install dependencies with increased timeouts and retry logic
-COPY package.json yarn.lock ./
-RUN yarn config set network-timeout 600000 && \
-    yarn config set registry https://registry.yarnpkg.com && \
-    yarn install --frozen-lockfile --network-timeout 600000
-
-# Development stage
 FROM base AS development
 
-# Copy dependencies from previous stage
-COPY --from=deps /app/node_modules ./node_modules
-
-# Copy only necessary files for Prisma
+# Copy only package files (not installing yet)
 COPY package.json yarn.lock ./
-COPY prisma ./prisma/
 
-# Generate Prisma client
-RUN yarn prisma generate
+# Copy prisma schema
+COPY prisma ./prisma/
 
 # Copy source code (minimal files due to .dockerignore)
 COPY . .
 
 # In development, we run as root to avoid permission issues with mounted volumes
-# Directories will be created at runtime with proper permissions in CMD
 USER root
 
 EXPOSE 3001
 
-# Use a shell to run multiple commands and ensure permissions at startup
-# If SEED=true (from .env.dev), run prisma seed once after migrations
+# Install dependencies at runtime (uses volume mount from docker-compose)
+# This way node_modules are persisted and no network call during build
 CMD ["sh", "-c", "mkdir -p /app/.next /app/logs /app/uploads \
   && chmod -R 777 /app/.next /app/logs /app/uploads \
+  && echo '[dev] Installing dependencies if needed...' \
+  && if [ ! -d node_modules ] || [ ! -f node_modules/.yarn-integrity ]; then yarn install --frozen-lockfile; fi \
+  && echo '[dev] Generating Prisma client...' \
+  && yarn prisma generate \
   && echo '[dev] Running Prisma migrate deploy...' \
   && yarn prisma migrate deploy \
   && if [ \"$SEED\" = \"true\" ]; then echo '[dev] Running Prisma seed...'; yarn prisma db seed || true; fi \

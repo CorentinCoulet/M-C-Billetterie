@@ -438,7 +438,7 @@ const config = {
       "value": "prisma-client-js"
     },
     "output": {
-      "value": "/app/src/generated/prisma",
+      "value": "/home/corentin/M-C-Billetterie/src/generated/prisma",
       "fromEnvVar": null
     },
     "config": {
@@ -447,12 +447,12 @@ const config = {
     "binaryTargets": [
       {
         "fromEnvVar": null,
-        "value": "linux-musl-openssl-3.0.x",
+        "value": "debian-openssl-3.0.x",
         "native": true
       }
     ],
     "previewFeatures": [],
-    "sourceFilePath": "/app/prisma/schema.prisma",
+    "sourceFilePath": "/home/corentin/M-C-Billetterie/prisma/schema.prisma",
     "isCustomOutput": true
   },
   "relativeEnvPaths": {
