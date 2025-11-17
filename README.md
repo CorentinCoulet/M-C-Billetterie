@@ -193,34 +193,44 @@ Scripts historiques dépréciés:
 
 📖 **Documentation complète** : [TOOLS_GUIDE.md](./docs/TOOLS_GUIDE.md)
 
-## ⚙️ Installation Docker optimisée (dev / prod)
+## ⚙️ Lancer Docker sans scripts externes (dev / prod)
 
-Objectif: démarrer un environnement de développement ou de production complet (avec monitoring optionnel) en une seule commande, avec bootstrap automatique des fichiers d’environnement si nécessaire.
+Objectif: démarrer via Docker Compose directement, sans passer par les scripts run-docker. Les fichiers Compose déclenchent eux-mêmes ce qu’il faut (génération .env, migrations, seed en dev, etc.).
 
-Commandes recommandées:
+Commandes simples:
 
 ```bash
-# Développement — crée .env.dev si absent, build + up + monitoring
-yarn docker:setup:dev
+# Développement (auto-génère .env.dev si absent)
+docker compose -f docker-compose.dev.yml up -d
 
-# Production — crée .env.prod si absent, build + up + monitoring
-yarn docker:setup:prod
+# Production (fichier unique qui inclut base + monitoring,
+# auto-génère .env.prod si absent)
+docker compose -f docker-compose.prod.yml up -d
 
-# Vérifications rapides (valide la configuration Docker Compose)
-yarn docker:doctor:dev
-yarn docker:doctor:prod
+# Arrêt
+docker compose -f docker-compose.dev.yml down
+docker compose -f docker-compose.prod.yml down
 
-# Besoin de (re)lancer sans le setup complet ?
-yarn run-docker:dev        # équivalent: up --monitoring --build
-yarn run-docker:prod       # équivalent: up --monitoring --build
+# Validation de la configuration
+docker compose -f docker-compose.dev.yml config
+docker compose -f docker-compose.prod.yml config
 ```
 
+Ce qui est automatisé:
+- Génération d’environnement:
+  - Service envgen-dev dans docker-compose.dev.yml → crée .env.dev si manquant
+  - Service envgen-prod dans docker-compose.prod.yml → crée .env.prod si manquant
+  - Les fichiers existants ne sont jamais écrasés
+- Développement:
+  - Le conteneur web-dev applique prisma generate + migrate deploy
+  - Le seed s’exécute automatiquement si `SEED=true` (par défaut)
+- Production:
+  - Services utilitaires `migrate` et `init-admin` disponibles à la demande
+
 Notes:
-- Les commandes de setup copient .env.example vers .env.dev/.env.prod si le fichier cible n’existe pas encore; pensez à ajuster les variables critiques (DB, EMAIL, DOMAIN, etc.).
-- Le monitoring (Prometheus/Grafana/Exporters) est activé par défaut via les lanceurs unifiés; vous pouvez relancer sans monitoring via `scripts/run-docker.sh dev up` (sans `--monitoring`).
-- Pour exécuter les opérations associées:
-  - Dev: seed manuel → `yarn run-docker:dev:seed`
-  - Prod: migrations Prisma → `yarn run-docker:prod:migrate`
+- Requiert Docker Compose v2.20+ pour la directive `include` utilisée dans docker-compose.dev.yml et docker-compose.prod.yml.
+- En prod, un seul fichier est désormais suffisant: `docker-compose.prod.yml` inclut automatiquement la base et le monitoring.
+- Remplacez les placeholders sensibles dans `.env.prod` (Stripe, SMTP, domaine, etc.).
 
 ## ☸️ Déploiement Kubernetes
 
@@ -301,6 +311,15 @@ Résumé des ports (dev):
 - Redis Commander: 8084
 
 Astuce: pour désactiver temporairement le seed auto, placez `SEED=false` dans `.env.dev` puis relancez la stack dev.
+
+Aliases Yarn pratiques (optionnels):
+```bash
+# Démarrer/arrêter via Yarn sans scripts externes
+yarn docker:dev:up
+yarn docker:dev:down
+yarn docker:prod:up
+yarn docker:prod:down
+```
 
 ## 🗄️ Prisma: Dev & Prod
 

@@ -68,7 +68,7 @@ services:
     ports:
       - "${POSTGRES_EXPORTER_PORT:-9187}:9187"
     environment:
-      DATA_SOURCE_NAME: "postgresql://${DB_USER:-postgres}:${DB_PASSWORD}@${DB_HOST:-db-dev}:5432/${DB_NAME:-billetterie}?sslmode=disable"
+      DATA_SOURCE_NAME: "postgresql://${DB_USER:-postgres}:${DB_PASSWORD:-password}@${DB_HOST:-db-dev}:5432/${DB_NAME:-billetterie}?sslmode=disable"
     networks:
       - ${COMPOSE_NETWORK:-billetterie-network-dev}
     healthcheck:

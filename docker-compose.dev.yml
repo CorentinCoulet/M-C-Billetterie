@@ -1,8 +1,14 @@
 # ===================================================================
-# DEVELOPMENT ENVIRONMENT - COMPLETELY INDEPENDENT
+# DEVELOPMENT ENVIRONMENT - Standalone dev stack + monitoring include
+# We include ONLY the monitoring stack to avoid conflicts. The base
+# application stack is defined separately and is NOT included here.
 # ===================================================================
 
+include:
+  - docker-compose.monitoring.yml
+
 services:
+  # Note: No overrides of base services to avoid include conflicts
   # Next.js Application - DEVELOPMENT
   web-dev:
     build:
@@ -29,9 +35,6 @@ services:
       # Avoid JSON issues
       FORCE_COLOR: 0
       CI: false
-      # Services
-      DATABASE_URL: ${DATABASE_URL}
-      REDIS_URL: ${REDIS_URL}
       HOSTNAME: 0.0.0.0
     volumes:
       - .:/app
@@ -40,6 +43,8 @@ services:
       - ./logs:/app/logs
       - ./uploads:/app/uploads
     depends_on:
+      envgen-dev:
+        condition: service_completed_successfully
       db-dev:
         condition: service_healthy
       redis-dev:
@@ -48,7 +53,6 @@ services:
         condition: service_completed_successfully
     networks:
       - billetterie-network-dev
-    command: sh -c "yarn dev:docker"
 
   # Prisma migrations (DEV) — executed on demand or before web-dev starts
   migrate-dev:
@@ -58,7 +62,6 @@ services:
     env_file:
       - .env.dev
     environment:
-      - DATABASE_URL=${DATABASE_URL}
       - NODE_ENV=development
     volumes:
       - ./prisma:/app/prisma
@@ -66,6 +69,8 @@ services:
       - ./yarn.lock:/app/yarn.lock
       - node_modules_dev:/app/node_modules
     depends_on:
+      envgen-dev:
+        condition: service_completed_successfully
       db-dev:
         condition: service_healthy
     command: sh -c "if [ ! -d node_modules/@prisma ]; then yarn add -D prisma @prisma/client --network-timeout 60000; fi && npx prisma migrate deploy && npx prisma generate"
@@ -80,12 +85,13 @@ services:
     env_file:
       - .env.dev
     environment:
-      - DATABASE_URL=${DATABASE_URL}
       - NODE_ENV=development
       - SEED_MODE=dev
     volumes:
       - ./:/app
     depends_on:
+      envgen-dev:
+        condition: service_completed_successfully
       db-dev:
         condition: service_healthy
     command: sh -c "yarn install --frozen-lockfile --production=false && yarn db:seed"
@@ -123,7 +129,14 @@ services:
     restart: unless-stopped
     ports:
       - "6380:6379"
-    command: redis-server --requirepass ${REDIS_PASSWORD:-DevRedis2024!SecureCache} --appendonly yes
+    command: >
+      redis-server
+      --requirepass ${REDIS_PASSWORD:-DevRedis2024!SecureCache}
+      --appendonly yes
+      --appendfsync everysec
+      --maxmemory 256mb
+      --maxmemory-policy allkeys-lru
+      --tcp-keepalive 60
     volumes:
       - redis_data_dev:/data
     healthcheck:
@@ -131,6 +144,18 @@ services:
       interval: 10s
       timeout: 3s
       retries: 5
+    networks:
+      - billetterie-network-dev
+
+  # Environment generator (DEV) — generates .env.dev if missing
+  envgen-dev:
+    image: node:22-alpine
+    container_name: envgen-dev
+    working_dir: /app
+    volumes:
+      - ./:/app
+    command: sh -c "node scripts/generate-env.js dev || true"
+    restart: "no"
     networks:
       - billetterie-network-dev
 
@@ -190,6 +215,8 @@ services:
       HTTP_USER: ${REDIS_COMMANDER_USER:-admin}
       HTTP_PASSWORD: ${REDIS_COMMANDER_PASSWORD:-admin}
     depends_on:
+      envgen-dev:
+        condition: service_completed_successfully
       redis-dev:
         condition: service_healthy
     networks:
@@ -206,8 +233,3 @@ volumes:
   postgres_data_dev:
   redis_data_dev:
   uploads_dev:
-
-networks:
-  billetterie-network-dev:
-    driver: bridge
-    name: billetterie-dev-network
