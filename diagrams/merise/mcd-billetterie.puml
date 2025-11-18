@@ -79,19 +79,42 @@ entity FAIRE_PARTIE_EQUIPE {
 }
 
 ' === RELATIONS ET CARDINALITÉS (conceptuel) ===
-UTILISATEUR ||--o{ COMMANDE : passe
-COMMANDE ||--o{ BILLET : contient
-BILLET }o--|| EVENEMENT : concerne
-UTILISATEUR ||--o{ BILLET : possède
-ORGANISATEUR ||--o{ EVENEMENT : organise
-CATEGORIE ||--o{ EVENEMENT : catégorise
-LIEU ||--o{ EVENEMENT : accueille
-UTILISATEUR ||--o{ AVIS : rédige
-EVENEMENT ||--o{ AVIS : reçoit
-THEME ||--o{ EVENEMENT : stylise
-UTILISATEUR ||--o{ FAIRE_PARTIE_EQUIPE
-FAIRE_PARTIE_EQUIPE }o--|| ORGANISATEUR
-COMMANDE ||--o| PAIEMENT : règle
+' Un utilisateur passe 0,n commandes - Une commande est passée par 1,1 utilisateur
+UTILISATEUR "1,1" -- "0,n" COMMANDE : passe
+
+' Une commande contient 1,n billets - Un billet est contenu dans 1,1 commande
+COMMANDE "1,1" -- "1,n" BILLET : contient
+
+' Un billet concerne 1,1 événement - Un événement a 0,n billets
+BILLET "0,n" -- "1,1" EVENEMENT : concerne
+
+' Un utilisateur possède 0,n billets - Un billet peut être possédé par 0,1 utilisateur (invité)
+UTILISATEUR "0,1" -- "0,n" BILLET : possède
+
+' Un organisateur organise 0,n événements - Un événement est organisé par 1,1 organisateur
+ORGANISATEUR "1,1" -- "0,n" EVENEMENT : organise
+
+' Une catégorie catégorise 0,n événements - Un événement a 0,1 catégorie
+CATEGORIE "0,1" -- "0,n" EVENEMENT : catégorise
+
+' Un lieu accueille 0,n événements - Un événement se déroule dans 0,1 lieu
+LIEU "0,1" -- "0,n" EVENEMENT : accueille
+
+' Un utilisateur rédige 0,n avis - Un avis est rédigé par 1,1 utilisateur
+UTILISATEUR "1,1" -- "0,n" AVIS : rédige
+
+' Un événement reçoit 0,n avis - Un avis concerne 1,1 événement
+EVENEMENT "1,1" -- "0,n" AVIS : reçoit
+
+' Un thème stylise 0,n événements - Un événement a 0,1 thème
+THEME "0,1" -- "0,n" EVENEMENT : stylise
+
+' Un utilisateur fait partie de 0,n équipes - Association ternaire
+UTILISATEUR "1,1" -- "0,n" FAIRE_PARTIE_EQUIPE
+FAIRE_PARTIE_EQUIPE "0,n" -- "1,1" ORGANISATEUR
+
+' Une commande est réglée par 0,1 paiement - Un paiement règle 1,1 commande
+COMMANDE "1,1" -- "0,1" PAIEMENT : règle
 
 note right of EVENEMENT
   Catégorie, Lieu et Thème sont facultatifs
