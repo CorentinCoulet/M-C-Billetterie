@@ -72,6 +72,13 @@ export function LayoutWithNavigation({ children }: LayoutWithNavigationProps) {
     return <>{children}</>
   }
 
+  // Sur le dashboard, on laisse le layout dédié gérer l'UI (sidebar, topbar, etc.)
+  // afin d'éviter des espacements/marges redondants qui décalent le contenu.
+  const isDashboard = pathname?.startsWith('/dashboard')
+  if (isDashboard) {
+    return <>{children}</>
+  }
+
   // Extraire le nom de la page actuelle pour le Header
   const currentPage = pathname.split('/')[1] || 'home'
 

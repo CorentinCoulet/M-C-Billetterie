@@ -68,19 +68,7 @@ export function Header({ navigate, currentPage, currentUser, favorites = [], log
               </h1>
             </div>
             <nav className="hidden md:flex items-center space-x-4 lg:space-x-6">
-              <Button 
-                variant={currentPage === 'events' ? 'default' : 'ghost'}
-                onClick={() => handleNavigate('events')}
-                className={
-                  currentPage === 'events' 
-                    ? 'glass-button font-semibold' 
-                    : 'font-semibold hover:bg-gradient-to-r hover:from-primary/20 hover:to-blue-600/20 hover:text-primary hover:scale-105 hover:shadow-lg hover:shadow-blue-500/20 focus:bg-gradient-to-r focus:from-primary/20 focus:to-blue-600/20 focus:text-primary focus:scale-105 focus:shadow-lg focus:shadow-blue-500/20 focus:ring-2 focus:ring-blue-400/50 transition-all duration-300 ease-in-out'
-                }
-                style={{ fontSize: '1.2rem' }}
-              >
-                Événements
-              </Button>
-              {currentUser?.role === 'ORGANIZER' && (
+              {currentUser && (
                 <Button 
                   variant={currentPage === 'dashboard' ? 'default' : 'ghost'}
                   onClick={() => handleNavigate('dashboard')}
@@ -94,6 +82,18 @@ export function Header({ navigate, currentPage, currentUser, favorites = [], log
                   🎯 Dashboard
                 </Button>
               )}
+              <Button 
+                variant={currentPage === 'events' ? 'default' : 'ghost'}
+                onClick={() => handleNavigate('events')}
+                className={
+                  currentPage === 'events' 
+                    ? 'glass-button font-semibold' 
+                    : 'font-semibold hover:bg-gradient-to-r hover:from-primary/20 hover:to-blue-600/20 hover:text-primary hover:scale-105 hover:shadow-lg hover:shadow-blue-500/20 focus:bg-gradient-to-r focus:from-primary/20 focus:to-blue-600/20 focus:text-primary focus:scale-105 focus:shadow-lg focus:shadow-blue-500/20 focus:ring-2 focus:ring-blue-400/50 transition-all duration-300 ease-in-out'
+                }
+                style={{ fontSize: '1.2rem' }}
+              >
+                Événements
+              </Button>
               <Button 
                 variant={currentPage === 'about' ? 'default' : 'ghost'}
                 onClick={() => handleNavigate('about')}
@@ -203,19 +203,7 @@ export function Header({ navigate, currentPage, currentUser, favorites = [], log
 
           {/* Menu Items */}
           <nav className="flex flex-col space-y-4 flex-1">
-            <Button 
-              variant={currentPage === 'events' ? 'default' : 'ghost'}
-              onClick={() => handleNavigate('events')}
-              className={`justify-start text-lg font-semibold ${
-                currentPage === 'events'
-                  ? 'glass-button'
-                  : 'hover:bg-gradient-to-r hover:from-primary/20 hover:to-blue-600/20 hover:text-primary'
-              }`}
-            >
-              🎉 Événements
-            </Button>
-
-            {currentUser?.role === 'ORGANIZER' && (
+            {currentUser && (
               <Button 
                 variant={currentPage === 'dashboard' ? 'default' : 'ghost'}
                 onClick={() => handleNavigate('dashboard')}
@@ -228,6 +216,17 @@ export function Header({ navigate, currentPage, currentUser, favorites = [], log
                 🎯 Dashboard
               </Button>
             )}
+            <Button 
+              variant={currentPage === 'events' ? 'default' : 'ghost'}
+              onClick={() => handleNavigate('events')}
+              className={`justify-start text-lg font-semibold ${
+                currentPage === 'events'
+                  ? 'glass-button'
+                  : 'hover:bg-gradient-to-r hover:from-primary/20 hover:to-blue-600/20 hover:text-primary'
+              }`}
+            >
+              🎉 Événements
+            </Button>
 
             <Button 
               variant={currentPage === 'about' ? 'default' : 'ghost'}

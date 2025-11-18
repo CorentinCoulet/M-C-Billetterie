@@ -1,5 +1,6 @@
 import { useOrganizerDashboardData } from '@/hooks/use-dashboard-data';
 import { useEffect, useMemo, useState } from 'react';
+import { useSearchParams } from 'next/navigation';
 
 type OrgMember = {
   id: string;
@@ -16,6 +17,8 @@ type OrganizationItem = {
 
 export function OrganizerDashboardContent() {
   const organizerData = useOrganizerDashboardData();
+  const searchParams = useSearchParams();
+  const requestedOrgId = searchParams.get('org');
   const ROLE_LABELS: Record<OrgMember['role'], string> = {
     OWNER: 'Propriétaire',
     ADMIN: 'Administrateur',
@@ -42,6 +45,7 @@ export function OrganizerDashboardContent() {
   const [creatingAdvanced, setCreatingAdvanced] = useState(false);
   const [orgName, setOrgName] = useState('');
   const [creatingOrg, setCreatingOrg] = useState(false);
+  const [activeOrgId, setActiveOrgId] = useState<string | null>(null);
 
   // Charger les organisations de l'organisateur connecté (dont il est membre)
   useEffect(() => {
@@ -54,6 +58,32 @@ export function OrganizerDashboardContent() {
         const json = await res.json();
         if (json.success) {
           setOrganizations(json.data as OrganizationItem[]);
+          // Pré-sélection par paramètre d'URL si fourni
+          const list = json.data as OrganizationItem[];
+          if (requestedOrgId && requestedOrgId.length > 0) {
+            const exists = list.find(o => o.id === requestedOrgId);
+            if (exists) {
+              setActiveOrgId(requestedOrgId);
+            } else {
+              // En dernier recours, tenter de charger l'organisation ciblée pour vérifier l'appartenance
+              try {
+                const resp = await fetch(`/api/organizations/${requestedOrgId}`, { credentials: 'include' });
+                if (resp.ok) {
+                  const j = await resp.json();
+                  if (j.success && j.data) {
+                    // Ajouter en tête et la sélectionner
+                    setOrganizations([j.data as OrganizationItem, ...list]);
+                    setActiveOrgId(requestedOrgId);
+                  }
+                }
+                // Si non ok (403/404), on ignore et on utilisera la première org disponible
+              } catch {}
+            }
+          } else if (list.length > 0) {
+            setActiveOrgId(list[0].id);
+          } else {
+            setActiveOrgId(null);
+          }
         } else {
           throw new Error(json.error || 'Erreur lors du chargement des organisations');
         }
@@ -64,9 +94,15 @@ export function OrganizerDashboardContent() {
       }
     };
     loadOrganizations();
-  }, []);
+  }, [requestedOrgId]);
 
-  const activeOrg = useMemo(() => organizations?.[0] ?? null, [organizations]);
+  const activeOrg = useMemo(() => {
+    if (!organizations || organizations.length === 0) return null;
+    if (activeOrgId) {
+      return organizations.find(o => o.id === activeOrgId) ?? organizations[0];
+    }
+    return organizations[0] ?? null;
+  }, [organizations, activeOrgId]);
 
   async function refreshMembers() {
     if (!activeOrg) return;
@@ -93,7 +129,16 @@ export function OrganizerDashboardContent() {
       const res = await fetch('/api/organizations', { credentials: 'include' });
       if (!res.ok) return;
       const json = await res.json();
-      if (json.success) setOrganizations(json.data as OrganizationItem[]);
+      if (json.success) {
+        const list = json.data as OrganizationItem[];
+        setOrganizations(list);
+        if (!activeOrgId) {
+          setActiveOrgId(list[0]?.id ?? null);
+        } else if (!list.some(o => o.id === activeOrgId)) {
+          // L'org active a peut-être été supprimée
+          setActiveOrgId(list[0]?.id ?? null);
+        }
+      }
     } catch {}
   }
 

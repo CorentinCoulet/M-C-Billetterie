@@ -45,13 +45,21 @@ export async function middleware(request: NextRequest) {
     const pathname = request.nextUrl.pathname;
     const isApiRoute = pathname.startsWith('/api/');
 
-    // Get token from cookie or Authorization header
-    let token = request.cookies.get('auth-token')?.value;
-    if (!token) {
-      const authHeader = request.headers.get('authorization');
-      if (authHeader?.startsWith('Bearer ')) {
-        token = authHeader.substring(7);
+    // Get token depending on route type
+    // For API routes, we accept Authorization header or auth cookie.
+    // For page routes (dashboard/admin/organizer), we REQUIRE the 'auth-token' cookie to avoid
+    // accidental exposure via manually crafted Authorization headers.
+    let token: string | undefined = undefined;
+    if (isApiRoute) {
+      token = request.cookies.get('auth-token')?.value;
+      if (!token) {
+        const authHeader = request.headers.get('authorization');
+        if (authHeader?.startsWith('Bearer ')) {
+          token = authHeader.substring(7);
+        }
       }
+    } else {
+      token = request.cookies.get('auth-token')?.value;
     }
 
     // Edge-safe: consider user "authenticated" if a token is present.
@@ -87,7 +95,8 @@ export async function middleware(request: NextRequest) {
 
     if (isProtectedRoute && !payload) {
       const loginUrl = new URL('/login', request.url);
-      loginUrl.searchParams.set('redirect', pathname);
+      // Preserve full path with query (including targeted organizer context like ?org=...)
+      loginUrl.searchParams.set('redirect', request.nextUrl.pathname + (request.nextUrl.search || ''));
       return NextResponse.redirect(loginUrl);
     }
 
