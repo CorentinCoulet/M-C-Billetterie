@@ -198,9 +198,17 @@ export function AppProvider({ children }: AppProviderProps) {
     } catch (error) {
       console.error('Error logging out:', error)
     } finally {
+      try {
+        // Nettoyage défensif côté client
+        if (typeof window !== 'undefined') {
+          localStorage.removeItem('auth-token')
+          sessionStorage.removeItem('auth-token')
+        }
+      } catch {}
       setCurrentUser(null)
       setCart([])
-      router.push('/')
+      // Rediriger explicitement vers la page de connexion pour éviter toute confusion
+      router.replace('/login?loggedOut=1')
     }
   }, [router])
 

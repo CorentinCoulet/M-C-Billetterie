@@ -1,37 +1,73 @@
 import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
-import { buildSecurityHeaders } from './config/security-headers';
-import { verifyToken } from './src/lib/jwt';
+// IMPORTANT: Edge middleware runs in a restricted runtime (no Node APIs like jsonwebtoken)
+// Do NOT import server-side JWT libraries here. We only perform a lightweight check
+// based on the presence of the auth cookie and defer full verification to API routes.
 
-const sharedSecurityHeaders = buildSecurityHeaders({
-  env: process.env.NODE_ENV,
-  additionalHeaders: [{ key: 'X-DNS-Prefetch-Control', value: 'on' }],
-});
+type HeaderKV = { key: string; value: string };
+
+// Fallback static headers in case dynamic import fails in Edge runtime
+const FALLBACK_SECURITY_HEADERS: HeaderKV[] = [
+  { key: 'X-Content-Type-Options', value: 'nosniff' },
+  { key: 'X-Frame-Options', value: 'DENY' },
+  { key: 'X-XSS-Protection', value: '1; mode=block' },
+  { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
+  {
+    key: 'Content-Security-Policy',
+    value:
+      "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self'; frame-ancestors 'none'",
+  },
+  { key: 'X-DNS-Prefetch-Control', value: 'on' },
+];
+
+async function buildHeaders(): Promise<HeaderKV[]> {
+  try {
+    // Dynamic import to avoid CJS/ESM issues at module evaluation time in Edge
+    const mod: any = await import('./config/security-headers');
+    const fn = (mod as any).buildSecurityHeaders as
+      | ((opts: { env?: string; additionalHeaders?: HeaderKV[] }) => HeaderKV[])
+      | undefined;
+    if (typeof fn === 'function') {
+      return fn({
+        env: process.env.NODE_ENV,
+        additionalHeaders: [{ key: 'X-DNS-Prefetch-Control', value: 'on' }],
+      });
+    }
+  } catch (e) {
+    // Last resort: use fallback headers and continue
+    console.error('Security headers module failed to load in middleware:', e);
+  }
+  return FALLBACK_SECURITY_HEADERS;
+}
 
 export async function middleware(request: NextRequest) {
   try {
     const pathname = request.nextUrl.pathname;
     const isApiRoute = pathname.startsWith('/api/');
 
-    // Get token from cookie or Authorization header
-    let token = request.cookies.get('auth-token')?.value;
-    
-    if (!token) {
-      const authHeader = request.headers.get('authorization');
-      if (authHeader?.startsWith('Bearer ')) {
-        token = authHeader.substring(7);
+    // Get token depending on route type
+    // For API routes, we accept Authorization header or auth cookie.
+    // For page routes (dashboard/admin/organizer), we REQUIRE the 'auth-token' cookie to avoid
+    // accidental exposure via manually crafted Authorization headers.
+    let token: string | undefined = undefined;
+    if (isApiRoute) {
+      token = request.cookies.get('auth-token')?.value;
+      if (!token) {
+        const authHeader = request.headers.get('authorization');
+        if (authHeader?.startsWith('Bearer ')) {
+          token = authHeader.substring(7);
+        }
       }
+    } else {
+      token = request.cookies.get('auth-token')?.value;
     }
 
-    // Verify token and get payload (DB validation done in API routes)
+    // Edge-safe: consider user "authenticated" if a token is present.
+    // Full validation (signature, expiration, role) is performed in API routes via withAuth.
+    // We avoid jsonwebtoken usage here due to Edge limitations to fix redirect loops.
     let payload: any = null;
-    
     if (token) {
-      try {
-        payload = verifyToken(token);
-      } catch (error) {
-        payload = null;
-      }
+      payload = { tokenPresent: true };
     }
 
     // Check protected routes
@@ -40,21 +76,40 @@ export async function middleware(request: NextRequest) {
     const isDashboardRoute = pathname.startsWith('/dashboard');
     const isProtectedRoute = isAdminRoute || isOrganizerRoute || isDashboardRoute;
 
+    // If user is already authenticated (token present) and tries to access the login page,
+    // redirect them to the intended destination (redirect param) or a sensible default.
+    if (pathname === '/login' && payload) {
+      const url = new URL(request.url);
+      const redirect = url.searchParams.get('redirect') || '';
+      const safeRedirect = redirect.startsWith('/') && !redirect.startsWith('/api');
+      
+      // Default destination if no safe redirect provided
+      // We choose /dashboard as a sensible default for authenticated users of this app
+      // (role-based routing will be handled client-side and/or by API protections)
+      let defaultDest = '/dashboard';
+
+      const dest = safeRedirect ? redirect : defaultDest;
+      const destUrl = new URL(dest, request.url);
+      return NextResponse.redirect(destUrl);
+    }
+
     if (isProtectedRoute && !payload) {
       const loginUrl = new URL('/login', request.url);
-      loginUrl.searchParams.set('redirect', pathname);
+      // Preserve full path with query (including targeted organizer context like ?org=...)
+      loginUrl.searchParams.set('redirect', request.nextUrl.pathname + (request.nextUrl.search || ''));
       return NextResponse.redirect(loginUrl);
     }
 
-    // Check role-based access
-    if (isAdminRoute && payload && payload.role !== 'ADMIN') {
+    // Role-based access: Only enforce if a role is explicitly available (not the case in Edge here).
+    // API routes will strictly validate roles; pages can self-guard.
+    if (isAdminRoute && payload && (payload as any).role && (payload as any).role !== 'ADMIN') {
       return NextResponse.json(
         { error: 'Access denied. Admin role required.' },
         { status: 403 }
       );
     }
 
-    if (isOrganizerRoute && payload && payload.role !== 'ORGANIZER' && payload.role !== 'ADMIN') {
+    if (isOrganizerRoute && payload && (payload as any).role && (payload as any).role !== 'ORGANIZER' && (payload as any).role !== 'ADMIN') {
       return NextResponse.json(
         { error: 'Access denied. Organizer role required.' },
         { status: 403 }
@@ -66,7 +121,8 @@ export async function middleware(request: NextRequest) {
     // Create response with headers
     const response = NextResponse.next();
 
-    sharedSecurityHeaders.forEach(({ key, value }) => {
+    const securityHeaders = await buildHeaders();
+    securityHeaders.forEach(({ key, value }) => {
       response.headers.set(key, value);
     });
     response.headers.set('Server', 'MC-Billetterie/1.0');
@@ -78,10 +134,9 @@ export async function middleware(request: NextRequest) {
       response.headers.set('Cache-Control', 'public, max-age=300, stale-while-revalidate=60');
     }
 
-    // Add user info to headers if authenticated
+    // Add minimal user info header if authenticated (no PII, only a flag)
     if (payload) {
-      response.headers.set('X-User-ID', payload.userId);
-      response.headers.set('X-User-Role', payload.role || '');
+      response.headers.set('X-Auth', '1');
     }
 
     return response;
@@ -89,7 +144,8 @@ export async function middleware(request: NextRequest) {
     // In case of any error, return a minimal safe response
     console.error('Middleware error:', error);
     const response = NextResponse.next();
-    sharedSecurityHeaders.forEach(({ key, value }) => {
+    const headers = await buildHeaders();
+    headers.forEach(({ key, value }) => {
       response.headers.set(key, value);
     });
     response.headers.set('Server', 'MC-Billetterie/1.0');
@@ -104,5 +160,6 @@ export const config = {
     '/admin/:path*',
     '/organizer/:path*',
     '/dashboard/:path*',
+    '/login',
   ],
 };

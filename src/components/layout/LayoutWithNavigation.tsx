@@ -47,13 +47,35 @@ export function LayoutWithNavigation({ children }: LayoutWithNavigationProps) {
       cart: '/cart',
       auth: '/login',
       help: '/help',
-      dashboard: '/dashboard'
+      dashboard: '/dashboard',
+    };
+
+    // Calcule un chemin sûr
+    const target = routes[page] ?? (page?.startsWith('/') ? page : `/${page}`);
+
+    try {
+      // Utilise le routeur Next si disponible; fallback vers location en cas d'exception
+      if (router && typeof router.push === 'function') {
+        router.push(target as any);
+      } else if (typeof window !== 'undefined') {
+        window.location.assign(target);
+      }
+    } catch (e) {
+      if (typeof window !== 'undefined') {
+        window.location.assign(target);
+      }
     }
-    router.push(routes[page] || `/${page}`)
   }, [router])
 
   // Si c'est la page de connexion, on n'affiche pas le Header/Footer
   if (isLoginPage) {
+    return <>{children}</>
+  }
+
+  // Sur le dashboard, on laisse le layout dédié gérer l'UI (sidebar, topbar, etc.)
+  // afin d'éviter des espacements/marges redondants qui décalent le contenu.
+  const isDashboard = pathname?.startsWith('/dashboard')
+  if (isDashboard) {
     return <>{children}</>
   }
 

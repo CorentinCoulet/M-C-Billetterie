@@ -71,6 +71,7 @@ export function AuthPage({ navigate }: AuthPageProps) {
         headers: {
           'Content-Type': 'application/json',
         },
+        credentials: 'include',
         body: JSON.stringify({ email, password }),
       })
 
@@ -80,9 +81,19 @@ export function AuthPage({ navigate }: AuthPageProps) {
         setCurrentUser(data.data.user)
         await checkAuth()
         
-        // Redirection SIMPLE selon le rôle - PERIOD.
+        // Si un paramètre redirect est présent et sûr, on le privilégie
+        try {
+          const params = new URLSearchParams(window.location.search)
+          const redirect = params.get('redirect') || ''
+          const safeRedirect = redirect.startsWith('/') && !redirect.startsWith('/api')
+          if (safeRedirect) {
+            window.location.replace(redirect)
+            return
+          }
+        } catch {}
+
+        // Sinon, redirection selon le rôle
         const role = data.data.user.role
-        
         if (role === 'ADMIN') {
           window.location.replace('/admin')
         } else if (role === 'ORGANIZER') {
@@ -140,7 +151,7 @@ export function AuthPage({ navigate }: AuthPageProps) {
           className="mb-6 border-white/40 hover:bg-white/20"
         >
           <ArrowLeft size={16} className="mr-2" />
-          Retour à l'accueil
+          Retour à l&#39;accueil
         </Button>
         
         <Card className="glass-card w-full border-2 border-white/40">
@@ -298,7 +309,7 @@ export function AuthPage({ navigate }: AuthPageProps) {
                       
                       <div className="space-y-2">
                         <label htmlFor="companyName" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                          Nom de l'entreprise <span className="text-red-500">*</span>
+                          Nom de l&#39;entreprise <span className="text-red-500">*</span>
                         </label>
                         <Input
                           id="companyName"
@@ -375,7 +386,7 @@ export function AuthPage({ navigate }: AuthPageProps) {
 
                       <div className="space-y-2">
                         <label htmlFor="description" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                          Description de l'activité
+                          Description de l&#39;activité
                         </label>
                         <textarea
                           id="description"
@@ -439,14 +450,14 @@ export function AuthPage({ navigate }: AuthPageProps) {
                         className="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded mt-0.5"
                       />
                       <label htmlFor="acceptTerms" className="text-sm leading-relaxed">
-                        J'accepte les{' '}
+                        J&#39;accepte les{' '}
                         <TermsModal 
                           trigger={
                             <button 
                               type="button" 
                               className="text-primary underline hover:text-primary/80 cursor-pointer"
                             >
-                              conditions d'utilisation
+                              conditions d&#39;utilisation
                             </button>
                           }
                         />

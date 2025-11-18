@@ -1,7 +1,7 @@
 'use client'
 
-import { Funnel, Heart, MagnifyingGlass, ShoppingCartSimple } from '@phosphor-icons/react'
-import { AnimatePresence, motion } from 'framer-motion'
+import { Heart, MagnifyingGlass, ShoppingCartSimple, MapPin, CurrencyEur, Tag, ArrowsDownUp, CalendarBlank } from '@phosphor-icons/react'
+import { motion } from 'framer-motion'
 import { useState } from 'react'
 import { toast } from 'sonner'
 import { Badge } from '../components/ui/badge'
@@ -55,10 +55,13 @@ export function EventsPage({
   toggleFavorite,
   addToCart
 }: EventsPageProps) {
-  const [showMoreFilters, setShowMoreFilters] = useState(false)
   const [sortBy, setSortBy] = useState('date')
   const [dateRange, setDateRange] = useState('all')
   const [addingToCart, setAddingToCart] = useState<number | null>(null)
+  // Nouveaux états de filtres demandés
+  const [selectedLocation, setSelectedLocation] = useState<string>('all')
+  const [priceMin, setPriceMin] = useState<string>('')
+  const [priceMax, setPriceMax] = useState<string>('')
   
   const handleAddToCart = (eventId: number, eventName: string) => {
     setAddingToCart(eventId)
@@ -73,7 +76,9 @@ export function EventsPage({
   // Extract unique categories from events
   const uniqueCategories = Array.from(new Set(events.map(e => e.category).filter(Boolean)))
   const categories = ['all', ...uniqueCategories.sort()]
-  const priceRanges = ['all', '0-30', '30-60', '60+']
+  // Lieux uniques pour le filtre de lieu
+  const uniqueLocations = Array.from(new Set(events.map(e => e.location || e.venue).filter(Boolean))) as string[]
+  const locations = ['all', ...uniqueLocations.sort()]
   const sortOptions = ['date', 'price', 'name', 'popularity']
   const dateRanges = ['all', 'today', 'week', 'month']
 
@@ -82,11 +87,15 @@ export function EventsPage({
                          event.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
                          event.category.toLowerCase().includes(searchQuery.toLowerCase())
     const matchesCategory = selectedCategory === 'all' || event.category === selectedCategory
-    const eventPrice = parseFloat(event.price.replace('€', '').replace('Gratuit', '0'))
-    const matchesPrice = priceRange === 'all' || 
-                        (priceRange === '0-30' && eventPrice <= 30) ||
-                        (priceRange === '30-60' && eventPrice > 30 && eventPrice <= 60) ||
-                        (priceRange === '60+' && eventPrice > 60)
+    // Prix min / max (remplace l'ancien filtre de plages)
+    const rawPrice = event.price.replace('€', '').replace('Gratuit', '0').replace(',', '.').trim()
+    const eventPrice = parseFloat(rawPrice)
+    const minOk = priceMin === '' || (!Number.isNaN(eventPrice) && eventPrice >= parseFloat(priceMin))
+    const maxOk = priceMax === '' || (!Number.isNaN(eventPrice) && eventPrice <= parseFloat(priceMax))
+    const matchesPrice = minOk && maxOk
+    // Lieu
+    const eventLocation = (event.location || event.venue || '').toString()
+    const matchesLocation = selectedLocation === 'all' || eventLocation === selectedLocation
     
     // Date range filter
     const eventDate = new Date(event.date)
@@ -96,7 +105,7 @@ export function EventsPage({
                        (dateRange === 'week' && eventDate <= new Date(today.getTime() + 7 * 24 * 60 * 60 * 1000)) ||
                        (dateRange === 'month' && eventDate <= new Date(today.getTime() + 30 * 24 * 60 * 60 * 1000))
     
-    return matchesSearch && matchesCategory && matchesPrice && matchesDate
+    return matchesSearch && matchesCategory && matchesPrice && matchesDate && matchesLocation
   }).sort((a, b) => {
     // Sorting logic
     if (sortBy === 'date') {
@@ -125,125 +134,174 @@ export function EventsPage({
           <div className="glass-card rounded-3xl p-8 sm:p-12">
             <h1 className="text-3xl sm:text-4xl font-bold text-foreground mb-4">Découvrez nos événements</h1>
             <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
-              Trouvez l'événement parfait parmi notre sélection de concerts, festivals et spectacles
+              Trouvez l&apos;événement parfait parmi notre sélection de concerts, festivals et spectacles
             </p>
           </div>
         </motion.div>
 
-        {/* Filters */}
+        {/* Filtres */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
           className="glass-card rounded-2xl p-6 mb-8"
         >
-          <div className="grid md:grid-cols-4 gap-4">
-            <div className="relative">
-              <MagnifyingGlass size={20} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground" />
+          <div className="grid grid-cols-1 md:grid-cols-6 lg:grid-cols-7 gap-4">
+            {/* Recherche */}
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-foreground flex items-center gap-2">
+                <MagnifyingGlass size={16} />
+                Recherche
+              </label>
+              <div className="relative">
+                <MagnifyingGlass size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                <Input
+                  placeholder="Rechercher un événement..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-10 bg-white"
+                />
+              </div>
+            </div>
+
+            {/* Catégorie */}
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-foreground flex items-center gap-2">
+                <Tag size={16} />
+                Catégorie
+              </label>
+              <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+                <SelectTrigger className="bg-white">
+                  <SelectValue placeholder="Catégorie" />
+                </SelectTrigger>
+                <SelectContent>
+                  {categories.map(category => (
+                    <SelectItem key={category} value={category}>
+                      {category === 'all' ? 'Toutes les catégories' : category}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Lieu */}
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-foreground flex items-center gap-2">
+                <MapPin size={16} />
+                Lieu
+              </label>
+              <Select value={selectedLocation} onValueChange={setSelectedLocation}>
+                <SelectTrigger className="bg-white">
+                  <SelectValue placeholder="Lieu" />
+                </SelectTrigger>
+                <SelectContent>
+                  {locations.map(loc => (
+                    <SelectItem key={loc} value={loc}>
+                      {loc === 'all' ? 'Tous les lieux' : loc}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Prix min */}
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-foreground flex items-center gap-2">
+                <CurrencyEur size={16} />
+                Prix min
+              </label>
               <Input
-                placeholder="Rechercher un événement..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10 bg-white"
+                type="number"
+                inputMode="decimal"
+                placeholder="Min"
+                value={priceMin}
+                onChange={(e) => setPriceMin(e.target.value)}
+                className="bg-white"
+                min="0"
               />
             </div>
-            
-            <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-              <SelectTrigger className="bg-white">
-                <SelectValue placeholder="Catégorie" />
-              </SelectTrigger>
-              <SelectContent>
-                {categories.map(category => (
-                  <SelectItem key={category} value={category}>
-                    {category === 'all' ? 'Toutes les catégories' : category}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            
-            <Select value={priceRange} onValueChange={setPriceRange}>
-              <SelectTrigger className="bg-white">
-                <SelectValue placeholder="Prix" />
-              </SelectTrigger>
-              <SelectContent>
-                {priceRanges.map(range => (
-                  <SelectItem key={range} value={range}>
-                    {range === 'all' ? 'Tous les prix' : 
-                     range === '0-30' ? '0€ - 30€' :
-                     range === '30-60' ? '30€ - 60€' : '60€+'}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            
-            <Button 
-              variant="outline" 
-              className="flex items-center space-x-2 bg-white"
-              onClick={() => setShowMoreFilters(!showMoreFilters)}
-            >
-              <Funnel size={16} />
-              <span>Plus de filtres</span>
-            </Button>
-          </div>
 
-          {/* Additional filters */}
-          <AnimatePresence>
-            {showMoreFilters && (
-              <motion.div
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: 'auto' }}
-                exit={{ opacity: 0, height: 0 }}
-                transition={{ duration: 0.3 }}
-                className="overflow-hidden"
+            {/* Prix max */}
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-foreground flex items-center gap-2">
+                <CurrencyEur size={16} />
+                Prix max
+              </label>
+              <Input
+                type="number"
+                inputMode="decimal"
+                placeholder="Max"
+                value={priceMax}
+                onChange={(e) => setPriceMax(e.target.value)}
+                className="bg-white"
+                min="0"
+              />
+            </div>
+
+            {/* Trier par */}
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-foreground flex items-center gap-2">
+                <ArrowsDownUp size={16} />
+                Trier par
+              </label>
+              <Select value={sortBy} onValueChange={setSortBy}>
+                <SelectTrigger className="bg-white">
+                  <SelectValue placeholder="Trier par" />
+                </SelectTrigger>
+                <SelectContent>
+                  {sortOptions.map(option => (
+                    <SelectItem key={option} value={option}>
+                      {option === 'date' ? 'Date' :
+                       option === 'price' ? 'Prix' :
+                       option === 'name' ? 'Nom' : 'Popularité'}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Période */}
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-foreground flex items-center gap-2">
+                <CalendarBlank size={16} />
+                Période
+              </label>
+              <Select value={dateRange} onValueChange={setDateRange}>
+                <SelectTrigger className="bg-white">
+                  <SelectValue placeholder="Période" />
+                </SelectTrigger>
+                <SelectContent>
+                  {dateRanges.map(range => (
+                    <SelectItem key={range} value={range}>
+                      {range === 'all' ? 'Toutes les dates' :
+                       range === 'today' ? 'Aujourd\'hui' :
+                       range === 'week' ? 'Cette semaine' : 'Ce mois-ci'}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Réinitialiser */}
+            <div className="md:col-span-6 lg:col-span-7 flex items-end">
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setSearchQuery('')
+                  setSelectedCategory('all')
+                  setPriceRange('all') // compat parent
+                  setSortBy('date')
+                  setDateRange('all')
+                  setSelectedLocation('all')
+                  setPriceMin('')
+                  setPriceMax('')
+                }}
+                className="bg-white w-full md:w-auto"
               >
-                <div className="grid md:grid-cols-3 gap-4 mt-4 pt-4 border-t border-white/20">
-                  <Select value={sortBy} onValueChange={setSortBy}>
-                    <SelectTrigger className="bg-white">
-                      <SelectValue placeholder="Trier par" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {sortOptions.map(option => (
-                        <SelectItem key={option} value={option}>
-                          {option === 'date' ? 'Date' :
-                           option === 'price' ? 'Prix' :
-                           option === 'name' ? 'Nom' : 'Popularité'}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-
-                  <Select value={dateRange} onValueChange={setDateRange}>
-                    <SelectTrigger className="bg-white">
-                      <SelectValue placeholder="Période" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {dateRanges.map(range => (
-                        <SelectItem key={range} value={range}>
-                          {range === 'all' ? 'Toutes les dates' :
-                           range === 'today' ? "Aujourd'hui" :
-                           range === 'week' ? 'Cette semaine' : 'Ce mois-ci'}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-
-                  <Button
-                    variant="outline"
-                    onClick={() => {
-                      setSearchQuery('')
-                      setSelectedCategory('all')
-                      setPriceRange('all')
-                      setSortBy('date')
-                      setDateRange('all')
-                    }}
-                    className="bg-white"
-                  >
-                    Réinitialiser tous les filtres
-                  </Button>
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
+                Réinitialiser tous les filtres
+              </Button>
+            </div>
+          </div>
         </motion.div>
 
         {/* Results */}
@@ -371,7 +429,10 @@ export function EventsPage({
               onClick={() => {
                 setSearchQuery('')
                 setSelectedCategory('all')
-                setPriceRange('all')
+                setPriceRange('all') // compat parent
+                setSelectedLocation('all')
+                setPriceMin('')
+                setPriceMax('')
               }}
               variant="outline"
             >

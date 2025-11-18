@@ -1,13 +1,10 @@
 import prisma from '@/lib/prisma';
 import bcrypt from 'bcryptjs';
-import jwt, { SignOptions } from 'jsonwebtoken';
+import { signToken, verifyToken } from '@/lib/jwt';
+import type { SignOptions } from 'jsonwebtoken';
 
-const JWT_SECRET = process.env.JWT_SECRET;
-const JWT_EXPIRES_IN = '24h';
-
-if (!JWT_SECRET) {
-  throw new Error('JWT_SECRET environment variable is required');
-}
+// Keep a local expiresIn for session records if needed; JWT expiration is handled in signToken
+const JWT_EXPIRES_IN: SignOptions['expiresIn'] = '24h';
 
 export interface User {
   id: string;
@@ -67,7 +64,7 @@ export class AuthService {
    */
   async validateToken(token: string): Promise<User | null> {
     try {
-      const decoded = jwt.verify(token, JWT_SECRET!) as any;
+      const decoded = verifyToken<any>(token);
       
       if (!decoded.userId || !decoded.sessionId) {
         return null;
@@ -145,8 +142,8 @@ export class AuthService {
 
       // Create JWT token
       const payload = { userId: user.id, sessionId: session.id };
-      const options: SignOptions = { expiresIn: JWT_EXPIRES_IN };
-      const token = jwt.sign(payload, JWT_SECRET!, options);
+      // Use unified JWT signer to ensure same secret/alg across Edge and Node runtimes
+      const token = signToken(payload);
 
       return {
         user: {
@@ -219,8 +216,8 @@ export class AuthService {
 
       // Create JWT token
       const payload = { userId: user.id, sessionId: session.id };
-      const options: SignOptions = { expiresIn: JWT_EXPIRES_IN };
-      const token = jwt.sign(payload, JWT_SECRET!, options);
+      // Use unified JWT signer to ensure same secret/alg across Edge and Node runtimes
+      const token = signToken(payload);
 
       return {
         user: {
