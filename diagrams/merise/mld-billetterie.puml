@@ -129,8 +129,6 @@ class THEME {
 }
 
 class MEMBRE_EQUIPE {
-    + id : UUID <<PK>>
-    --
     # organisateur_id : UUID <<FK>>
     # utilisateur_id : UUID <<FK>>
     * role : String
