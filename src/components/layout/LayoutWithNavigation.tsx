@@ -19,8 +19,13 @@ export function LayoutWithNavigation({ children }: LayoutWithNavigationProps) {
   const [cart, setCart] = useState<any[]>([])
   const [isAtTop, setIsAtTop] = useState(true)
 
-  // Détecter si on est sur la page de connexion
-  const isLoginPage = pathname === '/login'
+  // Déterminer si nous sommes sur une page d'authentification
+  // Nous masquons la navbar uniquement sur ces pages
+  const authPaths = ['/login', '/register', '/forgot-password', '/reset-password']
+  const isAuthPage = !!pathname && (
+    authPaths.includes(pathname) ||
+    pathname.startsWith('/auth') // pour couvrir /auth/* si utilisé
+  )
 
   useEffect(() => {
     const handleScroll = () => {
@@ -67,17 +72,12 @@ export function LayoutWithNavigation({ children }: LayoutWithNavigationProps) {
     }
   }, [router])
 
-  // Si c'est la page de connexion, on n'affiche pas le Header/Footer
-  if (isLoginPage) {
+  // Si c'est une page d'authentification, on n'affiche pas le Header/Footer
+  if (isAuthPage) {
     return <>{children}</>
   }
 
-  // Sur le dashboard, on laisse le layout dédié gérer l'UI (sidebar, topbar, etc.)
-  // afin d'éviter des espacements/marges redondants qui décalent le contenu.
-  const isDashboard = pathname?.startsWith('/dashboard')
-  if (isDashboard) {
-    return <>{children}</>
-  }
+  // Afficher le Header/Footer sur toutes les autres pages, y compris le dashboard
 
   // Extraire le nom de la page actuelle pour le Header
   const currentPage = pathname.split('/')[1] || 'home'

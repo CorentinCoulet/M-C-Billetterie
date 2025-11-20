@@ -18,6 +18,22 @@ export default function ProfilePage() {
   const { currentUser, logout, isLoading } = useApp()
   const [activeTab, setActiveTab] = useState('info')
   
+  // Traduction des statuts de commande (UI en français)
+  const translateOrderStatus = (status: string): string => {
+    const key = (status || '').toString().toUpperCase()
+    const map: Record<string, string> = {
+      PENDING: 'En attente',
+      PROCESSING: 'En traitement',
+      PAID: 'Payée',
+      COMPLETED: 'Terminée',
+      CANCELED: 'Annulée',
+      CANCELLED: 'Annulée', // variante orthographique possible
+      REFUNDED: 'Remboursée',
+      FAILED: 'Échouée',
+    }
+    return map[key] || status
+  }
+
   // Edit information state
   const [isEditing, setIsEditing] = useState(false)
   const [formData, setFormData] = useState({
@@ -610,7 +626,7 @@ export default function ProfilePage() {
                                 {order.totalPrice}€
                               </p>
                               <span className="inline-block text-xs px-3 py-1.5 rounded-full bg-gradient-to-r from-green-500 to-emerald-600 text-white font-semibold shadow-lg mt-2">
-                                ✓ {order.status}
+                                ✓ {translateOrderStatus(order.status)}
                               </span>
                             </div>
                           </div>
