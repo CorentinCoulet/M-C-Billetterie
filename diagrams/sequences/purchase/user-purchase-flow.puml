@@ -1,0 +1,49 @@
+@startuml user-purchase-flow
+'left to right direction
+title Achat de Billets - Réservation Directe
+
+skinparam sequenceMessageAlign center
+skinparam maxMessageSize 150
+
+actor "Utilisateur" as User
+participant "Interface Web" as UI
+
+== Sélection ==
+User -> UI: Consulte page événement
+UI --> User: Affiche détails et billets disponibles
+
+alt Événement complet
+    UI --> User: "Événement complet"
+else Billets disponibles
+    User -> UI: Sélectionne type et quantité
+    User -> UI: Réserver maintenant
+    UI --> User: "Réservation pour 15 min" + Timer
+end
+
+== Informations ==
+UI --> User: Formulaire (nom, email, téléphone)
+User -> UI: Remplit et valide
+
+alt Données invalides
+    UI --> User: Affiche erreurs
+    User -> UI: Corrige
+else Données valides
+    UI --> User: Résumé avec montant total
+end
+
+== Paiement ==
+User -> UI: Confirme et paye
+UI --> User: Formulaire paiement Stripe
+User -> UI: Saisit carte et valide
+UI --> User: "Traitement..."
+
+alt Paiement échoué
+    UI --> User: "Échec paiement" + Réservation annulée
+else Paiement réussi
+    UI --> User: ✓ "Paiement confirmé"
+    UI --> User: Page confirmation + "Email envoyé"
+    User -> UI: Télécharge PDF
+    UI --> User: Billets PDF avec QR codes
+end
+
+@enduml

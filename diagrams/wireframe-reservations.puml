@@ -1,0 +1,401 @@
+@startuml Wireframe-Reservations
+
+!define RECTANGLE rectangle
+!define TITLE title
+
+skinparam rectangle {
+    BackgroundColor White
+    BorderColor Black
+}
+
+' ============================================
+' PAGE 1: Liste des événements disponibles
+' ============================================
+TITLE Page de Réservation - Étape 1: Sélection d'événement
+
+RECTANGLE "Header/Navbar" as header1 {
+    RECTANGLE "Logo" as logo1
+    RECTANGLE "Événements" as events1
+    RECTANGLE "Dashboard" as dash1
+    RECTANGLE "Profil" as profil1
+    RECTANGLE "Panier" as panier1
+    RECTANGLE "Se Déconnecter" as deco1
+    logo1 -right- events1
+    events1 -right- dash1
+    dash1 -right- profil1
+    profil1 -right- panier1
+    panier1 -right- deco1
+}
+
+
+RECTANGLE "Filtres et Recherche" as filtres1 #LightBlue {
+    RECTANGLE "Barre de recherche" as search1
+    RECTANGLE "Catégorie" as cat1
+    RECTANGLE "Lieu" as lieu1
+    RECTANGLE "Date" as date1
+    RECTANGLE "Thème" as theme1
+}
+
+RECTANGLE "Liste des Événements" as liste1 #LightGreen {
+    RECTANGLE "Événement 1" as evt1 {
+        RECTANGLE "Image" as img1
+        RECTANGLE "Titre de l'événement\n📅 Date: 25/12/2025 20:00\n📍 Lieu: Palais des Congrès\n💰 À partir de 25€\n👥 Capacité: 500/1000" as info1
+        RECTANGLE "[Voir Détails] [🛒 Ajouter au Panier] [Réserver Maintenant]" as actions1
+    }
+    
+    RECTANGLE "Événement 2" as evt2 {
+        RECTANGLE "Image" as img2
+        RECTANGLE "Concert Rock Festival\n📅 Date: 30/12/2025 19:00\n📍 Lieu: Stade Municipal\n💰 À partir de 45€\n👥 Capacité: 200/500" as info2
+        RECTANGLE "[Voir Détails] [🛒 Ajouter au Panier] [Réserver Maintenant]" as actions2
+    }
+}
+
+header1 -down-> filtres1
+filtres1 -down-> liste1
+
+newpage
+
+' ============================================
+' PAGE 2: Détails de l'événement
+' ============================================
+TITLE Page de Réservation - Étape 2: Détails de l'événement
+
+RECTANGLE "Header" as header2 {
+    RECTANGLE "Logo" as logo2
+    RECTANGLE "← Retour" as retour2
+    RECTANGLE "Mon Compte" as compte2
+    logo2 -right- retour2
+    retour2 -right- compte2
+}
+
+RECTANGLE "Détails Événement" as details2 #LightYellow {
+    RECTANGLE "Bannière Image" as banner2
+    RECTANGLE "Concert Rock Festival\n⭐⭐⭐⭐☆ (4.2/5 - 45 avis)\n\n📅 Date: 30 Décembre 2025, 19:00\n📍 Lieu: Stade Municipal, Paris\n🎭 Catégorie: Concert\n🎨 Thème: Rock\n👥 Capacité: 200 places restantes / 500 total\n\nDescription:\nLorem ipsum dolor sit amet...\n\n🎫 Tarifs:\n- Standard: 45€\n- VIP: 80€\n- Carré Or: 120€" as info_evt2
+}
+
+RECTANGLE "Section Réservation" as section_resa2 #LightGreen {
+    RECTANGLE "Sélectionnez vos places:\n\nType de billet: Standard (45€)\n\nQuantité: [-] [2] [+]\n\nTotal: 90€\n\n☐ J'ai un code promo\n\n[🛒 Ajouter au Panier] [Réserver Maintenant]" as resa_form2
+}
+
+RECTANGLE "Avis Clients" as avis2 #LightCyan {
+    RECTANGLE "⭐⭐⭐⭐⭐\nJean Dupont - 15/11/2025\nExcellent événement !" as avis_1
+}
+
+header2 -down-> details2
+details2 -down-> section_resa2
+section_resa2 -down-> avis2
+
+newpage
+
+' ============================================
+' PAGE 3: Récapitulatif et Paiement
+' ============================================
+TITLE Page de Réservation - Étape 3: Paiement
+
+RECTANGLE "Header" as header3 {
+    RECTANGLE "Logo" as logo3
+    RECTANGLE "← Retour" as retour3
+    RECTANGLE "Mon Compte" as compte3
+    logo3 -right- retour3
+    retour3 -right- compte3
+}
+
+RECTANGLE "Étapes" as etapes3 #LightGray {
+    RECTANGLE "✓ Événement → ✓ Places → • Paiement → Confirmation" as progress3
+}
+
+RECTANGLE "Récapitulatif" as recap3 #LightYellow {
+    RECTANGLE "Concert Rock Festival\n📅 30 Décembre 2025, 19:00\n📍 Stade Municipal, Paris\n\nDétails:\n- 2x Standard @ 45€ = 90€\n- Frais de service = 5€\n\nCode Promo: NOEL2025 (-10%)\nRéduction: -9.50€\n\nTOTAL: 85.50€" as recap_info3
+}
+
+RECTANGLE "Informations Client" as client3 #LightCyan {
+    RECTANGLE "Vos informations:\n☑ Utiliser mon compte\n☐ Achat anonyme\n\nEmail: ____________\nNom: ____________\nTéléphone: ____________" as client_form3
+}
+
+RECTANGLE "Paiement" as payment3 #LightGreen {
+    RECTANGLE "Mode de paiement:\n☑ Carte bancaire\n☐ PayPal\n\nNuméro de carte: ____-____-____-____\nDate exp: __/__ CVC: ___\n\n☑ J'accepte les conditions générales\n☑ Autoriser le transfert de billets\n\n[🔒 Payer 85.50€]" as payment_form3
+}
+
+header3 -down-> etapes3
+etapes3 -down-> recap3
+recap3 -down-> client3
+client3 -down-> payment3
+
+newpage
+
+' ============================================
+' PAGE 4: Confirmation
+' ============================================
+TITLE Page de Réservation - Étape 4: Confirmation
+
+RECTANGLE "Header" as header4 {
+    RECTANGLE "Logo" as logo4
+    RECTANGLE "Mes Réservations" as reserv4
+    RECTANGLE "Mon Compte" as compte4
+    logo4 -right- reserv4
+    reserv4 -right- compte4
+}
+
+RECTANGLE "Confirmation" as confirm4 #LightGreen {
+    RECTANGLE "✓ Réservation Confirmée !\n\nNuméro de commande: #ORD-2025-1234\nNuméro de transaction: TRX-9876543210\n\nConcert Rock Festival\n📅 30 Décembre 2025, 19:00\n📍 Stade Municipal, Paris" as confirm_info4
+    
+    RECTANGLE "Billet 1" as ticket1_4 #White {
+        RECTANGLE "[QR Code]\n\nBillet Standard #1\nCode: TICKET-ABC123\nSiège: A-15\n\n⏰ QR Code valide 12h\n🔄 Rotation automatique" as ticket1_info
+    }
+    
+    RECTANGLE "Billet 2" as ticket2_4 #White {
+        RECTANGLE "[QR Code]\n\nBillet Standard #2\nCode: TICKET-DEF456\nSiège: A-16\n\n⏰ QR Code valide 12h\n🔄 Rotation automatique" as ticket2_info
+    }
+    
+    RECTANGLE "📧 Envoyer par Email | 📱 Ajouter au Wallet | 🖨️ Imprimer" as actions4
+    RECTANGLE "ℹ️ Informations importantes:\n- Les billets ont été envoyés à votre email\n- Présentez vos QR codes à l'entrée\n- Les QR codes changent automatiquement toutes les 12h" as info4
+}
+
+RECTANGLE "Actions" as final_actions4 {
+    RECTANGLE "← Retour aux événements | Voir mes réservations" as links4
+}
+
+header4 -down-> confirm4
+confirm4 -down-> final_actions4
+
+newpage
+
+' ============================================
+' PAGE 5: Panier
+' ============================================
+TITLE Panier
+
+RECTANGLE "Header/Navbar" as header5a {
+    RECTANGLE "Logo" as logo5a
+    RECTANGLE "Événements" as events5a
+    RECTANGLE "Dashboard" as dash5a
+    RECTANGLE "Profil" as profil5a
+    RECTANGLE "🛒 Panier (2)" as panier5a
+    logo5a -right- events5a
+    events5a -right- dash5a
+    dash5a -right- profil5a
+    profil5a -right- panier5a
+}
+
+RECTANGLE "Mon Panier" as panier_content #LightYellow {
+    RECTANGLE "Article Panier 1" as item1 #White {
+        RECTANGLE "Concert Rock Festival\n📅 30 Décembre 2025, 19:00\n📍 Stade Municipal, Paris\n\n2x Standard @ 45€ = 90€\n\n[Modifier] [Supprimer]" as item1_info
+    }
+    
+    RECTANGLE "Article Panier 2" as item2 #White {
+        RECTANGLE "Festival Jazz\n📅 15 Janvier 2026, 20:00\n📍 Zénith de Paris\n\n1x VIP @ 80€ = 80€\n\n[Modifier] [Supprimer]" as item2_info
+    }
+    
+    RECTANGLE "Total Panier" as total_panier {
+        RECTANGLE "Sous-total: 170€\nFrais de service: 8.50€\n\nCode Promo: ___________  [Appliquer]\n\nTOTAL: 178.50€" as total_info
+    }
+}
+
+RECTANGLE "Actions Panier" as actions_panier {
+    RECTANGLE "[Vider le panier] [Continuer mes achats] [🔒 Finaliser la réservation]" as panier_btns
+}
+
+note right of actions_panier
+  Identification obligatoire 
+  pour finaliser la réservation
+end note
+
+header5a -down-> panier_content
+panier_content -down-> actions_panier
+
+newpage
+
+' ============================================
+' PAGE 6: Dashboard - Mes Réservations
+' ============================================
+TITLE Dashboard - Mes Réservations
+
+RECTANGLE "Header/Navbar" as header5 {
+    RECTANGLE "Logo" as logo5
+    RECTANGLE "Événements" as events5
+    RECTANGLE "Dashboard" as dash5
+    RECTANGLE "Profil" as profil5
+    RECTANGLE "Panier" as panier5
+    logo5 -right- events5
+    events5 -right- dash5
+    dash5 -right- profil5
+    profil5 -right- panier5
+}
+
+RECTANGLE "Filtres" as filtres5 #LightBlue {
+    RECTANGLE "[Toutes] [À venir] [Passées] [Annulées]" as filter_btns5
+}
+
+RECTANGLE "Liste Réservations" as liste5 #LightYellow {
+    RECTANGLE "Réservation Active" as resa1_5 #LightGreen {
+        RECTANGLE "Concert Rock Festival\n📅 30 Décembre 2025, 19:00\n🎫 2 billets - Standard\n💰 85.50€ - ✓ Payé\n\nStatus: [Active]\n\n[Voir les billets] [Transférer] [Annuler]" as resa1_info
+    }
+    
+    RECTANGLE "Réservation Passée" as resa2_5 #LightGray {
+        RECTANGLE "Festival Jazz 2025\n📅 15 Novembre 2025, 20:00\n🎫 1 billet - VIP\n💰 120€ - ✓ Utilisé\n\nStatus: [Terminé]\n\n[Voir détails] [Laisser un avis]" as resa2_info
+    }
+    
+    RECTANGLE "Réservation En attente" as resa3_5 #LightCoral {
+        RECTANGLE "Spectacle Comédie\n📅 20 Décembre 2025, 21:00\n🎫 3 billets - Standard\n💰 135€ - ⏳ En attente de paiement\n\nStatus: [Paiement en attente]\n\n[Finaliser le paiement] [Annuler]" as resa3_info
+    }
+}
+
+header5 -down-> filtres5
+filtres5 -down-> liste5
+
+newpage
+
+' ============================================
+' PAGE 7: Profil - Catégorie Réservations
+' ============================================
+TITLE Profil - Mes Réservations
+
+RECTANGLE "Header/Navbar" as header6a {
+    RECTANGLE "Logo" as logo6a
+    RECTANGLE "Événements" as events6a
+    RECTANGLE "Dashboard" as dash6a
+    RECTANGLE "Profil" as profil6a
+    RECTANGLE "Panier" as panier6a
+    logo6a -right- events6a
+    events6a -right- dash6a
+    dash6a -right- profil6a
+    profil6a -right- panier6a
+}
+
+RECTANGLE "Menu Profil" as menu_profil #LightBlue {
+    RECTANGLE "[Informations Personnelles]\n[Mes Réservations] ✓\n[Historique des Achats]\n[Paramètres]\n[Sécurité]" as menu_items
+}
+
+RECTANGLE "Mes Réservations (depuis Profil)" as reserv_profil #LightYellow {
+    RECTANGLE "Filtres: [Toutes] [À venir] [Passées] [Annulées]" as filtres_profil
+    
+    RECTANGLE "Réservation 1" as resa1_profil #LightGreen {
+        RECTANGLE "Concert Rock Festival\n📅 30 Décembre 2025, 19:00\n🎫 2 billets - Standard\n💰 85.50€ - ✓ Payé\n\n[Voir les billets] [Transférer] [Annuler]" as resa1_info_profil
+    }
+    
+    RECTANGLE "Réservation 2" as resa2_profil #LightGray {
+        RECTANGLE "Festival Jazz 2025\n📅 15 Novembre 2025, 20:00\n🎫 1 billet - VIP\n💰 120€ - ✓ Utilisé\n\n[Voir détails] [Laisser un avis]" as resa2_info_profil
+    }
+}
+
+header6a -down-> menu_profil
+menu_profil -right-> reserv_profil
+
+newpage
+
+' ============================================
+' PAGE 8: Détails d'une Réservation
+' ============================================
+TITLE Détails de la Réservation
+
+RECTANGLE "Header/Navbar" as header6 {
+    RECTANGLE "Logo" as logo6
+    RECTANGLE "Événements" as events6
+    RECTANGLE "← Dashboard / Profil" as retour6
+    RECTANGLE "Panier" as panier6
+    logo6 -right- events6
+    events6 -right- retour6
+    retour6 -right- panier6
+}
+
+RECTANGLE "Informations Commande" as order6 #LightYellow {
+    RECTANGLE "Commande #ORD-2025-1234\n\nÉvénement: Concert Rock Festival\n📅 30 Décembre 2025, 19:00\n📍 Stade Municipal, Paris\n\nStatut: ✓ Confirmé et Payé\nDate d'achat: 20 Novembre 2025, 14:30\nMode de paiement: Carte bancaire\nTransaction: TRX-9876543210\n\nDétails financiers:\n- 2x Standard @ 45€ = 90€\n- Frais de service = 5€\n- Réduction (NOEL2025) = -9.50€\nTotal payé: 85.50€" as order_info6
+}
+
+RECTANGLE "Mes Billets" as tickets6 #LightGreen {
+    RECTANGLE "2 billets disponibles" as tickets_title6
+    
+    RECTANGLE "Billet 1" as ticket1_6 #White {
+        RECTANGLE "[Grand QR Code]\n\nBillet Standard #1\nCode: TICKET-ABC123\nSiège: A-15\n\nStatus: ✓ Non scanné\n\n🔄 QR Code se régénère dans: 8h 32min\n\n[Transférer ce billet]" as ticket1_info6
+    }
+    
+    RECTANGLE "Billet 2" as ticket2_6 #White {
+        RECTANGLE "[Grand QR Code]\n\nBillet Standard #2\nCode: TICKET-DEF456\nSiège: A-16\n\nStatus: ✓ Non scanné\n\n🔄 QR Code se régénère dans: 8h 32min\n\n[Transférer ce billet]" as ticket2_info6
+    }
+}
+
+RECTANGLE "Actions" as actions6 {
+    RECTANGLE "[📧 Renvoyer par Email]\n[📱 Ajouter au Wallet]\n[🖨️ Imprimer tous les billets]\n[❌ Annuler la réservation]" as action_btns6
+}
+
+header6 -down-> order6
+order6 -down-> tickets6
+tickets6 -down-> actions6
+
+newpage
+
+' ============================================
+' PAGE 9: Transfert de Billet
+' ============================================
+TITLE Transfert de Billet
+
+RECTANGLE "Header/Navbar" as header7 {
+    RECTANGLE "Logo" as logo7
+    RECTANGLE "Événements" as events7
+    RECTANGLE "← Retour" as retour7
+    RECTANGLE "Profil" as profil7
+    logo7 -right- events7
+    events7 -right- retour7
+    retour7 -right- profil7
+}
+
+RECTANGLE "Informations Billet" as ticket_info7 #LightYellow {
+    RECTANGLE "Billet à transférer\n\nÉvénement: Concert Rock Festival\nDate: 30 Décembre 2025, 19:00\nType: Standard\nSiège: A-15\nCode: TICKET-ABC123" as ticket_data7
+}
+
+RECTANGLE "Destinataire" as dest7 #LightCyan {
+    RECTANGLE "Transférer à:\n\nEmail du destinataire: _______________\n\nMessage (optionnel):\n_____________________________\n_____________________________\n_____________________________\n\n⚠️ Attention:\n- Le transfert est définitif\n- Vous perdrez l'accès à ce billet\n- Le destinataire recevra un email\n- Le QR code sera régénéré" as dest_form7
+}
+
+RECTANGLE "Validation" as valid7 {
+    RECTANGLE "☐ Je confirme vouloir transférer ce billet\n\n[Annuler] [Confirmer le transfert]" as valid_btns7
+}
+
+header7 -down-> ticket_info7
+ticket_info7 -down-> dest7
+dest7 -down-> valid7
+
+newpage
+
+' ============================================
+' PAGE 10: Interface Organisateur
+' ============================================
+TITLE Interface Organisateur - Mes Événements
+
+RECTANGLE "Header Organisateur" as header8 #LightBlue {
+    RECTANGLE "Logo" as logo8
+    RECTANGLE "Événements Publics" as public8
+    RECTANGLE "Tableau de bord" as dash8
+    RECTANGLE "Mes Événements" as events8
+    RECTANGLE "Statistiques" as stats8
+    RECTANGLE "Équipe" as team8
+    logo8 -right- public8
+    public8 -right- dash8
+    dash8 -right- events8
+    events8 -right- stats8
+    stats8 -right- team8
+}
+
+RECTANGLE "Statistiques Rapides" as quick_stats8 #LightGreen {
+    RECTANGLE "📊 Ventes totales: 45,678€\n🎫 Billets vendus: 567\n📅 Événements actifs: 12\n👥 Participants: 1,234" as stats_data8
+}
+
+RECTANGLE "Liste Événements" as events_list8 {
+    RECTANGLE "Événement Actif" as evt1_8 #LightGreen {
+        RECTANGLE "Concert Rock Festival\n📅 30 Décembre 2025, 19:00\n\nVentes: 200/500 billets (40%)\nRevenus: 8,550€\n\nStatut: [✓ Publié]\n\n[Modifier] [Statistiques] [Scanner billets] [Annuler]" as evt1_info8
+    }
+    
+    RECTANGLE "Événement Brouillon" as evt2_8 #LightYellow {
+        RECTANGLE "Festival d'été 2026\n📅 15 Juin 2026, 14:00\n\nVentes: -\nRevenus: -\n\nStatut: [📝 Brouillon]\n\n[Modifier] [Publier]" as evt2_info8
+    }
+}
+
+RECTANGLE "Actions Organisateur" as actions8 {
+    RECTANGLE "[+ Créer un événement] [Exporter les données] [Voir tous les avis]" as action_btns8
+}
+
+header8 -down-> quick_stats8
+quick_stats8 -down-> events_list8
+events_list8 -down-> actions8
+
+@enduml

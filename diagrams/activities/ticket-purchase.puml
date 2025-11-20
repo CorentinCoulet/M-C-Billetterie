@@ -1,6 +1,5 @@
 @startuml ticket-purchase
-!theme aws-orange
-title Diagramme d'Activité - Achat de Billets
+title Achat de Billets
 
 start
 :Utilisateur parcourt les événements;
@@ -9,7 +8,7 @@ start
 
 if (Billets disponibles ?) then (non)
   :Affiche "Événement complet";
-  :Propose liste d'attente;
+  :Propose liste d'attente;enfaite
   stop
 else (oui)
   :Sélectionne type et quantité de billets;

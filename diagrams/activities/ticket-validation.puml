@@ -1,5 +1,4 @@
 @startuml ticket-validation
-!theme aws-orange
 title Validation de Billets
 
 start
