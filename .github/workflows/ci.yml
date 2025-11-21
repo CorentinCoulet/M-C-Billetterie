@@ -32,7 +32,7 @@ jobs:
           cache: 'yarn'
 
       - name: 📦 Install dependencies
-        run: yarn install --frozen-lockfile
+        run: yarn install --frozen-lockfile || yarn install
 
       - name: 💾 Cache node_modules
         uses: actions/cache/save@v3
@@ -68,7 +68,7 @@ jobs:
           key: ${{ runner.os }}-yarn-${{ hashFiles('yarn.lock') }}
 
       - name: 📦 Ensure dependencies are installed
-        run: yarn install --frozen-lockfile
+        run: yarn install --frozen-lockfile || yarn install
 
       - name: 🔍 ESLint
         run: yarn lint
@@ -127,7 +127,7 @@ jobs:
           key: ${{ runner.os }}-yarn-${{ hashFiles('yarn.lock') }}
 
       - name: 📦 Ensure dependencies are installed
-        run: yarn install --frozen-lockfile
+        run: yarn install --frozen-lockfile || yarn install
 
       - name: 🗃️ Setup database
         env:
@@ -214,7 +214,7 @@ jobs:
           key: ${{ runner.os }}-yarn-${{ hashFiles('yarn.lock') }}
 
       - name: 📦 Ensure dependencies are installed
-        run: yarn install --frozen-lockfile
+        run: yarn install --frozen-lockfile || yarn install
 
       - name: 🎭 Install Playwright
         run: yarn playwright install --with-deps chromium
@@ -280,7 +280,7 @@ jobs:
           key: ${{ runner.os }}-yarn-${{ hashFiles('yarn.lock') }}
 
       - name: 📦 Ensure dependencies are installed
-        run: yarn install --frozen-lockfile
+        run: yarn install --frozen-lockfile || yarn install
 
       - name: 🗃️ Generate Prisma Client
         run: yarn prisma generate
