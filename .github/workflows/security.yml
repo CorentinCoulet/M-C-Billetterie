@@ -6,6 +6,12 @@ on:
   pull_request:
     branches: [main, develop]
 
+# Explicit permissions needed for security tooling (CodeQL, SARIF uploads, etc.)
+permissions:
+  contents: read
+  actions: read
+  security-events: write
+
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
@@ -59,6 +65,8 @@ jobs:
   code-analysis:
     name: 🔍 Code Analysis
     runs-on: ubuntu-latest
+    # Skip on PRs from forks because the GITHUB_TOKEN has restricted perms there
+    if: ${{ github.event_name != 'pull_request' || github.event.pull_request.head.repo.fork != true }}
     
     steps:
       - name: 📥 Checkout
