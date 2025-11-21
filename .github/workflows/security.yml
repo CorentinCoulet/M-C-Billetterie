@@ -31,17 +31,27 @@ jobs:
       - name: 📦 Install dependencies
         run: yarn install --frozen-lockfile
 
+      - name: 🔎 Show tool versions
+        run: |
+          node -v
+          yarn -v
+
       - name: 🔍 Yarn audit
         run: yarn audit --level moderate
         continue-on-error: true
 
       - name: 🔒 Snyk scan
+        if: env.SNYK_TOKEN != ''
         uses: snyk/actions/node@master
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
         with:
           args: --severity-threshold=high
         continue-on-error: true
+
+      - name: ⚠️ Skip Snyk (no token)
+        if: env.SNYK_TOKEN == ''
+        run: echo "SNYK_TOKEN non défini, étape Snyk ignorée."
 
   # =============================================
   # JOB 2: Code Analysis
