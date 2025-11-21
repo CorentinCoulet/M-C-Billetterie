@@ -22,7 +22,10 @@ RUN mkdir -p /app/src/generated/prisma
 
 # Generate Prisma Client
 # Provide a dummy DATABASE_URL so Prisma can validate the schema at build time
+# Ensure required system libraries for Prisma engines on Alpine
+RUN apk add --no-cache libc6-compat openssl ca-certificates
 ENV DATABASE_URL="postgresql://fake:fake@localhost:5432/fake"
+ENV DIRECT_URL="postgresql://fake:fake@localhost:5432/fake"
 RUN yarn prisma generate
 
 # Set build-time environment variables to prevent runtime issues
