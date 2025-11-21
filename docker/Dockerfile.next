@@ -9,7 +9,9 @@ WORKDIR /app
     # Install dependencies based on the preferred package manager (YARN ONLY)
     COPY package.json ./
     COPY yarn.lock* ./
-    RUN if [ -f yarn.lock ]; then yarn install --frozen-lockfile; else yarn install; fi
+    # Do not use --frozen-lockfile during Docker build to allow lockfile to reconcile
+    # with package.json changes made in the repo (CI still enforces --frozen-lockfile).
+    RUN yarn install
 
 # Rebuild the source code only when needed
 FROM base AS builder
