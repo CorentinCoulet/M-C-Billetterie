@@ -15,10 +15,10 @@ env:
 
 jobs:
   # =============================================
-  # JOB 1: Lint & Type Check
+  # JOB 0: Install Dependencies (shared cache)
   # =============================================
-  lint-and-typecheck:
-    name: 🔍 Lint & Type Check
+  install:
+    name: 📦 Install Dependencies
     runs-on: ubuntu-latest
     
     steps:
@@ -34,6 +34,39 @@ jobs:
       - name: 📦 Install dependencies
         run: yarn install --frozen-lockfile
 
+      - name: 💾 Cache node_modules
+        uses: actions/cache/save@v3
+        with:
+          path: |
+            node_modules
+            .yarn/cache
+          key: ${{ runner.os }}-yarn-${{ hashFiles('yarn.lock') }}
+
+  # =============================================
+  # JOB 1: Lint & Type Check
+  # =============================================
+  lint-and-typecheck:
+    name: 🔍 Lint & Type Check
+    runs-on: ubuntu-latest
+    needs: install
+    
+    steps:
+      - name: 📥 Checkout
+        uses: actions/checkout@v4
+
+      - name: 🟢 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: 💾 Restore cache
+        uses: actions/cache/restore@v3
+        with:
+          path: |
+            node_modules
+            .yarn/cache
+          key: ${{ runner.os }}-yarn-${{ hashFiles('yarn.lock') }}
+
       - name: 🔍 ESLint
         run: yarn lint
 
@@ -46,6 +79,7 @@ jobs:
   test-unit-integration:
     name: 🧪 Unit & Integration Tests
     runs-on: ubuntu-latest
+    needs: install
     
     services:
       postgres:
@@ -80,10 +114,14 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: 'yarn'
 
-      - name: 📦 Install dependencies
-        run: yarn install --frozen-lockfile
+      - name: 💾 Restore cache
+        uses: actions/cache/restore@v3
+        with:
+          path: |
+            node_modules
+            .yarn/cache
+          key: ${{ runner.os }}-yarn-${{ hashFiles('yarn.lock') }}
 
       - name: 🗃️ Setup database
         env:
@@ -124,6 +162,7 @@ jobs:
   test-e2e:
     name: 🎭 E2E Tests
     runs-on: ubuntu-latest
+    needs: install
     timeout-minutes: 30
     
     services:
@@ -159,10 +198,14 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: 'yarn'
 
-      - name: 📦 Install dependencies
-        run: yarn install --frozen-lockfile
+      - name: 💾 Restore cache
+        uses: actions/cache/restore@v3
+        with:
+          path: |
+            node_modules
+            .yarn/cache
+          key: ${{ runner.os }}-yarn-${{ hashFiles('yarn.lock') }}
 
       - name: 🎭 Install Playwright
         run: yarn playwright install --with-deps chromium
@@ -208,7 +251,7 @@ jobs:
   build:
     name: 🏗️ Build
     runs-on: ubuntu-latest
-    needs: [lint-and-typecheck]
+    needs: [install, lint-and-typecheck]
     
     steps:
       - name: 📥 Checkout
@@ -218,10 +261,14 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: 'yarn'
 
-      - name: 📦 Install dependencies
-        run: yarn install --frozen-lockfile
+      - name: 💾 Restore cache
+        uses: actions/cache/restore@v3
+        with:
+          path: |
+            node_modules
+            .yarn/cache
+          key: ${{ runner.os }}-yarn-${{ hashFiles('yarn.lock') }}
 
       - name: 🗃️ Generate Prisma Client
         run: yarn prisma generate
