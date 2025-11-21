@@ -1,0 +1,35 @@
+@startuml Database Architecture - Billetterie
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Component.puml
+
+title Architecture de la Base de données
+
+Container_Boundary(db, "PostgreSQL Database") {
+    ComponentDb(core, "Tables Core", "PostgreSQL", "User, Event, Ticket, Order, Payment")
+    ComponentDb(security, "Tables Sécurité", "PostgreSQL", "Sessions, AuditLog, LoginAttempt")
+    ComponentDb(system, "Tables Système", "PostgreSQL", "Organizer, Category, Venue")
+}
+
+System_Ext(prisma, "Prisma ORM", "Client TypeScript")
+System_Ext(redis, "Redis Cache", "Sessions & Cache")
+
+' Relations
+Rel(prisma, core, "CRUD", "SQL")
+Rel(prisma, security, "Audit", "SQL")
+Rel(prisma, system, "Config", "SQL")
+Rel(prisma, redis, "Cache")
+
+note right of core
+  **Métier:**
+  User → Order → Ticket
+  Event → Ticket
+  Order → Payment (1:1)
+end note
+
+note right of security
+  **Sécurité:**
+  UserSession, AuditLog
+  LoginAttempt, BlockedIP
+end note
+
+SHOW_LEGEND()
+@enduml

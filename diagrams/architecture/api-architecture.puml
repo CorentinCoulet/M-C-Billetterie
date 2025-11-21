@@ -1,0 +1,35 @@
+@startuml API REST Architecture - Billetterie
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Component.puml
+
+title Architecture de l'API REST
+
+Container_Boundary(api, "API REST - Next.js") {
+    Component(routes, "Routes API", "Next.js", "Points d'entrée HTTP")
+    Component(middleware, "Middleware", "Next.js", "Auth, validation, sécurité")
+    Component(controllers, "Controllers", "TypeScript", "Auth, Events, Tickets, Orders, Payments")
+    Component(services, "Services", "TypeScript", "Logique métier")
+}
+
+System_Ext(prisma, "Prisma ORM", "PostgreSQL")
+System_Ext(redis, "Redis", "Cache & Sessions")
+System_Ext(stripe, "Stripe API", "Paiements")
+
+' Relations
+Rel(routes, middleware, "Sécurise")
+Rel(middleware, controllers, "Route vers")
+Rel(controllers, services, "Utilise")
+Rel(services, prisma, "SQL")
+Rel(services, redis, "Cache")
+Rel(controllers, stripe, "Paiements")
+
+note right of controllers
+  **Domaines:**
+  - Auth (Better Auth)
+  - Events & Tickets
+  - Orders & Cart
+  - Payments (Stripe)
+  - Admin
+end note
+
+SHOW_LEGEND()
+@enduml
