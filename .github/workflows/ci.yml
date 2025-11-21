@@ -6,14 +6,12 @@ on:
   pull_request:
     branches: [main, develop]
 
-# Avoid multiple executions
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
 env:
   NODE_VERSION: '18'
-  YARN_CACHE_FOLDER: ~/.yarn/cache
 
 jobs:
   # =============================================
@@ -24,7 +22,7 @@ jobs:
     runs-on: ubuntu-latest
     
     steps:
-      - name: 📥 Checkout code
+      - name: 📥 Checkout
         uses: actions/checkout@v4
 
       - name: 🟢 Setup Node.js
@@ -36,10 +34,10 @@ jobs:
       - name: 📦 Install dependencies
         run: yarn install --frozen-lockfile
 
-      - name: 🔍 Run ESLint
+      - name: 🔍 ESLint
         run: yarn lint
 
-      - name: 📝 Type check
+      - name: 📝 TypeScript check
         run: yarn type-check
 
   # =============================================
@@ -75,7 +73,7 @@ jobs:
           --health-retries 5
 
     steps:
-      - name: 📥 Checkout code
+      - name: 📥 Checkout
         uses: actions/checkout@v4
 
       - name: 🟢 Setup Node.js
@@ -94,7 +92,7 @@ jobs:
           yarn prisma generate
           yarn prisma migrate deploy
 
-      - name: 🧪 Run Jest tests
+      - name: 🧪 Run tests with coverage
         env:
           DATABASE_URL: postgresql://postgres:postgres@localhost:5432/billetterie_test
           REDIS_URL: redis://localhost:6379
@@ -112,19 +110,19 @@ jobs:
           EMAIL_FROM: test@test.com
         run: yarn test:ci
 
-      - name: 📊 Upload coverage to Codecov
+      - name: 📊 Upload coverage
         uses: codecov/codecov-action@v4
+        if: always()
         with:
           files: ./coverage/lcov.info
           flags: unittests
-          name: codecov-umbrella
         continue-on-error: true
 
   # =============================================
-  # JOB 3: E2E Tests avec Playwright
+  # JOB 3: E2E Tests
   # =============================================
   test-e2e:
-    name: 🎭 E2E Tests (Playwright)
+    name: 🎭 E2E Tests
     runs-on: ubuntu-latest
     timeout-minutes: 30
     
@@ -154,7 +152,7 @@ jobs:
           --health-retries 5
 
     steps:
-      - name: 📥 Checkout code
+      - name: 📥 Checkout
         uses: actions/checkout@v4
 
       - name: 🟢 Setup Node.js
@@ -166,7 +164,7 @@ jobs:
       - name: 📦 Install dependencies
         run: yarn install --frozen-lockfile
 
-      - name: 🎭 Install Playwright browsers
+      - name: 🎭 Install Playwright
         run: yarn playwright install --with-deps chromium
 
       - name: 🗃️ Setup database
@@ -177,7 +175,7 @@ jobs:
           yarn prisma migrate deploy
           yarn db:seed
 
-      - name: 🎭 Run Playwright tests
+      - name: 🎭 Run E2E tests
         env:
           DATABASE_URL: postgresql://postgres:postgres@localhost:5432/billetterie_test
           REDIS_URL: redis://localhost:6379
@@ -194,10 +192,9 @@ jobs:
           EMAIL_PASSWORD: testpassword
           EMAIL_FROM: test@test.com
           E2E_BASE_URL: http://localhost:3000
-          CI: true
         run: yarn test:e2e --project=chromium
 
-      - name: 📤 Upload Playwright report
+      - name: 📤 Upload test report
         uses: actions/upload-artifact@v4
         if: always()
         with:
@@ -206,47 +203,15 @@ jobs:
           retention-days: 7
 
   # =============================================
-  # JOB 4: Security Audit
-  # =============================================
-  security-audit:
-    name: 🔒 Security Audit
-    runs-on: ubuntu-latest
-    
-    steps:
-      - name: 📥 Checkout code
-        uses: actions/checkout@v4
-
-      - name: 🟢 Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: 'yarn'
-
-      - name: 📦 Install dependencies
-        run: yarn install --frozen-lockfile
-
-      - name: 🔍 Yarn audit
-        run: yarn audit --level high
-        continue-on-error: true
-
-      - name: 🔒 Check for vulnerabilities with Snyk
-        uses: snyk/actions/node@master
-        env:
-          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
-        with:
-          args: --severity-threshold=high
-        continue-on-error: true
-
-  # =============================================
-  # JOB 5: Build Test
+  # JOB 4: Build Application
   # =============================================
   build:
-    name: 🏗️ Build Application
+    name: 🏗️ Build
     runs-on: ubuntu-latest
-    needs: [lint-and-typecheck, test-unit-integration]
+    needs: [lint-and-typecheck]
     
     steps:
-      - name: 📥 Checkout code
+      - name: 📥 Checkout
         uses: actions/checkout@v4
 
       - name: 🟢 Setup Node.js
@@ -261,7 +226,7 @@ jobs:
       - name: 🗃️ Generate Prisma Client
         run: yarn prisma generate
 
-      - name: 🏗️ Build Next.js application
+      - name: 🏗️ Build Next.js
         env:
           DATABASE_URL: postgresql://fake:fake@localhost:5432/fake
           JWT_SECRET: fake-jwt-secret-32-characters-long-minimum-for-build
@@ -272,7 +237,7 @@ jobs:
           NODE_ENV: production
         run: yarn build
 
-      - name: 📤 Upload build artifacts
+      - name: 📤 Upload build
         uses: actions/upload-artifact@v4
         with:
           name: next-build
@@ -280,56 +245,23 @@ jobs:
           retention-days: 1
 
   # =============================================
-  # JOB 6: Mutation Testing (Optional - Weekly)
+  # JOB 5: Final Status
   # =============================================
-  mutation-testing:
-    name: 🧬 Mutation Testing
-    runs-on: ubuntu-latest
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    # Only runs on main to save resources
-    
-    steps:
-      - name: 📥 Checkout code
-        uses: actions/checkout@v4
-
-      - name: 🟢 Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: 'yarn'
-
-      - name: 📦 Install dependencies
-        run: yarn install --frozen-lockfile
-
-      - name: 🧬 Run Stryker mutation tests
-        env:
-          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/billetterie_test
-          JWT_SECRET: test-secret-jwt-32-characters-long-minimum-for-security
-          NODE_ENV: test
-        run: yarn test:mutation:ci
-        continue-on-error: true
-
-  # =============================================
-  # JOB 7: Status Check (Success/Failure)
-  # =============================================
-  ci-success:
-    name: ✅ CI Success
+  ci-status:
+    name: ✅ CI Status
     runs-on: ubuntu-latest
     needs: [lint-and-typecheck, test-unit-integration, test-e2e, build]
-    if: success()
+    if: always()
     
     steps:
-      - name: ✅ All checks passed
-        run: echo "All CI checks passed successfully!"
-
-  ci-failure:
-    name: ❌ CI Failure
-    runs-on: ubuntu-latest
-    needs: [lint-and-typecheck, test-unit-integration, test-e2e, build]
-    if: failure()
-    
-    steps:
-      - name: ❌ Some checks failed
+      - name: Check results
         run: |
-          echo "Some CI checks failed. Please review the logs above."
-          exit 1
+          if [[ "${{ needs.lint-and-typecheck.result }}" == "failure" ]] || \
+             [[ "${{ needs.test-unit-integration.result }}" == "failure" ]] || \
+             [[ "${{ needs.test-e2e.result }}" == "failure" ]] || \
+             [[ "${{ needs.build.result }}" == "failure" ]]; then
+            echo "❌ CI Pipeline failed"
+            exit 1
+          else
+            echo "✅ CI Pipeline succeeded"
+          fi

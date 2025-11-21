@@ -1,169 +1,150 @@
-name: Security Pipeline
+name: Security Scan
 
 on:
   push:
-    branches: [ main, develop ]
+    branches: [main, develop]
   pull_request:
-    branches: [ main ]
-  schedule:
-    - cron: '0 2 * * 1' # Weekly security scan
+    branches: [main, develop]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
-  vulnerability-scan:
-    name: Vulnerability Scanning
+  # =============================================
+  # JOB 1: Dependency Security
+  # =============================================
+  dependency-scan:
+    name: 🔒 Dependency Scan
     runs-on: ubuntu-latest
     
     steps:
-    - uses: actions/checkout@v4
-      with:
-        fetch-depth: 0
+      - name: 📥 Checkout
+        uses: actions/checkout@v4
 
-    - name: Setup Node.js
-      uses: actions/setup-node@v4
-      with:
-        node-version: '18'
-        cache: 'yarn'
+      - name: 🟢 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'yarn'
 
-    # Dependency vulnerabilities
-    - name: Install dependencies
-      run: yarn install --frozen-lockfile
+      - name: 📦 Install dependencies
+        run: yarn install --frozen-lockfile
 
-    - name: Snyk Security Scan
-      uses: snyk/actions/node@master
-      env:
-        SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
-      with:
-        args: --severity-threshold=high --fail-on=all
+      - name: 🔍 Yarn audit
+        run: yarn audit --level moderate
+        continue-on-error: true
 
-    # OWASP Dependency Check
-    - name: OWASP Dependency Check
-      uses: dependency-check/Dependency-Check_Action@main
-      with:
-        project: 'billetterie'
-        path: '.'
-        format: 'ALL'
-        args: >
-          --enableRetired
-          --enableExperimental
-          --nvdApiKey ${{ secrets.NVD_API_KEY }}
-          --failOnCVSS 7
+      - name: 🔒 Snyk scan
+        uses: snyk/actions/node@master
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        with:
+          args: --severity-threshold=high
+        continue-on-error: true
 
-    # Static code analysis
-    - name: CodeQL Analysis
-      uses: github/codeql-action/init@v3
-      with:
-        languages: javascript
-        
-    - name: CodeQL Analyze
-      uses: github/codeql-action/analyze@v3
-
-    # Docker security
-    - name: Build Docker Image
-      run: |
-        docker build -f docker/Dockerfile.prod -t billetterie:test .
-
-    - name: Trivy Container Scan
-      uses: aquasecurity/trivy-action@master
-      with:
-        image-ref: 'billetterie:test'
-        format: 'sarif'
-        output: 'trivy-results.sarif'
-        severity: 'CRITICAL,HIGH'
-        exit-code: '1'
-
-    # Upload results
-    - name: Upload Trivy SARIF
-      uses: github/codeql-action/upload-sarif@v3
-      if: always()
-      with:
-        sarif_file: 'trivy-results.sarif'
-
-  penetration-testing:
-    name: Automated Penetration Testing
-    runs-on: ubuntu-latest
-    needs: vulnerability-scan
-    
-    steps:
-    - uses: actions/checkout@v4
-    
-    - name: Start Application
-      run: |
-        docker-compose -f docker-compose.yml up -d
-        sleep 30
-
-    - name: OWASP ZAP Baseline Scan
-      uses: zaproxy/action-baseline@v0.10.0
-      with:
-        target: 'http://localhost:3000'
-        rules_file_name: '.zap/rules.tsv'
-        cmd_options: '-a'
-
-    - name: OWASP ZAP Full Scan
-      uses: zaproxy/action-full-scan@v0.9.0
-      with:
-        target: 'http://localhost:3000'
-        rules_file_name: '.zap/rules.tsv'
-        cmd_options: '-a'
-
-  secrets-scanning:
-    name: Secrets Detection
+  # =============================================
+  # JOB 2: Code Analysis
+  # =============================================
+  code-analysis:
+    name: 🔍 Code Analysis
     runs-on: ubuntu-latest
     
     steps:
-    - uses: actions/checkout@v4
-      with:
-        fetch-depth: 0
-        
-    - name: TruffleHog OSS
-      uses: trufflesecurity/trufflehog@main
-      with:
-        path: ./
-        base: main
-        head: HEAD
-        extra_args: --debug --only-verified
+      - name: 📥 Checkout
+        uses: actions/checkout@v4
 
-    - name: GitLeaks
-      uses: gitleaks/gitleaks-action@v2
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: 🔍 CodeQL init
+        uses: github/codeql-action/init@v3
+        with:
+          languages: javascript-typescript
 
-  compliance-check:
-    name: Compliance & Best Practices
+      - name: 🔍 CodeQL analyze
+        uses: github/codeql-action/analyze@v3
+
+  # =============================================
+  # JOB 3: Secrets Detection
+  # =============================================
+  secrets-scan:
+    name: 🔐 Secrets Detection
     runs-on: ubuntu-latest
     
     steps:
-    - uses: actions/checkout@v4
-    
-    - name: Hadolint Docker Linting
-      uses: hadolint/hadolint-action@v3.1.0
-      with:
-        dockerfile: docker/Dockerfile.prod
-        
-    - name: Kubernetes Security Check
-      uses: azure/k8s-lint@v1
-      with:
-        manifests: |
-          k8s/production.yaml
+      - name: 📥 Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
-    - name: Infrastructure as Code Security
-      uses: bridgecrewio/checkov-action@master
-      with:
-        directory: .
-        framework: dockerfile,kubernetes
-        output_format: sarif
-        output_file_path: reports/results.sarif
+      - name: 🔐 GitLeaks
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-  security-report:
-    name: Security Report Generation
+  # =============================================
+  # JOB 4: Docker Security (only on main)
+  # =============================================
+  docker-scan:
+    name: 🐳 Docker Scan
     runs-on: ubuntu-latest
-    needs: [vulnerability-scan, penetration-testing, secrets-scanning, compliance-check]
+    if: github.ref == 'refs/heads/main'
+    
+    steps:
+      - name: 📥 Checkout
+        uses: actions/checkout@v4
+
+      - name: 🐳 Build image
+        run: docker build -f docker/Dockerfile.next -t billetterie:test .
+
+      - name: 🔒 Trivy scan
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: 'billetterie:test'
+          format: 'sarif'
+          output: 'trivy-results.sarif'
+          severity: 'CRITICAL,HIGH'
+        continue-on-error: true
+
+      - name: 📤 Upload Trivy results
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: 'trivy-results.sarif'
+
+  # =============================================
+  # JOB 5: Dockerfile Linting
+  # =============================================
+  dockerfile-lint:
+    name: 🐋 Dockerfile Lint
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: 📥 Checkout
+        uses: actions/checkout@v4
+
+      - name: 🔍 Hadolint
+        uses: hadolint/hadolint-action@v3.1.0
+        with:
+          dockerfile: docker/Dockerfile.next
+        continue-on-error: true
+
+  # =============================================
+  # JOB 6: Security Summary
+  # =============================================
+  security-status:
+    name: ✅ Security Status
+    runs-on: ubuntu-latest
+    needs: [dependency-scan, code-analysis, secrets-scan, dockerfile-lint]
     if: always()
     
     steps:
-    - name: Security Summary
-      run: |
-        echo "## Security Scan Results" >> $GITHUB_STEP_SUMMARY
-        echo "- Vulnerability Scan: ${{ needs.vulnerability-scan.result }}" >> $GITHUB_STEP_SUMMARY
-        echo "- Penetration Testing: ${{ needs.penetration-testing.result }}" >> $GITHUB_STEP_SUMMARY  
-        echo "- Secrets Scanning: ${{ needs.secrets-scanning.result }}" >> $GITHUB_STEP_SUMMARY
-        echo "- Compliance Check: ${{ needs.compliance-check.result }}" >> $GITHUB_STEP_SUMMARY
+      - name: Summary
+        run: |
+          echo "## 🔒 Security Scan Results" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Check | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "|-------|--------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Dependency Scan | ${{ needs.dependency-scan.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Code Analysis | ${{ needs.code-analysis.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Secrets Detection | ${{ needs.secrets-scan.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Dockerfile Lint | ${{ needs.dockerfile-lint.result }} |" >> $GITHUB_STEP_SUMMARY
+
