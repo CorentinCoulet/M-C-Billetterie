@@ -63,11 +63,18 @@ jobs:
     steps:
       - name: 📥 Checkout
         uses: actions/checkout@v4
+        with:
+          # Full history helps CodeQL track alerts across runs
+          fetch-depth: 0
 
       - name: 🔍 CodeQL init
         uses: github/codeql-action/init@v3
         with:
           languages: javascript-typescript
+          # Use the broader set of queries (security + quality) for better coverage
+          queries: security-and-quality
+          # TS/JS analysis doesn't require a build; disable autobuild to avoid flakiness
+          build-mode: none
 
       - name: 🔍 CodeQL analyze
         uses: github/codeql-action/analyze@v3
