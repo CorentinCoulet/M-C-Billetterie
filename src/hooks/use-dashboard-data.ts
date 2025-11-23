@@ -6,7 +6,7 @@ import {
     OrganizerDashboardData,
     UserDashboardData
 } from '@/types/dashboard';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useAuthRole } from './use-auth';
 
 interface UseDashboardDataReturn {
@@ -24,7 +24,7 @@ export function useDashboardData(): UseDashboardDataReturn {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchDashboardData = async () => {
+  const fetchDashboardData = useCallback(async () => {
     if (!isAuthenticated || !user) return;
 
     try {
@@ -62,11 +62,11 @@ export function useDashboardData(): UseDashboardDataReturn {
     } finally {
       setLoading(false);
     }
-  };
+  }, [isAuthenticated, user, role]);
 
   useEffect(() => {
     fetchDashboardData();
-  }, [role, user, isAuthenticated]);
+  }, [fetchDashboardData]);
 
   const refreshData = () => {
     fetchDashboardData();
