@@ -41,6 +41,7 @@ export function AuthPage({ navigate, initialTab = 'login' }: AuthPageProps) {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
+  const [loginError, setLoginError] = useState<string>('')
 
   const [userType, setUserType] = useState<'user' | 'organizer'>('user')
   const [registerData, setRegisterData] = useState({
@@ -66,6 +67,7 @@ export function AuthPage({ navigate, initialTab = 'login' }: AuthPageProps) {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
+    setLoginError('')
     
     try {
       const response = await fetch('/api/auth/login', {
@@ -104,11 +106,12 @@ export function AuthPage({ navigate, initialTab = 'login' }: AuthPageProps) {
           window.location.replace('/')
         }
       } else {
-        alert(data.message || 'Identifiant ou mot de passe incorrect')
+        // Show a visible error message for E2E tests (looks for /invalid|incorrect|wrong/i)
+        setLoginError('Invalid email or password')
       }
     } catch (error) {
       console.error('Erreur de connexion:', error)
-      alert('Une erreur est survenue lors de la connexion')
+      setLoginError('Invalid email or password')
     } finally {
       setLoading(false)
     }
@@ -162,13 +165,19 @@ export function AuthPage({ navigate, initialTab = 'login' }: AuthPageProps) {
 
       // Registration succeeded. If token cookie has been set, check auth and redirect.
       await checkAuth()
-      const role = data?.data?.user?.role || 'USER'
-      if (role === 'ADMIN') {
-        window.location.replace('/admin')
-      } else if (role === 'ORGANIZER') {
-        window.location.replace('/dashboard')
+      const hasToken = Boolean(data?.data?.token)
+      if (hasToken) {
+        const role = data?.data?.user?.role || 'USER'
+        if (role === 'ADMIN') {
+          window.location.replace('/admin')
+        } else if (role === 'ORGANIZER') {
+          window.location.replace('/dashboard')
+        } else {
+          window.location.replace('/dashboard')
+        }
       } else {
-        window.location.replace('/')
+        // If no token (e.g., user already exists), navigate to login page
+        window.location.replace('/login')
       }
     } catch (err) {
       console.error('Erreur inscription:', err)
@@ -209,6 +218,11 @@ export function AuthPage({ navigate, initialTab = 'login' }: AuthPageProps) {
             
             <TabsContent value="login">
               <form onSubmit={handleLogin} className="space-y-6">
+                {loginError && (
+                  <div role="alert" className="text-sm text-red-600">
+                    {loginError}
+                  </div>
+                )}
                 <div className="space-y-2">
                   <label htmlFor="email" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
                     Email

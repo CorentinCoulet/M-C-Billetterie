@@ -123,7 +123,7 @@ export async function middleware(request: NextRequest) {
 
     // If user is already authenticated (token present) and tries to access the login page,
     // redirect them to the intended destination (redirect param) or a sensible default.
-    if (pathname === '/login' && payload) {
+    if ((pathname === '/login' || pathname === '/register') && payload) {
       const url = new URL(request.url);
       const redirect = url.searchParams.get('redirect') || '';
       const safeRedirect = redirect.startsWith('/') && !redirect.startsWith('/api');

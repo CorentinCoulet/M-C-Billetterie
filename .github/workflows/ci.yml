@@ -295,7 +295,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        shard: ["1/3", "2/3", "3/3"]
+        part: [1, 2, 3]
     
     services:
       postgres:
@@ -353,7 +353,7 @@ jobs:
           yarn prisma migrate deploy
           yarn db:seed
 
-      - name: 🎭 Run E2E tests (shard ${{ matrix.shard }})
+      - name: 🎭 Run E2E tests (shard ${{ matrix.part }}/3)
         env:
           DATABASE_URL: postgresql://postgres:postgres@localhost:5432/billetterie_test
           REDIS_URL: redis://localhost:6379
@@ -370,13 +370,13 @@ jobs:
           EMAIL_PASSWORD: testpassword
           EMAIL_FROM: test@test.com
           E2E_BASE_URL: http://localhost:3000
-        run: yarn test:e2e --project=chromium --shard=${{ matrix.shard }}
+        run: yarn test:e2e --project=chromium --shard=${{ matrix.part }}/3
 
-      - name: 📤 Upload test report (shard ${{ matrix.shard }})
+      - name: 📤 Upload test report (shard ${{ matrix.part }}/3)
         uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: playwright-report-${{ matrix.shard }}
+          name: playwright-report-${{ matrix.part }}-of-3
           path: playwright-report/
           retention-days: 7
 
