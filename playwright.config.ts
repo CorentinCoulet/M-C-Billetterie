@@ -78,5 +78,23 @@ export default defineConfig({
     url: 'http://localhost:3000',
     reuseExistingServer: !process.env.CI,
     timeout: 120 * 1000,
+    env: {
+      // Ensure the Next.js dev server uses the same test env as CI so API routes work during E2E
+      DATABASE_URL: process.env.DATABASE_URL || 'postgresql://postgres:postgres@localhost:5432/billetterie_test',
+      REDIS_URL: process.env.REDIS_URL || 'redis://localhost:6379',
+      JWT_SECRET: process.env.JWT_SECRET || 'test-secret-jwt-32-characters-long-minimum-for-security',
+      JWT_REFRESH_SECRET: process.env.JWT_REFRESH_SECRET || 'test-refresh-secret-jwt-32-characters-minimum',
+      NEXTAUTH_SECRET: process.env.NEXTAUTH_SECRET || 'test-nextauth-secret-32-characters-long-for-security',
+      NEXTAUTH_URL: process.env.NEXTAUTH_URL || 'http://localhost:3000',
+      NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000',
+      NODE_ENV: 'test',
+      STRIPE_SECRET_KEY: process.env.STRIPE_SECRET_KEY || 'sk_test_fake_key',
+      STRIPE_WEBHOOK_SECRET: process.env.STRIPE_WEBHOOK_SECRET || 'whsec_test_fake',
+      EMAIL_HOST: process.env.EMAIL_HOST || 'smtp.test.com',
+      EMAIL_PORT: process.env.EMAIL_PORT || '587',
+      EMAIL_USER: process.env.EMAIL_USER || 'test@test.com',
+      EMAIL_PASSWORD: process.env.EMAIL_PASSWORD || 'testpassword',
+      EMAIL_FROM: process.env.EMAIL_FROM || 'test@test.com',
+    }
   },
 });

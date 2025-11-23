@@ -224,5 +224,6 @@ export const config = {
     '/tickets',
     '/orders',
     '/login',
+    '/register',
   ],
 };
