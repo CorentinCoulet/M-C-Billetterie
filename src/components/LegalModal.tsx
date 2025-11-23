@@ -13,9 +13,9 @@ const TermsContent = () => (
     <section>
       <h3 className="text-lg font-semibold mb-3">1. Objet et acceptation</h3>
       <p className="text-sm text-gray-600 mb-3">
-        Les présentes Conditions Générales d'Utilisation (CGU) régissent l'accès et l'utilisation 
-        de la plateforme de billetterie électronique. L'utilisation de nos services implique 
-        l'acceptation pleine et entière de ces conditions. Tout accès ou utilisation de la plateforme 
+        Les présentes Conditions Générales d&#39;Utilisation (CGU) régissent l&#39;accès et l&#39;utilisation 
+        de la plateforme de billetterie électronique. L&#39;utilisation de nos services implique 
+        l&#39;acceptation pleine et entière de ces conditions. Tout accès ou utilisation de la plateforme 
         emporte acceptation expresse et sans réserve des présentes CGU.
       </p>
     </section>
@@ -24,70 +24,70 @@ const TermsContent = () => (
       <h3 className="text-lg font-semibold mb-3">2. Description des services</h3>
       <p className="text-sm text-gray-600 mb-3">
         La plateforme propose un service de billetterie électronique permettant la mise en relation 
-        entre organisateurs d'événements et acheteurs de billets. Nous agissons en qualité 
-        d'intermédiaire technique et commercial.
+        entre organisateurs d&#39;événements et acheteurs de billets. Nous agissons en qualité 
+        d&#39;intermédiaire technique et commercial.
       </p>
       <p className="text-sm text-gray-600 mb-2">Nos services comprennent notamment :</p>
       <ul className="text-sm text-gray-600 list-disc list-inside space-y-1 mb-3">
-        <li>Plateforme de création et de gestion d'événements</li>
+        <li>Plateforme de création et de gestion d&#39;événements</li>
         <li>Système de vente de billets dématérialisés</li>
         <li>Solutions de paiement sécurisées certifiées PCI-DSS</li>
         <li>Génération automatique de billets électroniques avec codes QR uniques</li>
         <li>Système de notifications et de rappels automatisés</li>
-        <li>Outils de contrôle d'accès et de validation</li>
+        <li>Outils de contrôle d&#39;accès et de validation</li>
         <li>Services de support client</li>
       </ul>
     </section>
 
     <section>
-      <h3 className="text-lg font-semibold mb-3">3. Conditions d'accès et inscription</h3>
+      <h3 className="text-lg font-semibold mb-3">3. Conditions d&#39;accès et inscription</h3>
       <p className="text-sm text-gray-600 mb-3">
-        L'accès aux services nécessite la création d'un compte utilisateur. L'utilisateur garantit 
-        l'exactitude, la sincérité et la mise à jour des informations communiquées. Il est seul 
+        L&#39;accès aux services nécessite la création d&#39;un compte utilisateur. L&#39;utilisateur garantit 
+        l&#39;exactitude, la sincérité et la mise à jour des informations communiquées. Il est seul 
         responsable de la confidentialité de ses identifiants et de toute utilisation de son compte.
       </p>
-      <p className="text-sm text-gray-600 mb-2">L'utilisateur s'engage à :</p>
+      <p className="text-sm text-gray-600 mb-2">L&#39;utilisateur s&#39;engage à :</p>
       <ul className="text-sm text-gray-600 list-disc list-inside space-y-1 mb-3">
         <li>Fournir des informations complètes, exactes et sincères</li>
         <li>Procéder à la mise à jour régulière de ses données personnelles</li>
-        <li>Préserver la confidentialité de ses codes d'accès</li>
+        <li>Préserver la confidentialité de ses codes d&#39;accès</li>
         <li>Signaler immédiatement toute utilisation frauduleuse de son compte</li>
-        <li>Ne créer qu'un seul compte par personne physique ou morale</li>
+        <li>Ne créer qu&#39;un seul compte par personne physique ou morale</li>
       </ul>
     </section>
 
     <section>
-      <h3 className="text-lg font-semibold mb-3">4. Règles d'utilisation et interdictions</h3>
-      <p className="text-sm text-gray-600 mb-2">L'utilisateur s'interdit formellement de :</p>
+      <h3 className="text-lg font-semibold mb-3">4. Règles d&#39;utilisation et interdictions</h3>
+      <p className="text-sm text-gray-600 mb-2">L&#39;utilisateur s&#39;interdit formellement de :</p>
       <ul className="text-sm text-gray-600 list-disc list-inside space-y-1 mb-3">
-        <li>Utiliser la plateforme à des fins illicites ou contraires à l'ordre public</li>
-        <li>Porter atteinte aux droits de tiers ou troubler la tranquillité d'autrui</li>
+        <li>Utiliser la plateforme à des fins illicites ou contraires à l&#39;ordre public</li>
+        <li>Porter atteinte aux droits de tiers ou troubler la tranquillité d&#39;autrui</li>
         <li>Diffuser des contenus illégaux, diffamatoires, discriminatoires ou malveillants</li>
         <li>Compromettre la sécurité ou le fonctionnement de la plateforme</li>
-        <li>Usurper l'identité d'autrui ou créer de faux profils</li>
+        <li>Usurper l&#39;identité d&#39;autrui ou créer de faux profils</li>
         <li>Procéder à des achats spéculatifs ou à la revente non autorisée de billets</li>
         <li>Utiliser des moyens automatisés pour accéder aux services (bots, scripts)</li>
       </ul>
     </section>
 
     <section>
-      <h3 className="text-lg font-semibold mb-3">5. Modalités d'achat et conditions commerciales</h3>
+      <h3 className="text-lg font-semibold mb-3">5. Modalités d&#39;achat et conditions commerciales</h3>
       <p className="text-sm text-gray-600 mb-3">
-        La vente est réputée conclue lors de la validation du paiement et de l'émission du billet électronique. 
+        La vente est réputée conclue lors de la validation du paiement et de l&#39;émission du billet électronique. 
         Les prix sont indiqués en euros, toutes taxes comprises. Les modalités de remboursement, 
-        d'échange ou d'annulation sont définies par l'organisateur de l'événement et précisées 
-        lors de l'achat.
+        d&#39;échange ou d&#39;annulation sont définies par l&#39;organisateur de l&#39;événement et précisées 
+        lors de l&#39;achat.
       </p>
       <p className="text-sm text-gray-600 mb-3">
-        L'acheteur reconnaît que le billet est strictement personnel et nominatif. 
-        Toute revente non autorisée peut entraîner l'annulation du billet sans remboursement.
+        L&#39;acheteur reconnaît que le billet est strictement personnel et nominatif. 
+        Toute revente non autorisée peut entraîner l&#39;annulation du billet sans remboursement.
       </p>
     </section>
 
     <section>
       <h3 className="text-lg font-semibold mb-3">6. Propriété intellectuelle</h3>
       <p className="text-sm text-gray-600 mb-3">
-        L'ensemble des éléments de la plateforme (structure, design, contenus, marques, logos, 
+        L&#39;ensemble des éléments de la plateforme (structure, design, contenus, marques, logos, 
         codes sources) constituent des œuvres protégées par les dispositions du Code de la 
         propriété intellectuelle. Toute reproduction, représentation, modification ou exploitation 
         non expressément autorisée constitue une contrefaçon sanctionnée pénalement.
@@ -104,7 +104,7 @@ const TermsContent = () => (
       </p>
       <p className="text-sm text-gray-600 mb-3">
         Nous ne saurions être tenus responsables des dysfonctionnements imputables aux réseaux 
-        de télécommunications, aux fournisseurs d'accès internet ou à des événements de force majeure.
+        de télécommunications, aux fournisseurs d&#39;accès internet ou à des événements de force majeure.
       </p>
     </section>
 
@@ -113,7 +113,7 @@ const TermsContent = () => (
       <p className="text-sm text-gray-600 mb-3">
         Le traitement des données personnelles est régi par notre Politique de Confidentialité, 
         conforme au Règlement Général sur la Protection des Données (RGPD). Les utilisateurs 
-        disposent de droits d'accès, de rectification, d'effacement et de portabilité sur leurs données.
+        disposent de droits d&#39;accès, de rectification, d&#39;effacement et de portabilité sur leurs données.
       </p>
     </section>
 
@@ -122,7 +122,7 @@ const TermsContent = () => (
       <p className="text-sm text-gray-600 mb-3">
         Nous nous réservons le droit de modifier les présentes conditions à tout moment. 
         Les utilisateurs seront informés de toute modification substantielle par notification. 
-        L'accès aux services peut être suspendu ou résilié en cas de non-respect des présentes conditions.
+        L&#39;accès aux services peut être suspendu ou résilié en cas de non-respect des présentes conditions.
       </p>
     </section>
 
@@ -148,7 +148,7 @@ const PrivacyContent = () => (
     <section>
       <h3 className="text-lg font-semibold mb-3">1. Responsable du traitement et délégué à la protection des données</h3>
       <p className="text-sm text-gray-600 mb-3">
-        La présente Politique de Protection des Données Personnelles a pour objet d'informer les utilisateurs 
+        La présente Politique de Protection des Données Personnelles a pour objet d&#39;informer les utilisateurs 
         des traitements de données personnelles mis en œuvre dans le cadre des services de billetterie électronique, 
         en conformité avec le Règlement Général sur la Protection des Données (RGPD) n°2016/679 
         et la loi Informatique et Libertés modifiée.
@@ -162,12 +162,12 @@ const PrivacyContent = () => (
       <h3 className="text-lg font-semibold mb-3">2. Catégories de données collectées et bases légales</h3>
       
       <div className="mb-4">
-        <h4 className="font-medium text-sm mb-2">Données d'identification et de contact :</h4>
+        <h4 className="font-medium text-sm mb-2">Données d&#39;identification et de contact :</h4>
         <ul className="text-sm text-gray-600 list-disc list-inside space-y-1 mb-2">
           <li>Nom, prénom, pseudonyme</li>
           <li>Adresse de courrier électronique</li>
           <li>Numéro de téléphone mobile</li>
-          <li>Date de naissance (vérification d'âge pour certains événements)</li>
+          <li>Date de naissance (vérification d&#39;âge pour certains événements)</li>
           <li>Adresse postale (facturation et livraison)</li>
         </ul>
         <p className="text-xs text-gray-500 mb-3">
@@ -176,7 +176,7 @@ const PrivacyContent = () => (
       </div>
 
       <div className="mb-4">
-        <h4 className="font-medium text-sm mb-2">Données professionnelles (organisateurs d'événements) :</h4>
+        <h4 className="font-medium text-sm mb-2">Données professionnelles (organisateurs d&#39;événements) :</h4>
         <ul className="text-sm text-gray-600 list-disc list-inside space-y-1 mb-2">
           <li>Dénomination sociale et forme juridique</li>
           <li>Numéro SIRET et code APE</li>
@@ -195,7 +195,7 @@ const PrivacyContent = () => (
         <ul className="text-sm text-gray-600 list-disc list-inside space-y-1 mb-2">
           <li>Données de paiement (cryptées et tokenisées)</li>
           <li>Historique des commandes et factures</li>
-          <li>Préférences d'achat et comportements de consommation</li>
+          <li>Préférences d&#39;achat et comportements de consommation</li>
         </ul>
         <p className="text-xs text-gray-500 mb-3">
           <strong>Base légale :</strong> Exécution du contrat et obligations comptables
@@ -208,7 +208,7 @@ const PrivacyContent = () => (
           <li>Adresses IP et données de géolocalisation approximative</li>
           <li>Identifiants de session et cookies techniques</li>
           <li>Données de navigation (pages consultées, durée de visite)</li>
-          <li>Caractéristiques techniques (navigateur, système d'exploitation)</li>
+          <li>Caractéristiques techniques (navigateur, système d&#39;exploitation)</li>
         </ul>
         <p className="text-xs text-gray-500 mb-3">
           <strong>Base légale :</strong> Intérêt légitime et consentement (cookies non essentiels)
@@ -235,18 +235,18 @@ const PrivacyContent = () => (
       <h3 className="text-lg font-semibond mb-3">4. Vos droits fondamentaux</h3>
       <p className="text-sm text-gray-600 mb-2">Conformément au RGPD, vous bénéficiez des droits suivants :</p>
       <ul className="text-sm text-gray-600 list-disc list-inside space-y-1 mb-3">
-        <li><strong>Droit d'information</strong> sur les traitements (articles 13 et 14)</li>
-        <li><strong>Droit d'accès</strong> aux données vous concernant (article 15)</li>
+        <li><strong>Droit d&#39;information</strong> sur les traitements (articles 13 et 14)</li>
+        <li><strong>Droit d&#39;accès</strong> aux données vous concernant (article 15)</li>
         <li><strong>Droit de rectification</strong> des données inexactes (article 16)</li>
-        <li><strong>Droit à l'effacement</strong> dans les cas prévus par la loi (article 17)</li>
+        <li><strong>Droit à l&#39;effacement</strong> dans les cas prévus par la loi (article 17)</li>
         <li><strong>Droit à la limitation</strong> du traitement (article 18)</li>
         <li><strong>Droit à la portabilité</strong> des données (article 20)</li>
-        <li><strong>Droit d'opposition</strong> au traitement (article 21)</li>
-        <li><strong>Droit de ne pas faire l'objet d'une décision automatisée</strong> (article 22)</li>
+        <li><strong>Droit d&#39;opposition</strong> au traitement (article 21)</li>
+        <li><strong>Droit de ne pas faire l&#39;objet d&#39;une décision automatisée</strong> (article 22)</li>
       </ul>
       <p className="text-sm text-gray-600 mb-3">
-        <strong>Modalités d'exercice :</strong> Demande écrite accompagnée d'une copie de pièce d'identité 
-        à l'adresse : privacy@billetterie.com. Réponse garantie sous 30 jours.
+        <strong>Modalités d&#39;exercice :</strong> Demande écrite accompagnée d&#39;une copie de pièce d&#39;identité 
+        à l&#39;adresse : privacy@billetterie.com. Réponse garantie sous 30 jours.
       </p>
     </section>
 
@@ -255,7 +255,7 @@ const PrivacyContent = () => (
       <div className="mb-3">
         <h4 className="font-medium text-sm mb-2">Données en base active :</h4>
         <ul className="text-sm text-gray-600 list-disc list-inside space-y-1 mb-3">
-          <li><strong>Comptes clients :</strong> Jusqu'à suppression du compte + 3 ans</li>
+          <li><strong>Comptes clients :</strong> Jusqu&#39;à suppression du compte + 3 ans</li>
           <li><strong>Prospects non clients :</strong> 3 ans à compter du dernier contact</li>
           <li><strong>Données de paiement :</strong> Suppression immédiate après transaction (tokenisation)</li>
         </ul>
@@ -274,9 +274,9 @@ const PrivacyContent = () => (
       <p className="text-sm text-gray-600 mb-2">Nous mettons en œuvre des mesures techniques et organisationnelles appropriées :</p>
       <ul className="text-sm text-gray-600 list-disc list-inside space-y-1 mb-3">
         <li><strong>Chiffrement</strong> SSL/TLS pour tous les échanges de données</li>
-        <li><strong>Authentification forte</strong> et contrôle d'accès par rôles</li>
-        <li><strong>Surveillance continue</strong> et détection d'intrusions</li>
-        <li><strong>Sauvegardes chiffrées</strong> et plans de continuité d'activité</li>
+        <li><strong>Authentification forte</strong> et contrôle d&#39;accès par rôles</li>
+        <li><strong>Surveillance continue</strong> et détection d&#39;intrusions</li>
+        <li><strong>Sauvegardes chiffrées</strong> et plans de continuité d&#39;activité</li>
         <li><strong>Formation du personnel</strong> aux bonnes pratiques RGPD</li>
         <li><strong>Audits de sécurité</strong> réguliers par des tiers certifiés</li>
       </ul>
@@ -287,8 +287,8 @@ const PrivacyContent = () => (
       <p className="text-sm text-gray-600 mb-3">
         Les données personnelles peuvent être transmises à nos sous-traitants techniques 
         (hébergement, paiement, communications) liés par des contrats conformes au RGPD. 
-        Aucun transfert vers un pays tiers à l'Union Européenne n'est effectué sans garanties 
-        appropriées (décision d'adéquation ou clauses contractuelles types).
+        Aucun transfert vers un pays tiers à l&#39;Union Européenne n&#39;est effectué sans garanties 
+        appropriées (décision d&#39;adéquation ou clauses contractuelles types).
       </p>
     </section>
 
@@ -311,7 +311,7 @@ const PrivacyContent = () => (
       </p>
       <p className="text-sm text-gray-600 mb-3">
         <strong>Autorité de contrôle :</strong> En cas de réponse insatisfaisante, vous pouvez 
-        introduire une réclamation auprès de la Commission Nationale de l'Informatique et des Libertés (CNIL) 
+        introduire une réclamation auprès de la Commission Nationale de l&#39;Informatique et des Libertés (CNIL) 
         - www.cnil.fr
       </p>
     </section>
