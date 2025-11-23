@@ -20,7 +20,7 @@ const envSchema = z.object({
   STRIPE_SECRET_KEY: z.string().optional(),
   STRIPE_PUBLISHABLE_KEY: z.string().optional(),
   STRIPE_WEBHOOK_SECRET: z.string().optional(),
-  STRIPE_CURRENCY: z.string().default('eur'),
+  STRIPE_CURRENCY: z.string().default('EUR'),
   
   // Email
   EMAIL_FROM: z.string().default('noreply@billetterie.com'),
@@ -97,7 +97,7 @@ export const CONFIG = {
     SECRET_KEY: env.STRIPE_SECRET_KEY || 'sk_test_your_test_key',
     PUBLIC_KEY: env.STRIPE_PUBLISHABLE_KEY || 'pk_test_your_test_key',
     WEBHOOK_SECRET: env.STRIPE_WEBHOOK_SECRET || 'whsec_your_webhook_secret',
-    CURRENCY: env.STRIPE_CURRENCY,
+    CURRENCY: (env.STRIPE_CURRENCY || 'EUR').toUpperCase(),
     PAYMENT_METHODS: ['card'],
     SUCCESS_URL: `${env.NEXT_PUBLIC_APP_URL}/checkout/success?session_id={CHECKOUT_SESSION_ID}`,
     CANCEL_URL: `${env.NEXT_PUBLIC_APP_URL}/checkout/cancel?session_id={CHECKOUT_SESSION_ID}`,
