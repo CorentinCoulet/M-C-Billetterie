@@ -77,13 +77,46 @@ jobs:
         run: yarn type-check
 
   # =============================================
-  # JOB 2: Unit & Integration Tests
+  # JOB 2A: Unit Tests (no services)
   # =============================================
-  test-unit-integration:
-    name: 🧪 Unit & Integration Tests
+  test-unit:
+    name: 🧪 Unit Tests
     runs-on: ubuntu-latest
     needs: install
-    
+
+    steps:
+      - name: 📥 Checkout
+        uses: actions/checkout@v4
+
+      - name: 🟢 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: 💾 Restore cache
+        uses: actions/cache/restore@v3
+        with:
+          path: |
+            node_modules
+            .yarn/cache
+          key: ${{ runner.os }}-yarn-${{ hashFiles('yarn.lock') }}
+
+      - name: 📦 Ensure dependencies are installed
+        run: yarn install --frozen-lockfile --ignore-engines || yarn install --ignore-engines
+
+      - name: 🧪 Run unit tests
+        env:
+          NODE_ENV: test
+        run: yarn test:unit --ci --watchAll=false
+
+  # =============================================
+  # JOB 2B: Integration Tests (DB/Redis)
+  # =============================================
+  test-integration:
+    name: 🔗 Integration Tests
+    runs-on: ubuntu-latest
+    needs: install
+
     services:
       postgres:
         image: postgres:16-alpine
@@ -136,7 +169,7 @@ jobs:
           yarn prisma generate
           yarn prisma migrate deploy
 
-      - name: 🧪 Run tests with coverage
+      - name: 🧪 Run integration tests
         env:
           DATABASE_URL: postgresql://postgres:postgres@localhost:5432/billetterie_test
           REDIS_URL: redis://localhost:6379
@@ -145,31 +178,124 @@ jobs:
           NEXTAUTH_SECRET: test-nextauth-secret-32-characters-long-for-security
           NEXTAUTH_URL: http://localhost:3000
           NODE_ENV: test
-          STRIPE_SECRET_KEY: sk_test_fake_key
-          STRIPE_WEBHOOK_SECRET: whsec_test_fake
-          EMAIL_HOST: smtp.test.com
-          EMAIL_PORT: 587
-          EMAIL_USER: test@test.com
-          EMAIL_PASSWORD: testpassword
-          EMAIL_FROM: test@test.com
-        run: yarn test:ci
+        run: yarn test:integration --ci --watchAll=false
 
-      - name: 📊 Upload coverage
-        uses: codecov/codecov-action@v4
-        if: always()
+  # =============================================
+  # JOB 2C: API Tests (DB/Redis)
+  # =============================================
+  test-api:
+    name: 🌐 API Tests
+    runs-on: ubuntu-latest
+    needs: install
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: billetterie_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: 📥 Checkout
+        uses: actions/checkout@v4
+
+      - name: 🟢 Setup Node.js
+        uses: actions/setup-node@v4
         with:
-          files: ./coverage/lcov.info
-          flags: unittests
-        continue-on-error: true
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: 💾 Restore cache
+        uses: actions/cache/restore@v3
+        with:
+          path: |
+            node_modules
+            .yarn/cache
+          key: ${{ runner.os }}-yarn-${{ hashFiles('yarn.lock') }}
+
+      - name: 📦 Ensure dependencies are installed
+        run: yarn install --frozen-lockfile --ignore-engines || yarn install --ignore-engines
+
+      - name: 🗃️ Setup database
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/billetterie_test
+        run: |
+          yarn prisma generate
+          yarn prisma migrate deploy
+
+      - name: 🧪 Run API tests
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/billetterie_test
+          REDIS_URL: redis://localhost:6379
+          JWT_SECRET: test-secret-jwt-32-characters-long-minimum-for-security
+          JWT_REFRESH_SECRET: test-refresh-secret-jwt-32-characters-minimum
+          NEXTAUTH_SECRET: test-nextauth-secret-32-characters-long-for-security
+          NEXTAUTH_URL: http://localhost:3000
+          NODE_ENV: test
+        run: yarn test:api --ci --watchAll=false
+
+  # =============================================
+  # JOB 2D: Security Tests (no services needed)
+  # =============================================
+  test-security:
+    name: 🔐 Security Tests
+    runs-on: ubuntu-latest
+    needs: install
+
+    steps:
+      - name: 📥 Checkout
+        uses: actions/checkout@v4
+
+      - name: 🟢 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: 💾 Restore cache
+        uses: actions/cache/restore@v3
+        with:
+          path: |
+            node_modules
+            .yarn/cache
+          key: ${{ runner.os }}-yarn-${{ hashFiles('yarn.lock') }}
+
+      - name: 📦 Ensure dependencies are installed
+        run: yarn install --frozen-lockfile --ignore-engines || yarn install --ignore-engines
+
+      - name: 🧪 Run security tests
+        env:
+          NODE_ENV: test
+        run: npx jest --testPathPattern=tests/security --ci --watchAll=false
 
   # =============================================
   # JOB 3: E2E Tests
   # =============================================
   test-e2e:
-    name: 🎭 E2E Tests
+    name: 🎭 E2E Tests (sharded)
     runs-on: ubuntu-latest
     needs: install
     timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: ["1/3", "2/3", "3/3"]
     
     services:
       postgres:
@@ -227,7 +353,7 @@ jobs:
           yarn prisma migrate deploy
           yarn db:seed
 
-      - name: 🎭 Run E2E tests
+      - name: 🎭 Run E2E tests (shard ${{ matrix.shard }})
         env:
           DATABASE_URL: postgresql://postgres:postgres@localhost:5432/billetterie_test
           REDIS_URL: redis://localhost:6379
@@ -244,13 +370,13 @@ jobs:
           EMAIL_PASSWORD: testpassword
           EMAIL_FROM: test@test.com
           E2E_BASE_URL: http://localhost:3000
-        run: yarn test:e2e --project=chromium
+        run: yarn test:e2e --project=chromium --shard=${{ matrix.shard }}
 
-      - name: 📤 Upload test report
+      - name: 📤 Upload test report (shard ${{ matrix.shard }})
         uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: playwright-report
+          name: playwright-report-${{ matrix.shard }}
           path: playwright-report/
           retention-days: 7
 
@@ -309,18 +435,21 @@ jobs:
   ci-status:
     name: ✅ CI Status
     runs-on: ubuntu-latest
-    needs: [lint-and-typecheck, test-unit-integration, test-e2e, build]
+    needs: [lint-and-typecheck, test-unit, test-integration, test-api, test-security, test-e2e, build]
     if: always()
     
     steps:
       - name: Check results
         run: |
           if [[ "${{ needs.lint-and-typecheck.result }}" == "failure" ]] || \
-             [[ "${{ needs.test-unit-integration.result }}" == "failure" ]] || \
+             [[ "${{ needs.test-unit.result }}" == "failure" ]] || \
+             [[ "${{ needs.test-integration.result }}" == "failure" ]] || \
+             [[ "${{ needs.test-api.result }}" == "failure" ]] || \
+             [[ "${{ needs.test-security.result }}" == "failure" ]] || \
              [[ "${{ needs.test-e2e.result }}" == "failure" ]] || \
              [[ "${{ needs.build.result }}" == "failure" ]]; then
-            echo "❌ CI Pipeline failed"
-            exit 1
+           echo "❌ CI Pipeline failed"
+           exit 1
           else
-            echo "✅ CI Pipeline succeeded"
+           echo "✅ CI Pipeline succeeded"
           fi
