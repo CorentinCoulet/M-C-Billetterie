@@ -276,10 +276,9 @@ export class AuthService {
         return null;
       }
 
-      // Create new token
+      // Create new token using centralized JWT helper
       const payload = { userId: user.id, sessionId: user.sessionId };
-      const options: SignOptions = { expiresIn: JWT_EXPIRES_IN };
-      const newToken = jwt.sign(payload, JWT_SECRET!, options);
+      const newToken = signToken(payload);
 
       return newToken;
     } catch (error) {
