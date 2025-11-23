@@ -92,11 +92,3 @@ async function handleRegister(request: NextRequest) {
 export async function POST(request: NextRequest) {
   return handleRegister(request);
 }
-
-// Export par défaut pour compatibilité avec certains tests (Jest)
-export default async function handler(request: NextRequest) {
-  if (request.method === 'POST') {
-    return handleRegister(request);
-  }
-  return NextApiResponse.error('Method Not Allowed', 405);
-}

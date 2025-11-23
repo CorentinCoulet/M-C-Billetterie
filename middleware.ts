@@ -74,7 +74,9 @@ export async function middleware(request: NextRequest) {
     const isAdminRoute = pathname.startsWith('/admin');
     const isOrganizerRoute = pathname.startsWith('/organizer');
     const isDashboardRoute = pathname.startsWith('/dashboard');
-    const isProtectedRoute = isAdminRoute || isOrganizerRoute || isDashboardRoute;
+    const isTicketsRoute = pathname.startsWith('/tickets');
+    const isOrdersRoute = pathname.startsWith('/orders');
+    const isProtectedRoute = isAdminRoute || isOrganizerRoute || isDashboardRoute || isTicketsRoute || isOrdersRoute;
 
     // If user is already authenticated (token present) and tries to access the login page,
     // redirect them to the intended destination (redirect param) or a sensible default.
@@ -160,6 +162,8 @@ export const config = {
     '/admin/:path*',
     '/organizer/:path*',
     '/dashboard/:path*',
+    '/tickets',
+    '/orders',
     '/login',
   ],
 };

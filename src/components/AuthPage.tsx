@@ -27,6 +27,7 @@ import { PrivacyModal, TermsModal } from './LegalModal'
 
 interface AuthPageProps {
   navigate: (page: string) => void
+  initialTab?: 'login' | 'register'
   currentUser?: any
   users?: any[]
   setUsers?: (users: any[]) => void
@@ -34,7 +35,7 @@ interface AuthPageProps {
   logout?: () => void
 }
 
-export function AuthPage({ navigate }: AuthPageProps) {
+export function AuthPage({ navigate, initialTab = 'login' }: AuthPageProps) {
   const { currentUser, setCurrentUser, logout, checkAuth } = useApp()
   const router = useRouter()
   const [email, setEmail] = useState('')
@@ -43,6 +44,7 @@ export function AuthPage({ navigate }: AuthPageProps) {
 
   const [userType, setUserType] = useState<'user' | 'organizer'>('user')
   const [registerData, setRegisterData] = useState({
+    name: '',
     firstName: '',
     lastName: '',
     email: '',
@@ -134,8 +136,46 @@ export function AuthPage({ navigate }: AuthPageProps) {
       return
     }
     
-    alert('Inscription à venir')
-    setLoading(false)
+    try {
+      const body: any = {
+        email: registerData.email,
+        password: registerData.password,
+        confirmPassword: registerData.confirmPassword,
+      }
+      if (registerData.name && registerData.name.trim().length > 0) {
+        body.name = registerData.name.trim()
+      }
+
+      const res = await fetch('/api/auth/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify(body),
+      })
+      const data = await res.json()
+
+      if (!res.ok || !data?.success) {
+        alert(data?.message || 'Erreur lors de l\'inscription')
+        setLoading(false)
+        return
+      }
+
+      // Registration succeeded. If token cookie has been set, check auth and redirect.
+      await checkAuth()
+      const role = data?.data?.user?.role || 'USER'
+      if (role === 'ADMIN') {
+        window.location.replace('/admin')
+      } else if (role === 'ORGANIZER') {
+        window.location.replace('/dashboard')
+      } else {
+        window.location.replace('/')
+      }
+    } catch (err) {
+      console.error('Erreur inscription:', err)
+      alert('Une erreur est survenue lors de l\'inscription')
+    } finally {
+      setLoading(false)
+    }
   }
 
   const updateRegisterData = (field: string, value: any) => {
@@ -161,7 +201,7 @@ export function AuthPage({ navigate }: AuthPageProps) {
             </CardTitle>
           </CardHeader>
         <CardContent>
-          <Tabs defaultValue="login" className="space-y-4">
+          <Tabs defaultValue={initialTab} className="space-y-4">
             <TabsList className="grid w-full grid-cols-2">
               <TabsTrigger value="login">Connexion</TabsTrigger>
               <TabsTrigger value="register">Inscription</TabsTrigger>
@@ -175,6 +215,7 @@ export function AuthPage({ navigate }: AuthPageProps) {
                   </label>
                   <Input
                     id="email"
+                    name="email"
                     type="email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
@@ -187,11 +228,17 @@ export function AuthPage({ navigate }: AuthPageProps) {
                   </label>
                   <Input
                     id="password"
+                    name="password"
                     type="password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     required
                   />
+                </div>
+                <div className="text-right -mt-2">
+                  <a href="/forgot-password" className="text-sm text-blue-600 hover:text-blue-800">
+                    Forgot password
+                  </a>
                 </div>
                 <Button type="submit" className="w-full glass-button" disabled={loading}>
                   {loading ? 'Connexion...' : 'Se connecter'}
@@ -224,6 +271,54 @@ export function AuthPage({ navigate }: AuthPageProps) {
                 </div>
 
                 <form onSubmit={handleRegister} className="space-y-6">
+                  {/* Champs requis pour les tests E2E */}
+                  <div className="space-y-2">
+                    <label htmlFor="reg_name" className="text-sm font-medium leading-none">Nom complet</label>
+                    <Input
+                      id="reg_name"
+                      name="name"
+                      type="text"
+                      value={registerData.name}
+                      onChange={(e) => updateRegisterData('name', e.target.value)}
+                      placeholder="Votre nom"
+                      required
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label htmlFor="reg_email" className="text-sm font-medium leading-none">Email</label>
+                    <Input
+                      id="reg_email"
+                      name="email"
+                      type="email"
+                      value={registerData.email}
+                      onChange={(e) => updateRegisterData('email', e.target.value)}
+                      required
+                    />
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <label htmlFor="reg_password" className="text-sm font-medium leading-none">Mot de passe</label>
+                      <Input
+                        id="reg_password"
+                        name="password"
+                        type="password"
+                        value={registerData.password}
+                        onChange={(e) => updateRegisterData('password', e.target.value)}
+                        required
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <label htmlFor="reg_confirm" className="text-sm font-medium leading-none">Confirmer le mot de passe</label>
+                      <Input
+                        id="reg_confirm"
+                        name="confirmPassword"
+                        type="password"
+                        value={registerData.confirmPassword}
+                        onChange={(e) => updateRegisterData('confirmPassword', e.target.value)}
+                        required
+                      />
+                    </div>
+                  </div>
                   {/* Informations personnelles */}
                   <div className="space-y-5">
                     <div className="flex items-center gap-2">

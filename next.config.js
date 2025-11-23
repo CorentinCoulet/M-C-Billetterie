@@ -34,8 +34,7 @@ const nextConfig = {
   poweredByHeader: false,
   output: 'standalone',
   
-  // Force webpack bundler instead of turbopack (Next.js 16 requirement)
-  turbopack: false,
+  // Use default bundler selection per Next.js version (remove invalid turbopack flag)
   
   typescript: {
     ignoreBuildErrors: true,

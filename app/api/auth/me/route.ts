@@ -64,14 +64,3 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   return handlePost(request);
 }
-
-// Export par défaut pour compatibilité avec certains tests (Jest)
-export default async function handler(request: NextRequest) {
-  if (request.method === 'GET') {
-    return handleGet(request);
-  }
-  if (request.method === 'POST') {
-    return handlePost(request);
-  }
-  return NextApiResponse.error('Method Not Allowed', 405);
-}

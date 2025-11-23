@@ -13,7 +13,7 @@ const Background = memo(function Background() {
   )
 })
 
-export default function LoginClient() {
+export default function LoginClient({ initialTab }: { initialTab?: 'login' | 'register' }) {
   const router = useRouter()
   const searchParams = useSearchParams()
   const { currentUser, isLoading } = useApp()
@@ -67,7 +67,7 @@ export default function LoginClient() {
   return (
     <>
       <Background />
-      <AuthPage navigate={navigate} />
+      <AuthPage navigate={navigate} initialTab={initialTab} />
     </>
   )
 }
