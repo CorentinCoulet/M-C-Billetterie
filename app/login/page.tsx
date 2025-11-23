@@ -1,9 +1,12 @@
 'use client'
 
 import { useRouter, useSearchParams } from 'next/navigation'
-import { memo, useCallback, useEffect } from 'react'
+import { memo, useCallback, useEffect, Suspense } from 'react'
 import { AuthPage } from '../../src/components/AuthPage'
 import { useApp } from '../../src/context/AppContext'
+
+// Force this page to be dynamic to avoid prerender errors when using client-side navigation hooks
+export const dynamic = 'force-dynamic'
 
 const Background = memo(() => (
   <div className="fixed inset-0 -z-10">
@@ -63,9 +66,9 @@ export default function LoginPage() {
   }, [currentUser, isLoading, router, searchParams])
 
   return (
-    <>
+    <Suspense fallback={null}>
       <Background />
       <AuthPage navigate={navigate} />
-    </>
+    </Suspense>
   )
 }
