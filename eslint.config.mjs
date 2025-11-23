@@ -22,6 +22,9 @@ const eslintConfig = [
       '**/coverage/**',
       '**/.turbo/**',
       '**/out/**',
+      // Ignore generated sources and Prisma client types to avoid lint noise (e.g., no-empty-object-type)
+      '**/src/generated/**',
+      '**/src/generated/prisma/**',
       '**/*.config.js',
       '**/*.config.mjs',
       '**/*.config.ts',
@@ -49,6 +52,8 @@ const eslintConfig = [
       '@typescript-eslint/no-require-imports': 'off',
       '@typescript-eslint/no-unsafe-function-type': 'off',
       '@typescript-eslint/no-namespace': 'off',
+      // Generated Prisma d.ts files frequently use `{}` types; ensure we don't fail CI if any remain
+      '@typescript-eslint/no-empty-object-type': 'off',
       'import/no-anonymous-default-export': 'off',
       'prefer-const': 'off',
     },
