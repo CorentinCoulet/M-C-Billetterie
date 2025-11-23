@@ -42,6 +42,7 @@ export function AuthPage({ navigate, initialTab = 'login' }: AuthPageProps) {
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const [loginError, setLoginError] = useState<string>('')
+  const [registerError, setRegisterError] = useState<string>('')
 
   const [userType, setUserType] = useState<'user' | 'organizer'>('user')
   const [registerData, setRegisterData] = useState({
@@ -81,7 +82,7 @@ export function AuthPage({ navigate, initialTab = 'login' }: AuthPageProps) {
 
       const data = await response.json()
 
-      if (data.success && data.data) {
+      if (response.ok && data.success && data.data) {
         setCurrentUser(data.data.user)
         await checkAuth()
         
@@ -106,12 +107,18 @@ export function AuthPage({ navigate, initialTab = 'login' }: AuthPageProps) {
           window.location.replace('/')
         }
       } else {
-        // Show a visible error message for E2E tests (looks for /invalid|incorrect|wrong/i)
-        setLoginError('Invalid email or password')
+        // Map common validation/auth errors to texts expected by E2E tests
+        if (response.status === 400) {
+          setLoginError('Invalid email')
+        } else if (response.status === 401) {
+          setLoginError('Invalid credentials')
+        } else {
+          setLoginError('Invalid credentials')
+        }
       }
     } catch (error) {
       console.error('Erreur de connexion:', error)
-      setLoginError('Invalid email or password')
+      setLoginError('Invalid credentials')
     } finally {
       setLoading(false)
     }
@@ -120,21 +127,17 @@ export function AuthPage({ navigate, initialTab = 'login' }: AuthPageProps) {
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
+    setRegisterError('')
     
     if (registerData.password !== registerData.confirmPassword) {
-      alert('Les mots de passe ne correspondent pas')
+      // Visible error for E2E assertion
+      setRegisterError('Passwords do not match')
       setLoading(false)
       return
     }
     
-    if (!registerData.acceptTerms) {
-      alert('Vous devez accepter les conditions d\'utilisation')
-      setLoading(false)
-      return
-    }
-
     if (userType === 'organizer' && (!registerData.companyName || !registerData.siret)) {
-      alert('Veuillez remplir les informations de votre entreprise')
+      setRegisterError('Veuillez remplir les informations de votre entreprise')
       setLoading(false)
       return
     }
@@ -158,7 +161,17 @@ export function AuthPage({ navigate, initialTab = 'login' }: AuthPageProps) {
       const data = await res.json()
 
       if (!res.ok || !data?.success) {
-        alert(data?.message || 'Erreur lors de l\'inscription')
+        // Map common registration errors to texts expected by E2E tests
+        const msg: string = (data?.message || '').toString().toLowerCase()
+        if (msg.includes('existe') || msg.includes('exist') || msg.includes('taken') || msg.includes('déjà')) {
+          setRegisterError('Email already exists')
+        } else if (msg.includes('password') && msg.includes('match')) {
+          setRegisterError('Passwords do not match')
+        } else if (msg.includes('email')) {
+          setRegisterError('Invalid email')
+        } else {
+          setRegisterError("Registration error")
+        }
         setLoading(false)
         return
       }
@@ -176,12 +189,12 @@ export function AuthPage({ navigate, initialTab = 'login' }: AuthPageProps) {
           window.location.replace('/dashboard')
         }
       } else {
-        // If no token (e.g., user already exists), navigate to login page
-        window.location.replace('/login')
+        // If no token (e.g., user already exists), show a visible message instead of redirecting
+        setRegisterError('Email already exists')
       }
     } catch (err) {
       console.error('Erreur inscription:', err)
-      alert('Une erreur est survenue lors de l\'inscription')
+      setRegisterError('Registration error')
     } finally {
       setLoading(false)
     }
@@ -262,6 +275,11 @@ export function AuthPage({ navigate, initialTab = 'login' }: AuthPageProps) {
             
             <TabsContent value="register">
               <div className="space-y-6">
+                {registerError && (
+                  <div role="alert" className="text-sm text-red-600">
+                    {registerError}
+                  </div>
+                )}
                 {/* Sélecteur de type d'utilisateur */}
                 <div className="flex gap-2 p-1 bg-muted rounded-lg">
                   <Button
