@@ -51,7 +51,7 @@ export default function AboutPage() {
             <p className="text-muted-foreground leading-relaxed">
               M&C Billetterie a été créé avec une vision simple : rendre la culture accessible à tous. 
               Nous croyons que chacun mérite de vivre des expériences artistiques exceptionnelles, 
-              qu'il s'agisse d'un concert intime, d'un spectacle grandiose ou d'un festival vibrant.
+              qu&#39;il s&#39;agisse d&#39;un concert intime, d&#39;un spectacle grandiose ou d&#39;un festival vibrant.
             </p>
           </div>
 
@@ -82,17 +82,17 @@ export default function AboutPage() {
             <p className="text-muted-foreground leading-relaxed">
               Composée de passionnés de culture et de technologie, notre équipe travaille 
               chaque jour pour vous offrir la meilleure expérience possible. Nous collaborons 
-              étroitement avec les organisateurs d'événements pour vous proposer une sélection 
+              étroitement avec les organisateurs d&#39;événements pour vous proposer une sélection 
               de qualité et vous garantir des moments inoubliables.
             </p>
           </div>
 
           <div className="glass-card rounded-2xl p-8 text-center">
             <h2 className="text-2xl font-bold text-foreground mb-4">
-              Rejoignez l'aventure
+              Rejoignez l&#39;aventure
             </h2>
             <p className="text-muted-foreground mb-6">
-              Découvrez notre sélection d'événements et vivez des expériences uniques.
+              Découvrez notre sélection d&#39;événements et vivez des expériences uniques.
             </p>
             <Button 
               onClick={() => router.push('/events')}

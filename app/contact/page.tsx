@@ -127,7 +127,7 @@ export default function ContactPage() {
             </div>
 
             <div className="glass-card rounded-2xl p-8">
-              <h3 className="text-xl font-semibold text-foreground mb-4">Horaires d'ouverture</h3>
+              <h3 className="text-xl font-semibold text-foreground mb-4">Horaires d&#39;ouverture</h3>
               <div className="space-y-2 text-muted-foreground">
                 <p>Lundi - Vendredi : 9h00 - 18h00</p>
                 <p>Samedi : 10h00 - 16h00</p>

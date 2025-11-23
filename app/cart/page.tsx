@@ -302,7 +302,7 @@ export default function CartPage() {
                     <div className="space-y-3 text-sm text-muted-foreground">
                       <div className="flex items-start space-x-2">
                         <span className="text-primary">✓</span>
-                        <span>Annulation gratuite jusqu'à 24h avant l'événement</span>
+                        <span>Annulation gratuite jusqu&#39;à 24h avant l&#39;événement</span>
                       </div>
                       <div className="flex items-start space-x-2">
                         <span className="text-primary">✓</span>

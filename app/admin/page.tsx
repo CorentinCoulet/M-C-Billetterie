@@ -96,7 +96,7 @@ export default function AdminPage() {
                 <strong>2,847</strong>
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
-                <span>Actifs aujourd'hui:</span>
+                <span>Actifs aujourd&#39;hui:</span>
                 <strong>156</strong>
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
@@ -115,7 +115,7 @@ export default function AdminPage() {
           <div style={{ margin: '1rem 0' }}>
             <div style={{ marginBottom: '1rem' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
-                <span>Revenue aujourd'hui:</span>
+                <span>Revenue aujourd&#39;hui:</span>
                 <strong style={{ color: '#48bb78' }}>1,230€</strong>
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
@@ -185,7 +185,7 @@ export default function AdminPage() {
             </ul>
           </div>
           <div style={{ padding: '0.75rem', background: '#f7fafc', borderRadius: '0.25rem', border: '1px solid #e2e8f0' }}>
-            <strong>Authentification requise:</strong> Bearer Token dans l'en-tête Authorization
+            <strong>Authentification requise:</strong> Bearer Token dans l&#39;en-tête Authorization
           </div>
         </div>
       </section>

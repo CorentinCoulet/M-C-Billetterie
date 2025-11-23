@@ -190,7 +190,7 @@ export default function FAQPage() {
               Vous ne trouvez pas votre réponse ?
             </h2>
             <p className="text-muted-foreground mb-6">
-              Notre équipe de support est là pour vous aider. N'hésitez pas à nous contacter.
+              Notre équipe de support est là pour vous aider. N&#39;hésitez pas à nous contacter.
             </p>
             <button 
               onClick={goToContact}
