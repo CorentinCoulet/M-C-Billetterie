@@ -35,7 +35,7 @@ jobs:
           cache: 'yarn'
 
       - name: 📦 Install dependencies
-        run: yarn install --frozen-lockfile || yarn install
+        run: yarn install --frozen-lockfile --ignore-engines || yarn install --ignore-engines
 
       - name: 🔎 Show tool versions
         run: |
