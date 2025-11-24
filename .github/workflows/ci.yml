@@ -32,7 +32,11 @@ jobs:
           cache: 'yarn'
 
       - name: 📦 Install dependencies
-        run: yarn install --frozen-lockfile --ignore-engines || yarn install --ignore-engines
+        run: |
+          # Try with frozen lockfile first, then allow updates if it fails
+          yarn install --frozen-lockfile --ignore-engines --network-timeout 300000 || \
+          yarn install --ignore-engines --network-timeout 300000 || \
+          (sleep 10 && yarn install --ignore-engines --network-timeout 300000)
 
       - name: 💾 Cache node_modules
         uses: actions/cache/save@v3
@@ -40,7 +44,7 @@ jobs:
           path: |
             node_modules
             .yarn/cache
-          key: ${{ runner.os }}-yarn-${{ hashFiles('yarn.lock') }}
+          key: ${{ runner.os }}-yarn-${{ hashFiles('yarn.lock') }}-v2
 
   # =============================================
   # JOB 1: Lint & Type Check
@@ -65,10 +69,14 @@ jobs:
           path: |
             node_modules
             .yarn/cache
-          key: ${{ runner.os }}-yarn-${{ hashFiles('yarn.lock') }}
+          key: ${{ runner.os }}-yarn-${{ hashFiles('yarn.lock') }}-v2
+          restore-keys: |
+            ${{ runner.os }}-yarn-
 
       - name: 📦 Ensure dependencies are installed
-        run: yarn install --frozen-lockfile --ignore-engines || yarn install --ignore-engines
+        run: |
+          yarn install --ignore-engines --network-timeout 300000 || \
+          (sleep 10 && yarn install --ignore-engines --network-timeout 300000)
 
       - name: 🔍 ESLint
         run: yarn lint
@@ -99,10 +107,14 @@ jobs:
           path: |
             node_modules
             .yarn/cache
-          key: ${{ runner.os }}-yarn-${{ hashFiles('yarn.lock') }}
+          key: ${{ runner.os }}-yarn-${{ hashFiles('yarn.lock') }}-v2
+          restore-keys: |
+            ${{ runner.os }}-yarn-
 
       - name: 📦 Ensure dependencies are installed
-        run: yarn install --frozen-lockfile --ignore-engines || yarn install --ignore-engines
+        run: |
+          yarn install --ignore-engines --network-timeout 300000 || \
+          (sleep 10 && yarn install --ignore-engines --network-timeout 300000)
 
       - name: 🧪 Run unit tests
         env:
@@ -157,10 +169,14 @@ jobs:
           path: |
             node_modules
             .yarn/cache
-          key: ${{ runner.os }}-yarn-${{ hashFiles('yarn.lock') }}
+          key: ${{ runner.os }}-yarn-${{ hashFiles('yarn.lock') }}-v2
+          restore-keys: |
+            ${{ runner.os }}-yarn-
 
       - name: 📦 Ensure dependencies are installed
-        run: yarn install --frozen-lockfile --ignore-engines || yarn install --ignore-engines
+        run: |
+          yarn install --ignore-engines --network-timeout 300000 || \
+          (sleep 10 && yarn install --ignore-engines --network-timeout 300000)
 
       - name: 🗃️ Setup database
         env:
@@ -228,10 +244,14 @@ jobs:
           path: |
             node_modules
             .yarn/cache
-          key: ${{ runner.os }}-yarn-${{ hashFiles('yarn.lock') }}
+          key: ${{ runner.os }}-yarn-${{ hashFiles('yarn.lock') }}-v2
+          restore-keys: |
+            ${{ runner.os }}-yarn-
 
       - name: 📦 Ensure dependencies are installed
-        run: yarn install --frozen-lockfile --ignore-engines || yarn install --ignore-engines
+        run: |
+          yarn install --ignore-engines --network-timeout 300000 || \
+          (sleep 10 && yarn install --ignore-engines --network-timeout 300000)
 
       - name: 🗃️ Setup database
         env:
@@ -299,10 +319,14 @@ jobs:
           path: |
             node_modules
             .yarn/cache
-          key: ${{ runner.os }}-yarn-${{ hashFiles('yarn.lock') }}
+          key: ${{ runner.os }}-yarn-${{ hashFiles('yarn.lock') }}-v2
+          restore-keys: |
+            ${{ runner.os }}-yarn-
 
       - name: 📦 Ensure dependencies are installed
-        run: yarn install --frozen-lockfile --ignore-engines || yarn install --ignore-engines
+        run: |
+          yarn install --ignore-engines --network-timeout 300000 || \
+          (sleep 10 && yarn install --ignore-engines --network-timeout 300000)
 
       - name: 🗃️ Setup database
         env:
@@ -376,10 +400,14 @@ jobs:
           path: |
             node_modules
             .yarn/cache
-          key: ${{ runner.os }}-yarn-${{ hashFiles('yarn.lock') }}
+          key: ${{ runner.os }}-yarn-${{ hashFiles('yarn.lock') }}-v2
+          restore-keys: |
+            ${{ runner.os }}-yarn-
 
       - name: 📦 Ensure dependencies are installed
-        run: yarn install --frozen-lockfile --ignore-engines || yarn install --ignore-engines
+        run: |
+          yarn install --ignore-engines --network-timeout 300000 || \
+          (sleep 10 && yarn install --ignore-engines --network-timeout 300000)
 
       - name: 🎭 Install Playwright Browsers
         run: yarn playwright install --with-deps ${{ matrix.browser }}
@@ -488,10 +516,14 @@ jobs:
           path: |
             node_modules
             .yarn/cache
-          key: ${{ runner.os }}-yarn-${{ hashFiles('yarn.lock') }}
+          key: ${{ runner.os }}-yarn-${{ hashFiles('yarn.lock') }}-v2
+          restore-keys: |
+            ${{ runner.os }}-yarn-
 
       - name: 📦 Ensure dependencies are installed
-        run: yarn install --frozen-lockfile --ignore-engines || yarn install --ignore-engines
+        run: |
+          yarn install --ignore-engines --network-timeout 300000 || \
+          (sleep 10 && yarn install --ignore-engines --network-timeout 300000)
 
       - name: 🗃️ Generate Prisma Client
         run: yarn prisma generate
