@@ -39,7 +39,7 @@ jobs:
           (sleep 10 && yarn install --ignore-engines --network-timeout 300000)
 
       - name: 💾 Cache node_modules
-        uses: actions/cache/save@v3
+        uses: actions/cache/save@v4
         with:
           path: |
             node_modules
@@ -64,7 +64,7 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
 
       - name: 💾 Restore cache
-        uses: actions/cache/restore@v3
+        uses: actions/cache/restore@v4
         with:
           path: |
             node_modules
@@ -102,7 +102,7 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
 
       - name: 💾 Restore cache
-        uses: actions/cache/restore@v3
+        uses: actions/cache/restore@v4
         with:
           path: |
             node_modules
@@ -164,7 +164,7 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
 
       - name: 💾 Restore cache
-        uses: actions/cache/restore@v3
+        uses: actions/cache/restore@v4
         with:
           path: |
             node_modules
@@ -239,7 +239,7 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
 
       - name: 💾 Restore cache
-        uses: actions/cache/restore@v3
+        uses: actions/cache/restore@v4
         with:
           path: |
             node_modules
@@ -314,7 +314,7 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
 
       - name: 💾 Restore cache
-        uses: actions/cache/restore@v3
+        uses: actions/cache/restore@v4
         with:
           path: |
             node_modules
@@ -395,7 +395,7 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
 
       - name: 💾 Restore cache
-        uses: actions/cache/restore@v3
+        uses: actions/cache/restore@v4
         with:
           path: |
             node_modules
@@ -511,7 +511,7 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
 
       - name: 💾 Restore cache
-        uses: actions/cache/restore@v3
+        uses: actions/cache/restore@v4
         with:
           path: |
             node_modules
