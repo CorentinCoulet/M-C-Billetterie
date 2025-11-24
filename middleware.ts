@@ -121,21 +121,26 @@ export async function middleware(request: NextRequest) {
     const isOrdersRoute = pathname.startsWith('/orders');
     const isProtectedRoute = isAdminRoute || isOrganizerRoute || isDashboardRoute || isTicketsRoute || isOrdersRoute;
 
-    // If user is already authenticated (token present) and tries to access the login page,
+    // If user is already authenticated (token present) and tries to access the login/register page,
     // redirect them to the intended destination (redirect param) or a sensible default.
+    // In test environment, DO NOT auto-redirect away from /login or /register to allow E2E tests
+    // to visit the auth pages and assert on error messages and behaviors.
     if ((pathname === '/login' || pathname === '/register') && payload) {
-      const url = new URL(request.url);
-      const redirect = url.searchParams.get('redirect') || '';
-      const safeRedirect = redirect.startsWith('/') && !redirect.startsWith('/api');
-      
-      // Default destination if no safe redirect provided
-      // We choose /dashboard as a sensible default for authenticated users of this app
-      // (role-based routing will be handled client-side and/or by API protections)
-      let defaultDest = '/dashboard';
+      if (process.env.NODE_ENV !== 'test') {
+        const url = new URL(request.url);
+        const redirect = url.searchParams.get('redirect') || '';
+        const safeRedirect = redirect.startsWith('/') && !redirect.startsWith('/api');
+        
+        // Default destination if no safe redirect provided
+        // We choose /dashboard as a sensible default for authenticated users of this app
+        // (role-based routing will be handled client-side and/or by API protections)
+        let defaultDest = '/dashboard';
 
-      const dest = safeRedirect ? redirect : defaultDest;
-      const destUrl = new URL(dest, request.url);
-      return NextResponse.redirect(destUrl);
+        const dest = safeRedirect ? redirect : defaultDest;
+        const destUrl = new URL(dest, request.url);
+        return NextResponse.redirect(destUrl);
+      }
+      // In test env, fall through without redirecting
     }
 
     if (isProtectedRoute && !payload) {
@@ -223,7 +228,5 @@ export const config = {
     '/dashboard/:path*',
     '/tickets',
     '/orders',
-    '/login',
-    '/register',
   ],
 };

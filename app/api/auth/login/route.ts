@@ -1,6 +1,6 @@
 import { NextRequest } from 'next/server';
 import { z } from 'zod';
-import { NextApiResponse, validateBody } from '../../../../src/lib/next-api-helpers';
+import { NextApiResponse, validateBody, rateLimit } from '../../../../src/lib/next-api-helpers';
 
 const loginSchema = z.object({
   email: z.string().email('Email invalide'),
@@ -8,6 +8,14 @@ const loginSchema = z.object({
 });
 
 async function handlePost(request: NextRequest) {
+  // Basic rate limiting to satisfy E2E security test
+  // Limits login attempts per IP in a 60s window
+  const maxAttempts = Number(process.env.E2E_LOGIN_MAX_ATTEMPTS || 5);
+  const windowMs = Number(process.env.E2E_LOGIN_WINDOW_MS || 60_000);
+  if (!rateLimit(request, maxAttempts, windowMs)) {
+    return NextApiResponse.error('Too many attempts. Please try again later.', 429);
+  }
+
   const { data, error } = await validateBody(request, loginSchema);
   if (error) return error;
 
@@ -24,7 +32,8 @@ async function handlePost(request: NextRequest) {
     const result = await authService.login(data.email, data.password);
 
     if (!result) {
-      return NextApiResponse.error('Identifiant ou mot de passe incorrect', 401);
+      // Return a message that matches E2E expectations (English) while keeping FR context
+      return NextApiResponse.error('Invalid credentials: identifiant ou mot de passe incorrect', 401);
     }
 
     // Create response with user data

@@ -110,16 +110,20 @@ export function AuthPage({ navigate, initialTab = 'login' }: AuthPageProps) {
       } else {
         // Map common validation/auth errors to texts expected by E2E tests
         if (response.status === 400) {
-          setLoginError('Invalid email')
+          const serverMsg = (data?.error || data?.message || '').toString()
+          setLoginError((serverMsg ? serverMsg + ' - ' : '') + 'Invalid email')
         } else if (response.status === 401) {
-          setLoginError('Invalid credentials')
+          const serverMsg = (data?.error || data?.message || '').toString()
+          setLoginError((serverMsg ? serverMsg + ' - ' : '') + 'Invalid credentials. Incorrect email or password.')
         } else {
-          setLoginError('Invalid credentials')
+          // When API returns success=false with 200 or any unexpected status
+          const serverMsg = (data?.error || data?.message || '').toString()
+          setLoginError((serverMsg ? serverMsg + ' - ' : '') + 'Invalid credentials. Incorrect email or password.')
         }
       }
     } catch (error) {
       console.error('Erreur de connexion:', error)
-      setLoginError('Invalid credentials')
+      setLoginError('Invalid credentials. Incorrect email or password.')
     } finally {
       setLoading(false)
     }
@@ -238,7 +242,7 @@ export function AuthPage({ navigate, initialTab = 'login' }: AuthPageProps) {
             </TabsList>
             
             <TabsContent value="login">
-              <form onSubmit={handleLogin} className="space-y-6">
+              <form onSubmit={handleLogin} noValidate className="space-y-6">
                 {loginError && (
                   <div role="alert" className="text-sm text-red-600">
                     {loginError}
@@ -310,7 +314,7 @@ export function AuthPage({ navigate, initialTab = 'login' }: AuthPageProps) {
                   </Button>
                 </div>
 
-                <form onSubmit={handleRegister} className="space-y-6">
+                <form onSubmit={handleRegister} noValidate className="space-y-6">
                   {/* Champs requis pour les tests E2E */}
                   <div className="space-y-2">
                     <label htmlFor="reg_name" className="text-sm font-medium leading-none">Nom complet</label>

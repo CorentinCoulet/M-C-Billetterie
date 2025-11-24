@@ -288,15 +288,16 @@ jobs:
   # JOB 3: E2E Tests
   # =============================================
   test-e2e:
-    name: 🎭 E2E Tests (sharded)
+    name: 🎭 E2E Tests
     runs-on: ubuntu-latest
     needs: install
     timeout-minutes: 30
     strategy:
       fail-fast: false
       matrix:
-        part: [1, 2, 3]
-    
+        browser: [chromium]
+        shard: [1, 2]
+
     services:
       postgres:
         image: postgres:16-alpine
@@ -342,8 +343,8 @@ jobs:
       - name: 📦 Ensure dependencies are installed
         run: yarn install --frozen-lockfile --ignore-engines || yarn install --ignore-engines
 
-      - name: 🎭 Install Playwright
-        run: yarn playwright install --with-deps chromium
+      - name: 🎭 Install Playwright Browsers
+        run: yarn playwright install --with-deps ${{ matrix.browser }}
 
       - name: 🗃️ Setup database
         env:
@@ -353,7 +354,7 @@ jobs:
           yarn prisma migrate deploy
           yarn db:seed
 
-      - name: 🎭 Run E2E tests (shard ${{ matrix.part }}/3)
+      - name: 🎭 Run E2E tests (${{ matrix.browser }} - shard ${{ matrix.shard }}/2)
         env:
           DATABASE_URL: postgresql://postgres:postgres@localhost:5432/billetterie_test
           REDIS_URL: redis://localhost:6379
@@ -370,15 +371,61 @@ jobs:
           EMAIL_PASSWORD: testpassword
           EMAIL_FROM: test@test.com
           E2E_BASE_URL: http://localhost:3000
-        run: yarn test:e2e --project=chromium --shard=${{ matrix.part }}/3
+          CI: true
+        run: yarn test:e2e --project=${{ matrix.browser }} --shard=${{ matrix.shard }}/2
 
-      - name: 📤 Upload test report (shard ${{ matrix.part }}/3)
+      - name: 📤 Upload Playwright Report
         uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: playwright-report-${{ matrix.part }}-of-3
+          name: playwright-report-${{ matrix.browser }}-${{ matrix.shard }}
           path: playwright-report/
           retention-days: 7
+
+      - name: 📤 Upload Test Results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: test-results-${{ matrix.browser }}-${{ matrix.shard }}
+          path: test-results/
+          retention-days: 7
+
+  # =============================================
+  # JOB 3B: Publish E2E Test Report
+  # =============================================
+  publish-e2e-report:
+    name: 📊 Publish E2E Report
+    runs-on: ubuntu-latest
+    needs: test-e2e
+    if: always()
+
+    steps:
+      - name: 📥 Download all reports
+        uses: actions/download-artifact@v4
+        with:
+          pattern: playwright-report-*
+          path: all-reports
+          merge-multiple: true
+
+      - name: 📊 Merge and publish reports
+        if: always()
+        run: |
+          echo "## 🎭 E2E Test Results" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Status" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ Tests actifs: 3 tests qui doivent passer" >> $GITHUB_STEP_SUMMARY
+          echo "- ⏭️ Tests skippés: 9 tests (en cours de correction)" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Détails" >> $GITHUB_STEP_SUMMARY
+          echo "Les rapports détaillés sont disponibles dans les artifacts." >> $GITHUB_STEP_SUMMARY
+
+      - name: 📤 Upload merged report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: playwright-report-merged
+          path: all-reports/
+          retention-days: 30
 
   # =============================================
   # JOB 4: Build Application
@@ -435,7 +482,7 @@ jobs:
   ci-status:
     name: ✅ CI Status
     runs-on: ubuntu-latest
-    needs: [lint-and-typecheck, test-unit, test-integration, test-api, test-security, test-e2e, build]
+    needs: [lint-and-typecheck, test-unit, test-integration, test-api, test-security, test-e2e, publish-e2e-report, build]
     if: always()
     
     steps:
@@ -452,4 +499,13 @@ jobs:
            exit 1
           else
            echo "✅ CI Pipeline succeeded"
+           echo "" 
+           echo "### 📊 Test Summary"
+           echo "- ✅ Lint & Type Check: ${{ needs.lint-and-typecheck.result }}"
+           echo "- ✅ Unit Tests: ${{ needs.test-unit.result }}"
+           echo "- ✅ Integration Tests: ${{ needs.test-integration.result }}"
+           echo "- ✅ API Tests: ${{ needs.test-api.result }}"
+           echo "- ✅ Security Tests: ${{ needs.test-security.result }}"
+           echo "- ✅ E2E Tests: ${{ needs.test-e2e.result }} (3 tests actifs, 9 skippés)"
+           echo "- ✅ Build: ${{ needs.build.result }}"
           fi

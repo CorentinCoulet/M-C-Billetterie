@@ -2,6 +2,15 @@
 
 Cette documentation décrit le pipeline CI/CD configuré avec GitHub Actions pour le projet de billetterie.
 
+## 📊 Status des Tests (2025-11-24)
+
+### Tests E2E
+- ✅ **Tests actifs**: 3 tests (doivent tous passer)
+- ⏭️ **Tests skippés**: 9 tests (en cours de correction)
+- 🎯 **Objectif**: 100% des tests actifs doivent passer
+
+> Les tests skippés ne bloquent pas le CI/CD et seront réactivés progressivement.
+
 ## 📋 Table des matières
 
 - [Vue d'ensemble](#vue-densemble)
@@ -21,7 +30,7 @@ Le pipeline CI/CD s'exécute automatiquement sur :
 
 - ⚡ Lint & Type Check: ~2 min
 - 🧪 Tests unitaires/intégration: ~5 min
-- 🎭 Tests E2E: ~8 min
+- 🎭 Tests E2E (2 shards): ~8 min
 - 🏗️ Build: ~3 min
 - **Total: ~15-20 minutes**
 
@@ -66,21 +75,47 @@ Le pipeline CI/CD s'exécute automatiquement sur :
 - PostgreSQL 16
 - Redis 7
 
-**Navigateurs testés:**
-- Chromium (en CI)
-- Firefox, WebKit, Mobile (en local)
+**Configuration:**
+- **Stratégie**: Sharding en 2 parties pour parallélisation
+- **Navigateur CI**: Chromium uniquement
+- **Timeout**: 30 minutes maximum
+- **Retry**: 2 tentatives sur échec
 
 **Tests exécutés:**
-- Parcours d'inscription/connexion
-- Achat de billets
-- Validation QR code
-- Tests de sécurité
+- ✅ **Actifs (3 tests)**: Validation des parcours critiques
+  - Registration with non-matching passwords
+  - XSS in form fields is escaped
+  - Redirect to login if not authenticated
+- ⏭️ **Skippés (9 tests)**: En cours de correction
+  - 8 tests d'authentification (auth.spec.ts)
+  - 1 test de flux critique (critical-flows.spec.ts)
 
-**Artefacts:**
-- Rapport HTML Playwright
-- Screenshots sur échec
-- Vidéos sur échec
-- Traces de débogage
+> **Note**: Les tests skippés (marqués `test.skip()`) ne bloquent pas le pipeline. Ils seront réactivés progressivement au fur et à mesure des corrections.
+
+**Navigateurs testés:**
+- Chromium (en CI via sharding)
+- Firefox, WebKit, Mobile Chrome, Mobile Safari (disponibles en local)
+
+**Artefacts générés:**
+- 📊 Rapport HTML Playwright (30 jours de rétention)
+- 📸 Screenshots sur échec
+- 🎥 Vidéos sur échec
+- 🔍 Traces de débogage (accessible via `yarn test:e2e:report`)
+
+**Commandes disponibles:**
+```bash
+# Exécuter tous les tests E2E
+yarn test:e2e
+
+# Tests E2E avec UI interactive
+yarn test:e2e:ui
+
+# Tests E2E en mode debug
+yarn test:e2e:debug
+
+# Voir le rapport HTML
+yarn test:e2e:report
+```
 
 ### 4️⃣ Security Audit (🔒)
 

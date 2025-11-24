@@ -88,6 +88,7 @@ export default defineConfig({
       NEXTAUTH_URL: process.env.NEXTAUTH_URL || 'http://localhost:3000',
       NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000',
       NODE_ENV: 'test',
+      NEXT_PUBLIC_E2E: '1',
       STRIPE_SECRET_KEY: process.env.STRIPE_SECRET_KEY || 'sk_test_fake_key',
       STRIPE_WEBHOOK_SECRET: process.env.STRIPE_WEBHOOK_SECRET || 'whsec_test_fake',
       EMAIL_HOST: process.env.EMAIL_HOST || 'smtp.test.com',
@@ -95,6 +96,9 @@ export default defineConfig({
       EMAIL_USER: process.env.EMAIL_USER || 'test@test.com',
       EMAIL_PASSWORD: process.env.EMAIL_PASSWORD || 'testpassword',
       EMAIL_FROM: process.env.EMAIL_FROM || 'test@test.com',
+      SEED_ADMIN_PASSWORD: process.env.SEED_ADMIN_PASSWORD || 'AdminDemo123!',
+      SEED_ORGANIZER_PASSWORD: process.env.SEED_ORGANIZER_PASSWORD || 'OrganizerDemo123!',
+      SEED_USER_PASSWORD: process.env.SEED_USER_PASSWORD || 'UserDemo123!',
     }
   },
 });
