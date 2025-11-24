@@ -1,22 +1,40 @@
 import Stripe from 'stripe';
 
-// Initialize Stripe with API key from environment variables
-const stripeSecretKey = process.env.STRIPE_SECRET_KEY;
-
-if (!stripeSecretKey) {
-  console.warn('STRIPE_SECRET_KEY is not defined in environment variables. Stripe functionality will not work correctly.');
-}
+// Lazy initialization to avoid build-time errors
+let stripeInstance: Stripe | null = null;
 
 /**
- * Stripe client instance
+ * Get Stripe client instance (lazy initialization)
  */
-export const stripe = new Stripe(stripeSecretKey || 'dummy_key_for_development', {
-  apiVersion: '2025-08-27.basil', // Use the supported API version
-  appInfo: {
-    name: process.env.APP_NAME || 'Billetterie',
-    version: '1.0.0',
-  },
-  typescript: true,
+export const getStripeInstance = (): Stripe => {
+  if (!stripeInstance) {
+    const stripeSecretKey = process.env.STRIPE_SECRET_KEY;
+
+    if (!stripeSecretKey) {
+      console.warn('STRIPE_SECRET_KEY is not defined in environment variables. Stripe functionality will not work correctly.');
+    }
+
+    stripeInstance = new Stripe(stripeSecretKey || 'dummy_key_for_development', {
+      apiVersion: '2025-08-27.basil', // Use the supported API version
+      appInfo: {
+        name: process.env.APP_NAME || 'Billetterie',
+        version: '1.0.0',
+      },
+      typescript: true,
+    });
+  }
+
+  return stripeInstance;
+};
+
+/**
+ * Stripe client instance (legacy export for backward compatibility)
+ * @deprecated Use getStripeInstance() instead
+ */
+export const stripe = new Proxy({} as Stripe, {
+  get(_target, prop) {
+    return (getStripeInstance() as any)[prop];
+  }
 });
 
 /**
