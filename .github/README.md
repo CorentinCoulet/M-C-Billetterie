@@ -117,9 +117,36 @@ yarn test:e2e:debug
 yarn test:e2e:report
 ```
 
-### 4️⃣ Security Audit (🔒)
+### 4️⃣ Security Tests (🔐)
 
-**Objectif:** Détecter les vulnérabilités de sécurité
+**Objectif:** Vérifier la sécurité de l'application
+
+**Services:**
+- PostgreSQL 16
+- Redis 7
+
+**Tests exécutés:**
+- Tests de sécurité de base (`tests/security/basic-security.test.ts`)
+- Tests de sécurité avancés (`tests/security/advanced-security.test.ts`)
+- Tests de sécurité complets (`tests/security/security.test.ts`)
+
+**Validations:**
+- Protection contre les injections SQL
+- Protection XSS
+- Validation des tokens JWT
+- Rate limiting
+- Validation des entrées utilisateur
+- Sécurité des uploads de fichiers
+- Headers de sécurité
+- Protection CSRF
+
+**Échoue si:**
+- Vulnérabilités détectées
+- Tests de sécurité échouent
+
+### 5️⃣ Security Audit (🔒)
+
+**Objectif:** Détecter les vulnérabilités de sécurité dans les dépendances
 
 **Outils:**
 - `yarn audit` - Audit des dépendances npm
@@ -127,7 +154,7 @@ yarn test:e2e:report
 
 **Seuil:** Vulnérabilités `high` et `critical` uniquement
 
-### 5️⃣ Build Test (🏗️)
+### 6️⃣ Build Test (🏗️)
 
 **Objectif:** S'assurer que l'application se construit correctement
 
@@ -142,7 +169,7 @@ yarn test:e2e:report
 - Bundle trop volumineux
 - Dépendances manquantes
 
-### 6️⃣ Mutation Testing (🧬)
+### 7️⃣ Mutation Testing (🧬)
 
 **Objectif:** Vérifier la qualité des tests avec Stryker
 
@@ -152,7 +179,7 @@ yarn test:e2e:report
 - Stryker Mutator
 - Minimum 80% mutation score
 
-### 7️⃣ Status Check (✅/❌)
+### 8️⃣ Status Check (✅/❌)
 
 **Objectif:** Synthèse finale du pipeline
 

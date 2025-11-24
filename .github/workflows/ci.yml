@@ -252,12 +252,37 @@ jobs:
         run: yarn test:api --ci --watchAll=false
 
   # =============================================
-  # JOB 2D: Security Tests (no services needed)
+  # JOB 2D: Security Tests (with DB/Redis)
   # =============================================
   test-security:
     name: 🔐 Security Tests
     runs-on: ubuntu-latest
     needs: install
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: billetterie_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
 
     steps:
       - name: 📥 Checkout
@@ -279,8 +304,21 @@ jobs:
       - name: 📦 Ensure dependencies are installed
         run: yarn install --frozen-lockfile --ignore-engines || yarn install --ignore-engines
 
+      - name: 🗃️ Setup database
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/billetterie_test
+        run: |
+          yarn prisma generate
+          yarn prisma migrate deploy
+
       - name: 🧪 Run security tests
         env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/billetterie_test
+          REDIS_URL: redis://localhost:6379
+          JWT_SECRET: test-secret-jwt-32-characters-long-minimum-for-security
+          JWT_REFRESH_SECRET: test-refresh-secret-jwt-32-characters-minimum
+          NEXTAUTH_SECRET: test-nextauth-secret-32-characters-long-for-security
+          NEXTAUTH_URL: http://localhost:3000
           NODE_ENV: test
         run: npx jest --testPathPattern=tests/security --ci --watchAll=false
 
