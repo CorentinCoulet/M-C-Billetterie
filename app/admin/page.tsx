@@ -297,8 +297,13 @@ export default function AdminPage() {
                 <strong>{stats?.totalUsers?.toLocaleString('fr-FR') || 0}</strong>
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
+<<<<<<< HEAD
                 <span>Commandes totales:</span>
                 <strong>{stats?.totalOrders?.toLocaleString('fr-FR') || 0}</strong>
+=======
+                <span>Actifs aujourd&#39;hui:</span>
+                <strong>156</strong>
+>>>>>>> 069eccfa942d1345a0fef406bd77c05b8e50ce7d
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
                 <span>Billets actifs:</span>
@@ -320,8 +325,13 @@ export default function AdminPage() {
           <div style={{ margin: '1rem 0' }}>
             <div style={{ marginBottom: '1rem' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
+<<<<<<< HEAD
                 <span>Revenue total:</span>
                 <strong style={{ color: '#48bb78' }}>{formatCurrency(stats?.totalRevenue || 0)}</strong>
+=======
+                <span>Revenue aujourd&#39;hui:</span>
+                <strong style={{ color: '#48bb78' }}>1,230€</strong>
+>>>>>>> 069eccfa942d1345a0fef406bd77c05b8e50ce7d
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
                 <span>Transactions:</span>
@@ -455,7 +465,7 @@ export default function AdminPage() {
             </ul>
           </div>
           <div style={{ padding: '0.75rem', background: '#f7fafc', borderRadius: '0.25rem', border: '1px solid #e2e8f0' }}>
-            <strong>Authentification requise:</strong> Bearer Token dans l'en-tête Authorization
+            <strong>Authentification requise:</strong> Bearer Token dans l&#39;en-tête Authorization
           </div>
         </div>
       </section>

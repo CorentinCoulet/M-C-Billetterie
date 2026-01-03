@@ -2,6 +2,31 @@
 
 This folder contains the End-to-End (E2E) tests for the ticketing application, using Playwright.
 
+## 📊 Current Test Status (2025-11-24)
+
+### ✅ Active Tests (3)
+- `registration with non-matching passwords` - Validates password matching
+- `XSS in form fields is escaped` - Security validation
+- `redirect to login if not authenticated` - Protected routes
+
+### ⏭️ Skipped Tests (9)
+These tests are temporarily disabled while features are being developed/fixed:
+
+**auth.spec.ts** (8 tests):
+- `registration with existing email shows error`
+- `login with valid credentials`
+- `login with invalid email`
+- `login with incorrect password`
+- `logout works correctly`
+- `forgot password sends reset email`
+- `accessing protected page without auth redirects to login`
+- `multiple failed login attempts trigger rate limiting`
+
+**critical-flows.spec.ts** (1 test):
+- `login with invalid credentials shows error`
+
+> 💡 **Note**: Skipped tests will be re-enabled progressively as the corresponding features are fixed.
+
 ## 📋 Table of Contents
 
 - [Test Structure](#test-structure)
@@ -298,87 +323,290 @@ await page.pause(); // Opens Playwright inspector
 DEBUG=pw:api yarn test:e2e
 ```
 
-## 🎯 Critical Tests to Write
+# 🧪 Tests E2E - Guide Complet
 
-### ✅ Already Implemented
+Ce guide explique comment configurer et exécuter les tests End-to-End (E2E) avec Playwright.
 
-- ✅ Registration → Login → Purchase → Ticket Reception
-- ✅ Authentication (login, logout, forgot password)
-- ✅ Auth security (rate limiting, XSS, session)
+## 📋 Prérequis
 
-### 🔜 To Implement
+### Services requis
+- ✅ **PostgreSQL** : Base de données
+- ✅ **Redis** : Cache (optionnel mais recommandé)
+- ✅ **Node.js** : v18 ou supérieur
+- ✅ **Yarn** : Gestionnaire de paquets
 
-- [ ] QR code validation by organizer
-- [ ] Order refund
-- [ ] Multi-event management
-- [ ] Multiple shopping cart
-- [ ] Email notifications
-- [ ] User profile
-- [ ] Organizer dashboard
-
-## 📊 Reports
-
-Test reports are generated in:
-- `playwright-report/` - Interactive HTML report
-- `playwright-report/results.json` - JSON results
-
-To view the report:
-
+### Installation rapide des services (Ubuntu/WSL)
 ```bash
+# PostgreSQL
+sudo apt update
+sudo apt install postgresql postgresql-contrib
+
+# Redis
+sudo apt install redis-server
+
+# Démarrer les services
+sudo service postgresql start
+sudo service redis-server start
+```
+
+## 🚀 Configuration Rapide (3 étapes)
+
+### Étape 1 : Créer la base de données de test
+```bash
+# Se connecter à PostgreSQL
+sudo -u postgres psql
+
+# Créer la base de données
+CREATE DATABASE billetterie_test;
+
+# Quitter
+\q
+```
+
+### Étape 2 : Lancer le script de setup
+```bash
+# Rendre le script exécutable
+chmod +x scripts/testing/setup-e2e.sh
+
+# Lancer le setup
+./scripts/testing/setup-e2e.sh
+```
+
+Ce script va :
+- ✅ Vérifier tous les prérequis
+- ✅ Créer/vérifier la base de données
+- ✅ Installer les dépendances
+- ✅ Générer le client Prisma
+- ✅ Appliquer les migrations
+- ✅ Seed les données de test
+
+### Étape 3 : Lancer les tests
+```bash
+# Tous les tests
+yarn test:e2e
+
+# Mode UI interactif (recommandé pour le développement)
+yarn test:e2e:ui
+
+# Avec navigateur visible
+yarn test:e2e:headed
+
+# Mode debug
+yarn test:e2e:debug
+
+# Un seul navigateur (plus rapide)
+yarn test:e2e:chromium
+```
+
+## 📝 Configuration Manuelle (Alternative)
+
+Si le script automatique ne fonctionne pas, voici les étapes manuelles :
+
+### 1. Créer le fichier `.env.test`
+Le fichier existe déjà à la racine du projet. Vérifiez qu'il contient :
+```env
+NODE_ENV=test
+DATABASE_URL=postgresql://postgres:postgres@localhost:5432/billetterie_test
+REDIS_URL=redis://localhost:6379
+JWT_SECRET=test-secret-jwt-32-characters-long-minimum-for-security
+# ... (voir le fichier complet)
+```
+
+### 2. Créer la base de données
+```bash
+sudo -u postgres psql -c "CREATE DATABASE billetterie_test;"
+```
+
+### 3. Installer les dépendances
+```bash
+yarn install
+npx playwright install chromium
+```
+
+### 4. Configurer Prisma
+```bash
+yarn db:generate
+DATABASE_URL="postgresql://postgres:postgres@localhost:5432/billetterie_test" yarn db:migrate:deploy
+```
+
+### 5. Seed les données
+```bash
+DATABASE_URL="postgresql://postgres:postgres@localhost:5432/billetterie_test" yarn db:seed
+```
+
+## 🔍 Vérification de l'environnement
+
+### Vérifier que tout fonctionne
+```bash
+# PostgreSQL
+pg_isready -h localhost -p 5432
+
+# Redis
+redis-cli ping
+
+# Base de données existe
+psql -U postgres -c "\l" | grep billetterie_test
+```
+
+## 🐛 Résolution des problèmes
+
+### Problème : "PostgreSQL n'est pas démarré"
+```bash
+sudo service postgresql start
+sudo service postgresql status
+```
+
+### Problème : "Base de données n'existe pas"
+```bash
+# Supprimer et recréer
+sudo -u postgres psql -c "DROP DATABASE IF EXISTS billetterie_test;"
+sudo -u postgres psql -c "CREATE DATABASE billetterie_test;"
+
+# Réappliquer les migrations
+DATABASE_URL="postgresql://postgres:postgres@localhost:5432/billetterie_test" yarn db:migrate:deploy
+```
+
+### Problème : "Timeout lors des tests"
+Le serveur Next.js ne démarre peut-être pas correctement. Vérifiez :
+```bash
+# Lancer manuellement le serveur avec l'env de test
+export $(grep -v '^#' .env.test | xargs)
+yarn dev
+
+# Dans un autre terminal, lancer les tests
+yarn test:e2e
+```
+
+### Problème : "Error: Cannot find module '@prisma/client'"
+```bash
+yarn db:generate
+```
+
+### Problème : "Navigateurs Playwright non installés"
+```bash
+npx playwright install chromium
+```
+
+## 📊 Structure des tests
+
+```
+tests/e2e/
+├── auth.spec.ts          # Tests d'authentification
+├── events.spec.ts        # Tests des événements
+├── tickets.spec.ts       # Tests de billetterie
+├── global-setup.ts       # Configuration globale
+└── README.md            # Ce fichier
+```
+
+## 🎯 Commandes utiles
+
+### Développement
+```bash
+# Mode interactif (meilleur pour débugger)
+yarn test:e2e:ui
+
+# Avec navigateur visible
+yarn test:e2e:headed
+
+# Un test spécifique
+yarn test:e2e -g "registration with valid data"
+
+# Un fichier spécifique
+yarn test:e2e tests/e2e/auth.spec.ts
+```
+
+### Debugging
+```bash
+# Mode debug avec pause
+yarn test:e2e:debug
+
+# Voir les rapports
 yarn test:e2e:report
+
+# Générer des traces
+yarn test:e2e --trace on
 ```
 
-## 🔧 Configuration
-
-Configuration is in `playwright.config.ts`:
-
-- **Browsers**: Chromium, Firefox, WebKit + Mobile
-- **Base URL**: `http://localhost:3000`
-- **Retry**: 2 times on CI, 0 locally
-- **Traces**: Enabled on failure
-- **Screenshots**: On failure only
-- **Video**: Kept on failure
-
-## 🚨 Troubleshooting
-
-### "Browser not installed" Error
-
+### Nettoyage
 ```bash
-yarn playwright install
+# Nettoyer la base de test
+DATABASE_URL="postgresql://postgres:postgres@localhost:5432/billetterie_test" yarn db:clean
+
+# Re-seed
+DATABASE_URL="postgresql://postgres:postgres@localhost:5432/billetterie_test" yarn db:seed
+
+# Reset complet
+DATABASE_URL="postgresql://postgres:postgres@localhost:5432/billetterie_test" yarn db:reset
 ```
 
-### Test Timeout
+## 🔐 Données de test disponibles
 
-Increase timeout in test:
+Après le seed, vous avez accès à ces comptes de test :
 
-```typescript
-test('my test', async ({ page }) => {
-  test.setTimeout(60000); // 60 seconds
-  // ...
-});
+### Administrateur
+| Email | Password | Role |
+|-------|----------|------|
+| admin@demo.com | AdminDemo123! | ADMIN |
+
+### Organisateurs  
+| Email | Password | Role |
+|-------|----------|------|
+| music.events@demo.com | OrganizerDemo123! | ORGANIZER |
+| sports.manager@demo.com | OrganizerDemo123! | ORGANIZER |
+| tech.conferences@demo.com | OrganizerDemo123! | ORGANIZER |
+| culture.events@demo.com | OrganizerDemo123! | ORGANIZER |
+
+### Utilisateurs
+| Email | Password | Role |
+|-------|----------|------|
+| alice.martin@demo.com | UserDemo123! | USER |
+| bob.dubois@demo.com | UserDemo123! | USER |
+| claire.bernard@demo.com | UserDemo123! | USER |
+| david.petit@demo.com | UserDemo123! | USER |
+| emma.durand@demo.com | UserDemo123! | USER |
+
+📝 **Voir le détail complet** : [TEST_ACCOUNTS.md](./TEST_ACCOUNTS.md)
+
+## 📈 Configuration CI/CD
+
+Pour les tests en CI (GitHub Actions, GitLab CI, etc.) :
+
+```yaml
+# .github/workflows/e2e-tests.yml
+- name: Setup Database
+  run: |
+    sudo systemctl start postgresql
+    sudo -u postgres psql -c "CREATE DATABASE billetterie_test;"
+    
+- name: Run migrations
+  run: DATABASE_URL="postgresql://postgres:postgres@localhost:5432/billetterie_test" yarn db:migrate:deploy
+  
+- name: Run E2E tests
+  run: yarn test:e2e
 ```
 
-### Flaky Tests
+## 💡 Bonnes pratiques
 
-- Use explicit waits with `expect().toBeVisible()`
-- Avoid `waitForTimeout()`
-- Add `waitForLoadState('networkidle')`
+1. **Toujours utiliser des emails uniques** avec timestamp dans les tests
+2. **Nettoyer après les tests** si nécessaire
+3. **Utiliser le mode UI** pour développer de nouveaux tests
+4. **Augmenter les timeouts** si le serveur est lent
+5. **Vérifier les screenshots** en cas d'échec
 
-### Dev Server Won't Start
+## 📚 Documentation
 
-Check if port 3000 is free:
+- [Playwright Documentation](https://playwright.dev)
+- [Guide de tests E2E](../../docs/TESTING_GUIDE.md)
+- [API Documentation](../../docs/API_DOCUMENTATION.md)
 
-```bash
-netstat -ano | findstr :3000
-```
+## ✅ Checklist avant de lancer les tests
 
-## 📚 Resources
+- [ ] PostgreSQL est démarré
+- [ ] Redis est démarré (optionnel)
+- [ ] La base `billetterie_test` existe
+- [ ] Le fichier `.env.test` est présent
+- [ ] Les migrations sont appliquées
+- [ ] Les dépendances sont installées
+- [ ] Les navigateurs Playwright sont installés
 
-- [Playwright Documentation](https://playwright.dev/)
-- [Best Practices](https://playwright.dev/docs/best-practices)
-- [Debugging](https://playwright.dev/docs/debug)
-- [Selectors](https://playwright.dev/docs/selectors)
-
----
-
-**Note**: These E2E tests are designed to validate critical application flows. They complement existing unit and integration tests.
+Si tout est ✅, lancez simplement : `yarn test:e2e` 🚀

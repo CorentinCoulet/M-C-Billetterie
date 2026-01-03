@@ -119,3 +119,7 @@ export const getTestPrisma = () => getSharedMockPrisma();
 // For compatibility, also export as a getter
 export const testPrisma = getSharedMockPrisma();
 
+// Automatically run setup for all Jest tests
+// This ensures environment variables and mocks are initialized before any test runs
+setupTests();
+

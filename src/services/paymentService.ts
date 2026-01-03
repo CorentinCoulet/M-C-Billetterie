@@ -31,10 +31,20 @@ type PaymentStatistics = {
   totalRevenue: number;
 }
 
-// Initialize Stripe with the latest API version
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', {
-  apiVersion: '2025-08-27.basil', // Use supported API version
-});
+// Lazy initialization of Stripe to avoid build-time errors
+let stripeInstance: Stripe | null = null;
+const getStripe = () => {
+  if (!stripeInstance) {
+    const secretKey = process.env.STRIPE_SECRET_KEY;
+    if (!secretKey) {
+      throw new Error('STRIPE_SECRET_KEY is not configured');
+    }
+    stripeInstance = new Stripe(secretKey, {
+      apiVersion: '2025-08-27.basil', // Use supported API version
+    });
+  }
+  return stripeInstance;
+};
 
 /**
  * Service for payment processing operations
@@ -136,7 +146,7 @@ export class PaymentService {
     });
 
     // Create a payment intent with Stripe
-    const paymentIntent = await stripe.paymentIntents.create({
+    const paymentIntent = await getStripe().paymentIntents.create({
       amount: Math.round(order.totalPrice * 100), // Stripe expects amount in cents
       currency: 'eur',
       metadata: {
@@ -164,7 +174,7 @@ export class PaymentService {
 
   async processSuccessfulPayment(paymentIntentId: string): Promise<PaymentWithRelations> {
     // Retrieve the payment intent from Stripe first
-    const paymentIntent = await stripe.paymentIntents.retrieve(paymentIntentId);
+    const paymentIntent = await getStripe().paymentIntents.retrieve(paymentIntentId);
 
     if (paymentIntent.status !== 'succeeded') {
       throw new Error('Payment has not succeeded');
@@ -278,7 +288,7 @@ export class PaymentService {
    */
   async handleFailedPayment(paymentIntentId: string, error?: string): Promise<PaymentWithRelations> {
     // Retrieve the payment intent from Stripe
-    const paymentIntent = await stripe.paymentIntents.retrieve(paymentIntentId);
+    const paymentIntent = await getStripe().paymentIntents.retrieve(paymentIntentId);
 
     const paymentId = paymentIntent.metadata.paymentId;
     const orderId = paymentIntent.metadata.orderId;

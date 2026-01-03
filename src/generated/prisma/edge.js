@@ -444,7 +444,7 @@ const config = {
       "value": "prisma-client-js"
     },
     "output": {
-      "value": "/app/src/generated/prisma",
+      "value": "F:\\projets persos\\billetterie project\\billetterie-complete\\src\\generated\\prisma",
       "fromEnvVar": null
     },
     "config": {
@@ -453,12 +453,12 @@ const config = {
     "binaryTargets": [
       {
         "fromEnvVar": null,
-        "value": "linux-musl-openssl-3.0.x",
+        "value": "windows",
         "native": true
       }
     ],
     "previewFeatures": [],
-    "sourceFilePath": "/app/prisma/schema.prisma",
+    "sourceFilePath": "F:\\projets persos\\billetterie project\\billetterie-complete\\prisma\\schema.prisma",
     "isCustomOutput": true
   },
   "relativeEnvPaths": {

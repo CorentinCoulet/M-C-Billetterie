@@ -42,7 +42,9 @@ const nextConfig = {
     ignoreDuringBuilds: true,
   },
   
-  serverExternalPackages: ['jsonwebtoken', 'ioredis', 'redis', 'bcryptjs', 'nodemailer'],
+  // Externalize certain server-only packages so webpack doesn't attempt to bundle them.
+  // This avoids issues like "require.extensions is not supported by webpack" (e.g., Handlebars)
+  serverExternalPackages: ['jsonwebtoken', 'ioredis', 'redis', 'bcryptjs', 'nodemailer', 'handlebars'],
   
   headers: async () => [
     {

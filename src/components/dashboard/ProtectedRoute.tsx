@@ -60,7 +60,7 @@ export function ProtectedRoute({
         <div className="text-center">
           <h1 className="text-2xl font-bold text-gray-900 mb-4">Accès refusé</h1>
           <p className="text-gray-600 mb-6">
-            Vous n'avez pas les permissions nécessaires pour accéder à cette page
+            Vous n&#39;avez pas les permissions nécessaires pour accéder à cette page
           </p>
           <p className="text-sm text-gray-500 mb-6">
             Rôle requis : <strong>{requiredRole}</strong> | Votre rôle : <strong>{role}</strong>

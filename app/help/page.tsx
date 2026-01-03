@@ -210,7 +210,7 @@ export default function HelpPage() {
               <Book size={48} className="text-white" />
             </div>
             <h1 className="text-4xl font-bold text-foreground mb-6">
-              Centre d'aide
+              Centre d&#39;aide
             </h1>
             <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
               Trouvez rapidement les informations dont vous avez besoin pour profiter pleinement de M&C Billetterie.
@@ -324,11 +324,11 @@ export default function HelpPage() {
         >
           <div className="glass-card rounded-2xl p-8 text-center">
             <h2 className="text-2xl font-bold text-foreground mb-4">
-              Besoin d'aide supplémentaire ?
+              Besoin d&#39;aide supplémentaire ?
             </h2>
             <p className="text-muted-foreground mb-6 max-w-2xl mx-auto">
               Notre équipe de support est disponible pour répondre à toutes vos questions. 
-              N'hésitez pas à nous contacter directement.
+              N&#39;hésitez pas à nous contacter directement.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Button 

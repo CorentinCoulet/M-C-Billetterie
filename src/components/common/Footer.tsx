@@ -17,7 +17,7 @@ export function Footer({ navigate }: FooterProps) {
               Billetterie
             </h3>
             <p className="text-muted-foreground">
-              Votre plateforme de réservation d'événements
+              Votre plateforme de réservation d&#39;événements
             </p>
           </div>
           <div className="text-center">
@@ -80,7 +80,7 @@ export function Footer({ navigate }: FooterProps) {
                     size="sm" 
                     className="p-0 h-auto text-muted-foreground hover:text-primary hover:scale-105 transition-all duration-200 cursor-pointer"
                   >
-                    Conditions d'utilisation
+                    Conditions d&#39;utilisation
                   </Button>
                 }
               />

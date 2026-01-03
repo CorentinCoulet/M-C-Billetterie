@@ -5,13 +5,20 @@ import { PaymentStatus, PaymentStatusType, StripeApiVersion } from '../../types/
 
 const prisma = new PrismaClient();
 
-// Initialize Stripe only if API key is available
+// Lazy initialization to avoid build-time errors
 let stripe: Stripe | null = null;
-if (process.env.STRIPE_SECRET_KEY) {
-  stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
-    apiVersion: StripeApiVersion
-  });
-}
+const getStripe = (): Stripe => {
+  if (!stripe) {
+    const secretKey = process.env.STRIPE_SECRET_KEY;
+    if (!secretKey) {
+      throw new Error('STRIPE_SECRET_KEY is not configured');
+    }
+    stripe = new Stripe(secretKey, {
+      apiVersion: StripeApiVersion
+    });
+  }
+  return stripe;
+};
 
 export interface PaymentCreateData {
   orderId: string;

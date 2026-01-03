@@ -3,6 +3,7 @@
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
+import Link from 'next/link';
 
 interface Ticket {
   id: string;
@@ -98,12 +99,12 @@ export default function TicketsPage() {
                 </svg>
                 <h3 className="text-lg font-medium text-gray-900 mb-2">Aucun ticket</h3>
                 <p className="text-gray-500 mb-4">Vous n'avez pas encore acheté de tickets</p>
-                <a
+                <Link
                   href="/events"
                   className="inline-block bg-blue-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-blue-700 transition-colors"
                 >
                   Parcourir les événements
-                </a>
+                </Link>
               </div>
             </div>
           ) : (

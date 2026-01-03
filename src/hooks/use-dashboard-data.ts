@@ -6,7 +6,7 @@ import {
     OrganizerDashboardData,
     UserDashboardData
 } from '@/types/dashboard';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useAuthRole } from './use-auth';
 
 interface UseDashboardDataReturn {
@@ -21,12 +21,24 @@ export function useDashboardData(): UseDashboardDataReturn {
   const { role, user, isAuthenticated } = useAuthRole();
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [activities, setActivities] = useState<DashboardActivity[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchDashboardData = async () => {
+  // Prevent duplicate fetches on re-render by tracking the last fetch key
+  const lastFetchKeyRef = useRef<string>('');
+  const isFetchingRef = useRef<boolean>(false);
+
+  const fetchDashboardData = useCallback(async () => {
     if (!isAuthenticated || !user) return;
 
+    const fetchKey = `${user.id}:${role}`;
+    // Skip if a fetch for the same user/role just happened
+    if (lastFetchKeyRef.current === fetchKey || isFetchingRef.current) return;
+
+    isFetchingRef.current = true;
+    lastFetchKeyRef.current = fetchKey;
+
+    const ac = new AbortController();
     try {
       setLoading(true);
       setError(null);
@@ -34,6 +46,7 @@ export function useDashboardData(): UseDashboardDataReturn {
       // Fetch stats based on role
       const statsResponse = await fetch(`/api/dashboard/stats?role=${role}`, {
         credentials: 'include',
+        signal: ac.signal,
       });
 
       if (!statsResponse.ok) {
@@ -48,6 +61,7 @@ export function useDashboardData(): UseDashboardDataReturn {
       // Fetch activities
       const activitiesResponse = await fetch('/api/dashboard/activities', {
         credentials: 'include',
+        signal: ac.signal,
       });
 
       if (activitiesResponse.ok) {
@@ -58,17 +72,33 @@ export function useDashboardData(): UseDashboardDataReturn {
       }
 
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'An error occurred');
+      if (!(err instanceof DOMException && err.name === 'AbortError')) {
+        setError(err instanceof Error ? err.message : 'An error occurred');
+      }
     } finally {
+      isFetchingRef.current = false;
       setLoading(false);
     }
-  };
+  }, [isAuthenticated, user, role]);
 
+  // Only (re)fetch when authentication status transitions to an authenticated user
   useEffect(() => {
-    fetchDashboardData();
-  }, [role, user, isAuthenticated]);
+    if (isAuthenticated && user) {
+      // Authenticated: trigger fetch
+      fetchDashboardData();
+    } else {
+      // Not authenticated: ensure we are not stuck in loading state
+      setLoading(false);
+      setStats(null);
+      setActivities([]);
+      lastFetchKeyRef.current = '';
+    }
+  }, [isAuthenticated, user?.id, role, fetchDashboardData]);
 
   const refreshData = () => {
+    // Allow manual refresh regardless of lastFetchKey
+    // Reset the key so a new fetch will be triggered
+    lastFetchKeyRef.current = '';
     fetchDashboardData();
   };
 

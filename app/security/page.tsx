@@ -97,9 +97,9 @@ export default function SecurityDocsPage() {
         <h3 style={{ marginBottom: '0.5rem' }}>SQL Injection</h3>
         <ul style={{ margin: '0.5rem 0', paddingLeft: '1.5rem', fontSize: '0.9rem' }}>
           <li>Mots-clés SQL dangereux (UNION, SELECT, DROP, etc.)</li>
-          <li>Caractères spéciaux d'injection (', --, ;)</li>
+          <li>Caractères spéciaux d&#39;injection (&#39;, --, ;)</li>
           <li>Fonctions SQL système (@@version, information_schema)</li>
-          <li>Techniques d'évasion et obfuscation</li>
+          <li>Techniques d&#39;évasion et obfuscation</li>
         </ul>
 
         <h3 style={{ marginTop: '1rem', marginBottom: '0.5rem' }}>Cross-Site Scripting (XSS)</h3>
@@ -107,14 +107,14 @@ export default function SecurityDocsPage() {
           <li>Balises HTML malveillantes (&lt;script&gt;, &lt;iframe&gt;, etc.)</li>
           <li>Événements JavaScript (onload, onerror, onclick)</li>
           <li>Protocols dangereux (javascript:, data:, vbscript:)</li>
-          <li>Encodage d'évasion (URL, HTML entities)</li>
+          <li>Encodage d&#39;évasion (URL, HTML entities)</li>
         </ul>
 
         <h3 style={{ marginTop: '1rem', marginBottom: '0.5rem' }}>Command Injection</h3>
         <ul style={{ margin: '0.5rem 0', paddingLeft: '1.5rem', fontSize: '0.9rem' }}>
           <li>Commandes système (rm, cat, wget, curl)</li>
           <li>Opérateurs de chaînage (&&, ||, ;, |)</li>
-          <li>Variables d'environnement ($PATH, $HOME)</li>
+          <li>Variables d&#39;environnement ($PATH, $HOME)</li>
           <li>Redirections et pipes</li>
         </ul>
       </div>
@@ -126,7 +126,7 @@ export default function SecurityDocsPage() {
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem', margin: '1rem 0' }}>
           <div style={{ background: '#f8f9fa', padding: '1rem', borderRadius: '0.375rem' }}>
             <strong style={{ color: '#e53e3e' }}>Attaques Bloquées</strong>
-            <p style={{ fontSize: '0.9rem', margin: '0.5rem 0 0 0' }}>Nombre total d'attaques détectées et bloquées</p>
+            <p style={{ fontSize: '0.9rem', margin: '0.5rem 0 0 0' }}>Nombre total d&#39;attaques détectées et bloquées</p>
           </div>
           <div style={{ background: '#f8f9fa', padding: '1rem', borderRadius: '0.375rem' }}>
             <strong style={{ color: '#48bb78' }}>Taux de Réussite</strong>
@@ -134,7 +134,7 @@ export default function SecurityDocsPage() {
           </div>
           <div style={{ background: '#f8f9fa', padding: '1rem', borderRadius: '0.375rem' }}>
             <strong style={{ color: '#4299e1' }}>IPs Bloquées</strong>
-            <p style={{ fontSize: '0.9rem', margin: '0.5rem 0 0 0' }}>Nombre d'IPs actuellement bloquées</p>
+            <p style={{ fontSize: '0.9rem', margin: '0.5rem 0 0 0' }}>Nombre d&#39;IPs actuellement bloquées</p>
           </div>
           <div style={{ background: '#f8f9fa', padding: '1rem', borderRadius: '0.375rem' }}>
             <strong style={{ color: '#ed8936' }}>Faux Positifs</strong>
@@ -142,7 +142,7 @@ export default function SecurityDocsPage() {
           </div>
         </div>
 
-        <h3 style={{ marginTop: '1.5rem', marginBottom: '0.5rem' }}>Types d'Alertes</h3>
+        <h3 style={{ marginTop: '1.5rem', marginBottom: '0.5rem' }}>Types d&#39;Alertes</h3>
         <ul style={{ margin: '0.5rem 0', paddingLeft: '1.5rem' }}>
           <li><strong>Critique:</strong> Attaque active détectée et bloquée</li>
           <li><strong>Élevé:</strong> Multiple tentatives depuis la même IP</li>
@@ -154,8 +154,8 @@ export default function SecurityDocsPage() {
       <div className="card">
         <h2>🔒 Authentification Admin</h2>
         <p style={{ margin: '1rem 0', lineHeight: '1.6' }}>
-          L'accès aux endpoints d'administration nécessite une authentification par token Bearer. 
-          Le token doit être inclus dans l'en-tête Authorization de chaque requête.
+          L&#39;accès aux endpoints d&#39;administration nécessite une authentification par token Bearer. 
+          Le token doit être inclus dans l&#39;en-tête Authorization de chaque requête.
         </p>
         
         <div style={{ fontFamily: 'monospace', background: '#f8f9fa', padding: '1rem', borderRadius: '0.375rem', margin: '1rem 0' }}>
@@ -166,7 +166,7 @@ export default function SecurityDocsPage() {
         </div>
 
         <div className="alert alert-warning">
-          <strong>⚠️ Sécurité:</strong> Les tokens d'administration ne doivent jamais être exposés côté client. 
+          <strong>⚠️ Sécurité:</strong> Les tokens d&#39;administration ne doivent jamais être exposés côté client. 
           Utilisez uniquement depuis votre backend sécurisé.
         </div>
       </div>
@@ -191,7 +191,7 @@ export default function SecurityDocsPage() {
           <div style={{ background: '#fef5e7', padding: '1rem', borderRadius: '0.375rem', border: '1px solid #f6e05e' }}>
             <strong style={{ color: '#744210' }}>Précision</strong>
             <p style={{ fontSize: '1.2rem', fontWeight: 'bold', color: '#d69e2e', margin: '0.5rem 0' }}>99.9%</p>
-            <p style={{ fontSize: '0.9rem' }}>Détection d'attaques</p>
+            <p style={{ fontSize: '0.9rem' }}>Détection d&#39;attaques</p>
           </div>
         </div>
       </div>

@@ -59,7 +59,7 @@ export function AdminDashboardContent() {
 
       {/* Administrative actions */}
       <div className="bg-white rounded-lg shadow-sm border p-6">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">Actions d'administration</h3>
+        <h3 className="text-lg font-semibold text-gray-900 mb-4">Actions d&#39;administration</h3>
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <a
             href="/dashboard/admin/users"
@@ -260,7 +260,7 @@ export function AdminDashboardContent() {
             </div>
             <div className="flex-1">
               <h4 className="font-medium text-gray-900">Rapport mensuel</h4>
-              <p className="text-sm text-gray-600">Générer le rapport d'activité du mois</p>
+              <p className="text-sm text-gray-600">Générer le rapport d&#39;activité du mois</p>
               <button className="text-sm text-purple-600 hover:text-purple-800 mt-1">
                 Générer le rapport →
               </button>

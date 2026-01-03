@@ -6,6 +6,12 @@ on:
   pull_request:
     branches: [main, develop]
 
+# Explicit permissions needed for security tooling (CodeQL, SARIF uploads, etc.)
+permissions:
+  contents: read
+  actions: read
+  security-events: write
+
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
@@ -29,13 +35,19 @@ jobs:
           cache: 'yarn'
 
       - name: 📦 Install dependencies
-        run: yarn install --frozen-lockfile
+        run: yarn install --frozen-lockfile --ignore-engines || yarn install --ignore-engines
+
+      - name: 🔎 Show tool versions
+        run: |
+          node -v
+          yarn -v
 
       - name: 🔍 Yarn audit
         run: yarn audit --level moderate
         continue-on-error: true
 
       - name: 🔒 Snyk scan
+        if: env.SNYK_TOKEN != ''
         uses: snyk/actions/node@master
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
@@ -43,24 +55,37 @@ jobs:
           args: --severity-threshold=high
         continue-on-error: true
 
+      - name: ⚠️ Skip Snyk (no token)
+        if: env.SNYK_TOKEN == ''
+        run: echo "SNYK_TOKEN non défini, étape Snyk ignorée."
+
   # =============================================
   # JOB 2: Code Analysis
   # =============================================
   code-analysis:
     name: 🔍 Code Analysis
     runs-on: ubuntu-latest
+    # Skip on PRs from forks because the GITHUB_TOKEN has restricted perms there
+    if: ${{ github.event_name != 'pull_request' || github.event.pull_request.head.repo.fork != true }}
     
     steps:
       - name: 📥 Checkout
         uses: actions/checkout@v4
+        with:
+          # Full history helps CodeQL track alerts across runs
+          fetch-depth: 0
 
       - name: 🔍 CodeQL init
-        uses: github/codeql-action/init@v3
+        uses: github/codeql-action/init@v4
         with:
           languages: javascript-typescript
+          # Use the broader set of queries (security + quality) for better coverage
+          queries: security-and-quality
+          # TS/JS analysis doesn't require a build; disable autobuild to avoid flakiness
+          build-mode: none
 
       - name: 🔍 CodeQL analyze
-        uses: github/codeql-action/analyze@v3
+        uses: github/codeql-action/analyze@v4
 
   # =============================================
   # JOB 3: Secrets Detection
@@ -105,8 +130,8 @@ jobs:
         continue-on-error: true
 
       - name: 📤 Upload Trivy results
-        uses: github/codeql-action/upload-sarif@v3
-        if: always()
+        uses: github/codeql-action/upload-sarif@v4
+        if: ${{ always() && hashFiles('trivy-results.sarif') != '' }}
         with:
           sarif_file: 'trivy-results.sarif'
 

@@ -159,7 +159,6 @@ export class OrchestrationService {
   /**
    * Handle Stripe webhook events
    */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   async handleStripeWebhook(event: { type: string; data: { object: Record<string, any> } }) {
     try {
       switch (event.type) {

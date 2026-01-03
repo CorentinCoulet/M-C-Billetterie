@@ -7,16 +7,23 @@ import { CONFIG } from '../core/config';
 
 let stripe: Stripe | null = null;
 
-// Initialize Stripe only if payment feature is enabled and keys are available
-if (CONFIG.FEATURES.PAYMENTS && CONFIG.STRIPE.SECRET_KEY !== 'sk_test_your_test_key') {
-  stripe = new Stripe(CONFIG.STRIPE.SECRET_KEY, {
-    apiVersion: '2025-08-27.basil',
-    appInfo: {
-      name: 'Billetterie',
-      version: '1.0.0',
-    },
-  });
-}
+// Lazy initialization to avoid build-time errors
+const getStripe = (): Stripe => {
+  if (!stripe) {
+    if (CONFIG.FEATURES.PAYMENTS && CONFIG.STRIPE.SECRET_KEY !== 'sk_test_your_test_key') {
+      stripe = new Stripe(CONFIG.STRIPE.SECRET_KEY, {
+        apiVersion: '2025-08-27.basil',
+        appInfo: {
+          name: 'Billetterie',
+          version: '1.0.0',
+        },
+      });
+    } else {
+      throw new Error('Stripe is not properly configured or payments feature is disabled');
+    }
+  }
+  return stripe;
+};
 
 export interface PaymentIntentParams {
   amount: number;
@@ -50,7 +57,12 @@ class StripeService {
    * Check if Stripe is available
    */
   isAvailable(): boolean {
-    return stripe !== null && CONFIG.FEATURES.PAYMENTS;
+    try {
+      getStripe();
+      return CONFIG.FEATURES.PAYMENTS;
+    } catch {
+      return false;
+    }
   }
 
   /**
@@ -68,7 +80,7 @@ class StripeService {
       automaticPaymentMethods = true
     } = params;
 
-    return stripe!.paymentIntents.create({
+    return getStripe().paymentIntents.create({
       amount: Math.round(amount * 100), // Convert to cents
       currency,
       metadata,
@@ -95,7 +107,7 @@ class StripeService {
       expiresAt,
     } = params;
 
-    return stripe!.checkout.sessions.create({
+    return getStripe().checkout.sessions.create({
       payment_method_types: ['card'],
       line_items: lineItems,
       mode: 'payment',
@@ -115,7 +127,7 @@ class StripeService {
       throw new Error('Stripe service is not available');
     }
 
-    return stripe!.paymentIntents.retrieve(paymentIntentId);
+    return getStripe().paymentIntents.retrieve(paymentIntentId);
   }
 
   /**
@@ -126,7 +138,7 @@ class StripeService {
       throw new Error('Stripe service is not available');
     }
 
-    return stripe!.checkout.sessions.retrieve(sessionId);
+    return getStripe().checkout.sessions.retrieve(sessionId);
   }
 
   /**
@@ -142,7 +154,7 @@ class StripeService {
     }
 
     try {
-      return stripe!.webhooks.constructEvent(
+      return getStripe().webhooks.constructEvent(
         payload,
         signature,
         CONFIG.STRIPE.WEBHOOK_SECRET
@@ -188,7 +200,7 @@ class StripeService {
       refundData.amount = Math.round(amount * 100);
     }
 
-    return stripe!.refunds.create(refundData);
+    return getStripe().refunds.create(refundData);
   }
 
   /**
@@ -199,7 +211,7 @@ class StripeService {
       throw new Error('Stripe service is not available');
     }
 
-    return stripe!.paymentMethods.list({
+    return getStripe().paymentMethods.list({
       customer: customerId,
       type: 'card',
     });
@@ -217,14 +229,14 @@ class StripeService {
       throw new Error('Stripe service is not available');
     }
 
-    return stripe!.customers.create(params);
+    return getStripe().customers.create(params);
   }
 
   /**
    * Get Stripe instance (for advanced usage)
    */
-  getStripeInstance(): Stripe | null {
-    return stripe;
+  getStripeInstance(): Stripe {
+    return getStripe();
   }
 }
 
