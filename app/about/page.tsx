@@ -1,7 +1,7 @@
 'use client'
 
 import { Button } from '@/components/ui/button'
-import { ArrowLeft, Heart, Shield, Ticket } from '@phosphor-icons/react'
+import { Heart, Shield, Ticket } from '@phosphor-icons/react'
 import { motion } from 'framer-motion'
 import { useRouter } from 'next/navigation'
 
@@ -17,15 +17,6 @@ export default function AboutPage() {
           transition={{ duration: 0.8 }}
           className="mb-12"
         >
-          <Button 
-            onClick={() => router.back()}
-            variant="outline" 
-            className="mb-6 bg-card/50 backdrop-blur-sm hover:bg-card/70"
-          >
-            <ArrowLeft size={16} className="mr-2" />
-            Retour
-          </Button>
-          
           <div className="glass-card rounded-3xl p-12 text-center">
             <div className="w-24 h-24 bg-gradient-to-br from-primary to-accent rounded-full flex items-center justify-center mx-auto mb-8">
               <Heart size={48} className="text-white" />

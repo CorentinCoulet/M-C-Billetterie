@@ -1,16 +1,32 @@
 "use client"
 
-import { useAuthRole } from '@/hooks/use-auth'
-import { useEffect, useMemo, useState } from 'react'
+import { useAuthRole } from '@/hooks/use-auth';
+import { useEffect, useMemo, useState } from 'react';
 
 type OrganizationItem = {
   id: string;
   name: string;
 };
 
+type CategoryItem = {
+  id: string;
+  name: string;
+  eventCount: number;
+};
+
+type VenueItem = {
+  id: string;
+  name: string;
+  address: string;
+  capacity: number;
+  eventCount: number;
+};
+
 export default function DashboardNewEventPage() {
   const { isAuthenticated, role, loading } = useAuthRole()
   const [organizations, setOrganizations] = useState<OrganizationItem[] | null>(null)
+  const [categories, setCategories] = useState<CategoryItem[]>([])
+  const [venues, setVenues] = useState<VenueItem[]>([])
   const [error, setError] = useState<string | null>(null)
   const [isFetching, setIsFetching] = useState(true)
   const [busy, setBusy] = useState(false)
@@ -24,6 +40,8 @@ export default function DashboardNewEventPage() {
     date: '',
     maxCapacity: '',
     isPublished: false,
+    categoryId: '',
+    venueId: '',
   })
 
   useEffect(() => {
@@ -36,10 +54,29 @@ export default function DashboardNewEventPage() {
       setIsFetching(true)
       setError(null)
       try {
-        const res = await fetch('/api/organizations', { credentials: 'include' })
-        const json = await res.json()
-        if (!res.ok || !json.success) throw new Error(json.error || 'Erreur de chargement')
-        setOrganizations((json.data as any[]).map((o) => ({ id: o.id, name: o.name })))
+        // Charger organisations, catégories et venues en parallèle
+        const [orgRes, catRes, venueRes] = await Promise.all([
+          fetch('/api/organizations', { credentials: 'include' }),
+          fetch('/api/categories', { credentials: 'include' }),
+          fetch('/api/venues', { credentials: 'include' })
+        ])
+        
+        const [orgJson, catJson, venueJson] = await Promise.all([
+          orgRes.json(),
+          catRes.json(),
+          venueRes.json()
+        ])
+        
+        if (!orgRes.ok || !orgJson.success) throw new Error(orgJson.error || 'Erreur de chargement des organisations')
+        setOrganizations((orgJson.data as any[]).map((o) => ({ id: o.id, name: o.name })))
+        
+        if (catRes.ok && catJson.success) {
+          setCategories(catJson.data)
+        }
+        
+        if (venueRes.ok && venueJson.success) {
+          setVenues(venueJson.data)
+        }
       } catch (e: any) {
         setError(e.message || 'Erreur inconnue')
       } finally {
@@ -67,6 +104,8 @@ export default function DashboardNewEventPage() {
         date: new Date(form.date).toISOString(),
         organizerId: activeOrg.id,
         isPublished: form.isPublished,
+        categoryId: form.categoryId || undefined,
+        venueId: form.venueId || undefined,
       }
       const maxCap = parseInt(form.maxCapacity, 10)
       if (!Number.isNaN(maxCap) && maxCap > 0) payload.maxCapacity = maxCap
@@ -196,7 +235,7 @@ export default function DashboardNewEventPage() {
           <input
             type="text"
             required
-            placeholder="Lieu"
+            placeholder="Lieu (adresse)"
             className="md:col-span-2 border rounded-md px-3 py-2"
             value={form.location}
             onChange={(e) => setForm(s => ({ ...s, location: e.target.value }))}
@@ -208,6 +247,26 @@ export default function DashboardNewEventPage() {
             value={form.date}
             onChange={(e) => setForm(s => ({ ...s, date: e.target.value }))}
           />
+          <select
+            className="md:col-span-3 border rounded-md px-3 py-2 bg-white"
+            value={form.categoryId}
+            onChange={(e) => setForm(s => ({ ...s, categoryId: e.target.value }))}
+          >
+            <option value="">-- Catégorie (optionnel) --</option>
+            {categories.map(cat => (
+              <option key={cat.id} value={cat.id}>{cat.name}</option>
+            ))}
+          </select>
+          <select
+            className="md:col-span-3 border rounded-md px-3 py-2 bg-white"
+            value={form.venueId}
+            onChange={(e) => setForm(s => ({ ...s, venueId: e.target.value }))}
+          >
+            <option value="">-- Salle/Venue (optionnel) --</option>
+            {venues.map(v => (
+              <option key={v.id} value={v.id}>{v.name} ({v.capacity} places)</option>
+            ))}
+          </select>
           <textarea
             placeholder="Description"
             className="md:col-span-6 border rounded-md px-3 py-2"

@@ -1,4 +1,5 @@
 // Ticket controller - wrapper for the unified ticket service
+import { logger } from '../../lib/logger';
 import ticketService from '../../services/ticketService';
 
 // Controller types
@@ -74,7 +75,7 @@ export const generateQRCode = async (req: any, res: any) => {
       }
     });
   } catch (error) {
-    console.error('Error generating QR code:', error);
+    logger.error({ error }, 'Error generating QR code');
     return res.status(500).json({ error: 'Failed to generate QR code' });
   }
 };
@@ -94,7 +95,7 @@ export const validateQRCode = async (req: any, res: any) => {
     
     return res.json(validation);
   } catch (error) {
-    console.error('Error validating QR code:', error);
+    logger.error({ error }, 'Error validating QR code');
     return res.status(500).json({ error: 'Failed to validate QR code' });
   }
 };
@@ -137,7 +138,7 @@ export default {
       
       return res.send(ticketFile);
     } catch (error) {
-      console.error('Error downloading ticket:', error);
+      logger.error({ error }, 'Error downloading ticket');
       return res.status(500).json({ error: 'Failed to download ticket' });
     }
   }

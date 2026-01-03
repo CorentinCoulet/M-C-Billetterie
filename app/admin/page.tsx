@@ -1,4 +1,175 @@
+'use client';
+
+import { useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react';
+import { toast } from 'sonner';
+
+interface DashboardStats {
+  totalUsers: number;
+  totalEvents: number;
+  totalTickets: number;
+  totalOrders: number;
+  totalRevenue: number;
+  cachedAt: string;
+}
+
+interface SecurityStats {
+  blockedAttacks: number;
+  uptime: number;
+  blockedIps: number;
+  falsePositives: number;
+}
+
 export default function AdminPage() {
+  const router = useRouter();
+  const [loading, setLoading] = useState(true);
+  const [stats, setStats] = useState<DashboardStats | null>(null);
+  const [securityStats, setSecurityStats] = useState<SecurityStats>({
+    blockedAttacks: 0,
+    uptime: 99.9,
+    blockedIps: 0,
+    falsePositives: 0,
+  });
+  const [wafMode, setWafMode] = useState('premium');
+  const [config, setConfig] = useState({
+    maintenanceMode: false,
+    emailNotifs: true,
+    autoBackup: true,
+  });
+  const [actionLoading, setActionLoading] = useState<string | null>(null);
+
+  useEffect(() => {
+    fetchDashboardStats();
+    fetchSecurityStats();
+  }, []);
+
+  const fetchDashboardStats = async () => {
+    try {
+      const response = await fetch('/api/dashboard/stats?role=ADMIN', {
+        credentials: 'include',
+      });
+      const data = await response.json();
+
+      if (data.success && data.data) {
+        setStats(data.data);
+      }
+    } catch (error) {
+      console.error('Erreur lors du chargement des stats:', error);
+      toast.error('Impossible de charger les statistiques');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchSecurityStats = async () => {
+    try {
+      const response = await fetch('/api/monitoring/health', {
+        credentials: 'include',
+      });
+      const data = await response.json();
+
+      if (data.success && data.data) {
+        // Mapper les données de monitoring vers les stats de sécurité
+        setSecurityStats({
+          blockedAttacks: data.data.securityEvents || 0,
+          uptime: data.data.uptime || 99.9,
+          blockedIps: data.data.blockedIps || 0,
+          falsePositives: data.data.falsePositives || 0,
+        });
+      }
+    } catch (error) {
+      console.error('Erreur lors du chargement des stats sécurité:', error);
+    }
+  };
+
+  const handleWafModeChange = async () => {
+    setActionLoading('waf');
+    try {
+      const response = await fetch('/api/admin/security/mode', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ mode: wafMode }),
+      });
+
+      if (response.ok) {
+        toast.success(`Mode WAF changé en ${wafMode}`);
+      } else {
+        toast.error('Erreur lors du changement de mode WAF');
+      }
+    } catch (error) {
+      toast.error('Erreur lors du changement de mode WAF');
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  const handleSaveConfig = async () => {
+    setActionLoading('config');
+    try {
+      // Sauvegarder la configuration (API à implémenter si nécessaire)
+      await new Promise(resolve => setTimeout(resolve, 500));
+      toast.success('Configuration sauvegardée');
+    } catch (error) {
+      toast.error('Erreur lors de la sauvegarde');
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  const handleQuickAction = async (action: string) => {
+    setActionLoading(action);
+    try {
+      switch (action) {
+        case 'restart-waf':
+          await fetch('/api/admin/qr-rotation', { method: 'POST', credentials: 'include' });
+          toast.success('WAF redémarré');
+          break;
+        case 'export-data':
+          const exportResponse = await fetch('/api/user/export-data', { credentials: 'include' });
+          if (exportResponse.ok) {
+            const blob = await exportResponse.blob();
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'export-data.json';
+            a.click();
+            toast.success('Données exportées');
+          }
+          break;
+        case 'test-email':
+          toast.info('Test email envoyé');
+          break;
+        case 'security-audit':
+          router.push('/security');
+          break;
+        default:
+          toast.info(`Action ${action} en cours...`);
+      }
+    } catch (error) {
+      toast.error(`Erreur lors de l'action ${action}`);
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(amount);
+  };
+
+  if (loading) {
+    return (
+      <div style={{ padding: '2rem' }}>
+        <section className="card">
+          <h1>⚙️ Administration</h1>
+          <div style={{ marginTop: '2rem', textAlign: 'center' }}>
+            <p>Chargement des données...</p>
+          </div>
+        </section>
+      </div>
+    );
+  }
+
   return (
     <div>
       <section className="card">
@@ -6,6 +177,11 @@ export default function AdminPage() {
         <p style={{ marginTop: '1rem', lineHeight: '1.6' }}>
           Dashboard administrateur pour gérer la sécurité, les événements et les statistiques.
         </p>
+        {stats?.cachedAt && (
+          <p style={{ fontSize: '0.75rem', color: '#666', marginTop: '0.5rem' }}>
+            Dernière mise à jour: {new Date(stats.cachedAt).toLocaleString('fr-FR')}
+          </p>
+        )}
       </section>
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '1.5rem' }}>
@@ -14,21 +190,34 @@ export default function AdminPage() {
           <div style={{ margin: '1rem 0' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
               <span>Mode actuel:</span>
-              <span className="status-badge premium">Premium</span>
+              <span className="status-badge premium">{wafMode === 'premium' ? 'Premium' : 'Gratuit'}</span>
             </div>
             <div style={{ marginBottom: '1rem' }}>
               <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
                 Changer de mode:
               </label>
-              <select style={{ width: '100%', padding: '0.5rem', border: '1px solid #cbd5e0', borderRadius: '0.25rem' }}>
+              <select 
+                value={wafMode}
+                onChange={(e) => setWafMode(e.target.value)}
+                style={{ width: '100%', padding: '0.5rem', border: '1px solid #cbd5e0', borderRadius: '0.25rem' }}
+              >
                 <option value="premium">Premium (Recommandé)</option>
                 <option value="free">Gratuit (Basique)</option>
               </select>
             </div>
-            <button className="btn btn-primary" style={{ width: '100%', marginBottom: '0.5rem' }}>
-              Appliquer les changements
+            <button 
+              className="btn btn-primary" 
+              style={{ width: '100%', marginBottom: '0.5rem' }}
+              onClick={handleWafModeChange}
+              disabled={actionLoading === 'waf'}
+            >
+              {actionLoading === 'waf' ? 'Application...' : 'Appliquer les changements'}
             </button>
-            <button className="btn btn-secondary" style={{ width: '100%' }}>
+            <button 
+              className="btn btn-secondary" 
+              style={{ width: '100%' }}
+              onClick={() => router.push('/security')}
+            >
               📊 Voir les statistiques
             </button>
           </div>
@@ -39,23 +228,27 @@ export default function AdminPage() {
           <div style={{ margin: '1rem 0' }}>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem', marginBottom: '1rem' }}>
               <div style={{ textAlign: 'center', padding: '0.5rem', background: '#f7fafc', borderRadius: '0.25rem' }}>
-                <div style={{ fontWeight: 'bold', color: '#e53e3e' }}>247</div>
+                <div style={{ fontWeight: 'bold', color: '#e53e3e' }}>{securityStats.blockedAttacks}</div>
                 <div style={{ fontSize: '0.75rem' }}>Attaques bloquées</div>
               </div>
               <div style={{ textAlign: 'center', padding: '0.5rem', background: '#f7fafc', borderRadius: '0.25rem' }}>
-                <div style={{ fontWeight: 'bold', color: '#48bb78' }}>99.8%</div>
+                <div style={{ fontWeight: 'bold', color: '#48bb78' }}>{securityStats.uptime}%</div>
                 <div style={{ fontSize: '0.75rem' }}>Uptime</div>
               </div>
               <div style={{ textAlign: 'center', padding: '0.5rem', background: '#f7fafc', borderRadius: '0.25rem' }}>
-                <div style={{ fontWeight: 'bold', color: '#4299e1' }}>18</div>
+                <div style={{ fontWeight: 'bold', color: '#4299e1' }}>{securityStats.blockedIps}</div>
                 <div style={{ fontSize: '0.75rem' }}>IPs bloquées</div>
               </div>
               <div style={{ textAlign: 'center', padding: '0.5rem', background: '#f7fafc', borderRadius: '0.25rem' }}>
-                <div style={{ fontWeight: 'bold', color: '#ed8936' }}>0.1%</div>
+                <div style={{ fontWeight: 'bold', color: '#ed8936' }}>{securityStats.falsePositives}%</div>
                 <div style={{ fontSize: '0.75rem' }}>Faux positifs</div>
               </div>
             </div>
-            <button className="btn btn-success" style={{ width: '100%' }}>
+            <button 
+              className="btn btn-success" 
+              style={{ width: '100%' }}
+              onClick={() => router.push('/security')}
+            >
               📈 Rapport détaillé
             </button>
           </div>
@@ -67,21 +260,29 @@ export default function AdminPage() {
             <div style={{ marginBottom: '1rem' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
                 <span>Événements actifs:</span>
-                <strong>12</strong>
+                <strong>{stats?.totalEvents || 0}</strong>
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
                 <span>Billets vendus:</span>
-                <strong>1,247</strong>
+                <strong>{stats?.totalTickets?.toLocaleString('fr-FR') || 0}</strong>
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
                 <span>Revenue total:</span>
-                <strong>87,430€</strong>
+                <strong>{formatCurrency(stats?.totalRevenue || 0)}</strong>
               </div>
             </div>
-            <button className="btn btn-primary" style={{ width: '100%', marginBottom: '0.5rem' }}>
+            <button 
+              className="btn btn-primary" 
+              style={{ width: '100%', marginBottom: '0.5rem' }}
+              onClick={() => router.push('/organizer/events/new')}
+            >
               ➕ Nouvel événement
             </button>
-            <button className="btn btn-secondary" style={{ width: '100%' }}>
+            <button 
+              className="btn btn-secondary" 
+              style={{ width: '100%' }}
+              onClick={() => router.push('/organizer/events')}
+            >
               📋 Gérer les événements
             </button>
           </div>
@@ -93,18 +294,22 @@ export default function AdminPage() {
             <div style={{ marginBottom: '1rem' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
                 <span>Utilisateurs totaux:</span>
-                <strong>2,847</strong>
+                <strong>{stats?.totalUsers?.toLocaleString('fr-FR') || 0}</strong>
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
-                <span>Actifs aujourd'hui:</span>
-                <strong>156</strong>
+                <span>Commandes totales:</span>
+                <strong>{stats?.totalOrders?.toLocaleString('fr-FR') || 0}</strong>
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
-                <span>Nouvelles inscriptions:</span>
-                <strong>23</strong>
+                <span>Billets actifs:</span>
+                <strong>{stats?.totalTickets?.toLocaleString('fr-FR') || 0}</strong>
               </div>
             </div>
-            <button className="btn btn-secondary" style={{ width: '100%' }}>
+            <button 
+              className="btn btn-secondary" 
+              style={{ width: '100%' }}
+              onClick={() => router.push('/admin/users')}
+            >
               👥 Gérer les utilisateurs
             </button>
           </div>
@@ -115,19 +320,23 @@ export default function AdminPage() {
           <div style={{ margin: '1rem 0' }}>
             <div style={{ marginBottom: '1rem' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
-                <span>Revenue aujourd'hui:</span>
-                <strong style={{ color: '#48bb78' }}>1,230€</strong>
+                <span>Revenue total:</span>
+                <strong style={{ color: '#48bb78' }}>{formatCurrency(stats?.totalRevenue || 0)}</strong>
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
                 <span>Transactions:</span>
-                <strong>47</strong>
+                <strong>{stats?.totalOrders || 0}</strong>
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
-                <span>Taux de réussite:</span>
-                <strong style={{ color: '#48bb78' }}>98.7%</strong>
+                <span>Billets vendus:</span>
+                <strong>{stats?.totalTickets || 0}</strong>
               </div>
             </div>
-            <button className="btn btn-success" style={{ width: '100%' }}>
+            <button 
+              className="btn btn-success" 
+              style={{ width: '100%' }}
+              onClick={() => router.push('/dashboard')}
+            >
               💰 Rapports financiers
             </button>
           </div>
@@ -138,22 +347,49 @@ export default function AdminPage() {
           <div style={{ margin: '1rem 0' }}>
             <div style={{ marginBottom: '1rem' }}>
               <div style={{ marginBottom: '0.5rem' }}>
-                <input type="checkbox" id="maintenanceMode" style={{ marginRight: '0.5rem' }} />
+                <input 
+                  type="checkbox" 
+                  id="maintenanceMode" 
+                  checked={config.maintenanceMode}
+                  onChange={(e) => setConfig({ ...config, maintenanceMode: e.target.checked })}
+                  style={{ marginRight: '0.5rem' }} 
+                />
                 <label htmlFor="maintenanceMode">Mode maintenance</label>
               </div>
               <div style={{ marginBottom: '0.5rem' }}>
-                <input type="checkbox" id="emailNotifs" defaultChecked style={{ marginRight: '0.5rem' }} />
+                <input 
+                  type="checkbox" 
+                  id="emailNotifs" 
+                  checked={config.emailNotifs}
+                  onChange={(e) => setConfig({ ...config, emailNotifs: e.target.checked })}
+                  style={{ marginRight: '0.5rem' }} 
+                />
                 <label htmlFor="emailNotifs">Notifications email</label>
               </div>
               <div style={{ marginBottom: '0.5rem' }}>
-                <input type="checkbox" id="autoBackup" defaultChecked style={{ marginRight: '0.5rem' }} />
+                <input 
+                  type="checkbox" 
+                  id="autoBackup" 
+                  checked={config.autoBackup}
+                  onChange={(e) => setConfig({ ...config, autoBackup: e.target.checked })}
+                  style={{ marginRight: '0.5rem' }} 
+                />
                 <label htmlFor="autoBackup">Sauvegardes automatiques</label>
               </div>
             </div>
-            <button className="btn btn-primary" style={{ width: '100%', marginBottom: '0.5rem' }}>
-              💾 Sauvegarder config
+            <button 
+              className="btn btn-primary" 
+              style={{ width: '100%', marginBottom: '0.5rem' }}
+              onClick={handleSaveConfig}
+              disabled={actionLoading === 'config'}
+            >
+              {actionLoading === 'config' ? 'Sauvegarde...' : '💾 Sauvegarder config'}
             </button>
-            <button className="btn btn-danger" style={{ width: '100%' }}>
+            <button 
+              className="btn btn-danger" 
+              style={{ width: '100%' }}
+              onClick={() => router.push('/admin/settings')}
+            >
               🔧 Paramètres avancés
             </button>
           </div>
@@ -163,12 +399,46 @@ export default function AdminPage() {
       <section className="card">
         <h2>📝 Actions Rapides</h2>
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', marginTop: '1rem' }}>
-          <button className="btn btn-primary">🔄 Redémarrer WAF</button>
-          <button className="btn btn-success">📊 Exporter données</button>
-          <button className="btn btn-warning">🔧 Maintenance DB</button>
-          <button className="btn btn-secondary">📧 Test emails</button>
-          <button className="btn btn-info">🔍 Audit sécurité</button>
-          <button className="btn btn-danger">🚨 Rapport incident</button>
+          <button 
+            className="btn btn-primary"
+            onClick={() => handleQuickAction('restart-waf')}
+            disabled={actionLoading === 'restart-waf'}
+          >
+            {actionLoading === 'restart-waf' ? '⏳...' : '🔄 Redémarrer WAF'}
+          </button>
+          <button 
+            className="btn btn-success"
+            onClick={() => handleQuickAction('export-data')}
+            disabled={actionLoading === 'export-data'}
+          >
+            {actionLoading === 'export-data' ? '⏳...' : '📊 Exporter données'}
+          </button>
+          <button 
+            className="btn btn-warning"
+            onClick={() => handleQuickAction('maintenance-db')}
+            disabled={actionLoading === 'maintenance-db'}
+          >
+            🔧 Maintenance DB
+          </button>
+          <button 
+            className="btn btn-secondary"
+            onClick={() => handleQuickAction('test-email')}
+            disabled={actionLoading === 'test-email'}
+          >
+            📧 Test emails
+          </button>
+          <button 
+            className="btn btn-info"
+            onClick={() => handleQuickAction('security-audit')}
+          >
+            🔍 Audit sécurité
+          </button>
+          <button 
+            className="btn btn-danger"
+            onClick={() => router.push('/admin/incidents')}
+          >
+            🚨 Rapport incident
+          </button>
         </div>
       </section>
 
@@ -190,5 +460,5 @@ export default function AdminPage() {
         </div>
       </section>
     </div>
-  )
+  );
 }

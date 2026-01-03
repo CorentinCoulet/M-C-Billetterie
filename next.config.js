@@ -34,9 +34,6 @@ const nextConfig = {
   poweredByHeader: false,
   output: 'standalone',
   
-  // Force webpack bundler instead of turbopack (Next.js 16 requirement)
-  turbopack: false,
-  
   typescript: {
     ignoreBuildErrors: true,
   },
@@ -89,15 +86,23 @@ const nextConfig = {
   webpack: (config, { isServer, dev }) => {
     if (dev) {
       config.watchOptions = {
+        poll: process.env.WATCHPACK_POLLING === 'true' ? 2000 : undefined,
+        aggregateTimeout: 500,
         ignored: [
           '**/node_modules/**',
-          '**/.next/cache/**',
+          '**/.next/**',
           '**/coverage/**',
           '**/logs/**',
           '**/uploads/**',
           '**/.git/**',
+          '**/backups/**',
           '**/prisma/migrations/**',
-          '**/backups/**'
+          '**/docs/**',
+          '**/diagrams/**',
+          '**/k8s/**',
+          '**/infrastructure/**',
+          '**/monitoring/**',
+          '**/*.md'
         ]
       };
       

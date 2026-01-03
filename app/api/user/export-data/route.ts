@@ -11,7 +11,7 @@ interface JWTPayload {
 export async function GET(request: NextRequest) {
   try {
     // Check authentication
-    const token = request.cookies.get('auth_token')?.value
+    const token = request.cookies.get('auth-token')?.value
     if (!token) {
       return NextResponse.json(
         { success: false, message: 'Not authenticated' },
@@ -37,6 +37,16 @@ export async function GET(request: NextRequest) {
         role: true,
         createdAt: true,
         updatedAt: true,
+        metadata: true,
+        cartItems: {
+          select: {
+            id: true,
+            eventName: true,
+            quantity: true,
+            price: true,
+            addedAt: true,
+          }
+        },
         orders: {
           select: {
             id: true,
@@ -70,6 +80,15 @@ export async function GET(request: NextRequest) {
               }
             }
           }
+        },
+        notifications: {
+          select: {
+            id: true,
+            type: true,
+            message: true,
+            isRead: true,
+            sentAt: true,
+          }
         }
       }
     })
@@ -82,22 +101,30 @@ export async function GET(request: NextRequest) {
     }
 
     // Prepare data for export (GDPR)
+    const userMetadata = (user.metadata as Record<string, unknown>) || {}
     const exportData = {
       metadata: {
         exportDate: new Date().toISOString(),
         userId: user.id,
-        dataProtectionNotice: 'This data is exported in accordance with GDPR Article 20 (Right to data portability)'
+        dataProtectionNotice: 'This data is exported in accordance with GDPR Article 20 (Right to data portability)',
+        disclaimer: 'This export contains only your personal data. Please keep this file secure.'
       },
       personalInformation: {
         id: user.id,
         email: user.email,
         name: user.name,
-        role: user.role,
+        // Don't expose role for security reasons - removed
         accountCreatedAt: user.createdAt,
         accountUpdatedAt: user.updatedAt,
       },
-      orders: user.orders,
-      reviews: user.reviews,
+      preferences: {
+        consents: userMetadata.consents || null,
+      },
+      // Use user-friendly names instead of database table names
+      shoppingCart: user.cartItems,
+      purchaseHistory: user.orders,
+      eventFeedback: user.reviews,
+      messages: user.notifications,
     }
 
     // Create JSON file

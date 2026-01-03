@@ -11,7 +11,7 @@ interface JWTPayload {
 export async function GET(request: NextRequest) {
   try {
     // Check authentication
-    const token = request.cookies.get('auth_token')?.value
+    const token = request.cookies.get('auth-token')?.value
     if (!token) {
       return NextResponse.json(
         { success: false, message: 'Not authenticated' },
@@ -27,16 +27,25 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    // Fetch user orders
+    // Fetch user orders (limited data for performance)
     const orders = await prisma.order.findMany({
       where: {
         userId: payload.userId
       },
-      include: {
+      select: {
+        id: true,
+        totalPrice: true,
+        status: true,
+        createdAt: true,
+        updatedAt: true,
         tickets: {
-          include: {
+          select: {
+            id: true,
+            price: true,
+            status: true,
             event: {
               select: {
+                id: true,
                 title: true,
                 date: true,
                 location: true,
@@ -47,7 +56,8 @@ export async function GET(request: NextRequest) {
       },
       orderBy: {
         createdAt: 'desc'
-      }
+      },
+      take: 50 // Limit to last 50 orders for performance
     })
 
     return NextResponse.json({

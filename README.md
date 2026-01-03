@@ -43,15 +43,13 @@ cp .env.example .env
 yarn db:migrate
 yarn db:generate
 
-# Démarrer avec Docker (recommandé)
-# Linux/Mac:
-scripts/run-docker.sh dev up --monitoring --build
-# Windows (PowerShell):
-scripts/run-docker.ps1 -Env dev -Action up -Monitoring -Build
+# Démarrer avec Docker
+docker compose -f docker-compose.dev.yml up -d
+docker compose -f docker-compose.prod.yml up -d
 
 # Arrêter
-scripts/run-docker.sh dev down
-scripts/run-docker.ps1 -Env dev -Action down
+docker compose -f docker-compose.dev.yml down
+docker compose -f docker-compose.prod.yml down
 
 # Démarrer le développement (sans Docker)
 yarn dev

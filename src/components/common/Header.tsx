@@ -2,7 +2,7 @@
 
 import { List, X } from '@phosphor-icons/react'
 import Image from 'next/image'
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { useApp } from '../../context/AppContext'
 import { Button } from '../ui/button'
 
@@ -16,23 +16,8 @@ interface HeaderProps {
 }
 
 export function Header({ navigate, currentPage, currentUser, favorites = [], logout }: HeaderProps) {
-  const [isAtTop, setIsAtTop] = useState(true)
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const { cart } = useApp() // Use cart from context
-
-  useEffect(() => {
-    const handleScroll = () => {
-      setIsAtTop(window.scrollY < 100)
-    }
-
-    handleScroll()
-
-    window.addEventListener('scroll', handleScroll, { passive: true })
-
-    return () => {
-      window.removeEventListener('scroll', handleScroll)
-    }
-  }, [])
 
   // Close mobile menu on navigation
   const handleNavigate = (page: string) => {
@@ -47,7 +32,7 @@ export function Header({ navigate, currentPage, currentUser, favorites = [], log
 
   return (
     <>
-      <header className={`${isAtTop ? 'relative mb-8' : 'fixed top-0 left-0 right-0'} z-50 glass-card border-b-2 border-white/40 transition-all duration-500 ease-out`}>
+      <header className="fixed top-0 left-0 right-0 z-50 glass-card border-b-2 border-white/40">
         <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center space-x-4 md:space-x-8">
             <div 
@@ -60,6 +45,7 @@ export function Header({ navigate, currentPage, currentUser, favorites = [], log
                   alt="Billetterie Logo" 
                   width={80} 
                   height={80}
+                  priority
                   className="h-full w-full object-contain drop-shadow-lg"
                 />
               </div>

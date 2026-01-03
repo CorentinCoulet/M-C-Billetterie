@@ -16,12 +16,17 @@ async function handlePost(request: NextRequest) {
     const authServiceModule = await import('../../../../src/modules/auth/auth.service');
     const authService = authServiceModule.default;
 
-    // Get client info
-    const ipAddress = request.headers.get('x-forwarded-for') || 'unknown';
+    // Get client info for rate limiting and session tracking
+    const ipAddress = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 
+                      request.headers.get('x-real-ip') || 
+                      'unknown';
     const userAgent = request.headers.get('user-agent') || 'unknown';
 
-    // Login user
-    const result = await authService.login(data.email, data.password);
+    // Login user with metadata for RGPD/CNIL rate limiting
+    const result = await authService.login(data.email, data.password, {
+      ipAddress,
+      userAgent
+    });
 
     if (!result) {
       return NextApiResponse.error('Identifiant ou mot de passe incorrect', 401);
@@ -50,6 +55,15 @@ async function handlePost(request: NextRequest) {
 
     return response;
   } catch (error: any) {
+    // Handle account locked error (RGPD/CNIL: 5 failed attempts)
+    if (error.message?.startsWith('ACCOUNT_LOCKED:')) {
+      const minutes = error.message.split(':')[1];
+      return NextApiResponse.error(
+        `Compte temporairement verrouillé suite à trop de tentatives échouées. Réessayez dans ${minutes} minutes.`,
+        429 // Too Many Requests
+      );
+    }
+    
     return NextApiResponse.error(
       error.message || 'Erreur lors de la connexion',
       500

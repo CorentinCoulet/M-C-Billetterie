@@ -11,7 +11,7 @@ interface JWTPayload {
 export async function PUT(request: NextRequest) {
   try {
     // Check authentication
-    const token = request.cookies.get('auth_token')?.value
+    const token = request.cookies.get('auth-token')?.value
     if (!token) {
       return NextResponse.json(
         { success: false, message: 'Not authenticated' },
@@ -28,7 +28,7 @@ export async function PUT(request: NextRequest) {
     }
 
     const body = await request.json()
-    const { name, email } = body
+    const { name, email, phone, address, city, postalCode, country } = body
 
     // Check if email is already used by another user
     if (email && email !== payload.email) {
@@ -50,11 +50,21 @@ export async function PUT(request: NextRequest) {
       data: {
         name: name || undefined,
         email: email || undefined,
+        phone: phone !== undefined ? phone : undefined,
+        address: address !== undefined ? address : undefined,
+        city: city !== undefined ? city : undefined,
+        postalCode: postalCode !== undefined ? postalCode : undefined,
+        country: country !== undefined ? country : undefined,
       },
       select: {
         id: true,
         email: true,
         name: true,
+        phone: true,
+        address: true,
+        city: true,
+        postalCode: true,
+        country: true,
         role: true,
       }
     })

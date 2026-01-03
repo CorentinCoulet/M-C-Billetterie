@@ -12,7 +12,7 @@ interface JWTPayload {
 export async function PUT(request: NextRequest) {
   try {
     // Check authentication
-    const token = request.cookies.get('auth_token')?.value
+    const token = request.cookies.get('auth-token')?.value
     if (!token) {
       return NextResponse.json(
         { success: false, message: 'Not authenticated' },

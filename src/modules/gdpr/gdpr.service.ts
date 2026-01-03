@@ -4,6 +4,7 @@
 
 import { PrismaClient } from '@prisma/client';
 import { AuditService } from '../../lib/audit-service';
+import { logger } from '../../lib/logger';
 
 const prisma = new PrismaClient();
 
@@ -56,7 +57,7 @@ export class GDPRService {
         tickets: user.tickets
       };
     } catch (error) {
-      console.error('Error during GDPR data export:', error);
+      logger.error({ error, userId }, 'Error during GDPR data export');
       
       // Log failed export attempt
       await AuditService.logEvent({
@@ -138,7 +139,7 @@ export class GDPRService {
 
       return { success: true, message: 'User data deleted' };
     } catch (error) {
-      console.error('Error during GDPR data deletion:', error);
+      logger.error({ error, userId }, 'Error during GDPR data deletion');
       
       // Log failed deletion attempt
       await AuditService.logEvent({
@@ -183,7 +184,7 @@ export class GDPRService {
         userId
       };
     } catch (error) {
-      console.error('Error during GDPR data portability:', error);
+      logger.error({ error, userId }, 'Error during GDPR data portability');
       
       // Log failed portability attempt
       await AuditService.logEvent({
@@ -246,7 +247,7 @@ export class GDPRService {
 
       return { success: true, message: 'User data anonymized' };
     } catch (error) {
-      console.error('Error during GDPR data anonymization:', error);
+      logger.error({ error, userId }, 'Error during GDPR data anonymization');
       
       // Log failed anonymization attempt
       await AuditService.logEvent({
@@ -292,7 +293,7 @@ export class GDPRService {
         canDelete: user.orders.filter((order: any) => order.status !== 'cancelled').length === 0
       };
     } catch (error) {
-      console.error('Error during GDPR compliance status check:', error);
+      logger.error({ error, userId }, 'Error during GDPR compliance status check');
       
       // Log failed compliance check
       await AuditService.logEvent({

@@ -24,14 +24,22 @@ export default function ContactPage() {
     try {
       setLoading(true)
       
-      // Simulate API call - Replace with actual contact API endpoint
-      await new Promise(resolve => setTimeout(resolve, 1000))
-      
-      // Show success message
-      alert('Merci pour votre message ! Nous vous répondrons dans les plus brefs délais.')
-      
-      // Reset form
-      setFormData({ name: '', email: '', subject: '', message: '' })
+      const response = await fetch('/api/contact', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData),
+      })
+
+      const data = await response.json()
+
+      if (data.success) {
+        alert(data.message || 'Merci pour votre message ! Nous vous répondrons dans les plus brefs délais.')
+        setFormData({ name: '', email: '', subject: '', message: '' })
+      } else {
+        alert(data.message || 'Une erreur est survenue lors de l\'envoi.')
+      }
     } catch (error) {
       console.error('Erreur lors de l\'envoi du message:', error)
       alert('Une erreur est survenue lors de l\'envoi. Veuillez réessayer.')

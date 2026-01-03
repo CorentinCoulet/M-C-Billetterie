@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import prisma from '@/lib/prisma';
 import { NextApiRequest, NextApiResponse } from 'next';
 import authService from '../services/authService';
@@ -49,7 +50,7 @@ export async function isAuthenticated(
     // Continue to the next middleware or route handler
     return next();
   } catch (error) {
-    console.error('Authentication error:', error);
+    logger.error({ error }, 'Authentication error');
     return res.status(401).json({ message: 'Authentication failed' });
   }
 }
@@ -68,7 +69,7 @@ export function hasRoles(roles: string[]) {
         return next();
       });
     } catch (error) {
-      console.error('Authorization error:', error);
+      logger.error({ error }, 'Authorization error');
       return res.status(403).json({ message: 'Insufficient permissions' });
     }
   };

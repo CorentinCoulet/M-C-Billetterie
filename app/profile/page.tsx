@@ -1,7 +1,8 @@
 'use client'
 
-import { Envelope, FileText, Lock, Phone, ShoppingBag, Trash, User, Warning } from '@phosphor-icons/react'
+import { Envelope, FileText, Lock, Phone, Shield, ShoppingBag, Trash, User, Warning } from '@phosphor-icons/react'
 import { motion } from 'framer-motion'
+import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import { toast } from 'sonner'
@@ -10,15 +11,15 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../..
 import { Input } from '../../src/components/ui/input'
 import { Label } from '../../src/components/ui/label'
 import { Separator } from '../../src/components/ui/separator'
+import { Switch } from '../../src/components/ui/switch'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../src/components/ui/tabs'
 import { useApp } from '../../src/context/AppContext'
 
 export default function ProfilePage() {
   const router = useRouter()
-  const { currentUser, logout, isLoading } = useApp()
+  const { currentUser, setCurrentUser, logout, isLoading } = useApp()
   const [activeTab, setActiveTab] = useState('info')
   
-  // Traduction des statuts de commande (UI en français)
   const translateOrderStatus = (status: string): string => {
     const key = (status || '').toString().toUpperCase()
     const map: Record<string, string> = {
@@ -27,7 +28,7 @@ export default function ProfilePage() {
       PAID: 'Payée',
       COMPLETED: 'Terminée',
       CANCELED: 'Annulée',
-      CANCELLED: 'Annulée', // variante orthographique possible
+      CANCELLED: 'Annulée',
       REFUNDED: 'Remboursée',
       FAILED: 'Échouée',
     }
@@ -35,11 +36,14 @@ export default function ProfilePage() {
   }
 
   // Edit information state
-  const [isEditing, setIsEditing] = useState(false)
   const [formData, setFormData] = useState({
     name: '',
     email: '',
     phone: '',
+    address: '',
+    city: '',
+    postalCode: '',
+    country: 'France',
   })
 
   // Password change state
@@ -55,6 +59,19 @@ export default function ProfilePage() {
 
   // Order history state
   const [orders, setOrders] = useState<any[]>([])
+  const [ordersLoading, setOrdersLoading] = useState(false)
+  const [ordersLoaded, setOrdersLoaded] = useState(false)
+
+  // Consent state for GDPR
+  const [consents, setConsents] = useState({
+    marketing: false,
+    analytics: true,
+    thirdParty: false,
+  })
+  const [consentsLoading, setConsentsLoading] = useState(false)
+  const [consentsLoaded, setConsentsLoaded] = useState(false)
+  const [showDataDeleteModal, setShowDataDeleteModal] = useState(false)
+  const [dataDeleteConfirmation, setDataDeleteConfirmation] = useState('')
 
   useEffect(() => {
     if (!isLoading && !currentUser) {
@@ -64,33 +81,132 @@ export default function ProfilePage() {
       setFormData({
         name: currentUser.name || '',
         email: currentUser.email || '',
-        phone: '',
+        phone: currentUser.phone || '',
+        address: currentUser.address || '',
+        city: currentUser.city || '',
+        postalCode: currentUser.postalCode || '',
+        country: currentUser.country || 'France',
       })
     }
   }, [currentUser, isLoading, router])
 
+  // Fetch orders only when orders tab is active
   useEffect(() => {
-    // Fetch orders from API
     const fetchOrders = async () => {
+      if (ordersLoaded) return; // Don't fetch if already loaded
+      
+      setOrdersLoading(true);
       try {
         const response = await fetch('/api/orders/my-orders')
         if (response.ok) {
           const data = await response.json()
           if (data.success) {
             setOrders(data.data || [])
+            setOrdersLoaded(true);
           }
         }
       } catch (error) {
         console.error('Error loading orders:', error)
+      } finally {
+        setOrdersLoading(false);
       }
     }
-    if (currentUser) {
+    
+    if (currentUser && activeTab === 'orders') {
       fetchOrders()
     }
-  }, [currentUser])
+  }, [currentUser, activeTab, ordersLoaded])
+
+  // Fetch consent settings only when privacy tab is active
+  useEffect(() => {
+    const fetchConsents = async () => {
+      if (consentsLoaded) return; // Don't fetch if already loaded
+      
+      setConsentsLoading(true);
+      try {
+        const response = await fetch('/api/user/consent')
+        if (response.ok) {
+          const data = await response.json()
+          if (data.success && data.data) {
+            setConsents({
+              marketing: data.data.marketing || false,
+              analytics: data.data.analytics !== false, // default true
+              thirdParty: data.data.thirdParty || false,
+            })
+            setConsentsLoaded(true);
+          }
+        }
+      } catch (error) {
+        console.error('Error loading consents:', error)
+      } finally {
+        setConsentsLoading(false);
+      }
+    }
+    
+    if (currentUser && activeTab === 'privacy') {
+      fetchConsents()
+    }
+  }, [currentUser, activeTab, consentsLoaded])
+
+  const handleConsentChange = async (type: 'marketing' | 'analytics' | 'thirdParty', value: boolean) => {
+    const newConsents = { ...consents, [type]: value }
+    setConsents(newConsents)
+    setConsentsLoading(true)
+    
+    try {
+      const response = await fetch('/api/user/consent', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newConsents),
+      })
+      
+      if (response.ok) {
+        toast.success('Préférences mises à jour', {
+          style: {
+            background: 'rgb(34, 197, 94)',
+            border: '1px solid rgb(22, 163, 74)',
+            color: '#ffffff',
+            width: 'fit-content',
+          },
+        })
+      } else {
+        // Revert on failure
+        setConsents(consents)
+        toast.error('Erreur lors de la mise à jour')
+      }
+    } catch (error) {
+      setConsents(consents)
+      toast.error('Erreur lors de la mise à jour')
+    } finally {
+      setConsentsLoading(false)
+    }
+  }
+
+  const handleDeleteAccountFromData = async () => {
+    if (dataDeleteConfirmation !== 'SUPPRIMER') {
+      toast.error('Veuillez saisir "SUPPRIMER" pour confirmer')
+      return
+    }
+
+    try {
+      const response = await fetch('/api/user/delete-account', {
+        method: 'DELETE',
+      })
+      
+      if (response.ok) {
+        toast.success('Compte supprimé avec succès')
+        await logout()
+      } else {
+        toast.error('Erreur lors de la suppression du compte')
+      }
+    } catch (error) {
+      toast.error('Erreur lors de la suppression du compte')
+    }
+  }
 
   const handleUpdateProfile = async (e: React.FormEvent) => {
     e.preventDefault()
+    
     try {
       const response = await fetch('/api/user/update-profile', {
         method: 'PUT',
@@ -99,10 +215,27 @@ export default function ProfilePage() {
       })
       
       if (response.ok) {
-        toast.success('Profil mis à jour avec succès')
-        setIsEditing(false)
+        const data = await response.json()
+        if (data.success && data.data) {
+          setCurrentUser(data.data)
+        }
+        toast.success('Profil mis à jour avec succès', {
+          style: {
+            background: 'rgb(34, 197, 94)',
+            border: '1px solid rgb(22, 163, 74)',
+            color: '#ffffff',
+            width: 'fit-content',
+          },
+        })
+        
+        if (document.activeElement instanceof HTMLElement) {
+          document.activeElement.blur()
+        }
+        
+        window.scrollTo({ top: 0, behavior: 'smooth' })
       } else {
-        toast.error('Erreur lors de la mise à jour du profil')
+        const errorData = await response.json()
+        toast.error(errorData.message || 'Erreur lors de la mise à jour du profil')
       }
     } catch (error) {
       toast.error('Erreur lors de la mise à jour du profil')
@@ -169,6 +302,7 @@ export default function ProfilePage() {
   const downloadMyData = async () => {
     try {
       const response = await fetch('/api/user/export-data')
+      
       if (response.ok) {
         const blob = await response.blob()
         const url = window.URL.createObjectURL(blob)
@@ -226,38 +360,34 @@ export default function ProfilePage() {
         </motion.div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4 sm:space-y-6">
-          <TabsList className="glass-card p-1 sm:p-1.5 shadow-lg border-2 border-white/50 w-full grid grid-cols-4 gap-1">
+          <TabsList className="w-full h-auto p-1.5 bg-white/80 backdrop-blur-sm rounded-xl shadow-lg border border-white/50 flex flex-row">
             <TabsTrigger 
               value="info" 
-              className="flex items-center justify-center sm:space-x-2 data-[state=active]:bg-gradient-to-r data-[state=active]:from-primary data-[state=active]:to-blue-600 data-[state=active]:text-white transition-all duration-300 text-xs sm:text-sm px-2 sm:px-3"
+              className="flex-1 flex items-center justify-center gap-2 py-2.5 sm:py-3 px-2 sm:px-4 rounded-lg text-xs sm:text-sm font-medium text-gray-600 hover:text-primary hover:bg-primary/5 data-[state=active]:bg-gradient-to-r data-[state=active]:from-primary data-[state=active]:to-blue-600 data-[state=active]:text-white data-[state=active]:shadow-md transition-all duration-300"
             >
-              <User size={20} className="sm:hidden" weight="duotone" />
-              <User size={18} className="hidden sm:block" weight="duotone" />
-              <span className="font-medium hidden sm:inline">Informations</span>
+              <User size={18} weight="duotone" className="shrink-0" />
+              <span className="hidden sm:inline">Informations</span>
             </TabsTrigger>
             <TabsTrigger 
               value="security" 
-              className="flex items-center justify-center sm:space-x-2 data-[state=active]:bg-gradient-to-r data-[state=active]:from-orange-500 data-[state=active]:to-red-600 data-[state=active]:text-white transition-all duration-300 text-xs sm:text-sm px-2 sm:px-3"
+              className="flex-1 flex items-center justify-center gap-2 py-2.5 sm:py-3 px-2 sm:px-4 rounded-lg text-xs sm:text-sm font-medium text-gray-600 hover:text-orange-500 hover:bg-orange-50 data-[state=active]:bg-gradient-to-r data-[state=active]:from-orange-500 data-[state=active]:to-red-500 data-[state=active]:text-white data-[state=active]:shadow-md transition-all duration-300"
             >
-              <Lock size={20} className="sm:hidden" weight="duotone" />
-              <Lock size={18} className="hidden sm:block" weight="duotone" />
-              <span className="font-medium hidden sm:inline">Sécurité</span>
+              <Lock size={18} weight="duotone" className="shrink-0" />
+              <span className="hidden sm:inline">Sécurité</span>
             </TabsTrigger>
             <TabsTrigger 
               value="orders" 
-              className="flex items-center justify-center sm:space-x-2 data-[state=active]:bg-gradient-to-r data-[state=active]:from-green-500 data-[state=active]:to-emerald-600 data-[state=active]:text-white transition-all duration-300 text-xs sm:text-sm px-2 sm:px-3"
+              className="flex-1 flex items-center justify-center gap-2 py-2.5 sm:py-3 px-2 sm:px-4 rounded-lg text-xs sm:text-sm font-medium text-gray-600 hover:text-green-500 hover:bg-green-50 data-[state=active]:bg-gradient-to-r data-[state=active]:from-green-500 data-[state=active]:to-emerald-600 data-[state=active]:text-white data-[state=active]:shadow-md transition-all duration-300"
             >
-              <ShoppingBag size={20} className="sm:hidden" weight="duotone" />
-              <ShoppingBag size={18} className="hidden sm:block" weight="duotone" />
-              <span className="font-medium hidden sm:inline">Commandes</span>
+              <ShoppingBag size={18} weight="duotone" className="shrink-0" />
+              <span className="hidden sm:inline">Commandes</span>
             </TabsTrigger>
             <TabsTrigger 
               value="data" 
-              className="flex items-center justify-center sm:space-x-2 data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-500 data-[state=active]:to-pink-600 data-[state=active]:text-white transition-all duration-300 text-xs sm:text-sm px-2 sm:px-3"
+              className="flex-1 flex items-center justify-center gap-2 py-2.5 sm:py-3 px-2 sm:px-4 rounded-lg text-xs sm:text-sm font-medium text-gray-600 hover:text-purple-500 hover:bg-purple-50 data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-500 data-[state=active]:to-pink-600 data-[state=active]:text-white data-[state=active]:shadow-md transition-all duration-300"
             >
-              <FileText size={20} className="sm:hidden" weight="duotone" />
-              <FileText size={18} className="hidden sm:block" weight="duotone" />
-              <span className="font-medium hidden sm:inline">Mes données</span>
+              <FileText size={18} weight="duotone" className="shrink-0" />
+              <span className="hidden sm:inline">Mes données</span>
             </TabsTrigger>
           </TabsList>
 
@@ -306,7 +436,15 @@ export default function ProfilePage() {
 
                   <Separator className="my-6" />
 
-                  <form onSubmit={handleUpdateProfile} className="space-y-4">
+                  <form 
+                    onSubmit={handleUpdateProfile} 
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' && e.target instanceof HTMLInputElement) {
+                        e.preventDefault()
+                      }
+                    }}
+                    className="space-y-4"
+                  >
                     <div className="grid md:grid-cols-2 gap-4">
                       <div className="space-y-2">
                         <Label htmlFor="name" className="text-sm font-semibold text-foreground flex items-center space-x-2">
@@ -317,7 +455,6 @@ export default function ProfilePage() {
                           id="name"
                           value={formData.name}
                           onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                          disabled={!isEditing}
                           className="bg-white/80 border-2 focus:border-primary transition-all"
                         />
                       </div>
@@ -332,7 +469,6 @@ export default function ProfilePage() {
                           type="email"
                           value={formData.email}
                           onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                          disabled={!isEditing}
                           className="bg-white/80 border-2 focus:border-primary transition-all"
                         />
                       </div>
@@ -348,44 +484,79 @@ export default function ProfilePage() {
                         type="tel"
                         value={formData.phone}
                         onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                        disabled={!isEditing}
                         placeholder="+33 6 12 34 56 78"
                         className="bg-white/80 border-2 focus:border-primary transition-all"
                       />
                     </div>
 
+                    <div className="space-y-2">
+                      <Label htmlFor="address" className="text-sm font-semibold text-foreground flex items-center space-x-2">
+                        <Shield size={16} />
+                        <span>Adresse (optionnel)</span>
+                      </Label>
+                      <Input
+                        id="address"
+                        value={formData.address}
+                        onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+                        placeholder="123 rue de la République"
+                        className="bg-white/80 border-2 focus:border-primary transition-all"
+                      />
+                    </div>
+
+                    <div className="grid md:grid-cols-3 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="postalCode" className="text-sm font-semibold text-foreground flex items-center space-x-2">
+                          <Shield size={16} />
+                          <span>Code postal</span>
+                        </Label>
+                        <Input
+                          id="postalCode"
+                          value={formData.postalCode}
+                          onChange={(e) => setFormData({ ...formData, postalCode: e.target.value })}
+                          placeholder="75001"
+                          className="bg-white/80 border-2 focus:border-primary transition-all"
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="city" className="text-sm font-semibold text-foreground flex items-center space-x-2">
+                          <Shield size={16} />
+                          <span>Ville</span>
+                        </Label>
+                        <Input
+                          id="city"
+                          value={formData.city}
+                          onChange={(e) => setFormData({ ...formData, city: e.target.value })}
+                          placeholder="Paris"
+                          className="bg-white/80 border-2 focus:border-primary transition-all"
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="country" className="text-sm font-semibold text-foreground flex items-center space-x-2">
+                          <Shield size={16} />
+                          <span>Pays</span>
+                        </Label>
+                        <Input
+                          id="country"
+                          value={formData.country}
+                          onChange={(e) => setFormData({ ...formData, country: e.target.value })}
+                          placeholder="France"
+                          className="bg-white/80 border-2 focus:border-primary transition-all"
+                        />
+                      </div>
+                    </div>
+
                     <div className="flex flex-col sm:flex-row sm:space-x-4 space-y-3 sm:space-y-0 pt-4">
-                      {!isEditing ? (
-                        <Button 
-                          type="button" 
-                          onClick={() => setIsEditing(true)} 
-                          className="glass-button shadow-lg hover:shadow-xl transition-all w-full sm:w-auto"
-                          size="lg"
-                        >
-                          <User size={16} className="mr-2 sm:hidden" weight="duotone" />
-                          <User size={18} className="mr-2 hidden sm:block" weight="duotone" />
-                          Modifier mes informations
-                        </Button>
-                      ) : (
-                        <>
-                          <Button 
-                            type="submit" 
-                            className="glass-button shadow-lg hover:shadow-xl transition-all w-full sm:w-auto"
-                            size="lg"
-                          >
-                            💾 Enregistrer
-                          </Button>
-                          <Button
-                            type="button"
-                            variant="outline"
-                            onClick={() => setIsEditing(false)}
-                            className="border-2 border-white/50 shadow-lg hover:shadow-xl transition-all w-full sm:w-auto"
-                            size="lg"
-                          >
-                            ✕ Annuler
-                          </Button>
-                        </>
-                      )}
+                      <Button 
+                        type="submit" 
+                        className="glass-button shadow-lg hover:shadow-xl transition-all w-full sm:w-auto"
+                        size="lg"
+                      >
+                        <User size={16} className="mr-2 sm:hidden" weight="duotone" />
+                        <User size={18} className="mr-2 hidden sm:block" weight="duotone" />
+                        💾 Enregistrer les modifications
+                      </Button>
                     </div>
                   </form>
                 </CardContent>
@@ -582,7 +753,14 @@ export default function ProfilePage() {
                   </div>
                 </CardHeader>
                 <CardContent className="pt-6">
-                  {orders.length === 0 ? (
+                  {ordersLoading ? (
+                    <div className="text-center py-16">
+                      <div className="w-24 h-24 mx-auto mb-6 rounded-2xl bg-gradient-to-br from-green-100 to-emerald-100 flex items-center justify-center animate-pulse">
+                        <ShoppingBag size={48} className="text-green-600" weight="duotone" />
+                      </div>
+                      <p className="text-muted-foreground">Chargement de vos commandes...</p>
+                    </div>
+                  ) : orders.length === 0 ? (
                     <div className="text-center py-16">
                       <div className="w-24 h-24 mx-auto mb-6 rounded-2xl bg-gradient-to-br from-green-100 to-emerald-100 flex items-center justify-center">
                         <ShoppingBag size={48} className="text-green-600" weight="duotone" />
@@ -662,17 +840,15 @@ export default function ProfilePage() {
                 </CardHeader>
                 <CardContent className="space-y-8 pt-6">
                   <div className="space-y-6">
-                    <motion.div
-                      whileHover={{ scale: 1.02 }}
-                      className="flex items-start space-x-4 p-6 rounded-2xl bg-gradient-to-br from-purple-50 to-pink-50 border-2 border-purple-200 shadow-lg"
-                    >
+                    {/* Section: Télécharger mes données */}
+                    <div className="flex items-start space-x-4 p-6 rounded-2xl bg-gradient-to-br from-purple-50 to-pink-50 border-2 border-purple-200 shadow-lg">
                       <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-500 to-pink-600 flex items-center justify-center text-white flex-shrink-0 shadow-lg">
                         <FileText size={24} weight="duotone" />
                       </div>
                       <div className="flex-1">
                         <h3 className="font-bold text-lg mb-2">Télécharger mes données</h3>
                         <p className="text-sm text-muted-foreground mb-4">
-                          Téléchargez une copie complète de vos données personnelles au format JSON
+                          Téléchargez une copie complète de vos données personnelles au format JSON (incluant vos commandes, avis, notifications et préférences)
                         </p>
                         <Button 
                           onClick={downloadMyData} 
@@ -683,10 +859,90 @@ export default function ProfilePage() {
                           Télécharger mes données
                         </Button>
                       </div>
-                    </motion.div>
+                    </div>
 
                     <Separator />
 
+                    {/* Section: Gestion des consentements */}
+                    <div className="space-y-4 p-6 rounded-2xl bg-gradient-to-br from-indigo-50 to-violet-50 border-2 border-indigo-200">
+                      <div className="flex items-center space-x-2 mb-4">
+                        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center text-white shadow-lg">
+                          <Shield size={20} weight="duotone" />
+                        </div>
+                        <p className="font-bold text-lg">Gestion des consentements</p>
+                      </div>
+                      
+                      {consentsLoading ? (
+                        <div className="text-center py-8">
+                          <div className="animate-pulse space-y-4">
+                            <div className="h-16 bg-white/50 rounded-xl"></div>
+                            <div className="h-16 bg-white/50 rounded-xl"></div>
+                            <div className="h-16 bg-white/50 rounded-xl"></div>
+                          </div>
+                          <p className="text-muted-foreground mt-4 text-sm">Chargement de vos préférences...</p>
+                        </div>
+                      ) : (
+                      <div className="space-y-4">
+                        <div 
+                          className="flex items-center justify-between p-4 bg-white rounded-xl border border-indigo-100 shadow-sm cursor-pointer hover:bg-indigo-50/50 transition-colors"
+                          onClick={() => !consentsLoading && handleConsentChange('marketing', !consents.marketing)}
+                        >
+                          <div className="flex-1">
+                            <p className="font-semibold">Communications marketing</p>
+                            <p className="text-sm text-muted-foreground">Recevoir des offres et actualités par e-mail</p>
+                          </div>
+                          <Switch
+                            checked={consents.marketing}
+                            onCheckedChange={(checked) => handleConsentChange('marketing', checked)}
+                            disabled={consentsLoading}
+                            onClick={(e) => e.stopPropagation()}
+                          />
+                        </div>
+                        
+                        <div 
+                          className="flex items-center justify-between p-4 bg-white rounded-xl border border-indigo-100 shadow-sm cursor-pointer hover:bg-indigo-50/50 transition-colors"
+                          onClick={() => !consentsLoading && handleConsentChange('analytics', !consents.analytics)}
+                        >
+                          <div className="flex-1">
+                            <p className="font-semibold">Cookies analytiques</p>
+                            <p className="text-sm text-muted-foreground">Nous aider à améliorer notre service</p>
+                          </div>
+                          <Switch
+                            checked={consents.analytics}
+                            onCheckedChange={(checked) => handleConsentChange('analytics', checked)}
+                            disabled={consentsLoading}
+                            onClick={(e) => e.stopPropagation()}
+                          />
+                        </div>
+                        
+                        <div 
+                          className="flex items-center justify-between p-4 bg-white rounded-xl border border-indigo-100 shadow-sm cursor-pointer hover:bg-indigo-50/50 transition-colors"
+                          onClick={() => !consentsLoading && handleConsentChange('thirdParty', !consents.thirdParty)}
+                        >
+                          <div className="flex-1">
+                            <p className="font-semibold">Partage avec des tiers</p>
+                            <p className="text-sm text-muted-foreground">Partager vos données avec nos partenaires</p>
+                          </div>
+                          <Switch
+                            checked={consents.thirdParty}
+                            onCheckedChange={(checked) => handleConsentChange('thirdParty', checked)}
+                            disabled={consentsLoading}
+                            onClick={(e) => e.stopPropagation()}
+                          />
+                        </div>
+                      </div>
+                      )}
+                      
+                      <div className="mt-4 p-3 bg-indigo-100/50 rounded-lg border border-indigo-200">
+                        <p className="text-xs text-indigo-700">
+                          ℹ️ Vous pouvez modifier vos consentements à tout moment. Vos préférences sont enregistrées immédiatement.
+                        </p>
+                      </div>
+                    </div>
+
+                    <Separator />
+
+                    {/* Section: Données collectées */}
                     <div className="space-y-3 p-6 rounded-2xl bg-gradient-to-br from-blue-50 to-indigo-50 border-2 border-blue-200">
                       <div className="flex items-center space-x-2 mb-3">
                         <span className="text-2xl">📊</span>
@@ -703,17 +959,26 @@ export default function ProfilePage() {
                         </li>
                         <li className="flex items-start space-x-2">
                           <span className="text-blue-600 font-bold">•</span>
-                          <span className="text-sm">Préférences et favoris</span>
+                          <span className="text-sm">Préférences et consentements</span>
                         </li>
                         <li className="flex items-start space-x-2">
                           <span className="text-blue-600 font-bold">•</span>
-                          <span className="text-sm">Données de navigation (cookies)</span>
+                          <span className="text-sm">Notifications et avis</span>
                         </li>
                       </ul>
+                      <div className="mt-4 pt-4 border-t border-blue-200">
+                        <Link 
+                          href="/privacy" 
+                          className="text-sm text-indigo-600 hover:text-indigo-800 underline font-medium"
+                        >
+                          📄 Consulter notre politique de confidentialité complète
+                        </Link>
+                      </div>
                     </div>
 
                     <Separator />
 
+                    {/* Section: Vos droits RGPD */}
                     <div className="space-y-3 p-6 rounded-2xl bg-gradient-to-br from-green-50 to-emerald-50 border-2 border-green-200">
                       <div className="flex items-center space-x-2 mb-3">
                         <span className="text-2xl">⚖️</span>
@@ -740,7 +1005,95 @@ export default function ProfilePage() {
                           <span className="text-green-600 font-bold">✓</span>
                           <span className="text-sm">Droit d&apos;opposition au traitement</span>
                         </li>
+                        <li className="flex items-start space-x-2">
+                          <span className="text-green-600 font-bold">✓</span>
+                          <span className="text-sm">Droit à la limitation du traitement</span>
+                        </li>
                       </ul>
+                      <div className="mt-4 p-3 bg-green-100/50 rounded-lg border border-green-200">
+                        <p className="text-xs text-green-800">
+                          <strong>📅 Délai de traitement :</strong> Vos demandes d&apos;export ou de suppression sont traitées sous 30 jours maximum.
+                        </p>
+                        <p className="text-xs text-green-800 mt-2">
+                          <strong>🗂️ Conservation :</strong> Vos données personnelles sont conservées pendant 3 ans après votre dernière activité.
+                        </p>
+                        <p className="text-xs text-green-800 mt-2">
+                          <strong>📧 Contact DPO :</strong> Pour toute question sur vos données :{' '}
+                          <a href="mailto:dpo@billetterie.fr" className="underline font-semibold">dpo@billetterie.fr</a>
+                        </p>
+                      </div>
+                    </div>
+
+                    <Separator />
+
+                    {/* Section: Suppression du compte */}
+                    <div className="space-y-4 p-6 rounded-2xl bg-gradient-to-br from-red-50 to-orange-50 border-2 border-red-200">
+                      <div className="flex items-center space-x-2 mb-3">
+                        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-red-500 to-orange-600 flex items-center justify-center text-white shadow-lg">
+                          <Trash size={20} weight="duotone" />
+                        </div>
+                        <div>
+                          <p className="font-bold text-lg text-red-800">Supprimer mon compte</p>
+                          <p className="text-sm text-red-600">Exercez votre droit à l&apos;effacement (Art. 17 RGPD)</p>
+                        </div>
+                      </div>
+                      
+                      {!showDataDeleteModal ? (
+                        <Button
+                          variant="outline"
+                          className="border-2 border-red-400 text-red-700 hover:bg-red-100 shadow-lg hover:shadow-xl transition-all"
+                          onClick={() => setShowDataDeleteModal(true)}
+                          size="lg"
+                        >
+                          <Trash size={18} className="mr-2" weight="duotone" />
+                          Supprimer définitivement mon compte
+                        </Button>
+                      ) : (
+                        <motion.div
+                          initial={{ opacity: 0, scale: 0.95 }}
+                          animate={{ opacity: 1, scale: 1 }}
+                          className="space-y-4 p-4 border-2 border-red-400 rounded-xl bg-red-100/50 shadow-inner"
+                        >
+                          <div className="flex items-start space-x-3">
+                            <Warning size={24} className="text-red-700 flex-shrink-0 mt-1" weight="duotone" />
+                            <div>
+                              <p className="text-sm text-red-800 font-semibold mb-2">
+                                ⚠️ Cette action est irréversible. Toutes vos données seront définitivement supprimées.
+                              </p>
+                              <p className="text-sm text-red-700">
+                                Pour confirmer la suppression, saisissez <strong className="font-bold text-red-900">SUPPRIMER</strong> ci-dessous :
+                              </p>
+                            </div>
+                          </div>
+                          <Input
+                            value={dataDeleteConfirmation}
+                            onChange={(e) => setDataDeleteConfirmation(e.target.value)}
+                            placeholder="Tapez SUPPRIMER"
+                            className="bg-white border-2 border-red-400 focus:border-red-600 text-center font-semibold"
+                          />
+                          <div className="flex space-x-4">
+                            <Button
+                              variant="destructive"
+                              onClick={handleDeleteAccountFromData}
+                              disabled={dataDeleteConfirmation !== 'SUPPRIMER'}
+                              className="shadow-lg hover:shadow-xl transition-all"
+                            >
+                              <Trash size={18} className="mr-2" weight="duotone" />
+                              Confirmer
+                            </Button>
+                            <Button
+                              variant="outline"
+                              onClick={() => {
+                                setShowDataDeleteModal(false)
+                                setDataDeleteConfirmation('')
+                              }}
+                              className="border-2 shadow-lg hover:shadow-xl transition-all"
+                            >
+                              ✕ Annuler
+                            </Button>
+                          </div>
+                        </motion.div>
+                      )}
                     </div>
                   </div>
                 </CardContent>

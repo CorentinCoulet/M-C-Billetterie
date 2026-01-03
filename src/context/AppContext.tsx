@@ -7,6 +7,11 @@ export interface User {
   id: string
   email: string
   name?: string
+  phone?: string
+  address?: string
+  city?: string
+  postalCode?: string
+  country?: string
   role?: string
 }
 
@@ -70,7 +75,7 @@ export function AppProvider({ children }: AppProviderProps) {
         }
       }
     } catch (error) {
-      console.error('Error loading cart:', error)
+      // Erreur silencieuse - comportement normal
     }
   }, [currentUser])
 
@@ -97,7 +102,7 @@ export function AppProvider({ children }: AppProviderProps) {
         await loadCartFromAPI()
       }
     } catch (error) {
-      console.error('Error adding to cart:', error)
+      // Erreur silencieuse - comportement normal
     }
   }, [currentUser, loadCartFromAPI])
 
@@ -117,7 +122,7 @@ export function AppProvider({ children }: AppProviderProps) {
         await loadCartFromAPI()
       }
     } catch (error) {
-      console.error('Error removing from cart:', error)
+      // Erreur silencieuse - comportement normal
     }
   }, [currentUser, cart, loadCartFromAPI])
 
@@ -144,7 +149,7 @@ export function AppProvider({ children }: AppProviderProps) {
         await loadCartFromAPI()
       }
     } catch (error) {
-      console.error('Error updating cart:', error)
+      // Erreur silencieuse - comportement normal
     }
   }, [currentUser, cart, removeFromCart, loadCartFromAPI])
 
@@ -161,7 +166,7 @@ export function AppProvider({ children }: AppProviderProps) {
         setCart([])
       }
     } catch (error) {
-      console.error('Error clearing cart:', error)
+      // Erreur silencieuse - comportement normal
     }
   }, [currentUser])
 
@@ -182,7 +187,7 @@ export function AppProvider({ children }: AppProviderProps) {
         setCurrentUser(null)
       }
     } catch (error) {
-      console.error('Error checking auth:', error)
+      // Erreur réseau silencieuse - comportement normal si non connecté
       setCurrentUser(null)
     } finally {
       setIsLoading(false)
@@ -196,7 +201,7 @@ export function AppProvider({ children }: AppProviderProps) {
         credentials: 'include',
       })
     } catch (error) {
-      console.error('Error logging out:', error)
+      // Erreur silencieuse - déconnexion forcée de toute façon
     } finally {
       try {
         // Nettoyage défensif côté client

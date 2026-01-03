@@ -23,9 +23,10 @@ services:
       - .env.dev
     environment:
       NODE_ENV: development
-      # Ultra-fast hot reload
-      WATCHPACK_POLLING: "false"
-      CHOKIDAR_USEPOLLING: "false"
+      # Hot reload configuration for Windows/WSL2
+      WATCHPACK_POLLING: "true"
+      CHOKIDAR_USEPOLLING: "true"
+      CHOKIDAR_INTERVAL: 2000
       FAST_REFRESH: true
       # Disable slow features in dev
       NEXT_TELEMETRY_DISABLED: 1
@@ -52,7 +53,7 @@ services:
       migrate-dev:
         condition: service_completed_successfully
     networks:
-      - billetterie-network-dev
+      - billetterie-dev-network
 
   # Prisma migrations (DEV) — executed on demand or before web-dev starts
   migrate-dev:
@@ -65,17 +66,14 @@ services:
       - NODE_ENV=development
     volumes:
       - ./prisma:/app/prisma
-      - ./package.json:/app/package.json
-      - ./yarn.lock:/app/yarn.lock
-      - node_modules_dev:/app/node_modules
     depends_on:
       envgen-dev:
         condition: service_completed_successfully
       db-dev:
         condition: service_healthy
-    command: sh -c "if [ ! -d node_modules/@prisma ]; then yarn add -D prisma @prisma/client --network-timeout 60000; fi && npx prisma migrate deploy && npx prisma generate"
+    command: sh -c "npm install -g prisma@6 @prisma/client@6 && prisma migrate deploy && prisma generate"
     networks:
-      - billetterie-network-dev
+      - billetterie-dev-network
 
   # Prisma seed (DEV) — executed on demand
   seed-dev:
@@ -96,7 +94,7 @@ services:
         condition: service_healthy
     command: sh -c "yarn install --frozen-lockfile --production=false && yarn db:seed"
     networks:
-      - billetterie-network-dev
+      - billetterie-dev-network
     profiles:
       - dev-init
 
@@ -120,7 +118,7 @@ services:
       timeout: 5s
       retries: 5
     networks:
-      - billetterie-network-dev
+      - billetterie-dev-network
 
   # Redis Cache - DEVELOPMENT
   redis-dev:
@@ -145,7 +143,7 @@ services:
       timeout: 3s
       retries: 5
     networks:
-      - billetterie-network-dev
+      - billetterie-dev-network
 
   # Environment generator (DEV) — generates .env.dev if missing
   envgen-dev:
@@ -157,7 +155,7 @@ services:
     command: sh -c "node scripts/generate-env.js dev || true"
     restart: "no"
     networks:
-      - billetterie-network-dev
+      - billetterie-dev-network
 
   # ===================================================================
   # DEVELOPMENT-SPECIFIC TOOLS
@@ -172,7 +170,7 @@ services:
       - "${MAILHOG_SMTP_PORT:-1025}:1025"  # SMTP
       - "${MAILHOG_UI_PORT:-8025}:8025"    # Web UI
     networks:
-      - billetterie-network-dev
+      - billetterie-dev-network
     healthcheck:
       test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8025"]
       interval: 30s
@@ -193,7 +191,7 @@ services:
       db-dev:
         condition: service_healthy
     networks:
-      - billetterie-network-dev
+      - billetterie-dev-network
     healthcheck:
       test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8080"]
       interval: 30s
@@ -211,7 +209,7 @@ services:
       - .env.dev
     environment:
       PORT: 8081
-      REDIS_HOSTS: "local:redis-dev:6379:0:${REDIS_PASSWORD:-password}"
+      REDIS_HOSTS: "local:redis-dev:6379:0:${REDIS_PASSWORD:-redis_dev_2024}"
       HTTP_USER: ${REDIS_COMMANDER_USER:-admin}
       HTTP_PASSWORD: ${REDIS_COMMANDER_PASSWORD:-admin}
     depends_on:
@@ -220,9 +218,9 @@ services:
       redis-dev:
         condition: service_healthy
     networks:
-      - billetterie-network-dev
+      - billetterie-dev-network
     healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8081/favicon.png"]
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:8081/"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -233,3 +231,7 @@ volumes:
   postgres_data_dev:
   redis_data_dev:
   uploads_dev:
+
+networks:
+  billetterie-dev-network:
+    name: billetterie-dev-network

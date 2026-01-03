@@ -1,6 +1,8 @@
-import prisma from '@/lib/prisma';
-import bcrypt from 'bcryptjs';
 import { signToken, verifyToken } from '@/lib/jwt';
+import { logger } from '@/lib/logger';
+import prisma from '@/lib/prisma';
+import { PASSWORD_POLICY } from '@/lib/security-config';
+import bcrypt from 'bcryptjs';
 import type { SignOptions } from 'jsonwebtoken';
 
 // Keep a local expiresIn for session records if needed; JWT expiration is handled in signToken
@@ -9,6 +11,12 @@ const JWT_EXPIRES_IN: SignOptions['expiresIn'] = '24h';
 export interface User {
   id: string;
   email: string;
+  name?: string;
+  phone?: string;
+  address?: string;
+  city?: string;
+  postalCode?: string;
+  country?: string;
   role?: string;
   sessionId?: string;
 }
@@ -41,7 +49,7 @@ export class AuthService {
         }
       });
     } catch (error) {
-      console.error('Clean expired sessions error:', error);
+      logger.error({ error }, 'Clean expired sessions error');
     }
   }
 
@@ -76,6 +84,12 @@ export class AuthService {
         select: {
           id: true,
           email: true,
+          name: true,
+          phone: true,
+          address: true,
+          city: true,
+          postalCode: true,
+          country: true,
           role: true
         }
       });
@@ -87,23 +101,57 @@ export class AuthService {
       return {
         id: user.id,
         email: user.email,
+        name: user.name,
+        phone: user.phone,
+        address: user.address,
+        city: user.city,
+        postalCode: user.postalCode,
+        country: user.country,
         role: user.role || 'USER',
         sessionId: decoded.sessionId
       };
     } catch (error) {
-      console.error('Token validation error:', error);
+      logger.error({ error }, 'Token validation error');
       return null;
     }
   }
 
   /**
    * Login user with email and password
+   * Implements RGPD/CNIL rate limiting: blocks after MAX_LOGIN_ATTEMPTS failed attempts
    */
-  async login(email: string, password: string): Promise<LoginResult | null> {
+  async login(
+    email: string, 
+    password: string,
+    metadata?: { ipAddress?: string; userAgent?: string }
+  ): Promise<LoginResult | null> {
     try {
       // Validate input
       if (!email || !password) {
         return null;
+      }
+
+      const ipAddress = metadata?.ipAddress || 'unknown';
+      const lockoutWindow = new Date(Date.now() - PASSWORD_POLICY.LOCKOUT_DURATION * 60 * 1000);
+
+      // RGPD/CNIL: Check for too many failed login attempts (Article 32 - Security)
+      const recentFailedAttempts = await prisma.loginAttempt.count({
+        where: {
+          email,
+          success: false,
+          timestamp: { gte: lockoutWindow }
+        }
+      });
+
+      if (recentFailedAttempts >= PASSWORD_POLICY.MAX_LOGIN_ATTEMPTS) {
+        const remainingLockoutMinutes = Math.ceil(PASSWORD_POLICY.LOCKOUT_DURATION - 
+          (Date.now() - lockoutWindow.getTime()) / 60000);
+        
+        logger.warn({ email, ipAddress, attempts: recentFailedAttempts }, 
+          'Account temporarily locked due to too many failed login attempts');
+        
+        // Return special error for locked account
+        throw new Error(`ACCOUNT_LOCKED:${remainingLockoutMinutes}`);
       }
 
       // Find user by email
@@ -112,20 +160,41 @@ export class AuthService {
         select: {
           id: true,
           email: true,
+          name: true,
+          phone: true,
+          address: true,
+          city: true,
+          postalCode: true,
+          country: true,
           password: true,
           role: true
         }
       });
 
       if (!user || !user.password) {
+        // Log failed attempt (user not found - don't reveal this to client)
+        await this.logLoginAttempt(email, false, ipAddress, metadata?.userAgent);
         return null;
       }
 
       // Verify password
       const isValidPassword = await bcrypt.compare(password, user.password);
       if (!isValidPassword) {
+        // Log failed attempt
+        await this.logLoginAttempt(email, false, ipAddress, metadata?.userAgent, user.id);
         return null;
       }
+
+      // Successful login - log it and clear failed attempts
+      await this.logLoginAttempt(email, true, ipAddress, metadata?.userAgent, user.id);
+      
+      // Clear old failed attempts for this user after successful login
+      await prisma.loginAttempt.deleteMany({
+        where: {
+          email,
+          success: false
+        }
+      });
 
       // Generate session token
       const sessionToken = this.generateSessionToken();
@@ -135,7 +204,7 @@ export class AuthService {
         data: {
           userId: user.id,
           token: sessionToken,
-          ipAddress: '',
+          ipAddress,
           expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000) // 24 hours
         }
       });
@@ -149,29 +218,82 @@ export class AuthService {
         user: {
           id: user.id,
           email: user.email,
+          name: user.name,
+          phone: user.phone,
+          address: user.address,
+          city: user.city,
+          postalCode: user.postalCode,
+          country: user.country,
           role: user.role || 'USER',
           sessionId: session.id
         },
         token
       };
     } catch (error) {
-      console.error('Login error:', error);
+      // Re-throw account locked errors
+      if (error instanceof Error && error.message.startsWith('ACCOUNT_LOCKED:')) {
+        throw error;
+      }
+      logger.error({ error }, 'Login error');
       return null;
+    }
+  }
+
+  /**
+   * Log a login attempt for security auditing and rate limiting
+   */
+  private async logLoginAttempt(
+    email: string, 
+    success: boolean, 
+    ipAddress: string, 
+    userAgent?: string,
+    userId?: string
+  ): Promise<void> {
+    try {
+      await prisma.loginAttempt.create({
+        data: {
+          email,
+          success,
+          ipAddress,
+          userAgent: userAgent || null,
+          userId: userId || null
+        }
+      });
+    } catch (error) {
+      logger.error({ error, email }, 'Failed to log login attempt');
     }
   }
 
   /**
    * Register a new user
    */
-  async register(email: string, password: string, name?: string): Promise<LoginResult | null> {
+  async register(email: string, password: string, name?: string, consentsMetadata?: {
+    termsAcceptedAt?: string;
+    privacyAcceptedAt?: string;
+    ageVerifiedAt?: string;
+    marketingConsent?: boolean;
+    registrationIp?: string;
+    registrationUserAgent?: string;
+  }): Promise<LoginResult | null> {
     try {
       // Validate input
       if (!email || !password) {
         throw new Error('Email and password are required');
       }
 
-      if (password.length < 8) {
-        throw new Error('Password must be at least 8 characters long');
+      // Validation renforcée du mot de passe (12 caractères minimum)
+      if (password.length < 12) {
+        throw new Error('Le mot de passe doit contenir au moins 12 caractères');
+      }
+
+      // Vérification des critères de sécurité
+      const hasUppercase = /[A-Z]/.test(password);
+      const hasLowercase = /[a-z]/.test(password);
+      const hasNumber = /\d/.test(password);
+      const hasSpecial = /[!@#$%^&*(),.?":{}|<>_\-+=\[\]\\;'/`~]/.test(password);
+
+      if (!hasUppercase || !hasLowercase || !hasNumber || !hasSpecial) {
+        throw new Error('Le mot de passe doit contenir au moins une majuscule, une minuscule, un chiffre et un caractère spécial');
       }
 
       // Check if user already exists
@@ -183,8 +305,23 @@ export class AuthService {
         throw new Error('User already exists');
       }
 
-      // Hash password
-      const hashedPassword = await bcrypt.hash(password, 10);
+      // Hash password with higher cost factor for better security
+      const hashedPassword = await bcrypt.hash(password, 12);
+
+      // Prepare metadata with consents
+      const userMetadata = consentsMetadata ? {
+        consents: {
+          termsAcceptedAt: consentsMetadata.termsAcceptedAt || new Date().toISOString(),
+          privacyAcceptedAt: consentsMetadata.privacyAcceptedAt || new Date().toISOString(),
+          ageVerifiedAt: consentsMetadata.ageVerifiedAt || new Date().toISOString(),
+          marketingConsent: consentsMetadata.marketingConsent || false,
+        },
+        registration: {
+          ip: consentsMetadata.registrationIp || 'unknown',
+          userAgent: consentsMetadata.registrationUserAgent || 'unknown',
+          date: new Date().toISOString()
+        }
+      } : null;
 
       // Create user
       const user = await prisma.user.create({
@@ -192,7 +329,9 @@ export class AuthService {
           email,
           password: hashedPassword,
           name,
-          role: 'USER'
+          role: 'USER',
+          passwordChangedAt: new Date(),
+          ...(userMetadata && { metadata: userMetadata })
         },
         select: {
           id: true,
@@ -229,7 +368,7 @@ export class AuthService {
         token
       };
     } catch (error) {
-      console.error('Registration error:', error);
+      logger.error({ error }, 'Registration error');
       return null;
     }
   }
@@ -248,7 +387,7 @@ export class AuthService {
       });
       return true;
     } catch (error) {
-      console.error('Logout error:', error);
+      logger.error({ error }, 'Logout error');
       return false;
     }
   }
@@ -283,7 +422,7 @@ export class AuthService {
 
       return newToken;
     } catch (error) {
-      console.error('Token refresh error:', error);
+      logger.error({ error }, 'Token refresh error');
       return null;
     }
   }
@@ -314,7 +453,7 @@ export class AuthService {
         role: user.role || 'USER'
       };
     } catch (error) {
-      console.error('Get current user error:', error);
+      logger.error({ error }, 'Get current user error');
       return null;
     }
   }
@@ -362,7 +501,7 @@ export class AuthService {
 
       return true;
     } catch (error) {
-      console.error('Change password error:', error);
+      logger.error({ error }, 'Change password error');
       return false;
     }
   }

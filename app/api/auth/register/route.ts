@@ -1,12 +1,29 @@
 import { NextRequest } from 'next/server';
 import { z } from 'zod';
 import { NextApiResponse, validateBody } from '../../../../src/lib/next-api-helpers';
+import { PasswordSecurityService } from '../../../../src/lib/password-security';
+
+// Schéma de validation pour les consentements
+const consentsSchema = z.object({
+  terms: z.boolean().refine(val => val === true, {
+    message: "Vous devez accepter les conditions générales d'utilisation"
+  }),
+  privacy: z.boolean().refine(val => val === true, {
+    message: "Vous devez accepter la politique de confidentialité"
+  }),
+  ageVerification: z.boolean().refine(val => val === true, {
+    message: "Vous devez certifier avoir au moins 16 ans"
+  }),
+  marketing: z.boolean().optional().default(false),
+  consentDate: z.string().datetime().optional()
+}).optional();
 
 const registerSchema = z.object({
   email: z.string().email('Email invalide'),
-  password: z.string().min(8, 'Le mot de passe doit contenir au moins 8 caractères'),
+  password: z.string().min(12, 'Le mot de passe doit contenir au moins 12 caractères'),
   name: z.string().min(2, 'Le nom doit contenir au moins 2 caractères').optional(),
   confirmPassword: z.string().optional(),
+  consents: consentsSchema
 }).refine((data) => {
   if (data.confirmPassword && data.password !== data.confirmPassword) {
     return false;
@@ -22,6 +39,45 @@ async function handleRegister(request: NextRequest) {
   if (error) return error;
 
   try {
+    // Validation stricte du mot de passe côté serveur
+    const passwordValidation = PasswordSecurityService.validatePasswordStrength(
+      data.password,
+      { 
+        email: data.email, 
+        firstName: data.name?.split(' ')[0], 
+        lastName: data.name?.split(' ').slice(1).join(' ') 
+      }
+    );
+
+    if (!passwordValidation.isValid) {
+      return NextApiResponse.error(
+        `Mot de passe invalide: ${passwordValidation.errors.join(', ')}`,
+        400
+      );
+    }
+
+    // Vérification des consentements obligatoires
+    if (data.consents) {
+      if (!data.consents.terms) {
+        return NextApiResponse.error(
+          "Vous devez accepter les conditions générales d'utilisation",
+          400
+        );
+      }
+      if (!data.consents.privacy) {
+        return NextApiResponse.error(
+          "Vous devez accepter la politique de confidentialité",
+          400
+        );
+      }
+      if (!data.consents.ageVerification) {
+        return NextApiResponse.error(
+          "Vous devez certifier avoir au moins 16 ans",
+          400
+        );
+      }
+    }
+
     // Import auth service
     const authServiceModule = await import('../../../../src/modules/auth/auth.service');
     const authService = authServiceModule.default;
@@ -30,8 +86,20 @@ async function handleRegister(request: NextRequest) {
     const ipAddress = request.headers.get('x-forwarded-for') || 'unknown';
     const userAgent = request.headers.get('user-agent') || 'unknown';
 
-    // Register user
-    const result = await authService.register(data.email, data.password, data.name);
+    // Register user with consents metadata
+    const result = await authService.register(
+      data.email, 
+      data.password, 
+      data.name,
+      data.consents ? {
+        termsAcceptedAt: data.consents.consentDate || new Date().toISOString(),
+        privacyAcceptedAt: data.consents.consentDate || new Date().toISOString(),
+        ageVerifiedAt: data.consents.consentDate || new Date().toISOString(),
+        marketingConsent: data.consents.marketing || false,
+        registrationIp: ipAddress,
+        registrationUserAgent: userAgent
+      } : undefined
+    );
 
     // Si l'inscription renvoie null, vérifier si l'utilisateur existe déjà
     if (!result) {

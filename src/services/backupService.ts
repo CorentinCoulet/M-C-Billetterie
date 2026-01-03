@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import prisma from '@/lib/prisma';
 import { exec } from 'child_process';
 import fs from 'fs/promises';
@@ -26,7 +27,7 @@ export class BackupService {
     try {
       await fs.mkdir(this.backupDir, { recursive: true });
     } catch (error) {
-      console.error('Failed to create backup directory:', error);
+      logger.error({ error }, 'Failed to create backup directory');
     }
   }
 
@@ -88,7 +89,7 @@ export class BackupService {
         error: error instanceof Error ? error.message : 'Unknown error',
       });
       
-      console.error('Full backup failed:', error);
+      logger.error({ error }, 'Full backup failed');
     }
   }
 
@@ -145,7 +146,7 @@ export class BackupService {
         error: error instanceof Error ? error.message : 'Unknown error',
       });
       
-      console.error('Incremental backup failed:', error);
+      logger.error({ error }, 'Incremental backup failed');
     }
   }
 
@@ -246,7 +247,7 @@ export class BackupService {
       console.log(`Cleaned up ${oldBackups.length} old backups`);
       
     } catch (error) {
-      console.error('Cleanup failed:', error);
+      logger.error({ error }, 'Backup cleanup failed');
     }
   }
 

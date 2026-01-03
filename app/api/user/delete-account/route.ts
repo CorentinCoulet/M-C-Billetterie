@@ -11,7 +11,7 @@ interface JWTPayload {
 export async function DELETE(request: NextRequest) {
   try {
     // Check authentication
-    const token = request.cookies.get('auth_token')?.value
+    const token = request.cookies.get('auth-token')?.value
     if (!token) {
       return NextResponse.json(
         { success: false, message: 'Not authenticated' },
@@ -38,7 +38,7 @@ export async function DELETE(request: NextRequest) {
       message: 'Account deleted successfully'
     })
 
-    response.cookies.delete('auth_token')
+    response.cookies.delete('auth-token')
 
     return response
   } catch (error) {

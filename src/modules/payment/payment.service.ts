@@ -1,5 +1,6 @@
 import Stripe from 'stripe';
 import { PrismaClient } from '../../generated/prisma';
+import { logger } from '../../lib/logger';
 import { PaymentStatus, PaymentStatusType, StripeApiVersion } from '../../types/prisma-fixes';
 
 const prisma = new PrismaClient();
@@ -42,7 +43,7 @@ export class PaymentService {
 
       return payment;
     } catch (error) {
-      console.error('Erreur lors de la création du paiement:', error);
+      logger.error({ error }, 'Erreur lors de la création du paiement');
       throw error;
     }
   }
@@ -65,7 +66,7 @@ export class PaymentService {
         }
       });
     } catch (error) {
-      console.error('Erreur lors de la récupération du paiement:', error);
+      logger.error({ error }, 'Erreur lors de la récupération du paiement');
       throw error;
     }
   }
@@ -82,7 +83,7 @@ export class PaymentService {
         }
       });
     } catch (error) {
-      console.error('Erreur lors de la mise à jour du paiement:', error);
+      logger.error({ error }, 'Erreur lors de la mise à jour du paiement');
       throw error;
     }
   }
@@ -122,7 +123,7 @@ export class PaymentService {
         paymentDate: new Date()
       });
     } catch (error) {
-      console.error('Erreur lors du traitement du paiement Stripe:', error);
+      logger.error({ error }, 'Erreur lors du traitement du paiement Stripe');
       throw error;
     }
   }
@@ -146,7 +147,7 @@ export class PaymentService {
 
       return paymentIntent;
     } catch (error) {
-      console.error('Erreur lors de la création de PaymentIntent Stripe:', error);
+      logger.error({ error }, 'Erreur lors de la création de PaymentIntent Stripe');
       throw error;
     }
   }
@@ -179,7 +180,7 @@ export class PaymentService {
 
       throw new Error('Impossible de rembourser ce paiement');
     } catch (error) {
-      console.error('Erreur lors du remboursement:', error);
+      logger.error({ error }, 'Erreur lors du remboursement');
       throw error;
     }
   }
@@ -191,7 +192,7 @@ export class PaymentService {
         orderBy: { paymentDate: 'desc' }
       });
     } catch (error) {
-      console.error('Erreur lors de la récupération des paiements:', error);
+      logger.error({ error }, 'Erreur lors de la récupération des paiements');
       throw error;
     }
   }

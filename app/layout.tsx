@@ -28,7 +28,7 @@ export default function RootLayout({
           <LayoutWithNavigation>
             {children}
           </LayoutWithNavigation>
-          <Toaster />
+          <Toaster position="bottom-right" visibleToasts={4} expand={true} richColors />
         </AppProvider>
       </body>
     </html>

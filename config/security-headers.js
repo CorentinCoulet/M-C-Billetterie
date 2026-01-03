@@ -11,7 +11,7 @@ const DEFAULT_CSP_DIRECTIVES = Object.freeze({
   "style-src": ["'self'", "'unsafe-inline'"],
   "img-src": ["'self'", 'data:', 'https:'],
   "font-src": ["'self'", 'data:'],
-  "connect-src": ["'self'"],
+  "connect-src": ["'self'", 'data:'],
   "frame-ancestors": ["'none'"]
 });
 

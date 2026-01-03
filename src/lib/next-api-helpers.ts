@@ -91,8 +91,14 @@ export async function withAuth(
         id: true,
         email: true,
         name: true,
+        phone: true,
+        address: true,
+        city: true,
+        postalCode: true,
+        country: true,
         role: true,
         isVerified: true,
+        lastLogin: true,
       }
     });
 

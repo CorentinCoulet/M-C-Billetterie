@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import fs from 'fs/promises';
 import Handlebars from 'handlebars';
 import nodemailer from 'nodemailer';
@@ -106,7 +107,7 @@ export class EmailService {
       
       return compiled;
     } catch (error) {
-      console.error(`Error loading template ${templateName}:`, error);
+      logger.error({ error, templateName }, 'Error loading email template');
       throw new Error(`Failed to load email template: ${templateName}`);
     }
   }

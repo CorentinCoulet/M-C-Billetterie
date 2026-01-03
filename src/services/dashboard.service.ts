@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import prisma from '@/lib/prisma';
 import {
     AdminDashboardData,
@@ -64,7 +65,7 @@ export class DashboardService {
         })),
       };
     } catch (error) {
-      console.error('Error fetching user dashboard data:', error);
+      logger.error({ error }, 'Error fetching user dashboard data');
       throw new Error('Failed to fetch user dashboard data');
     }
   }
@@ -144,7 +145,7 @@ export class DashboardService {
         topEvents,
       };
     } catch (error) {
-      console.error('Error fetching organizer dashboard data:', error);
+      logger.error({ error }, 'Error fetching organizer dashboard data');
       throw new Error('Failed to fetch organizer dashboard data');
     }
   }
@@ -192,7 +193,7 @@ export class DashboardService {
         systemMetrics,
       };
     } catch (error) {
-      console.error('Error fetching admin dashboard data:', error);
+      logger.error({ error }, 'Error fetching admin dashboard data');
       throw new Error('Failed to fetch admin dashboard data');
     }
   }
@@ -240,7 +241,7 @@ export class DashboardService {
           throw new Error('Invalid user role');
       }
     } catch (error) {
-      console.error('Error fetching dashboard stats:', error);
+      logger.error({ error }, 'Error fetching dashboard stats');
       throw error;
     }
   }
@@ -311,7 +312,7 @@ export class DashboardService {
       ).slice(0, 10);
 
     } catch (error) {
-      console.error('Error fetching recent activities:', error);
+      logger.error({ error }, 'Error fetching recent activities');
       throw new Error('Failed to fetch recent activities');
     }
   }
